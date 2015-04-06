@@ -110,8 +110,7 @@ else
     end
     
     %% 3) Go through frame by frame and figure out which part of the arena the
-    % mouse is in - this will be the tough part!!! steal a bunch of code from
-    % Dave's CalculatePlacefieldsDec
+    % mouse is in 
     
     [countsx,Xbin] = histc(x,Xedges);
     [countsy,Ybin] = histc(y,Yedges);
@@ -137,7 +136,8 @@ else
     XDim = info.Dataspace.Size(1);
     YDim = info.Dataspace.Size(2);
     FTLength = size(FT,2);
-    start_skip = ICmovieLength - FTLength; % Need to verify if this is correct!
+    start_skip = ICmovieLength - FTLength; % Need to verify if this is correct! It is!
+    
     
     %%% ARE THESE CORRECT? DOES THIS FRAME ACTUALLY COINCIDE WITH THE MOUSE
     %%% BEING IN THIS POSITION???
