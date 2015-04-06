@@ -1,0 +1,47 @@
+function [  ] = lin_interp_fix()
+%fixes wrongly interpolated xpos and ypos data in Pos.mat and adds a
+%time_interp array and saves it.  Run in the working directory of a session
+%to fix it!
+
+load('Pos.mat');
+DVT = importdata(ls('*.DVT'));
+disp(['Loaded "' ls('*.DVT') '"'])
+
+if exist('time_interp','var') % Abort if already correct
+    return
+end
+
+Xpix = xpos_interp;
+Ypix = ypos_interp;
+time_proxy = DVT(:,2);
+time = 
+
+% Generate times to match brain imaging data timestamps
+fps_brainimage = 20; % frames/sec for brain image timestamps
+
+start_time = ceil(min(time)*fps_brainimage)/fps_brainimage;
+max_time = floor(max(time)*fps_brainimage)/fps_brainimage;
+time_interp = start_time:1/fps_brainimage:max_time;
+
+if (max(time_interp) >= max_time)
+    time_interp = time_interp(1:end-1);
+end
+
+%% Do Linear Interpolation
+
+% Get appropriate time points to interpolate for each timestamp
+time_index = arrayfun(@(a) [max(find(a >= time)) min(find(a < time))],...
+    time_interp,'UniformOutput',0);
+time_test_cell = arrayfun(@(a) a,time_interp,'UniformOutput',0);
+
+xpos_interp = cellfun(@(a,b) lin_interp(time(a), Xpix(a),...
+    b),time_index,time_test_cell);
+
+ypos_interp = cellfun(@(a,b) lin_interp(time(a), Ypix(a),...
+    b),time_index,time_test_cell);
+
+save Pos.mat xpos_interp ypos_interp time_interp start_time MoMtime
+
+
+end
+
