@@ -15,6 +15,11 @@ analysis_type = 2; % 1 if you want to used smoothed data, 0 if not
 rot_overwrite = 0; 
 num_shuffles = 100;
 
+% Pixels to exclude from RVP analysis! (e.g. due to traveling waves, motion
+% artifacts, etc.)
+x_exclude = 325:num_x_pixels; % in pixels
+y_exclude = 300:num_y_pixels;
+
 smooth_type = {'_DF_no_smooth' '_DF_smooth', '_z_smooth'};
 smooth_append = smooth_type{analysis_type + 1};
 
@@ -121,8 +126,7 @@ load([sesh(1).folder 'reverse_placefields_ChangeMovie' rot_append '.mat']);
 num_x_pixels = size(AvgFrame_DF{1},2);
 num_y_pixels = size(AvgFrame_DF{1},1);
 
-x_exclude = 325:num_x_pixels; % in pixels
-y_exclude = 300:num_y_pixels;
+
 exclude = zeros(size(AvgFrame_DF{1}));
 exclude(y_exclude,x_exclude) = ones(length(y_exclude),length(x_exclude));
 

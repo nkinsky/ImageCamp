@@ -18,7 +18,7 @@ bin_ok = 'n';
 h = figure;
 while ~strcmpi(bin_ok,'y')
     
-    Xrange = max(x)-min(x); % NRK - run occupancy limits function here to get Xrange and Yrange
+    Xrange = max(x)-min(x); % NRK - run occupancy limits function here to get Xrange and Yrange, allow this to be adjusted manually
     Yrange = max(y)-min(y);
     
     NumXBins = ceil(Xrange/cmperbin);

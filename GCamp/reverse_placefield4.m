@@ -86,6 +86,7 @@ else
     x = pos_align.x; % Send standardized tracking data to x and y
     y = pos_align.y;
     
+    %%% NRK - get rid of this, use Dave function to calculate this here
     disp('Loading PlaceMaps data for FT size');
     load('PlaceMaps.mat','FT','speed','t')
     
