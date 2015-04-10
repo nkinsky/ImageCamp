@@ -11,6 +11,8 @@ function [ corr_1st_2nd] = corr_bw_sessions(rate_map1, rate_map2, exclude)
 %   exclude is a binary vector of indices you want to exclude from using in
 %   your calculation of correlations.
 
+% keyboard 
+
 NumXBins = size(rate_map1,2);
 NumYBins = size(rate_map1,1);
 

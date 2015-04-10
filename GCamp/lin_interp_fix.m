@@ -6,8 +6,12 @@ function [  ] = lin_interp_fix()
 fps_brainimage = 20; % frames/sec for brain image timestamps
 
 load('Pos.mat');
+save Pos_old.mat xpos_interp ypos_interp start_time MoMtime
 DVT = importdata(ls('*.DVT'));
-disp(['Loaded "' ls('*.DVT') '"'])
+disp(['Loaded "' ls('*.DVT')]); 
+    
+h = figure;
+plot(xpos_interp,ypos_interp,'bo-');
 
 if exist('time_interp','var') % Abort if already correct
     return
@@ -40,6 +44,11 @@ xpos_interp = cellfun(@(a,b) lin_interp(time(a), Xpix(a),...
 
 ypos_interp = cellfun(@(a,b) lin_interp(time(a), Ypix(a),...
     b),time_index,time_test_cell);
+
+figure(h);
+hold on
+plot(xpos_interp,ypos_interp,'r*')
+hold off
 
 keyboard
 

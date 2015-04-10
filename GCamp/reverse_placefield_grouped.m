@@ -65,7 +65,7 @@ end
 disp('Here is your chance to compare occupancy grids')
 keyboard
 
-%% 3) run reverse_placefield3
+%% 3) run reverse_placefield4
 
 for j = 1:2
    cd(sesh(j).folder);

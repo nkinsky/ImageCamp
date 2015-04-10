@@ -121,7 +121,7 @@ register_file = [reg_path reg_filename];
 cell_merge = 'base';
 elseif nargin == 1
     error('Please input both a base image and image to register to base file')
-elseif nargin >= 2
+elseif nargin == 2
    
     base_filename = base_file(max(regexp(base_file,'\','end'))+1:end);
     base_path = base_file(1:max(regexp(base_file,'\','end')));
@@ -232,10 +232,10 @@ disp(['X translation = ' num2str(tform.T(3,1)) ' pixels.'])
 disp(['Y translation = ' num2str(tform.T(3,2)) ' pixels.'])
 disp(['Rotation = ' num2str(mean([asind(tform.T(1,2)) acosd(tform.T(1,1))])) ' degrees.'])
 
-if ~exist('manual_reg_enable','var') || manual_reg_enable == 1
+if ~exist('manual_reg_enable','var') 
     manual_flag = input('Do you wish to manually adjust this registration? (y/n): ','s');
-elseif manual_reg_enable == 0
-    manual_flag = 'n';
+else
+    manual_flag
 end
 % if strcmpi(manual_flag,'n')
 %     use_manual_adjust = 0;
@@ -306,6 +306,6 @@ end
 
 save ([ base_path 'RegistrationInfoX.mat'],'RegistrationInfoX');
 
-% keyboard;
+keyboard;
 
 end

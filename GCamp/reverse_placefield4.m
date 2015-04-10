@@ -1,4 +1,4 @@
-function [ ] = reverse_placefield4(folder, speed_thresh, grid_info, movie_type, rot_overwrite)
+function [ ] = reverse_placefield4(folder, speed_thresh, grid_info, movie_type, rot_overwrite, movie_loc)
 % reverse_placefield3(folder, speed_thresh, Xedges, Yedges, cmperbin)
 % Version 4 - updated all the RVP plots and Occmap so that they match the
 % occupancy grid when plotted next to it and doing things like rotating
@@ -22,6 +22,12 @@ function [ ] = reverse_placefield4(folder, speed_thresh, grid_info, movie_type, 
 % If left blank, ICmovie_smooth will be assumed
 % rot_overwrite: 1 if you wish to analyze data that has NOT been rotated
 % such that local features align, 0 or left blank otherwise
+% movie_loc :   if specified, this points to the movie directory.
+% Otherwise, it is assumed that the movie is located in the working
+% directory with everything else.
+
+%%% Why are there values of -1 in a lot of places in AvgFrame_DF???
+%%% specifically, in values (1:10)
 
 %% Note that I need to set up 2ndary scaling empirically for each arena, and not calculate it based on every session...
 
@@ -47,6 +53,13 @@ if ~exist('rot_overwrite','var') % Set rot_overwrite if not indicated
     rot_overwrite = 0;
 end
 
+if ~exist('movie_loc','var')
+    movie_path = [folder '\' movie_name];
+    movie_loc = folder;
+elseif exist('movie_loc','var')
+    movie_path = [movie_loc '\' movie_name];
+end
+
 if rot_overwrite == 0
     save_append = '';
     pos_file = 'pos_corr_to_std.mat';
@@ -59,7 +72,7 @@ end
 % dropbox_path = 'C:\Users\Nat\Dropbox\';
 % calibration_file = [dropbox_path 'Imaging Project\MATLAB\tracking\2env arena calibration\arena_distortion_correction.mat'];
 
-session_path = folder; % uigetdir('','Select the Working directory for the session you wish to analyze:');
+session_path = folder;
 
 %% Check if sll the necessary files are in the working directory
 
@@ -85,22 +98,27 @@ else
     
     x = pos_align.x; % Send standardized tracking data to x and y
     y = pos_align.y;
+    t = pos_align.time_interp; % Plexon time interpolated back to inscopix frame rate/timestamps
+    load('Pos.mat','MoMtime'); % Get time that mouse arrives on maze.
     
-    %%% NRK - get rid of this, use Dave function to calculate this here
-    disp('Loading PlaceMaps data for FT size');
-    load('PlaceMaps.mat','FT','speed','t')
+    % Calculate speed from standardized tracking data
+    dx = diff(x);
+    dy = diff(y);
+    dt = diff(t);
+    speed = sqrt(dx.^2+dy.^2)./dt;
+    speed = [speed speed(end)];
     
     try
         if strcmpi(movie_type,'ICmovie_smooth')
-            h5info('ICmovie_smooth.h5','/Object');
+            h5info( movie_path,'/Object');
             F0_savefile = 'F0_ICmovie.mat';
         elseif strcmpi(movie_type,'ChangeMovie')
-            h5info('ChangeMovie.h5','/Object');
+            h5info( movie_path,'/Object');
             F0_savefile = 'F0_ChangeMovie.mat';
         end
         
     catch
-        error('You need to have Icmovie_smooth.h5 or ChangeMovie.h5 in this directory')
+        error('You need to have ICmovie_smooth.h5 or ChangeMovie.h5 in this directory')
     end
     
     %% 1) Set up speed thresh
@@ -110,8 +128,13 @@ else
         disp('No speed_thresh variable detected, so using zero')
     end
     
+    %% 2) Align Inscopix and Plexon (tracking) data
+    % Not necessary because this has already been run in arena align...
+    [~, ~, ~, index_scopix_valid] = AlignImagingToTracking_NK(movie_path, ...
+       SR, x, y, t, MoMtime); % get index_scopix_valid
+    
     %% 3) Go through frame by frame and figure out which part of the arena the
-    % mouse is in 
+    % mouse is in
     
     [countsx,Xbin] = histc(x,Xedges);
     [countsy,Ybin] = histc(y,Yedges);
@@ -122,42 +145,36 @@ else
     Xbin(find(Xbin == 0)) = 1;
     Ybin(find(Ybin == 0)) = 1;
     
-%     total_frames = sum(countsx) + sum(countsy);
-    
     % set up velocity filter
-    
     vel_filter = speed >= speed_thresh;
     
+    x_pos_valid = (x >= min(Xedges) & x <= max(Xedges));
+    y_pos_valid = (y >= min(Yedges) & y <= max(Yedges));
+    pos_valid = x_pos_valid & y_pos_valid;
     
     %% 4) For each area, add up all the active frames and average
     
-    % Get number of frames to ignore from beginning of movie
-    info = h5info(movie_name,'/Object');
-    ICmovieLength = info.Dataspace.Size(3);
+    info = h5info(movie_path,'/Object');
     XDim = info.Dataspace.Size(1);
     YDim = info.Dataspace.Size(2);
-    FTLength = size(FT,2);
-    start_skip = ICmovieLength - FTLength; % Need to verify if this is correct! It is!
-    
-    
-    %%% ARE THESE CORRECT? DOES THIS FRAME ACTUALLY COINCIDE WITH THE MOUSE
-    %%% BEING IN THIS POSITION???
+    F0 = zeros(XDim,YDim);
+    valid_length = length(index_scopix_valid);
     
     try % Save a bunch of time by loading the mean projection
         load(F0_savefile)
-        disp('Using previously save Mean Projection (F0)')
+        disp('Using previously saved Mean Projection (F0)')
     catch
         
     % Calculate average frame for the movie
     disp('Calculating Mean Projection...')
-    F0 = zeros(XDim,YDim);
+    
     nn = 0; % Set counter
-    for m = 1+start_skip:ICmovieLength
+    for m = 1:length(index_scopix_valid) % This might need to include pos_valid to filter out any frames where the mouse is outside the arena...
         if strcmpi(movie_type,'ICmovie_smooth');
-            temp = double(h5read('ICmovie_smooth.h5','/Object',[1 1 m 1],...
+            temp = double(h5read(movie_path,'/Object',[1 1 index_scopix_valid(m) 1],...
                 [XDim YDim 1 1]));
         elseif strcmpi(movie_type,'ChangeMovie');
-            temp2 = double(h5read('ChangeMovie.h5','/Object',[1 1 m 1],...
+            temp2 = double(h5read(movie_path,'/Object',[1 1 index_scopix_valid(m) 1],...
                 [XDim YDim 1 1]));
             temp = zeros(size(temp2));
             temp(temp2 >= 0) = temp2(temp2 >= 0); % Get only positive values for ChangeMovie 
@@ -166,21 +183,21 @@ else
         nn = nn + 1;
         
         if round(m/1000) == m/1000
-            disp([ num2str(m - start_skip) ' frames out of ' num2str(ICmovieLength - start_skip) ' completed.'])
+            disp([ num2str(index_scopix_valid(m)) ' frames out of ' num2str(valid_length) ' completed.'])
         end
         
     end
-    F0 = F0/(ICmovieLength-start_skip);
+    F0 = F0/valid_length;
     
     % Calculate Variance
     disp('Calculating Variance...')
     image_var = zeros(XDim,YDim);
-    for m = 1+start_skip:ICmovieLength
+    for m = 1:length(index_scopix_valid) % This might need to include pos_valid to filter out any frames where the mouse is outside the arena...
         if strcmpi(movie_type,'ICmovie_smooth');
-            temp = double(h5read('ICmovie_smooth.h5','/Object',[1 1 m 1],...
+            temp = double(h5read(movie_path,'/Object',[1 1 index_scopix_valid(m) 1],...
                 [XDim YDim 1 1]));
         elseif strcmpi(movie_type,'ChangeMovie');
-            temp2 = double(h5read('ChangeMovie.h5','/Object',[1 1 m 1],...
+            temp2 = double(h5read(movie_path,'/Object',[1 1 index_scopix_valid(m) 1],...
                 [XDim YDim 1 1]));
             temp = zeros(size(temp2));
             temp(temp2 >= 0) = temp2(temp2 >= 0); % Get only positive values for ChangeMovie 
@@ -189,22 +206,25 @@ else
         nn = nn + 1;
         
         if round(m/1000) == m/1000
-            disp([ num2str(m - start_skip) ' frames out of ' num2str(ICmovieLength - start_skip) ' completed.'])
+            disp([ num2str(index_scopix_valid(m)) ' frames out of ' num2str(valid_length) ' completed.'])
         end
         
     end
-    image_var = image_var/(ICmovieLength-start_skip);
+    image_var = image_var/valid_length;
     
     
     save(F0_savefile, 'F0','image_var'); % Save F0 for future reference - this is the longest step!!
     
     end
     
+    valid_length = length(index_scopix_valid);
     % set filter to artificially chop up 1st and 2nd halves of the movie
-    first_half = zeros(1,FTLength); second_half = zeros(1,FTLength);
-    first_half(1:floor(FTLength/2)) = ones(1,floor(FTLength/2));
-    second_half(floor(FTLength/2)+1:FTLength) = ...
-        ones(1,floor(length(floor(FTLength/2)+1:FTLength)));
+    first_half = zeros(1,valid_length); second_half = zeros(1,valid_length);
+    first_half(1:floor(valid_length/2)) = ones(1,floor(valid_length/2)) & ...
+        pos_valid(1:floor(valid_length/2));
+    second_half(floor(valid_length/2)+1:valid_length) = ...
+        ones(1,floor(length(floor(valid_length/2)+1:valid_length))) & ...
+        pos_valid(floor(valid_length/2)+1:valid_length);
     
     % Set counters
     n = 0; n1 = 0; n2 = 0; counter = 1;
@@ -235,9 +255,9 @@ else
             AvgFrame_DF2{j,i} = zeros(XDim,YDim);
             
             % Define Active Frames
-            ActiveFrames = find(Xbin == i & Ybin == j & vel_filter);
-            ActiveFrames_1st = find(Xbin == i & Ybin == j & first_half & vel_filter); % with first half filter
-            ActiveFrames_2nd = find(Xbin == i & Ybin == j & second_half & vel_filter); % with 2nd half filter
+            ActiveFrames = find(Xbin == i & Ybin == j & vel_filter & pos_valid);
+            ActiveFrames_1st = find(Xbin == i & Ybin == j & first_half & vel_filter & pos_valid); % with first half filter
+            ActiveFrames_2nd = find(Xbin == i & Ybin == j & second_half & vel_filter & pos_valid); % with 2nd half filter
             num_ActiveFrames(j,i) = length(ActiveFrames); % get number of frames active in each bin
             num_passes(j,i) = sum(diff(ActiveFrames) ~= 1) + 1;
             
@@ -246,11 +266,11 @@ else
                 for k = 1:length(ActiveFrames)
                     
                     if strcmpi(movie_type,'ICmovie_smooth');
-                        tempFrame = double(h5read('ICmovie_smooth.h5','/Object',...
-                            [1 1 ActiveFrames(k) + start_skip 1],[XDim YDim 1 1])); % m
+                        tempFrame = double(h5read(movie_path,'/Object',...
+                            [1 1 index_scopix_valid(ActiveFrames(k)) 1],[XDim YDim 1 1])); % m
                     elseif strcmpi(movie_type,'ChangeMovie');
-                        tempFrame2 = double(h5read('ChangeMovie.h5','/Object',...
-                            [1 1 ActiveFrames(k) + start_skip 1],[XDim YDim 1 1]));
+                        tempFrame2 = double(h5read(movie_path,'/Object',...
+                            [1 1 index_scopix_valid(ActiveFrames(k)) 1],[XDim YDim 1 1]));
                         tempFrame = zeros(size(tempFrame2));
                         tempFrame(tempFrame2 >= 0) = tempFrame2(tempFrame2 >= 0); % Get only positive values for ChangeMovie
                     end

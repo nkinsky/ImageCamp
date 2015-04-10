@@ -1,5 +1,5 @@
-function [h1, corrs] = shuffle_ratemaps2(folder1, folder2, analysis_type, num_shuffles, rot_overwrite, exclude)
-% corrs = shuffle_ratemaps(folder1, folder2, num_shuffles, rot_overwrite, exclude)
+function [h1, corrs] = shuffle_ratemaps2(folder1, folder2, analysis_type, num_shuffles, rot_overwrite, exclude, tform1, tform2)
+% corrs = shuffle_ratemaps(folder1, folder2, num_shuffles, rot_overwrite, exclude, tform)
 % This function takes two sessions and calculates the correlation between
 % their reverse place fiels across the whole arena, as well as calculating correlation values based on shuffled data
 % folder1 and folder2 are the two sessions you wish to compare
@@ -16,13 +16,17 @@ function [h1, corrs] = shuffle_ratemaps2(folder1, folder2, analysis_type, num_sh
 % h1 is the handle to the plot of all the correlations
 % corrs contains all the correlation data
 
-close all
+% close all
 
 %% Variables to set
 
 movie_type = 'ChangeMovie'; % hack for now
 
+rm_cell = {'AvgFrame_DF_1st_smooth' 'AvgFrame_DF_2nd_smooth' 'AvgFrame_DF_smooth' ...
+    'AvgFrame_DF' 'AvgFrame_DF_1st' 'AvgFrame_DF_2nd' ...
+    'AvgFrame_z_1st_smooth' 'AvgFrame_z_2nd_smooth' 'AvgFrame_z_smooth'};
 
+rm_index{1} = [1 2 3]; rm_index{2} = [4 5 6]; rm_index{3} = [7 8 9];
 
 %% Import stuff
 
@@ -38,45 +42,131 @@ if strcmpi(movie_type,'ICmovie_smooth')
 elseif strcmpi(movie_type,'ChangeMovie')
     import_file = [ 'reverse_placefields_ChangeMovie' import_append '.mat'];
 end
-sesh1 = importdata([ folder1 import_file]);
-sesh2 = importdata([ folder2 import_file]);
+
+sesh1_path = [ folder1 '\' import_file];
+sesh2_path = [ folder2 '\' import_file];
+% sesh1_file = importdata([ folder1 '\' import_file]);
+% sesh2_file = importdata([ folder2 '\' import_file]);
 
 %% Assign data based on smoothed flag 
+% Note - want to load ONLY the relevant variables, not the other fields
+% because those end up taking a huge amount of memory - right now I am
+% loading everything, then deleting as I progress, but I think that if I
+% were to load ONLY the relevant variables then I could cut down on time a
+% bunch!
 if analysis_type == 1
-   sesh1.frame_use = sesh1.AvgFrame_DF_smooth;
-   sesh1.frame_use_1st = sesh1.AvgFrame_DF_1st_smooth;
-   sesh1.frame_use_2nd = sesh1.AvgFrame_DF_2nd_smooth;
-   sesh2.frame_use = sesh2.AvgFrame_DF_smooth;
-   sesh2.frame_use_1st = sesh2.AvgFrame_DF_1st_smooth;
-   sesh2.frame_use_2nd = sesh2.AvgFrame_DF_2nd_smooth;
-   analysis_type = 'DF smoothed';
+    load(sesh1_path,'AvgFrame_DF_smooth','AvgFrame_DF_1st_smooth','AvgFrame_DF_2nd_smooth');
+    sesh1.frame_use = AvgFrame_DF_smooth;
+    sesh1.frame_use_1st = AvgFrame_DF_1st_smooth;
+    sesh1.frame_use_2nd = AvgFrame_DF_2nd_smooth;
+    load(sesh2_path,'AvgFrame_DF_smooth','AvgFrame_DF_1st_smooth','AvgFrame_DF_2nd_smooth');
+    sesh2.frame_use = AvgFrame_DF_smooth;
+    sesh2.frame_use_1st = AvgFrame_DF_1st_smooth;
+    sesh2.frame_use_2nd = AvgFrame_DF_2nd_smooth;
+    analysis_type = 'DF smoothed';
+    clear AvgFrame_DF_smooth AvgFrame_DF_1st_smooth AvgFrame_DF_2nd_smooth
 elseif analysis_type == 0
-    sesh1.frame_use = sesh1.AvgFrame_DF;
-    sesh1.frame_use_1st = sesh1.AvgFrame_DF_1st;
-    sesh1.frame_use_2nd = sesh1.AvgFrame_DF_2nd;
-    sesh2.frame_use = sesh2.AvgFrame_DF;
-    sesh2.frame_use_1st = sesh2.AvgFrame_DF_1st;
-    sesh2.frame_use_2nd = sesh2.AvgFrame_DF_2nd;
+    load(sesh1_path,'AvgFrame_DF','AvgFrame_DF_1st','AvgFrame_DF_2nd');
+    sesh1.frame_use = AvgFrame_DF;
+    sesh1.frame_use_1st = AvgFrame_DF_1st;
+    sesh1.frame_use_2nd = AvgFrame_DF_2nd;
+    load(sesh2_path,'AvgFrame_DF','AvgFrame_DF_1st','AvgFrame_DF_2nd');
+    sesh2.frame_use = AvgFrame_DF;
+    sesh2.frame_use_1st = AvgFrame_DF_1st;
+    sesh2.frame_use_2nd = AvgFrame_DF_2nd;
     analysis_type = 'DF unsmoothed';
+    clear AvgFrame_DF AvgFrame_DF_1st AvgFrame_DF_2nd
 elseif analysis_type == 2
-    sesh1.frame_use = sesh1.AvgFrame_z_smooth;
-    sesh1.frame_use_1st = sesh1.AvgFrame_z_1st_smooth;
-    sesh1.frame_use_2nd = sesh1.AvgFrame_z_2nd_smooth;
-    sesh2.frame_use = sesh2.AvgFrame_z_smooth;
-    sesh2.frame_use_1st = sesh2.AvgFrame_z_1st_smooth;
-    sesh2.frame_use_2nd = sesh2.AvgFrame_z_2nd_smooth;
+    load(sesh1_path,'AvgFrame_z_smooth','AvgFrame_z_1st_smooth','AvgFrame_z_2nd_smooth');
+    sesh1.frame_use = AvgFrame_z_smooth;
+    sesh1.frame_use_1st = AvgFrame_z_1st_smooth;
+    sesh1.frame_use_2nd = AvgFrame_z_2nd_smooth;
+    load(sesh2_path,'AvgFrame_z_smooth','AvgFrame_z_1st_smooth','AvgFrame_z_2nd_smooth');
+    sesh2.frame_use = AvgFrame_z_smooth;
+    sesh2.frame_use_1st = AvgFrame_z_1st_smooth;
+    sesh2.frame_use_2nd = AvgFrame_z_2nd_smooth;
     analysis_type = 'z-score smoothed';
+    clear AvgFrame_z_smooth AvgFrame_z_1st_smooth AvgFrame_z_2nd_smooth
 end
+load(sesh1_path,'Occmap','x','y','Xedges','Yedges');
+sesh1.Occmap = Occmap;
+sesh1.x = x; sesh1.y = y;
+sesh1.Xedges = Xedges; sesh1.Yedges = Yedges;
 
+load(sesh2_path,'Occmap','x','y','Xedges','Yedges');
+sesh2.Occmap = Occmap;
+sesh2.x = x; sesh2.y = y;
+sesh2.Xedges = Xedges; sesh2.Yedges = Yedges;
 
 image_xpix = size(sesh1.frame_use{1},2);
 image_ypix = size(sesh1.frame_use{1},1);
+
+% keyboard
+
+%% Register 2nd session images to 1st if necessary
+nan_frame_use = ones(size(sesh1.frame_use{1}))*nan;
+if exist('tform','var') && ~isempty(tform)
+    tform1 = tform(1).tform; tform2 = tform(2).tform;
+    disp('Registering 1nd session to base session')
+    base_ref = imref2d(size(sesh1.frame_use{1}));
+    for j = 1: size(sesh1.frame_use(:))
+        disp(['Registering bin ' num2str(j) ' of ' num2str(length(sesh1.frame_use(:)))])
+        if ~isnan(sum(sesh1.frame_use{j}(:)))
+            sesh1.frame_use{j} = imwarp(sesh1.frame_use{j},tform1,'OutputView',...
+                base_ref,'InterpolationMethod','nearest');
+        else
+           sesh1.frame_use{j} = nan_frame_use;
+        end
+        if ~isnan(sum(sesh1.frame_use_1st{j}(:)))
+            sesh1.frame_use_1st{j} = imwarp(sesh1.frame_use_1st{j},tform1,'OutputView',...
+                base_ref,'InterpolationMethod','nearest');
+        else
+           sesh1.frame_use_1st{j} = nan_frame_use; 
+        end
+        if ~isnan(sum(sesh1.frame_use_2nd{j}(:)))
+            sesh1.frame_use_2nd{j} = imwarp(sesh1.frame_use_2nd{j},tform1,'OutputView',...
+                base_ref,'InterpolationMethod','nearest');
+        else
+            sesh1.frame_use_2nd{j} = nan_frame_use;
+        end
+    end
+    disp('Registering 2nd session to base session')
+    base_ref = imref2d(size(sesh1.frame_use{1}));
+    for j = 1: size(sesh1.frame_use(:))
+        disp(['Registering bin ' num2str(j) ' of ' num2str(length(sesh1.frame_use(:)))])
+        if ~isnan(sum(sesh2.frame_use{j}(:)))
+            sesh2.frame_use{j} = imwarp(sesh2.frame_use{j},tform,'OutputView',...
+                base_ref,'InterpolationMethod','nearest');
+        else
+           sesh2.frame_use{j} = nan_frame_use;
+        end
+        if ~isnan(sum(sesh2.frame_use_1st{j}(:)))
+            sesh2.frame_use_1st{j} = imwarp(sesh2.frame_use_1st{j},tform,'OutputView',...
+                base_ref,'InterpolationMethod','nearest');
+        else
+           sesh2.frame_use_1st{j} = nan_frame_use; 
+        end
+        if ~isnan(sum(sesh2.frame_use_2nd{j}(:)))
+            sesh2.frame_use_2nd{j} = imwarp(sesh2.frame_use_2nd{j},tform,'OutputView',...
+                base_ref,'InterpolationMethod','nearest');
+        else
+            sesh2.frame_use_2nd{j} = nan_frame_use;
+        end
+    end
+end
 
 %% Select region to exclude (in this case, where we get traveling waves)
 % x_exclude = 325:image_xpix; % in pixels
 % y_exclude = 300:image_ypix;
 % exclude = zeros(size(sesh1.frame_use{1}));
 % exclude(y_exclude,x_exclude) = ones(length(y_exclude),length(x_exclude));
+
+%% Remove extra variables
+% rm_cell = {'AvgFrame_DF' 'AvgFrame_DF_1st' 'AvgFrame_DF_1st_smooth' ...
+%     'AvgFrame_DF_2nd' 'AvgFrame_DF_2nd_smooth' 'AvgFrame_DF_smooth' ...
+% 'AvgFrame_z_1st_smooth' 'AvgFrame_z_2nd_smooth' 'AvgFrame_z_smooth'};
+% sesh1 = rmfield(sesh1,rm_cell);
+% sesh2 = rmfield(sesh2,rm_cell);
 
 %% Calculate it out
 % Get resistor weighted occupancy
