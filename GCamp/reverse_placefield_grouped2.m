@@ -17,6 +17,9 @@
 % sessions.
 % 7) Make it so session 1 can also be rotated, currently only session 2 can
 % be rotated...
+% 8)*** Make it so I can look at 1st half only of combined sessions - will
+% need to add in a time filter...want to compare square days to adjacent
+% square sessions only, ditto for octagons, etc.
 
 clear_all_s
 close all
@@ -61,13 +64,15 @@ elseif rot_overwrite == 1
 end
 
 %% 1) Get working folder location for both sessions and load data in
-analysis_day(1) = 4; analysis_session(1) = 1;
-analysis_day(2) = 4; analysis_session(2) = 2;
+analysis_day(1) = 7; analysis_session(1) = 1;
+analysis_day(2) = 6; analysis_session(2) = 1;
 
 session_ref_path = 'J:\GCamp Mice\Working\2env\session_ref.mat';
 square_sesh_path = 'J:\GCamp Mice\Working\2env\square_sessions.mat';
 octagon_sesh_path = 'J:\GCamp Mice\Working\2env\octagon_sessions.mat';
+registration_file = 'J:\GCamp Mice\Working\2env\RegistrationInfoX.mat';
 load(session_ref_path); load(square_sesh_path); load(octagon_sesh_path);
+load(registration_file);
 
 for j=1:2
     if strcmpi(day(analysis_day(j)).session(analysis_session(j)).arena,'square')
@@ -80,37 +85,6 @@ for j=1:2
         sesh(j).movie_folder = octagon_sessions(index).movie_folder;
     end
 end
-
-% Hardcode these while debugging, otherwise use gui folder select below.
-% sesh(1).folder = 'J:\GCamp Mice\Working\2env\Working\11_19_2014\1 - 2env square left 201B\Working';
-% sesh(1).movie_folder = 'J:\GCamp Mice\Working\2env\Working\11_19_2014\1 - 2env square left 201B\Working';
-
-% sesh(1).folder = 'J:\GCamp Mice\Working\2env\11_23_2014\Working\session1\square left';
-% sesh(1).movie_folder = 'J:\GCamp Mice\Working\2env\11_23_2014\Working';
-% sesh(2).folder = 'J:\GCamp Mice\Working\2env\11_24_2014\Working\1 - square right 180';
-% sesh(2).movie_folder = 'J:\GCamp Mice\Working\2env\11_24_2014\Working';
-% registration_file = 'J:\GCamp Mice\Working\2env\11_23_2014\Working\session1\square left\RegistrationInfoX.mat';
-
-% sesh(1).folder = 'J:\GCamp Mice\Working\2env\11_25_2014\1 - 2env square left 201B\Working';
-% sesh(2).folder = 'J:\GCamp Mice\Working\2env\11_25_2014\2 - 2env square right 90CCW 201B\Working';
-
-% sesh(1).folder = 'J:\GCamp Mice\Working\2env\11_26_2014\1 - 2env octagon right 201B\Working';
-% sesh(2).folder = 'J:\GCamp Mice\Working\2env\11_26_2014\2 - 2 env octagon mid 201B\Working';
-
-% sesh(1).folder = 'J:\GCamp Mice\Working\2env\Working\11_22_2014\2 - 2env square mid 90CW 201B\Working';
-% sesh(1).movie_folder = 'J:\GCamp Mice\Working\2env\Working\11_22_2014\2 - 2env square mid 90CW 201B\Working';
-% sesh(2).folder = 'J:\GCamp Mice\Working\2env\11_23_2014\Working\session1\square left';
-% sesh(2).movie_folder = 'J:\GCamp Mice\Working\2env\11_23_2014\Working';
-% registration_file = 'J:\GCamp Mice\Working\2env\Working\11_22_2014\2 - 2env square mid 90CW 201B\Working\RegistrationInfoX.mat';
-
-% sesh(2).folder = 'J:\GCamp Mice\Working\2env\11_23_2014\Working\session2\octagon right';
-% sesh(2).movie_folder = 'J:\GCamp Mice\Working\2env\11_23_2014\Working';
-% sesh(2).movie_folder = 'J:\GCamp Mice\Working\2env\11_23_2014\Working';
-% sesh(1).folder = 'J:\GCamp Mice\Working\2env\Working\11_19_2014\1 - 2env square left 201B\Working';
-% sesh(2).folder = 'J:\GCamp Mice\Working\2env\Working\11_19_2014\2 - 2env square mid 201B\Working';
-% sesh(1).movie_folder = 'J:\GCamp Mice\Working\2env\Working\11_19_2014\1 - 2env square left 201B\Working';
-% sesh(2).movie_folder = 'J:\GCamp Mice\Working\2env\Working\11_19_2014\2 - 2env square mid 201B\Working';
-
 
 userprofile = getenv('USERPROFILE');
 calib_file = [userprofile '\Dropbox\Imaging Project\MATLAB\tracking\2env arena calibration\arena_distortion_hack.mat'];
@@ -130,17 +104,23 @@ end
 % Load Registration File if there
 for j = 1:2
     if exist('registration_file','var')
-        load(registration_file)
+%         load(registration_file)
         %%% INSERT FUNCTION TO GET APPRPROPRIATE INDEX TO USE HERE!!!
-        tform = RegistrationInfoX.tform;
-        reg_pix_exclude = RegistrationInfoX.exclude_pixels;
+        clear temp
+        for k = 1:size(RegistrationInfoX,2); 
+            temp(k) = strcmpi([sesh(j).folder '\ICmovie_min_proj.tif'], ...
+                RegistrationInfoX(k).register_file);
+        end
+        tform_use = RegistrationInfoX(temp).tform;
+        reg_pix_exclude = RegistrationInfoX(temp).exclude_pixels;
     else
         RegistrationInfoX = [];
-        tform = [];
+        tform_use = [];
         reg_pix_exclude = [];
     end
-    tform(j).tform = tform;
+    tform(j).tform = tform_use;
     tform(j).reg_pix_exclude = reg_pix_exclude;
+    tform(j).base_ref = imref2d(size(imread(RegistrationInfoX(temp).base_file)));
 end
 %% 2) run assign_occupancy_grid if not already done, plot for both sessions
 % and compare to make sure same number of bins are in each.
@@ -214,11 +194,13 @@ load([sesh(1).folder '\reverse_placefields_ChangeMovie' rot_append '.mat'],'AvgF
 
 % Pixels to exclude from RVP analysis! (e.g. due to traveling waves, motion
 % artifacts, etc.)
-num_x_pixels = size(AvgFrame_DF{1},2);
-num_y_pixels = size(AvgFrame_DF{1},1);
+AvgFrame_DF_reg = imwarp(AvgFrame_DF{1},tform(1).tform,'OutputView',...
+    tform(1).base_ref,'InterpolationMethod','nearest');
+num_x_pixels = size(AvgFrame_DF_reg,2);
+num_y_pixels = size(AvgFrame_DF_reg,1);
 x_exclude = 325:num_x_pixels; % in pixels
 y_exclude = 300:num_y_pixels;
-exclude = zeros(size(AvgFrame_DF{1}));
+exclude = zeros(size(AvgFrame_DF_reg));
 exclude(y_exclude,x_exclude) = ones(length(y_exclude),length(x_exclude));
 % Exclude pixels due to registration
 for j = 1:2

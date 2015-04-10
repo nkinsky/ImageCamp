@@ -61,12 +61,13 @@ elseif rot_overwrite == 1
 end
 
 %% 1) Get working folder location for both sessions and load data in
-analysis_day(1) = 1; analysis_session(1) = 1;
-analysis_day(2) = 1; analysis_session(2) = 2;
+analysis_day(1) = 4; analysis_session(1) = 2;
+analysis_day(2) = 5; analysis_session(2) = 1;
 
 session_ref_path = 'J:\GCamp Mice\Working\2env\session_ref.mat';
 square_sesh_path = 'J:\GCamp Mice\Working\2env\square_sessions.mat';
 octagon_sesh_path = 'J:\GCamp Mice\Working\2env\octagon_sessions.mat';
+registration_file 
 load(session_ref_path); load(square_sesh_path); load(octagon_sesh_path);
 
 for j=1:2

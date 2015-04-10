@@ -1,4 +1,4 @@
-function [ ] = reverse_placefield4(folder, speed_thresh, grid_info, movie_type, rot_overwrite, movie_loc)
+function [ ] = reverse_placefield4(folder, speed_thresh, grid_info, movie_type, rot_overwrite, movie_loc, general_filter)
 % reverse_placefield3(folder, speed_thresh, Xedges, Yedges, cmperbin)
 % Version 4 - updated all the RVP plots and Occmap so that they match the
 % occupancy grid when plotted next to it and doing things like rotating
@@ -25,6 +25,8 @@ function [ ] = reverse_placefield4(folder, speed_thresh, grid_info, movie_type, 
 % movie_loc :   if specified, this points to the movie directory.
 % Otherwise, it is assumed that the movie is located in the working
 % directory with everything else.
+% general_filter: general filter to exclude certain frames in the
+% analysis!!!
 
 %%% Why are there values of -1 in a lot of places in AvgFrame_DF???
 %%% specifically, in values (1:10)
@@ -132,6 +134,12 @@ else
     % Not necessary because this has already been run in arena align...
     [~, ~, ~, index_scopix_valid] = AlignImagingToTracking_NK(movie_path, ...
        SR, x, y, t, MoMtime); % get index_scopix_valid
+   
+   % create general_filter if not added
+   
+   if ~exist('general_filter','var')
+      general_filter = ones(size(x)); 
+   end
     
     %% 3) Go through frame by frame and figure out which part of the arena the
     % mouse is in
@@ -150,7 +158,7 @@ else
     
     x_pos_valid = (x >= min(Xedges) & x <= max(Xedges));
     y_pos_valid = (y >= min(Yedges) & y <= max(Yedges));
-    pos_valid = x_pos_valid & y_pos_valid;
+    pos_valid = x_pos_valid & y_pos_valid & general_filter;
     
     %% 4) For each area, add up all the active frames and average
     

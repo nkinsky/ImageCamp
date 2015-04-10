@@ -1,4 +1,4 @@
-function [h1, corrs] = shuffle_ratemaps2(folder1, folder2, analysis_type, num_shuffles, rot_overwrite, exclude, tform1, tform2)
+function [h1, corrs] = shuffle_ratemaps2(folder1, folder2, analysis_type, num_shuffles, rot_overwrite, exclude, tform)
 % corrs = shuffle_ratemaps(folder1, folder2, num_shuffles, rot_overwrite, exclude, tform)
 % This function takes two sessions and calculates the correlation between
 % their reverse place fiels across the whole arena, as well as calculating correlation values based on shuffled data
@@ -103,12 +103,12 @@ image_ypix = size(sesh1.frame_use{1},1);
 
 % keyboard
 
-%% Register 2nd session images to 1st if necessary
-nan_frame_use = ones(size(sesh1.frame_use{1}))*nan;
+%% Register images to base session
+nan_frame_use = ones(tform(1).base_ref.ImageSize)*nan;
 if exist('tform','var') && ~isempty(tform)
-    tform1 = tform(1).tform; tform2 = tform(2).tform;
+    tform1 = tform(1).tform; tform2 = tform(2).tform; base_ref = tform(1).base_ref;
     disp('Registering 1nd session to base session')
-    base_ref = imref2d(size(sesh1.frame_use{1}));
+%     base_ref = imref2d(size(sesh1.frame_use{1}));
     for j = 1: size(sesh1.frame_use(:))
         disp(['Registering bin ' num2str(j) ' of ' num2str(length(sesh1.frame_use(:)))])
         if ~isnan(sum(sesh1.frame_use{j}(:)))
@@ -131,23 +131,23 @@ if exist('tform','var') && ~isempty(tform)
         end
     end
     disp('Registering 2nd session to base session')
-    base_ref = imref2d(size(sesh1.frame_use{1}));
+%     base_ref = imref2d(size(sesh1.frame_use{1}));
     for j = 1: size(sesh1.frame_use(:))
         disp(['Registering bin ' num2str(j) ' of ' num2str(length(sesh1.frame_use(:)))])
         if ~isnan(sum(sesh2.frame_use{j}(:)))
-            sesh2.frame_use{j} = imwarp(sesh2.frame_use{j},tform,'OutputView',...
+            sesh2.frame_use{j} = imwarp(sesh2.frame_use{j},tform2,'OutputView',...
                 base_ref,'InterpolationMethod','nearest');
         else
            sesh2.frame_use{j} = nan_frame_use;
         end
         if ~isnan(sum(sesh2.frame_use_1st{j}(:)))
-            sesh2.frame_use_1st{j} = imwarp(sesh2.frame_use_1st{j},tform,'OutputView',...
+            sesh2.frame_use_1st{j} = imwarp(sesh2.frame_use_1st{j},tform2,'OutputView',...
                 base_ref,'InterpolationMethod','nearest');
         else
            sesh2.frame_use_1st{j} = nan_frame_use; 
         end
         if ~isnan(sum(sesh2.frame_use_2nd{j}(:)))
-            sesh2.frame_use_2nd{j} = imwarp(sesh2.frame_use_2nd{j},tform,'OutputView',...
+            sesh2.frame_use_2nd{j} = imwarp(sesh2.frame_use_2nd{j},tform2,'OutputView',...
                 base_ref,'InterpolationMethod','nearest');
         else
             sesh2.frame_use_2nd{j} = nan_frame_use;
