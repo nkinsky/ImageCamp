@@ -64,8 +64,8 @@ elseif rot_overwrite == 1
 end
 
 %% 1) Get working folder location for both sessions and load data in
-analysis_day(1) = 7; analysis_session(1) = 1;
-analysis_day(2) = 6; analysis_session(2) = 1;
+analysis_day(1) = 2; analysis_session(1) = 1;
+analysis_day(2) = 2; analysis_session(2) = 2;
 
 session_ref_path = 'J:\GCamp Mice\Working\2env\session_ref.mat';
 square_sesh_path = 'J:\GCamp Mice\Working\2env\square_sessions.mat';
@@ -163,7 +163,7 @@ end
 %% 2.75) Check your work
 figure
 for j = 1:2
-    subplot(1,2,j)
+    subplot(2,2,j)
     plot_occupancy_grid(sesh(j).x, sesh(j).y, sesh(j).grid_info.Xedges, ...
         sesh(j).grid_info.Yedges);
     xlim([min(sesh(j).grid_info.Xedges) max(sesh(j).grid_info.Xedges)]);
@@ -171,9 +171,14 @@ for j = 1:2
     title(['Session ' num2str(j) ' Occupancy Grid'])
     %%% PLOT AVIs here for checking!
 end
+for j = 1:2
+   subplot(2,2,j+2)
+   rot_use = get_rot_from_path(sesh(j).folder, rot_overwrite);
+   plot_arena_rot(sesh(j).folder,rot_use)
+end
 
 disp('Here is your chance to compare occupancy grids')
-% keyboard
+keyboard
 
 %% 3) run reverse_placefield4
 
@@ -190,12 +195,11 @@ close all
 disp('CALCULATING CORRELATIONS AND SHUFFLING DATA')
 
 % Pixels to exclude
-load([sesh(1).folder '\reverse_placefields_ChangeMovie' rot_append '.mat'],'AvgFrame_DF');
+load([sesh(1).folder '\reverse_placefields_ChangeMovie' rot_append '.mat'],'AvgFrame_DF'); % Is this necessary?
 
 % Pixels to exclude from RVP analysis! (e.g. due to traveling waves, motion
 % artifacts, etc.)
-AvgFrame_DF_reg = imwarp(AvgFrame_DF{1},tform(1).tform,'OutputView',...
-    tform(1).base_ref,'InterpolationMethod','nearest');
+AvgFrame_DF_reg = ones(tform(1).base_ref.ImageSize);
 num_x_pixels = size(AvgFrame_DF_reg,2);
 num_y_pixels = size(AvgFrame_DF_reg,1);
 x_exclude = 325:num_x_pixels; % in pixels

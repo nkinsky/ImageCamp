@@ -92,5 +92,5 @@ for j = 1:size(session,2)
     title(['Session ' num2str(j) ' Occupancy Grid'])
 end
 
-keyboard
+% keyboard
 end
