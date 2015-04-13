@@ -21,8 +21,9 @@
 % need to add in a time filter...want to compare square days to adjacent
 % square sessions only, ditto for octagons, etc.
 
-clear_all_s
+% clear_all_s
 close all
+clearvars -except j ind_use
 
 start_time = tic;
 
@@ -64,8 +65,8 @@ elseif rot_overwrite == 1
 end
 
 %% 1) Get working folder location for both sessions and load data in
-analysis_day(1) = 2; analysis_session(1) = 1;
-analysis_day(2) = 2; analysis_session(2) = 2;
+analysis_day(1) = 5; analysis_session(1) = 3;
+analysis_day(2) = 5; analysis_session(2) = 4;
 
 session_ref_path = 'J:\GCamp Mice\Working\2env\session_ref.mat';
 square_sesh_path = 'J:\GCamp Mice\Working\2env\square_sessions.mat';

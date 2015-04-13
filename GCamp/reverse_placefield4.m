@@ -1,4 +1,4 @@
-function [ ] = reverse_placefield4(folder, speed_thresh, grid_info, movie_type, rot_overwrite, movie_loc, general_filter)
+function [ ] = reverse_placefield4(folder, speed_thresh, grid_info, movie_type, rot_overwrite, movie_loc, gen_filter_flag)
 % reverse_placefield3(folder, speed_thresh, Xedges, Yedges, cmperbin)
 % Version 4 - updated all the RVP plots and Occmap so that they match the
 % occupancy grid when plotted next to it and doing things like rotating

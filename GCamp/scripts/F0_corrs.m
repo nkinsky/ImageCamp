@@ -20,6 +20,8 @@ y_exclude = 300:num_y_pixels;
 exclude_gen = zeros(base_ref.ImageSize);
 exclude_gen(y_exclude,x_exclude) = ones(length(y_exclude),length(x_exclude));
 
+%%% Do this with the octagon sessions also! Or maybe with both!!!
+
 F0_corr = zeros(size(square_sessions,2)); F0_var_corr = F0_corr;
 for j = 1:size(square_sessions,2)
     if exist([square_sessions(j).folder '\F0_ChangeMovie.mat'],'file')
