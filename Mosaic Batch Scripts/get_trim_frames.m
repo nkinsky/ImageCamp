@@ -4,8 +4,8 @@ function [ trim_frames ] = get_trim_frames( bad_frames, last_frame )
 %   movie to eliminate bad frames, keeping the movie the same length as the
 %   original.  Will duplicate some frames.
 
-bad_frames = [2727 8007 20480 20884 22148 23618];
-last_frame = 25041;
+% bad_frames = [2727 8007 20480 20884 22148 23618];
+% last_frame = 25041;
 
 % Re-sort bad frames if not in ascending order and spit out warning!
 if sum(bad_frames ~= sort(bad_frames)) > 0
