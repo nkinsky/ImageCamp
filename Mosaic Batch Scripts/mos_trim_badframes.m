@@ -15,7 +15,7 @@ mosaic.initialize();
 %% Step 1: Select Files to load, if multiple they will automatically be
 % concatenated
 if ~exist('movie_path', 'var')
-    [filename, pathname] = uigetfile({'*.txt;*.xml', 'Miniscope files'},'Select File to load');
+    [filename, pathname] = uigetfile({'*.mat', 'Object Files'},'Select File to load');
     
     if iscell(filename)
         num_files = size(filename,2);
