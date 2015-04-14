@@ -21,9 +21,12 @@
 % need to add in a time filter...want to compare square days to adjacent
 % square sessions only, ditto for octagons, etc.
 
+% Clear workspace if running a batch script
+if batch_run == 0
 % clear_all_s
 close all
 clearvars -except j ind_use
+end
 
 start_time = tic;
 
@@ -36,7 +39,7 @@ manual_enable = 1
 % Set to 1 if you wish to analyze data that has intentionally NOT been 
 % rotated such that the local features align.
 analysis_type = 2; % 1 if you want to used smoothed data, 0 if not
-rot_overwrite = 0; 
+rot_overwrite = 1; 
 num_shuffles = 100;
 
 smooth_type = {'_DF_no_smooth' '_DF_smooth', '_z_smooth'};
@@ -65,7 +68,7 @@ elseif rot_overwrite == 1
 end
 
 %% 1) Get working folder location for both sessions and load data in
-analysis_day(1) = 5; analysis_session(1) = 3;
+analysis_day(1) = 4; analysis_session(1) = 3;
 analysis_day(2) = 5; analysis_session(2) = 4;
 
 session_ref_path = 'J:\GCamp Mice\Working\2env\session_ref.mat';
@@ -76,15 +79,9 @@ load(session_ref_path); load(square_sesh_path); load(octagon_sesh_path);
 load(registration_file);
 
 for j=1:2
-    if strcmpi(day(analysis_day(j)).session(analysis_session(j)).arena,'square')
-        index = day(analysis_day(j)).session(analysis_session(j)).index;
-        sesh(j).folder = square_sessions(index).folder;
-        sesh(j).movie_folder = square_sessions(index).movie_folder;
-    elseif strcmpi(day(analysis_day(j)).session(analysis_session(j)).arena,'octagon')
-        index = day(analysis_day(j)).session(analysis_session(j)).index;
-        sesh(j).folder = octagon_sessions(index).folder;
-        sesh(j).movie_folder = octagon_sessions(index).movie_folder;
-    end
+    [ sesh(j).folder, sesh(j).movie_folder ] = get_sesh_folders( ...
+        day(analysis_day(j)).session(analysis_session(j)),...
+         square_sessions, octagon_sessions );   
 end
 
 userprofile = getenv('USERPROFILE');
@@ -103,25 +100,16 @@ for j = 1:2
 end
 
 % Load Registration File if there
+% tform = struct([]);
 for j = 1:2
     if exist('registration_file','var')
-%         load(registration_file)
-        %%% INSERT FUNCTION TO GET APPRPROPRIATE INDEX TO USE HERE!!!
-        clear temp
-        for k = 1:size(RegistrationInfoX,2); 
-            temp(k) = strcmpi([sesh(j).folder '\ICmovie_min_proj.tif'], ...
-                RegistrationInfoX(k).register_file);
-        end
-        tform_use = RegistrationInfoX(temp).tform;
-        reg_pix_exclude = RegistrationInfoX(temp).exclude_pixels;
+        [tform_struct] = get_reginfo( sesh(j).folder, RegistrationInfoX );
     else
-        RegistrationInfoX = [];
-        tform_use = [];
-        reg_pix_exclude = [];
+        tform_struct.RegistrationInfoX = [];
+        tform_struct.tform_use = [];
+        tform_struct.reg_pix_exclude = [];
     end
-    tform(j).tform = tform_use;
-    tform(j).reg_pix_exclude = reg_pix_exclude;
-    tform(j).base_ref = imref2d(size(imread(RegistrationInfoX(temp).base_file)));
+    tform(j) = tform_struct;
 end
 %% 2) run assign_occupancy_grid if not already done, plot for both sessions
 % and compare to make sure same number of bins are in each.
@@ -170,6 +158,10 @@ for j = 1:2
     xlim([min(sesh(j).grid_info.Xedges) max(sesh(j).grid_info.Xedges)]);
     ylim([min(sesh(j).grid_info.Yedges) max(sesh(j).grid_info.Yedges)]);
     title(['Session ' num2str(j) ' Occupancy Grid'])
+    if exist('analysis_day','var') && exist('analysis_session','var')
+        title(['Day ' num2str(analysis_day(j)) ' Session ' num2str(analysis_session(j))])
+    end
+            
     %%% PLOT AVIs here for checking!
 end
 for j = 1:2
@@ -179,7 +171,7 @@ for j = 1:2
 end
 
 disp('Here is your chance to compare occupancy grids')
-keyboard
+% keyboard
 
 %% 3) run reverse_placefield4
 

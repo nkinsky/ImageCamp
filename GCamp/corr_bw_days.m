@@ -1,4 +1,4 @@
-function [ corr_1st_2nd] = corr_bw_days(rate_map1, rate_map2, tform, exclude)
+function [ corr_1st_2nd] = corr_bw_days(rate_map1, rate_map2, exclude)
 %[corr_1st_2nd] = corr_bw_sessions(rate_map1, rate_map2) 
 %   Get correlation between rate maps between two sessions.  
 %
@@ -7,10 +7,6 @@ function [ corr_1st_2nd] = corr_bw_days(rate_map1, rate_map2, tform, exclude)
 %   place fields, a population vector of firing rates at a given place like
 %   a reward location, etc.).  They are currently set as cells, and must
 %   have the same x/y dimensions. 
-%
-%   tform is an affine transfrom that takes the image data from the 2nd
-%   session (rate_map2) and registers it onto the 1st session (rate_map1)
-%   so that you can make comparisons...
 %
 %   exclude is a binary vector of indices you want to exclude from using in
 %   your calculation of correlations.  Could be where there is blood, or
@@ -33,8 +29,8 @@ end
 corr_1st_2nd = zeros(size(rate_map1));
 for j=1:NumYBins
     for i = 1:NumXBins
-        rate_map2{j,i} = imwarp(rate_map2{j,i},tform,'OutputView',...
-    imref2d(size(rate_map1{j,i})),'InterpolationMethod','nearest');
+%         rate_map2{j,i} = imwarp(rate_map2{j,i},tform,'OutputView',...
+%     imref2d(size(rate_map1{j,i})),'InterpolationMethod','nearest');
         temp = corrcoef(rate_map1{j,i}(include),rate_map2{j,i}(include));
         corr_1st_2nd(j,i) = temp(1,2);
     end

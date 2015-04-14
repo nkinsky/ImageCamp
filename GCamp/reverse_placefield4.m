@@ -103,6 +103,7 @@ else
     t = pos_align.time_interp; % Plexon time interpolated back to inscopix frame rate/timestamps
     load('Pos.mat','MoMtime'); % Get time that mouse arrives on maze.
     
+    
     % Calculate speed from standardized tracking data
     dx = diff(x);
     dy = diff(y);
@@ -135,8 +136,7 @@ else
     [~, ~, ~, index_scopix_valid] = AlignImagingToTracking_NK(movie_path, ...
        SR, x, y, t, MoMtime); % get index_scopix_valid
    
-   % create general_filter if not added
-   
+   % create general_filter to include all values if not added
    if ~exist('general_filter','var')
       general_filter = ones(size(x)); 
    end

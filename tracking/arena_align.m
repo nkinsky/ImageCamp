@@ -79,16 +79,6 @@ load(calib_file);
     s2.time_interp, s2.MoMtime);
 
 
-
-% If xrestrict isn't specified, include everything
-if ~exist('xrestrict','var') || isempty(xrestrict)
-    xrestrict = [min([min(s1.x) min(s2.x)]) max([max(s1.x) max(s2.x)])];
-    yrestrict = [min([min(s1.y) min(s2.y)]) max([max(s1.y) max(s2.y)])];
-    [xrestrict, yrestrict] = tracking_to_cm_std( xrestrict, yrestrict, ...
-    pos_corr(ind_use).lm_x, pos_corr(ind_use).lm_y, Pix2Cm, corr_flag1, 0);
-
-end
-
 % keyboard
 
 %% Send 1st session to undistorted coordinates
@@ -98,6 +88,14 @@ ind_use = arrayfun(@(a) ~isempty(regexpi(sesh(1).folder,a.arena)),pos_corr) & ..
 [ s1.x_corr, s1.y_corr ] = tracking_to_cm_std( s1.x, s1.y, ...
     pos_corr(ind_use).lm_x, pos_corr(ind_use).lm_y, Pix2Cm, corr_flag1, limits_percent);
 
+% If xrestrict isn't specified, include everything
+if ~exist('xrestrict','var') || isempty(xrestrict)
+    xrestrict = [min([min(s1.x) min(s2.x)]) max([max(s1.x) max(s2.x)])];
+    yrestrict = [min([min(s1.y) min(s2.y)]) max([max(s1.y) max(s2.y)])];
+    [xrestrict, yrestrict] = tracking_to_cm_std( xrestrict, yrestrict, ...
+    pos_corr(ind_use).lm_x, pos_corr(ind_use).lm_y, Pix2Cm, corr_flag1, 0);
+
+end
 
 pos_restrict1 = s1.x_corr >= xrestrict(1) & s1.x_corr <= xrestrict(2) ...
     & s1.y_corr >= yrestrict(1) & s1.y_corr <= yrestrict(2);
@@ -111,6 +109,8 @@ y1_use = s1.y_corr(pos_restrict1);
 
 x_orig = xlims(1);
 y_orig = ylims(1);
+
+
 
 %% Send 2nd session to undistorted coordinates, rotate, scale, and align with 1st session
 % Get appropriate indices to use in pos_corr for grabbing linear models
@@ -181,7 +181,7 @@ plot_arena_rot(avi_path1, 0); title('Session 1 Un-rotated')
 subplot(2,3,6)
 plot_arena_rot(avi_path2, rot); title('Session 2 Rotated')
 
-keyboard
+% keyboard
 
 %% Manually adjust if necessary
 if manual_enable == 1

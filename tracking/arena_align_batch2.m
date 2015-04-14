@@ -42,16 +42,16 @@ elseif rot_overwrite == 1
     save_file = 'occupancy_grid_info_no_rotate.mat';
 end
 
-cd(session(1).folder)
-session(1).pos_align = importdata(import_file);
-if exist('auto_restrict','var') && auto_restrict == 1
+try
+    cd(session(1).folder)
+    session(1).pos_align = importdata(import_file);
     xrestrict = [min(session(1).pos_align.x) - restrict_buffer ...
         max(session(1).pos_align.x) + restrict_buffer];
     yrestrict = [min(session(1).pos_align.y) - restrict_buffer...
         max(session(1).pos_align.y) + restrict_buffer]  ;
-else
-xrestrict = [];
-yrestrict = [];
+catch
+    xrestrict = [];
+    yrestrict = [];
 end
 
 for j = 2:size(session,2);
@@ -71,7 +71,7 @@ session(1).pos_align = importdata(import_file);
 %% Compare occupancy grids
 
 [session(1).grid_info] = assign_occupancy_grid(session(1).pos_align.x, ...
-    session(1).pos_align.y, cmperbin, 0);
+    session(1).pos_align.y, cmperbin, auto_restrict);
 cmperbin = session(1).grid_info.cmperbin; % Update cmperbin if changed
 grid_info = session(1).grid_info;
 save(save_file, 'grid_info');
@@ -86,7 +86,7 @@ end
 % Plot out to check!
 figure
 for j = 1:size(session,2)
-    subplot(2,4,j)
+    subplot(3,4,j)
     plot_occupancy_grid(session(j).pos_align.x, session(j).pos_align.y, ...
         session(j).grid_info.Xedges, session(j).grid_info.Yedges);
     title(['Session ' num2str(j) ' Occupancy Grid'])
