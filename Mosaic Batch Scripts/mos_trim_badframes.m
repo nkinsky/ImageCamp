@@ -34,8 +34,6 @@ end
 
 badframe_movie = mosaic.loadObjects(movie_path);
 
-keyboard
-
 %% Step 3: Trim Movie
 
 % Get frames to trim
