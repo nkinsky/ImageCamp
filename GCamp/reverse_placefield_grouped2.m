@@ -1,28 +1,20 @@
 %% Reverse placefield wrapper function
 
 %%% TO-DO
-% 1) Fix alignment - still off when I have to align between single arena
-% and combined arena...manually draw box? Use 11/22 2nd session to 11/23
-% 1st session to troubleshoot
-% 2) Verify that 1st to 2nd half rvps are being calculated properly for
-% combined sessions
-% 3) Figure out what to do with xrestrict and yrestrict -- currently they
-% are just hacked, and hardcoded as empty matrices in section 2 below
-% 4) Adjust shuffle function to reduce RAM usage - only load sessions right
+% 1) Adjust rvp4 to spit out only AvgFrame, F0, and var - AvgFrame can be
+% either z_smooth or DF_smooth based on a flag.
+% 2) Add in re-mapping control - compare 1st to 2nd half correlations to
+% interleaved (every alternate 2 minutes, or maybe 1st and 3rd quartile to
+% 2nd and 4th quartile).
+% 2.5) Write smoothing function!!! too much code right now in rvp4!!!
+% 3) (done?)Adjust shuffle function to reduce RAM usage - only load sessions right
 % before you need to use them1
-% 5) Fix arena_align so that it doesn't automatically translate the arenas
-% - just run this once at the beginning of each bin size to get it all
-% aligned by hand.
-% 6) Double check that pos_align and rotate is working correctly for all
-% sessions.
-% 7) Make it so session 1 can also be rotated, currently only session 2 can
-% be rotated...
-% 8)*** Make it so I can look at 1st half only of combined sessions - will
+% 4)(low) Make it so I can look at 1st half only of combined sessions - will
 % need to add in a time filter...want to compare square days to adjacent
 % square sessions only, ditto for octagons, etc.
 
 % Clear workspace if running a batch script
-if batch_run == 0
+if ~exist('batch_run','var') || batch_run == 0
 % clear_all_s
 close all
 clearvars -except j ind_use
@@ -39,7 +31,7 @@ manual_enable = 1
 % Set to 1 if you wish to analyze data that has intentionally NOT been 
 % rotated such that the local features align.
 analysis_type = 2; % 1 if you want to used smoothed data, 0 if not
-rot_overwrite = 1; 
+rot_overwrite = 0; 
 num_shuffles = 100;
 
 smooth_type = {'_DF_no_smooth' '_DF_smooth', '_z_smooth'};
@@ -68,9 +60,13 @@ elseif rot_overwrite == 1
 end
 
 %% 1) Get working folder location for both sessions and load data in
-analysis_day(1) = 4; analysis_session(1) = 3;
-analysis_day(2) = 5; analysis_session(2) = 4;
+% You can run this here using hardcoded sessions if you want...
+if ~exist('batch_run','var') || batch_run == 0
+    analysis_day(1) = 4; analysis_session(1) = 1;
+    analysis_day(2) = 4; analysis_session(2) = 2;
+end
 
+% Hardcoded place where your reference files live...
 session_ref_path = 'J:\GCamp Mice\Working\2env\session_ref.mat';
 square_sesh_path = 'J:\GCamp Mice\Working\2env\square_sessions.mat';
 octagon_sesh_path = 'J:\GCamp Mice\Working\2env\octagon_sessions.mat';
@@ -121,24 +117,6 @@ for j = 1:2
     temp = importdata(grid_file);
     sesh(j).grid_info = temp;
 end
-% try 
-%     for j = 1:2
-%     cd(sesh(j).folder);
-%     sesh(j).grid_info = importdata(grid_file); % load occupancy grid info
-%     end
-% catch
-%     disp('Setting scaling based on user input.  NOTE - MAY NOT MATCH FROM SESSION TO SESSION')
-%     
-%     [sesh(1).grid_info] = assign_occupancy_grid(sesh(1).x,sesh(1).y, cmperbin, 0);
-%     cmperbin = sesh(1).grid_info.cmperbin;
-%     
-%     sesh(2).grid_info = sesh(1).grid_info;
-%     % [sesh(2).Xedges, sesh(2).Yedges, cmperbin] = assign_occupancy_grid(sesh(2).x,...
-%     %     sesh(2).y, cmperbin, 1); % Don't allow adjust of grids for session 2...
-% 
-% end
-% Plot out to check!
-
 
 %% 2.5) Load position data
 
@@ -179,7 +157,8 @@ for j = 1:2
     disp(['Running reverse_placefield for session ' num2str(j)]);
     cd(sesh(j).folder);
     reverse_placefield4(sesh(j).folder , speed_thresh, sesh(j).grid_info,...
-        movie_type, rot_overwrite, sesh(j).movie_folder);
+        movie_type, rot_overwrite, sesh(j).movie_folder,...
+        'num_divs_control',8);
 end
 
 %% 4) calculate intersession correlations and plot out for all!

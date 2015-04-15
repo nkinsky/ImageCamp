@@ -1,5 +1,5 @@
-function [ ] = reverse_placefield4(folder, speed_thresh, grid_info, movie_type, rot_overwrite, movie_loc, gen_filter_flag)
-% reverse_placefield3(folder, speed_thresh, Xedges, Yedges, cmperbin)
+function [ ] = reverse_placefield4(folder, speed_thresh, grid_info, movie_type, rot_overwrite, movie_loc, varargin)
+% reverse_placefield3(folder, speed_thresh, grid_info, movie_type, rot_overwrite, movie_loc, ...)
 % Version 4 - updated all the RVP plots and Occmap so that they match the
 % occupancy grid when plotted next to it and doing things like rotating
 % them 90 degrees works properly
@@ -25,11 +25,26 @@ function [ ] = reverse_placefield4(folder, speed_thresh, grid_info, movie_type, 
 % movie_loc :   if specified, this points to the movie directory.
 % Otherwise, it is assumed that the movie is located in the working
 % directory with everything else.
+%
+% ADDITIONAL ARGUMENTS (mush be listed at end in the form
+% "...,argument_name, argument_value, e.g. ...,general_filter,
+% ones(1,1000))
 % general_filter: general filter to exclude certain frames in the
 % analysis!!!
+% method: 'z_smooth' or 'DF_smooth' - if blank, z_smooth is default
+% pass_thresh: number of passes that the mouse needs to make through a 
+% given grid for it to be counted in the final RVP (default = 4)
+% smooth_adj: number of adjacent occupancy bins to include in average RVP 
+% during smoothing (default = 1)
+% num_divs_contol:  Number of divisions to divide your data up to when 
+% comparing 1st and 2nd session correlations... (default = 4)
+% 
 
-%%% Why are there values of -1 in a lot of places in AvgFrame_DF???
-%%% specifically, in values (1:10)
+
+%%% To-do!!! - update this so that I ONLY save the rvps for the whole
+%%% session and then do the correlations for each half within and spit out
+%%% a single correlation value.  Also save the analysis type (smooth, DF,
+%%% or z-smooth? Or save DF_smooth and variance...
 
 %% Note that I need to set up 2ndary scaling empirically for each arena, and not calculate it based on every session...
 
@@ -39,12 +54,7 @@ close all
 % cmperbin = 5.31; % cm per bin for calculating occupancy
 SR = 20; % sample rate in fps
 Pix2Cm = 0.15; % this is for 201b and is a hack until I get this saved in all the PlaceMaps.mat files
-pass_thresh = 4; % number of passes that the mouse needs to make through a given grid for it to be counted in the final RVP
-smooth_adj = 1; % number of adjacent occupancy bins to include in average RVP during smoothing
-% arena_effective_limits = [8 8];
-
-% global limits_percent % Ensures that if I miss this somewhere it carries through
-limits_percent = 5; % input for get_occupancy_limits below.  Tweak to make sure your occupancy maps line up correctly.
+limits_percent = 5; % input for get_occupancy_limits below.  Tweak to make sure your occupancy maps line up correctly. Not sure if this is necessary anymore...
 
 if ~exist('movie_type','var') % Assign movie_type if left blank
     movie_type = 'ICmovie_smooth';
@@ -69,10 +79,32 @@ elseif rot_overwrite == 1
     pos_file = 'pos_corr_to_std_no_rotate.mat';
     save_append = '_no_rotate';
 end
-% Adjust this appropriately if you aren't using dropbox to store all your
-% % files
-% dropbox_path = 'C:\Users\Nat\Dropbox\';
-% calibration_file = [dropbox_path 'Imaging Project\MATLAB\tracking\2env arena calibration\arena_distortion_correction.mat'];
+
+%%  Collect varargins and assign appropriate variables
+% keyboard
+if sum(cellfun(@(a) strcmpi(a,'method'),varargin)) == 1
+    method = varargin{find(cellfun(@(a) strcmpi(a,'method'),varargin)) + 1};
+else
+    method = 'z_smooth';
+end
+
+if sum(cellfun(@(a) strcmpi(a,'pass_thresh'),varargin)) == 1
+    pass_thresh = varargin{find(cellfun(@(a) strcmpi(a,'pass_thresh'),varargin)) + 1};
+else
+    pass_thresh = 4;
+end
+
+if sum(cellfun(@(a) strcmpi(a,'smooth_adj'),varargin)) == 1
+    smooth_adj = varargin{find(cellfun(@(a) strcmpi(a,'smooth_adj'),varargin)) + 1};
+else
+    smooth_adj = 1;
+end
+
+if sum(cellfun(@(a) strcmpi(a,'num_divs_control'),varargin)) == 1
+    num_divs_control = varargin{find(cellfun(@(a) strcmpi(a,'num_divs_control'),varargin)) + 1};
+else
+    num_divs_control = 1;
+end
 
 session_path = folder;
 
@@ -86,7 +118,7 @@ cmperbin = grid_info.cmperbin;
 
 cd(session_path)
 
-if exist(pos_file,'file') ~= 2
+if exist(pos_file,'file') ~= 2 % Get rid of this!! Just spit out a warning!
     disp('YOU NEED TO RUN arena_align before running this function!')
 else
     
@@ -102,7 +134,6 @@ else
     y = pos_align.y;
     t = pos_align.time_interp; % Plexon time interpolated back to inscopix frame rate/timestamps
     load('Pos.mat','MoMtime'); % Get time that mouse arrives on maze.
-    
     
     % Calculate speed from standardized tracking data
     dx = diff(x);
@@ -137,8 +168,11 @@ else
        SR, x, y, t, MoMtime); % get index_scopix_valid
    
    % create general_filter to include all values if not added
-   if ~exist('general_filter','var')
-      general_filter = ones(size(x)); 
+   
+   if sum(cellfun(@(a) strcmpi(a,'general_filter'),varargin)) == 1
+       general_filter = varargin{find(cellfun(@(a) strcmpi(a,'general_filter'),varargin)) + 1};
+   else
+       general_filter = ones(size(x)); 
    end
     
     %% 3) Go through frame by frame and figure out which part of the arena the
@@ -225,7 +259,6 @@ else
     
     end
     
-    valid_length = length(index_scopix_valid);
     % set filter to artificially chop up 1st and 2nd halves of the movie
     first_half = zeros(1,valid_length); second_half = zeros(1,valid_length);
     first_half(1:floor(valid_length/2)) = ones(1,floor(valid_length/2)) & ...
@@ -233,9 +266,12 @@ else
     second_half(floor(valid_length/2)+1:valid_length) = ...
         ones(1,floor(length(floor(valid_length/2)+1:valid_length))) & ...
         pos_valid(floor(valid_length/2)+1:valid_length);
+    [ control1, control2 ] = interleaved_filter( valid_length, num_divs_control );
+    % Set up control filters - interleaved values...
     
     % Set counters
     n = 0; n1 = 0; n2 = 0; counter = 1;
+    c1 = 0; c2 = 0;
     AvgFrame_tot = zeros(XDim,YDim);
     
     % Initialize z-score variables
@@ -243,6 +279,8 @@ else
     [AvgFrame_z{:}] = deal(zeros(size(F0)));
     AvgFrame_z_1st = AvgFrame_z;
     AvgFrame_z_2nd = AvgFrame_z;
+    AvgFrame_z_1c = AvgFrame_z;
+    AvgFrame_z_2c = AvgFrame_z;
     
     tic
     disp('Calculating reverse place-fields...')
@@ -260,17 +298,20 @@ else
             AvgFrame_DF_2nd{j,i} = zeros(XDim,YDim);
             AvgFrame{j,i} = zeros(XDim,YDim);
             AvgFrame_DF{j,i} = zeros(XDim,YDim);
-            AvgFrame_DF2{j,i} = zeros(XDim,YDim);
+            AvgFrame_1c{j,i} = zeros(XDim,YDim);
+            AvgFrame_DF_1c{j,i} = zeros(XDim,YDim);
+            AvgFrame_2c{j,i} = zeros(XDim,YDim);
+            AvgFrame_DF_2c{j,i} = zeros(XDim,YDim);
             
             % Define Active Frames
             ActiveFrames = find(Xbin == i & Ybin == j & vel_filter & pos_valid);
             ActiveFrames_1st = find(Xbin == i & Ybin == j & first_half & vel_filter & pos_valid); % with first half filter
-            ActiveFrames_2nd = find(Xbin == i & Ybin == j & second_half & vel_filter & pos_valid); % with 2nd half filter
+            ActiveFrames_2nd = find(Xbin == i & Ybin == j & second_half & vel_filter & pos_valid);
+            ActiveFrames_1c = find(Xbin == i & Ybin == j & control1 & vel_filter & pos_valid); % with first half filter
+            ActiveFrames_2c = find(Xbin == i & Ybin == j & control2 & vel_filter & pos_valid);% with 2nd half filter
             num_ActiveFrames(j,i) = length(ActiveFrames); % get number of frames active in each bin
             num_passes(j,i) = sum(diff(ActiveFrames) ~= 1) + 1;
             
-            % Sum up active frames
-%             temp_all = []; temp_1 = []; temp_2 = [];
                 for k = 1:length(ActiveFrames)
                     
                     if strcmpi(movie_type,'ICmovie_smooth');
@@ -283,47 +324,63 @@ else
                         tempFrame(tempFrame2 >= 0) = tempFrame2(tempFrame2 >= 0); % Get only positive values for ChangeMovie
                     end
                     AvgFrame{j,i} = AvgFrame{j,i} + tempFrame;
-%                     temp_all = [temp_all tempFrame(:)];
-                    %                 tempFrame = double(h5read('ICmovie_smooth.h5','/Object',...
-                    %                     [1 1 ActiveFrames(k) + start_skip 1],[XDim YDim 1 1]));
-                    %                 AvgFrame{j,i} = AvgFrame{j,i} + tempFrame;
+                    
+                    % Get 1st and 2nd half rvps for within session
+                    % comparison
                     if sum(ActiveFrames_1st == ActiveFrames(k)) == 1
                         AvgFrame_1st{j,i} = AvgFrame_1st{j,i} + tempFrame;
-%                         temp_1 = [temp_1 tempFrame(:)];
+
                         n1 = n1 + 1;
                     elseif sum(ActiveFrames_2nd == ActiveFrames(k)) == 1
                         AvgFrame_2nd{j,i} = AvgFrame_2nd{j,i} + tempFrame;
-%                         temp_2 = [temp_2 tempFrame(:)];
+
                         n2 = n2 + 1;
                     else
                         disp(['Error - frame '  num2str(ActiveFrames(k))...
                             ' apparently not in 1st or 2nd half of video!'])
                     end
+                    
+                    % Get 1st and 2nd control session rvps for within
+                    % session comparison
+                    if sum(ActiveFrames_1c == ActiveFrames(k)) == 1
+                        AvgFrame_1c{j,i} = AvgFrame_1c{j,i} + tempFrame;
+
+                        c1 = c1 + 1;
+                    elseif sum(ActiveFrames_2c == ActiveFrames(k)) == 1
+                        AvgFrame_2c{j,i} = AvgFrame_2c{j,i} + tempFrame;
+
+                        c2 = c2 + 1;
+                    else
+                        disp(['Error - frame '  num2str(ActiveFrames(k))...
+                            ' apparently not in 1st or 2nd half of control data!'])
+                    end
+                    
                     n = n+1;
                     
-
                 end
 
-                % Get mean and variance out of this
-%                 var_all = nanvar(temp')';
-%                 AvgFrame_var{j,i} = zeros(size(tempFrame));
-%                 AvgFrame_var{j,i}(:) = var_all; % for visualization only, may want to delete to save space!!!
-%                 AvgFrame_meancheck{j,i} = zeros(size(tempFrame)); % For later comparison to AvgFrame...
-%                 AvgFrame_meancheck{j,i}(:) = nanmean(temp')'; % 
-%                 var_1st = nanvar(temp_1')';
-%                 var_2nd = nanvar(temp_2')';
+
                 % Calculate average frames
                 AvgFrame_tot = AvgFrame_tot + AvgFrame{j,i};
                 AvgFrame{j,i} = AvgFrame{j,i}/length(ActiveFrames);
                 AvgFrame_1st{j,i} = AvgFrame_1st{j,i}/length(ActiveFrames_1st);
-                AvgFrame_DF_1st{j,i} = (AvgFrame_1st{j,i} - F0)./F0;
                 AvgFrame_2nd{j,i} = AvgFrame_2nd{j,i}/length(ActiveFrames_2nd);
-                AvgFrame_DF_2nd{j,i} = (AvgFrame_2nd{j,i} - F0)./F0;
+                % Subtract background
                 AvgFrame_DF{j,i} = (AvgFrame{j,i} - F0)./F0;
-                AvgFrame_DF2{j,i} = AvgFrame_DF2{j,i}/length(ActiveFrames);
+                AvgFrame_DF_1st{j,i} = (AvgFrame_1st{j,i} - F0)./F0;
+                AvgFrame_DF_2nd{j,i} = (AvgFrame_2nd{j,i} - F0)./F0;
+               % Divide by variance to z-score
                 AvgFrame_z{j,i}(:) = (AvgFrame{j,i}(:) - F0(:))./sqrt(image_var(:));
                 AvgFrame_z_1st{j,i}(:) = (AvgFrame_1st{j,i}(:) - F0(:))./sqrt(image_var(:));
                 AvgFrame_z_2nd{j,i}(:) = (AvgFrame_2nd{j,i}(:) - F0(:))./sqrt(image_var(:));
+                % Control data
+                AvgFrame_1c{j,i} = AvgFrame_1c{j,i}/length(ActiveFrames_1c);
+                AvgFrame_DF_1c{j,i} = (AvgFrame_1c{j,i} - F0)./F0;
+                AvgFrame_2c{j,i} = AvgFrame_2c{j,i}/length(ActiveFrames_2c);
+                AvgFrame_DF_2c{j,i} = (AvgFrame_2c{j,i} - F0)./F0;
+                AvgFrame_z_1c{j,i}(:) = (AvgFrame_1c{j,i}(:) - F0(:))./sqrt(image_var(:));
+                AvgFrame_z_2c{j,i}(:) = (AvgFrame_2c{j,i}(:) - F0(:))./sqrt(image_var(:));
+                
         end
     end
     toc
@@ -332,12 +389,16 @@ else
     disp(['Smoothing Data based on the ' num2str(smooth_adj) ' closest bin(s).'])
     for i = 1:NumXBins
         for j = 1:NumYBins
+            % Get adjacent bins to smooth
             [ind_near_bins] = get_nearest_indices(j, i, ...
                 NumYBins, NumXBins, smooth_adj);
+            % Set up counters
             temp = zeros(size(AvgFrame_DF{j,i})); nn = 0; tempz = temp;
-%             temp_check = temp;
             temp1 = temp; nn1 = 0; tempz1 = temp1;
             temp2 = temp; nn2 = 0; tempz2 = temp2;
+            temp1c = temp; cc1 = 0; tempz1c = temp1c;
+            temp2c = temp; cc2 = 0; tempz2c = temp2c;
+            % Do the actual smoothing
             for k = 1:length(ind_near_bins)
                temp(:) = nansum([temp(:) AvgFrame_DF{ind_near_bins(k)}(:)],2);
                tempz(:) = nansum([temp(:) AvgFrame_z{ind_near_bins(k)}(:)],2);
@@ -349,17 +410,25 @@ else
                temp2(:) = nansum([temp2(:) AvgFrame_DF_2nd{ind_near_bins(k)}(:)],2);
                tempz2(:) = nansum([tempz2(:) AvgFrame_z_2nd{ind_near_bins(k)}(:)],2);
                nn2 = nn2 + ~isnan(sum(AvgFrame_DF_2nd{ind_near_bins(k)}(:)));
+               temp1c(:) = nansum([temp1c(:) AvgFrame_DF_1c{ind_near_bins(k)}(:)],2);
+               tempz1c(:) = nansum([tempz1c(:) AvgFrame_z_1c{ind_near_bins(k)}(:)],2);
+               cc1 = cc1 + ~isnan(sum(AvgFrame_DF_1c{ind_near_bins(k)}(:)));
+               temp2c(:) = nansum([temp2c(:) AvgFrame_DF_2c{ind_near_bins(k)}(:)],2);
+               tempz2c(:) = nansum([tempz2c(:) AvgFrame_z_2c{ind_near_bins(k)}(:)],2);
+               cc2 = cc2 + ~isnan(sum(AvgFrame_DF_2c{ind_near_bins(k)}(:)));
             end
             
             AvgFrame_DF_smooth{j,i} = temp/nn;
             AvgFrame_z_smooth{j,i} = tempz/nn;
-%             AvgFrame_DF_smooth_check{j,i} =
-%             temp_check/length(ind_near_bins); % Used to verify everything
-%             is running correctly
             AvgFrame_DF_1st_smooth{j,i} = temp1/nn1;
             AvgFrame_z_1st_smooth{j,i} = tempz1/nn1;
             AvgFrame_DF_2nd_smooth{j,i} = temp2/nn2;
             AvgFrame_z_2nd_smooth{j,i} = tempz2/nn2;
+            % Control data
+            AvgFrame_DF_1c_smooth{j,i} = temp1c/cc1;
+            AvgFrame_z_1c_smooth{j,i} = tempz1c/cc1;
+            AvgFrame_DF_2c_smooth{j,i} = temp2c/cc2;
+            AvgFrame_z_2c_smooth{j,i} = tempz2c/cc2;
             
             % Make sure appropriate frames get sent back to NaN if they
             % started like that - don't let smoothing making them ok
@@ -374,6 +443,14 @@ else
             if isnan(sum(AvgFrame_DF_2nd{j,i}(:)))
                 AvgFrame_DF_2nd_smooth{j,i}(:) = NaN*ones(size(AvgFrame_DF_2nd{j,i}(:)));
                 AvgFrame_z_2nd_smooth{j,i}(:) = NaN*ones(size(AvgFrame_z_2nd{j,i}(:)));
+            end
+            if isnan(sum(AvgFrame_DF_1c{j,i}(:)))
+                AvgFrame_DF_1c_smooth{j,i}(:) = NaN*ones(size(AvgFrame_DF_1c{j,i}(:)));
+                AvgFrame_z_1c_smooth{j,i}(:) = NaN*ones(size(AvgFrame_z_1c{j,i}(:)));
+            end
+            if isnan(sum(AvgFrame_DF_2c{j,i}(:)))
+                AvgFrame_DF_2c_smooth{j,i}(:) = NaN*ones(size(AvgFrame_DF_2c{j,i}(:)));
+                AvgFrame_z_2c_smooth{j,i}(:) = NaN*ones(size(AvgFrame_z_2c{j,i}(:)));
             end
             
         end
@@ -437,10 +514,24 @@ else
     % Calculate correlations between 1st and 2nd half of exploration...
     for j=1:NumYBins
         for i = 1:NumXBins
-            temp = corrcoef(AvgFrame_DF_1st{j,i},AvgFrame_DF_2nd{j,i});
+            temp = corrcoef(AvgFrame_DF_1st_smooth{j,i},AvgFrame_DF_2nd_smooth{j,i});
             corr_1st_2nd(j,i) = temp(1,2);
+            tempz = corrcoef(AvgFrame_z_1st_smooth{j,i},AvgFrame_z_2nd_smooth{j,i});
+            corr_1st_2nd_z(j,i) = tempz(1,2);
+            temp_c = corrcoef(AvgFrame_DF_1c_smooth{j,i},AvgFrame_DF_2c_smooth{j,i});
+            corr_1st_2ndc(j,i) = temp_c(1,2);
+            tempz_c = corrcoef(AvgFrame_z_1c_smooth{j,i},AvgFrame_z_2c_smooth{j,i});
+            corr_1st_2nd_zc(j,i) = tempz_c(1,2);
         end
     end
+    
+    % Stuff these all into one variable
+    corrs.use_1_2_DF = nanmean(corr_1st_2nd(:));
+    corrs.use_1_2_z = nanmean(corr_1st_2nd_z(:));
+    corrs.control_1_2_DF = nanmean(corr_1st_2ndc(:));
+    corrs.control_1_2_z = nanmean(corr_1st_2nd_zc(:));
+    
+%     keyboard
     
     %% Save stuff
     % Flip everything to match Occmap and occupancy grids
@@ -465,16 +556,18 @@ else
         savename = [ 'reverse_placefields_ChangeMovie' save_append '.mat'];
     end
 
-    save(savename, 'F0', 'image_var', 'AvgFrame_DF', 'AvgFrame_DF_smooth', ...
-    'AvgFrame_DF_1st', 'AvgFrame_DF_1st_smooth', 'AvgFrame_DF_2nd', ...
-    'AvgFrame_DF_2nd_smooth', 'AvgFrame_z_smooth', 'AvgFrame_z_1st_smooth', ...
-    'AvgFrame_z_2nd_smooth', 'Occmap', 'cmperbin', 'Xedges', 'Yedges', ...
-    'speed_thresh', 'x', 'y', 't', 'limits_percent','-v7.3');
-    
-    %% 5) Done! - then compare each between sessions for the first Nov19!!
-%     disp([num2str(FTLength-total_frames) ' frames missing due to being outside the occupancy grid'])
-%     disp('Here is your chance to mess around with the data before closing the function')
-%     keyboard
+    % Save data, but ONLY specified method to save space!!!
+    if strcmpi(method,'z_smooth')
+        save(savename, 'F0', 'image_var', ...
+            'AvgFrame_z_smooth', 'AvgFrame_z_1st_smooth', ...
+            'AvgFrame_z_2nd_smooth', 'Occmap', 'cmperbin', 'Xedges', 'Yedges', ...
+            'speed_thresh', 'x', 'y', 't', 'limits_percent','corrs','-v7.3');
+    elseif strcmpi(method,'DF_smooth')
+        save(savename, 'F0', 'image_var', 'AvgFrame_DF_smooth', ...
+             'AvgFrame_DF_1st_smooth', 'AvgFrame_DF_2nd_smooth', ...
+            'Occmap', 'cmperbin', 'Xedges', 'Yedges', ...
+            'speed_thresh', 'x', 'y', 't', 'limits_percent','corrs','-v7.3');
+    end
     
 end
 
