@@ -15,13 +15,14 @@
 % 5 (only in the rectangle BEFORE the environments are connected). Compare
 % to the same AFTER the arenas are connected.
 
-rotate_flag = 0;
+rotate_flag = 1;
 
 %% File Locations
 
-%% NORVAL %%%
+%%% NORVAL %%%
 if rotate_flag == 1
 rot_txt_sq = '';
+rvp_filename = 'reverse_placefields_ChangeMovie.mat';
 square_session(1).file = 'J:\GCamp Mice\Working\2env\11_19_2014\1 - 2env square left 201B\Working\blah';
 square_session(2).file = 'J:\GCamp Mice\Working\2env\11_19_2014\2 - 2env square mid 201B\Working\corrs_cmperbin2_day1_sesh1_z_smooth.mat';
 square_session(3).file = 'J:\GCamp Mice\Working\2env\11_22_2014\1 - 2env square right 201B\Working\corrs_cmperbin2_day1_sesh2_z_smooth.mat';
@@ -43,6 +44,7 @@ octagon_session(7).file = 'J:\GCamp Mice\Working\2env\11_24_2014\Working\2 - oct
 octagon_session(8).file = 'J:\GCamp Mice\Working\2env\11_26_2014\2 - 2 env octagon mid 201B\Working\corrs_cmperbin2_day8_sesh1_z_smooth.mat';
 elseif rotate_flag == 0
 %%% NORVAL - NO ROTATE CONTROL %%%
+rvp_filename = 'reverse_placefields_ChangeMovie_no_rotate.mat';
 rot_txt_sq = ' - No Rotation Control'; % This gets stuck into titles of figures
 square_session(1).file = 'J:\GCamp Mice\Working\2env\11_19_2014\1 - 2env square left 201B\Working\blah';
 square_session(2).file = 'J:\GCamp Mice\Working\2env\11_19_2014\2 - 2env square mid 201B\Working\corrs_cmperbin2_day1_sesh1_no_rotate_z_smooth.mat';
@@ -72,12 +74,12 @@ end
 % individual session, so I need to look at only the first (or last) 5
 % minutes in the 2 env arena.  For days 5-6, I need to break this down into
 % only octagon or only square sessions
-square_days = [ 1 1 4 4 5 7 7 4 ; ......should be able to do this by manually breaking up the Pos.mat file...
-                1 4 4 5 6 6 7 5];
+square_days = [ 1 1 4 4 5 6 7 4 ; ......should be able to do this by manually breaking up the Pos.mat file...
+                1 4 4 5 6 7 7 5];
 square_sesh = [ 1 2 1 2 1 1 1 2; ...
                 2 1 2 1 1 1 2 1];
-octagon_days = [ 2 2 3 3 5 8 8 ;
-                 2 3 3 5 6 6 8] ;
+octagon_days = [ 2 2 3 3 5 6 8 ;
+                 2 3 3 5 6 8 8] ;
 octagon_sesh = [ 1 2 1 2 2 1 1 ;
                  2 1 2 2 2 2 2] ;
 %% This helps get all the appropriate file locations you may need to past into above...
@@ -98,17 +100,23 @@ octagon_sesh = [ 1 2 1 2 2 1 1 ;
 
 %% Load and plot square sessions
 
-for j = 1:7
-   load(square_session(j+1).file);
-   square_session(j+1).corr_1_2 = nanmean(corrs.corr_1_2(:));
-   square_session(j+1).corr_2_win = nanmean(corrs.corr_2_win(:));
-   square_session(j).corr_1_win = nanmean(corrs.corr_1_win(:));
-   square_session(j+1).shuffle_max = max(corrs.corr_shuffle);
-   square_session(j+1).text_bw = ['D' num2str(square_days(1,j)) '.' ...
-       num2str(square_sesh(1,j)) ' - D' num2str(square_days(2,j)) '.' ...
-       num2str(square_sesh(2,j))];
-   square_session(j).text_win = ['D' num2str(square_days(1,j)) '.' ...
-       num2str(square_sesh(1,j)) ];
+for j = 1:8
+    if j < 8
+        load(square_session(j+1).file);
+        square_session(j+1).corr_1_2 = nanmean(corrs.corr_1_2(:));
+        square_session(j+1).corr_2_win = nanmean(corrs.corr_2_win(:));
+        square_session(j).corr_1_win = nanmean(corrs.corr_1_win(:));
+        square_session(j+1).shuffle_max = max(corrs.corr_shuffle);
+        square_session(j+1).text_bw = ['D' num2str(square_days(1,j)) '.' ...
+            num2str(square_sesh(1,j)) ' - D' num2str(square_days(2,j)) '.' ...
+            num2str(square_sesh(2,j))];
+        square_session(j).text_win = ['D' num2str(square_days(1,j)) '.' ...
+            num2str(square_sesh(1,j)) ];
+    end
+    file_rvp = [ square_session(j).file(1:max(regexpi(square_session(j).file,'\\')))...
+        rvp_filename];
+    load(file_rvp,'corrs')
+    square_session(j).corr_1_ctrl = corrs.control_1_2_z;
 end
 square_session(1).corr_1_2 = nan;
 square_session(1).text_bw = 'NA';
@@ -118,10 +126,10 @@ square_session(8).text_win = ['D' num2str(square_days(2,7)) '.' ...
 square_session(1).shuffle_max = nan;
 
 
-
 square_corr_plot = arrayfun(@(a) a.corr_1_2,square_session);
 square_xtick = arrayfun(@(a) a.text_bw, square_session,'UniformOutput',0);
 square_corr_win = arrayfun(@(a) a.corr_1_win,square_session);
+square_corr_win_ctrl = arrayfun(@(a) a.corr_1_ctrl,square_session);
 square_win_xtick = arrayfun(@(a) a.text_win, square_session,'UniformOutput',0);
 square_shufflemax_plot = arrayfun(@(a) a.shuffle_max, square_session);
 
@@ -134,8 +142,10 @@ ylabel('Correlation'); title(['Whole Arena Correlations (Square)' rot_txt_sq]);
 xlim([1 8]); ylim([0 0.7]); set(gca,'XTickLabel', square_xtick)
 legend('Square session corrs', 'shuffled max values','hallway open','hallway closed')
 subplot(2,2,2);
-plot(1:8, square_corr_win,'bs-'); ylim([0 0.7])
-ylabel('Correlation'); title('Square Within Day Correlations - Whole Arena'); xlabel('Day')
+plot(1:8, square_corr_win,'bs-',1:8, square_corr_win_ctrl,'r--'); ylim([0 0.7])
+ylabel('Correlation'); title('Square Within Day Correlations - Whole Arena'); 
+xlabel('Day.Session'); legend('1st half to 2nd half','Interleaved Control');
+set(gca,'XTickLabel', square_win_xtick);
 
 
 % Plot w-in values to make sure remapping isn't occuring within

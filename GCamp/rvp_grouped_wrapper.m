@@ -1,6 +1,6 @@
 %rvp_grouped2_wrapper
 
-type = 'square'
+type = 'octagon'
 ind_use = 1:7; % Indices
 for jj = 1: length(ind_use)
     clearvars -except jj ind_use type
