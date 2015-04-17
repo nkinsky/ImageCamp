@@ -104,6 +104,7 @@ image_ypix = size(sesh1.frame_use{1},1);
 % keyboard
 
 %% Register images to base session
+tic
 nan_frame_use = ones(tform(1).base_ref.ImageSize)*nan;
 if exist('tform','var') && ~isempty(tform)
     tform1 = tform(1).tform; tform2 = tform(2).tform; base_ref = tform(1).base_ref;
@@ -154,7 +155,7 @@ if exist('tform','var') && ~isempty(tform)
         end
     end
 end
-
+toc
 %% Select region to exclude (in this case, where we get traveling waves)
 % x_exclude = 325:image_xpix; % in pixels
 % y_exclude = 300:image_ypix;

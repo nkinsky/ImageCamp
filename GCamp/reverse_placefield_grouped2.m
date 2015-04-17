@@ -31,7 +31,7 @@ manual_enable = 1
 % Set to 1 if you wish to analyze data that has intentionally NOT been 
 % rotated such that the local features align.
 analysis_type = 2; % 1 if you want to used smoothed data, 0 if not
-rot_overwrite = 0; 
+% rot_overwrite = 0; 
 num_shuffles = 100;
 
 smooth_type = {'_DF_no_smooth' '_DF_smooth', '_z_smooth'};
@@ -110,13 +110,25 @@ end
 %% 2) run assign_occupancy_grid if not already done, plot for both sessions
 % and compare to make sure same number of bins are in each.
 
-cmperbin = arena_align_batch2(sesh, calib_file, cmperbin, rot_overwrite, auto_restrict, [], [], manual_enable);
-
-for j = 1:2
-    cd(sesh(j).folder);
-    temp = importdata(grid_file);
-    sesh(j).grid_info = temp;
+try % Load previously aligned data
+    for j = 1:2
+        cd(sesh(j).folder);
+        temp = importdata(grid_file);
+        sesh(j).grid_info = temp;
+    end
+    
+catch % Align arenas if not already done
+    disp('Aligning arenas.  Type return to continue')
+    cmperbin = arena_align_batch2(sesh, calib_file, cmperbin, rot_overwrite, auto_restrict, [], [], manual_enable);
+    for j = 1:2
+        cd(sesh(j).folder);
+        temp = importdata(grid_file);
+        sesh(j).grid_info = temp;
+    end
+    
 end
+
+
 
 %% 2.5) Load position data
 

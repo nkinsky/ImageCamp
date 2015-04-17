@@ -22,8 +22,8 @@ for i = 1:NumXBins
             temp = zeros(size(rvp_raw{j,i})); nn = 0;
             % Do the actual smoothing
             for k = 1:length(ind_near_bins)
-               temp(:) = nansum([temp(:) AvgFrame_DF{ind_near_bins(k)}(:)],2);
-               nn = nn + ~isnan(sum(AvgFrame_DF{ind_near_bins(k)}(:))); % Adds to counter only if the RVP is not NaN
+               temp(:) = nansum([temp(:) rvp_raw{ind_near_bins(k)}(:)],2);
+               nn = nn + ~isnan(sum(rvp_raw{ind_near_bins(k)}(:))); % Adds to counter only if the RVP is not NaN
             end
             
             rvp_smooth{j,i} = temp/nn; % get average
