@@ -210,6 +210,8 @@ YDim = info.Dataspace.Size(2);
 F0 = zeros(XDim,YDim);
 valid_length = length(index_scopix_valid);
 
+% keyboard
+
 try % Save a bunch of time by loading the mean projection
     load(F0_savefile)
     disp('Using previously saved Mean Projection (F0)')
@@ -397,7 +399,7 @@ end
 toc
 %% Smoothing! - NRK NOTE: insert smooth_rvp here
 
-keyboard
+% keyboard
 tic
 disp(['Smoothing Data based on the ' num2str(smooth_adj) ' closest bin(s).'])
 
@@ -509,6 +511,11 @@ AvgFrame_z_smooth = flipud(AvgFrame_z_smooth);
 AvgFrame_z_1st_smooth = flipud(AvgFrame_z_1st_smooth);
 AvgFrame_z_2nd_smooth = flipud(AvgFrame_z_2nd_smooth);
 
+AvgFrame_DF_1c_smooth = flipud(AvgFrame_DF_1c_smooth);
+AvgFrame_z_1c_smooth = flipud(AvgFrame_z_1c_smooth);
+AvgFrame_DF_2c_smooth = flipud(AvgFrame_DF_2c_smooth);
+AvgFrame_z_2c_smooth = flipud(AvgFrame_z_2c_smooth);
+
 % Set savenames for data
 if strcmpi(movie_type,'ICmovie_smooth')
     savename = [ 'reverse_placefields' save_append '.mat'];
@@ -520,11 +527,13 @@ end
 if strcmpi(method,'z_smooth')
     save(savename, 'F0', 'image_var', ...
         'AvgFrame_z_smooth', 'AvgFrame_z_1st_smooth', ...
-        'AvgFrame_z_2nd_smooth', 'Occmap', 'cmperbin', 'Xedges', 'Yedges', ...
+        'AvgFrame_z_2nd_smooth', 'AvgFrame_z_1c_smooth',...
+        'AvgFrame_z_2c_smooth', 'Occmap', 'cmperbin', 'Xedges', 'Yedges', ...
         'speed_thresh', 'x', 'y', 't', 'limits_percent','corrs','-v7.3');
 elseif strcmpi(method,'DF_smooth')
     save(savename, 'F0', 'image_var', 'AvgFrame_DF_smooth', ...
         'AvgFrame_DF_1st_smooth', 'AvgFrame_DF_2nd_smooth', ...
+        'AvgFrame_DF_1c_smooth', 'AvgFrame_DF_2c_smooth', ...
         'Occmap', 'cmperbin', 'Xedges', 'Yedges', ...
         'speed_thresh', 'x', 'y', 't', 'limits_percent','corrs','-v7.3');
 end

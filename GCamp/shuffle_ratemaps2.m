@@ -55,14 +55,20 @@ sesh2_path = [ folder2 '\' import_file];
 % were to load ONLY the relevant variables then I could cut down on time a
 % bunch!
 if analysis_type == 1
-    load(sesh1_path,'AvgFrame_DF_smooth','AvgFrame_DF_1st_smooth','AvgFrame_DF_2nd_smooth');
+    load(sesh1_path,'AvgFrame_DF_smooth','AvgFrame_DF_1st_smooth','AvgFrame_DF_2nd_smooth',...
+        'AvgFrame_DF_1c_smooth','AvgFrame_DF_2c_smooth');
     sesh1.frame_use = AvgFrame_DF_smooth;
     sesh1.frame_use_1st = AvgFrame_DF_1st_smooth;
+    sesh1.frame_use_1c = AvgFrame_DF_1c_smooth;
     sesh1.frame_use_2nd = AvgFrame_DF_2nd_smooth;
-    load(sesh2_path,'AvgFrame_DF_smooth','AvgFrame_DF_1st_smooth','AvgFrame_DF_2nd_smooth');
+    sesh1.frame_use_2c = AvgFrame_DF_2c_smooth;
+    load(sesh2_path,'AvgFrame_DF_smooth','AvgFrame_DF_1st_smooth','AvgFrame_DF_2nd_smooth',...
+        'AvgFrame_DF_1c_smooth','AvgFrame_DF_2c_smooth');
     sesh2.frame_use = AvgFrame_DF_smooth;
     sesh2.frame_use_1st = AvgFrame_DF_1st_smooth;
     sesh2.frame_use_2nd = AvgFrame_DF_2nd_smooth;
+    sesh2.frame_use_1c = AvgFrame_DF_1c_smooth;
+    sesh2.frame_use_2c = AvgFrame_DF_2c_smooth;
     analysis_type = 'DF smoothed';
     clear AvgFrame_DF_smooth AvgFrame_DF_1st_smooth AvgFrame_DF_2nd_smooth
 elseif analysis_type == 0
@@ -77,14 +83,20 @@ elseif analysis_type == 0
     analysis_type = 'DF unsmoothed';
     clear AvgFrame_DF AvgFrame_DF_1st AvgFrame_DF_2nd
 elseif analysis_type == 2
-    load(sesh1_path,'AvgFrame_z_smooth','AvgFrame_z_1st_smooth','AvgFrame_z_2nd_smooth');
+    load(sesh1_path,'AvgFrame_z_smooth','AvgFrame_z_1st_smooth','AvgFrame_z_2nd_smooth',...
+        'AvgFrame_z_1c_smooth', 'AvgFrame_z_2c_smooth');
     sesh1.frame_use = AvgFrame_z_smooth;
     sesh1.frame_use_1st = AvgFrame_z_1st_smooth;
     sesh1.frame_use_2nd = AvgFrame_z_2nd_smooth;
-    load(sesh2_path,'AvgFrame_z_smooth','AvgFrame_z_1st_smooth','AvgFrame_z_2nd_smooth');
+    sesh1.frame_use_1c = AvgFrame_z_1c_smooth;
+    sesh1.frame_use_2c = AvgFrame_z_2c_smooth;
+    load(sesh2_path,'AvgFrame_z_smooth','AvgFrame_z_1st_smooth','AvgFrame_z_2nd_smooth',...
+        'AvgFrame_z_1c_smooth', 'AvgFrame_z_2c_smooth');
     sesh2.frame_use = AvgFrame_z_smooth;
     sesh2.frame_use_1st = AvgFrame_z_1st_smooth;
     sesh2.frame_use_2nd = AvgFrame_z_2nd_smooth;
+    sesh2.frame_use_1c = AvgFrame_z_1c_smooth;
+    sesh2.frame_use_2c = AvgFrame_z_2c_smooth;
     analysis_type = 'z-score smoothed';
     clear AvgFrame_z_smooth AvgFrame_z_1st_smooth AvgFrame_z_2nd_smooth
 end
@@ -130,6 +142,19 @@ if exist('tform','var') && ~isempty(tform)
         else
             sesh1.frame_use_2nd{j} = nan_frame_use;
         end
+        if ~isnan(sum(sesh1.frame_use_1c{j}(:)))
+            sesh1.frame_use_1c{j} = imwarp(sesh1.frame_use_1c{j},tform1,'OutputView',...
+                base_ref,'InterpolationMethod','nearest');
+        else
+           sesh1.frame_use_1c{j} = nan_frame_use; 
+        end
+        if ~isnan(sum(sesh1.frame_use_2c{j}(:)))
+            sesh1.frame_use_2c{j} = imwarp(sesh1.frame_use_2c{j},tform1,'OutputView',...
+                base_ref,'InterpolationMethod','nearest');
+        else
+            sesh1.frame_use_2c{j} = nan_frame_use;
+        end
+        
     end
     disp('Registering 2nd session to base session')
 %     base_ref = imref2d(size(sesh1.frame_use{1}));
@@ -152,6 +177,18 @@ if exist('tform','var') && ~isempty(tform)
                 base_ref,'InterpolationMethod','nearest');
         else
             sesh2.frame_use_2nd{j} = nan_frame_use;
+        end
+        if ~isnan(sum(sesh2.frame_use_1c{j}(:)))
+            sesh2.frame_use_1c{j} = imwarp(sesh2.frame_use_1c{j},tform1,'OutputView',...
+                base_ref,'InterpolationMethod','nearest');
+        else
+           sesh2.frame_use_1c{j} = nan_frame_use; 
+        end
+        if ~isnan(sum(sesh2.frame_use_2c{j}(:)))
+            sesh2.frame_use_2c{j} = imwarp(sesh2.frame_use_2c{j},tform1,'OutputView',...
+                base_ref,'InterpolationMethod','nearest');
+        else
+            sesh2.frame_use_2c{j} = nan_frame_use;
         end
     end
 end
@@ -177,9 +214,11 @@ weight3 = weight1.*weight2./(weight1+weight2);
 res_weight = weight3/nansum(weight3(:));
 
 % Get correlations w/in sessions and between sessions
-corr_1_2 = corr_bw_sessions(sesh1.frame_use,sesh2.frame_use,exclude);
-corr_1_win = corr_bw_sessions(sesh1.frame_use_1st,sesh1.frame_use_2nd,exclude);
-corr_2_win = corr_bw_sessions(sesh2.frame_use_1st,sesh2.frame_use_2nd,exclude);
+[ corr_1_2, dist_1_2] = corr_bw_sessions(sesh1.frame_use,sesh2.frame_use,exclude);
+[ corr_1_win, dist_1_win] = corr_bw_sessions(sesh1.frame_use_1st,sesh1.frame_use_2nd,exclude);
+[ corr_2_win, dist_2_win] = corr_bw_sessions(sesh2.frame_use_1st,sesh2.frame_use_2nd,exclude);
+[ corr_1_win_ctrl, dist_1_win_ctrl] = corr_bw_sessions(sesh1.frame_use_1c, sesh1.frame_use_2c, exclude);
+[ corr_2_win_ctrl, dist_2_win_ctrl] = corr_bw_sessions(sesh2.frame_use_1c, sesh2.frame_use_2c, exclude);
 
 corr_1_2_weighted_mean = nansum(res_weight(:).*corr_1_2(:));
 corr_1_win_weighted_mean = nansum(res_weight(:).*corr_1_win(:));
@@ -192,12 +231,14 @@ num_fields = num_rows*num_cols;
 
 tic
 disp('Now shuffling all entries in reverse place field cell variable.')
+% keyboard
 for k = 1:num_shuffles
    temp2_1 = cell(size(sesh1.frame_use)); 
    temp2_2 = cell(size(sesh1.frame_use));
    
    % Create shuffled indices
-   shuffle2a = randperm(num_fields);
+   %%% NOTE - NEED TO ADJUST THIS TO INCLUDE ONLY non-NAN VALUES!! %%%
+   shuffle2a = randperm(num_fields); 
    shuffle2b = randperm(num_fields);
    
    % Create shuffled fields
@@ -205,10 +246,19 @@ for k = 1:num_shuffles
    temp2_2(1:num_fields) = sesh2.frame_use(shuffle2b);
    
    % Calculate correlation
-   corr_1_2_allshuffle = corr_bw_sessions(temp2_1,temp2_2,exclude);
+   [corr_1_2_allshuffle, dist_1_2_shuffle] = corr_bw_sessions(temp2_1,temp2_2,exclude);
  
    weighted_mean_corr_shuffle_all(k) = nansum(res_weight(:).*corr_1_2_allshuffle(:));
    mean_corr_shuffle_all(k) = nanmean(corr_1_2_allshuffle(:));
+   mean_dist_shuffle_all(k) = nanmean(dist_1_2_shuffle(:));
+   %%% Rudimentary attempt to get shuffled statistics %%%
+   % Sum up all the correlations we get between sessions that are lower
+   % than what we would get from a shuffled distribution 
+
+   corr_1_2_diff(k) = sum(corr_1_2(:) - corr_1_2_allshuffle(:) <= 0); 
+   % Ditto for the distances, except we are now looking for sessions that
+   % are a larger distance apart than the shuffled distributions
+   dist_1_2_diff(k) = sum(dist_1_2(:) - dist_1_2_shuffle(:) >= 0);
    
    if round(k/10) == k/10
        disp([ num2str(k) ' shuffles out of ' num2str(num_shuffles) ' completed.'])
@@ -265,7 +315,18 @@ corrs.res_weight = res_weight;
 corrs.corr_1_2 = corr_1_2;
 corrs.corr_1_win = corr_1_win;
 corrs.corr_2_win = corr_2_win;
-corrs.corr_shuffle = weighted_mean_corr_shuffle_all;
+corrs.corr_1_win_ctrl = corr_1_win_ctrl;
+corrs.corr_2_win_ctrl = corr_2_win_ctrl;
+corrs.dist_1_2 = dist_1_2;
+corrs.dist_1_win = dist_1_win;
+corrs.dist_2_win = dist_2_win;
+corrs.dist_1_win_ctrl = dist_1_win_ctrl;
+corrs.dist_2_win_ctrl = dist_2_win_ctrl;
+corrs.corr_shuffle = mean_corr_shuffle_all;
+corrs.dist_shuffle = mean_dist_shuffle_all;
+corrs.corr_1_2_diff = corr_1_2_diff;
+corrs.dist_1_2_diff = dist_1_2_diff;
+
 
 % disp('Saving data')
 % if strcmpi(movie_type,'ICmovie_smooth')

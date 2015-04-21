@@ -1,14 +1,16 @@
 %rvp_grouped2_wrapper
 
+start_time_batch = tic;
+task = '2env';
 type = {'square' 'square' 'octagon' 'octagon'};
-rot_array = [0 0 1 1];
+rot_array = [0 1 0 1];
 
 for kk = 1:4
     rot_overwrite = rot_array(kk);
     disp(['BATCH RUN OF ' type{kk} ' SESSIONS WITH rot_overwrite = ' num2str(rot_overwrite)])
     ind_use = 1:7; % Indices
     for jj = 1: length(ind_use)
-        clearvars -except jj kk ind_use type rot_array rot_overwrite
+        clearvars -except jj kk ind_use type rot_array rot_overwrite start_time_batch task
         close all
         
         
@@ -43,3 +45,4 @@ for kk = 1:4
         
     end
 end
+disp(['Batch session completed in ' num2str(toc(start_time_batch)) ' seconds.'])

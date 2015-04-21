@@ -6,14 +6,20 @@
 % remapping, perhaps due to confusion in the mouse about what is going on.
 % 
 % TO-DO
-% 1) Look at within session correlations to see if there is remapping
-% within a session...
 % 2) For octagon in particular, look to see how correlations in the middle
 % of the arena compare to the edges... they seem much higher, so maybe the
 % remapping is all due to confusion about how the arena is rotated...
 % 3) Look at correlations between day 4 session 2 and the first part of day
 % 5 (only in the rectangle BEFORE the environments are connected). Compare
 % to the same AFTER the arenas are connected.
+
+% ** Compare no rotation to rotation - should get significant differences
+% between the two, and should have NO significant diff between no rotation
+% and shufled values for most of the sessions...should also see??
+% *** Compare center to edges ... do we see global remapping everywhere?
+% Or just at different parts of the environment?
+
+
 
 clear all
 close all
@@ -41,7 +47,7 @@ octagon_session(1).file = 'J:\GCamp Mice\Working\2env\11_20_2014\1 - 2env octago
 octagon_session(2).file = 'J:\GCamp Mice\Working\2env\11_20_2014\2 - 2env octagon right 90CCW\Working\corrs_cmperbin2_day2_sesh1_z_smooth.mat';
 octagon_session(3).file = 'J:\GCamp Mice\Working\2env\11_21_2014\1 - 2env octagon mid 201B\Working\corrs_cmperbin2_day2_sesh2_z_smooth.mat';
 octagon_session(4).file = 'J:\GCamp Mice\Working\2env\11_21_2014\2 - 2env octagon left  90CW 201B\Working\corrs_cmperbin2_day3_sesh1_z_smooth.mat';
-octagon_session(5).file = 'J:\GCamp Mice\Working\2env\11_23_2014\Working\session2\octagon right\corrs_cmperbin2_day3_sesh2_z_smooth.mat'; % **Need to breakd down more
+octagon_session(5).file = 'J:\GCamp Mice\Working\2env\11_23_2014\Working\session2\octagon right\octagon_only\corrs_cmperbin2_day3_sesh2_z_smooth.mat'; % **Need to breakd down more
 octagon_session(6).file = 'J:\GCamp Mice\Working\2env\11_24_2014\Working\1 - square right 180\corrs_cmperbin2_day5_sesh1_z_smooth.mat'; % **Need to breakd down more
 octagon_session(7).file = 'J:\GCamp Mice\Working\2env\11_24_2014\Working\2 - octagon left 180\corrs_cmperbin2_day8_sesh1_z_smooth.mat';
 octagon_session(8).file = 'J:\GCamp Mice\Working\2env\11_26_2014\2 - 2 env octagon mid 201B\Working\corrs_cmperbin2_day8_sesh1_z_smooth.mat';
@@ -64,10 +70,10 @@ octagon_session(1).file = 'J:\GCamp Mice\Working\2env\11_20_2014\1 - 2env octago
 octagon_session(2).file = 'J:\GCamp Mice\Working\2env\11_20_2014\2 - 2env octagon right 90CCW\Working\corrs_cmperbin2_day2_sesh1_no_rotate_z_smooth.mat';
 octagon_session(3).file = 'J:\GCamp Mice\Working\2env\11_21_2014\1 - 2env octagon mid 201B\Working\corrs_cmperbin2_day2_sesh2_no_rotate_z_smooth.mat';
 octagon_session(4).file = 'J:\GCamp Mice\Working\2env\11_21_2014\2 - 2env octagon left  90CW 201B\Working\corrs_cmperbin2_day3_sesh1_no_rotate_z_smooth.mat';
-octagon_session(5).file = 'J:\GCamp Mice\Working\2env\11_23_2014\Working\session2\octagon right\corrs_cmperbin2_day3_sesh2_no_rotate_z_smooth.mat'; % **Need to breakd down more
+octagon_session(5).file = 'J:\GCamp Mice\Working\2env\11_23_2014\Working\session2\octagon right\octagon_only\corrs_cmperbin2_day3_sesh2_no_rotate_z_smooth.mat'; % **Need to breakd down more
 octagon_session(6).file = 'J:\GCamp Mice\Working\2env\11_24_2014\Working\1 - square right 180\corrs_cmperbin2_day5_sesh1_no_rotate_z_smooth.mat'; % **Need to breakd down more
 %%% THE FILE BELOW SHOULD BE SESH1!!!
-octagon_session(7).file = 'J:\GCamp Mice\Working\2env\11_24_2014\Working\2 - octagon left 180\corrs_cmperbin2_day8_sesh2_no_rotate_z_smooth.mat'; % 
+octagon_session(7).file = 'J:\GCamp Mice\Working\2env\11_24_2014\Working\2 - octagon left 180\corrs_cmperbin2_day8_sesh1_no_rotate_z_smooth.mat'; % 
 octagon_session(8).file = 'J:\GCamp Mice\Working\2env\11_26_2014\2 - 2 env octagon mid 201B\Working\corrs_cmperbin2_day8_sesh1_no_rotate_z_smooth.mat';
 end
 
@@ -130,7 +136,15 @@ for k = 1:4
             end
             sesh_use(k).sesh(j+1).corr_1_2 = nanmean(nanmean(corrs.corr_1_2(cy,cx)));
             sesh_use(k).sesh(j+1).corr_2_win = nanmean(nanmean(corrs.corr_2_win(cy,cx)));
+            sesh_use(k).sesh(j+1).corr_2_win_ctrl = nanmean(nanmean(corrs.corr_2_win_ctrl(cy,cx)));
             sesh_use(k).sesh(j).corr_1_win = nanmean(nanmean(corrs.corr_1_win(cy,cx)));
+            sesh_use(k).sesh(j).corr_1_win_ctrl = nanmean(nanmean(corrs.corr_1_win_ctrl(cy,cx)));
+            sesh_use(k).sesh(j+1).dist_1_2 = nanmean(nanmean(corrs.dist_1_2(cy,cx)));
+            sesh_use(k).sesh(j+1).dist_2_win = nanmean(nanmean(corrs.dist_2_win(cy,cx)));
+            sesh_use(k).sesh(j+1).dist_2_win_ctrl = nanmean(nanmean(corrs.dist_2_win_ctrl(cy,cx)));
+            sesh_use(k).sesh(j).dist_1_win = nanmean(nanmean(corrs.dist_1_win(cy,cx)));
+            sesh_use(k).sesh(j).dist_1_win_ctrl = nanmean(nanmean(corrs.dist_1_win_ctrl(cy,cx)));
+            sesh_use(k).sesh(j+1).dist_shuffle_min = min(corrs.dist_shuffle);
             sesh_use(k).sesh(j+1).shuffle_max = max(corrs.corr_shuffle);
             sesh_use(k).sesh(j+1).text_bw = ['D' num2str(sesh_use(k).days_num(1,j)) '.' ...
                 num2str(sesh_use(k).session_num(1,j)) ' - D' num2str(sesh_use(k).days_num(2,j)) '.' ...
@@ -138,36 +152,44 @@ for k = 1:4
             sesh_use(k).sesh(j).text_win = ['D' num2str(sesh_use(k).days_num(1,j)) '.' ...
                 num2str(sesh_use(k).session_num(1,j)) ];
         end
-        if k == 2 || k == 4
-            if j == 5
-                file_rvp = [ 'J:\GCamp Mice\Working\2env\11_23_2014\Working\session2\octagon right\octagon_only\' ...
-                    rvp_filename];
-            end
-        else
-            file_rvp = [ sesh_use(k).sesh(j).file(1:max(regexpi(sesh_use(k).sesh(j).file,'\\')))...
-                rvp_filename];
-        end
-        load(file_rvp,'corrs')
-        sesh_use(k).sesh(j).corr_1_ctrl = corrs.control_1_2_z;
+%         if k == 2 || k == 4
+%             if j == 5
+%                 file_rvp = [ 'J:\GCamp Mice\Working\2env\11_23_2014\Working\session2\octagon right\octagon_only\' ...
+%                     rvp_filename];
+%             end
+%         else
+%             file_rvp = [ sesh_use(k).sesh(j).file(1:max(regexpi(sesh_use(k).sesh(j).file,'\\')))...
+%                 rvp_filename];
+%         end
+%         load(file_rvp,'corrs')
+%         sesh_use(k).sesh(j).corr_1_ctrl = corrs.control_1_2_z;
     end
 sesh_use(k).sesh(1).corr_1_2 = nan;
+sesh_use(k).sesh(1).dist_1_2 = nan;
 sesh_use(k).sesh(1).text_bw = 'NA';
 sesh_use(k).sesh(8).corr_1_win = sesh_use(k).sesh(7).corr_2_win;
+sesh_use(k).sesh(8).corr_1_win_ctrl = sesh_use(k).sesh(7).corr_2_win_ctrl;
+sesh_use(k).sesh(8).dist_1_win = sesh_use(k).sesh(7).dist_2_win;
+sesh_use(k).sesh(8).dist_1_win_ctrl = sesh_use(k).sesh(7).dist_2_win_ctrl;
 sesh_use(k).sesh(8).text_win = ['D' num2str(sesh_use(k).days_num(2,7)) '.' ...
        num2str(sesh_use(k).session_num(2,7)) ];
 sesh_use(k).sesh(1).shuffle_max = nan;
+sesh_use(k).sesh(1).dist_shuffle_min = nan;
 
 
 sesh_use(k).corr_plot = arrayfun(@(a) a.corr_1_2,sesh_use(k).sesh);
+sesh_use(k).dist_plot = arrayfun(@(a) a.dist_1_2,sesh_use(k).sesh);
 sesh_use(k).xtick = arrayfun(@(a) a.text_bw, sesh_use(k).sesh,'UniformOutput',0);
 sesh_use(k).corr_win = arrayfun(@(a) a.corr_1_win,sesh_use(k).sesh);
-sesh_use(k).corr_win_ctrl = arrayfun(@(a) a.corr_1_ctrl,sesh_use(k).sesh);
+sesh_use(k).corr_win_ctrl = arrayfun(@(a) a.corr_1_win_ctrl,sesh_use(k).sesh);
+sesh_use(k).dist_win = arrayfun(@(a) a.dist_1_win,sesh_use(k).sesh);
+sesh_use(k).dist_win_ctrl = arrayfun(@(a) a.dist_1_win_ctrl,sesh_use(k).sesh);
 sesh_use(k).win_xtick = arrayfun(@(a) a.text_win, sesh_use(k).sesh,'UniformOutput',0);
 sesh_use(k).shufflemax_plot = arrayfun(@(a) a.shuffle_max, sesh_use(k).sesh);  
+sesh_use(k).dist_shufflemin_plot = arrayfun(@(a) a.dist_shuffle_min, sesh_use(k).sesh);  
 end
 
-% Plot Whole Arena Corrs
-
+%% Plot Arena Corrs
 subplot_ind{1} = [1 2]; subplot_ind{3} = [1 2];
 subplot_ind{2} = [3 4]; subplot_ind{4} = [3 4];
 plot_ind = [1 1 2 2];
@@ -208,7 +230,7 @@ for k = 1:2:3
     set(gca,'XTickLabel', cellfun(@(a,b) [a '/' b],sesh_use(k).win_xtick,sesh_use(k+1).win_xtick,'UniformOutput',0));
 end
 
-%% Save everything as figs and jpgs
+% Save everything as figs and jpgs
 plot_folder = 'J:\GCamp Mice\Working\2env\plots';
 savename{1} = [ plot_folder '\2env Whole Arena Correlations' rotate_txt];
 savename{2} = [ plot_folder '\2env Center of Arena Correlations' rotate_txt];
@@ -217,14 +239,107 @@ hh{j} = figure(j);
 export_fig(savename{j},'-jpg');
 saveas(hh{j}, savename{j}, 'fig');
 end
+
+%% Plot Arena Distances
+% try
+%     load('fail.mat')
+    subplot_ind{1} = [1 2]; subplot_ind{3} = [1 2];
+    subplot_ind{2} = [3 4]; subplot_ind{4} = [3 4];
+    plot_ind = [1 1 2 2];
+    for k = 1:4
+        h = figure(plot_ind(k)+2);
+        set(h, 'Position', get(0,'Screensize'));
+        subplot(3,2,subplot_ind{k}(1));
+        plot(1:8, sesh_use(k).dist_plot, 'bs-', 1:8, sesh_use(k).dist_shufflemin_plot, 'rs--',...
+            [5 5], [0 1],'g-.', [7 7], [0 1], 'k-.')
+        ylabel('Distance'); title([sesh_use(k).name ' Across Session Distances' rotate_txt]);
+        xlim([1 8]); set(gca,'XTickLabel', sesh_use(k).xtick); % ylim([0 0.7])
+        legend('Across session dists', 'Shuffled min values','Hallway open','Hallway closed','Location','Best')
+        subplot(3,2,subplot_ind{k}(2));
+        plot(1:8, sesh_use(k).dist_win,'bs-',1:8, sesh_use(k).dist_win_ctrl,'r--'); % ylim([0 0.7])
+        ylabel('Distance'); title([sesh_use(k).name ' Within Session Distances' rotate_txt]);
+        xlabel('Day.Session'); legend('1st half to 2nd half','Interleaved Control','Location','Best');
+        set(gca,'XTickLabel', sesh_use(k).win_xtick);
+    end
+    
+    % Average Square and Octagon
+    corr_type = {'Arena' '' 'Center of Arena' ''};
+    for k = 1:2:3
+        figure(plot_ind(k)+2);
+        subplot(3,2,5)
+        plot(1:8,mean([sesh_use(k).dist_plot ; sesh_use(k+1).dist_plot],1),...
+            'bs-',1:8,mean([sesh_use(k).dist_shufflemin_plot ;sesh_use(k+1).dist_shufflemin_plot],1),...
+            'rs--', [5 5], [0 1],'g-.', [7 7], [0 1], 'k-.')
+        xlim([1 8]); set(gca,'XTickLabel', sesh_use(1).xtick); % ylim([0 0.7]);
+        ylabel('Distance'); title([ 'Averaged ' corr_type{k} ' Across Session Distances' rotate_txt])
+        legend('Average Session Dists', 'Shuffled min values','Location','Best')
+        subplot(3,2,6)
+        plot(1:8,mean([sesh_use(k).dist_win ; sesh_use(k+1).dist_win],1),...
+            'bs-',1:8,mean([sesh_use(k).dist_win_ctrl ;sesh_use(k+1).dist_win_ctrl],1),...
+            'rs--')
+        xlim([1 8]); set(gca,'XTickLabel', sesh_use(1).xtick); % ylim([0 0.7]);
+        ylabel('Distance'); title([ 'Averaged ' corr_type{k} ' Within Session Distances' rotate_txt])
+        xlabel('Day.Session'); legend('1st half to 2nd half','Interleaved Control','Location','Best');
+        set(gca,'XTickLabel', cellfun(@(a,b) [a '/' b],sesh_use(k).win_xtick,sesh_use(k+1).win_xtick,'UniformOutput',0));
+    end
+    
+    % Save everything as figs and jpgs
+    plot_folder = 'J:\GCamp Mice\Working\2env\plots';
+    savename{1} = [ plot_folder '\2env Whole Arena Distances' rotate_txt];
+    savename{2} = [ plot_folder '\2env Center of Arena Distances' rotate_txt];
+    for j = 1:2
+        hh{j} = figure(j);
+        export_fig(savename{j},'-jpg');
+        saveas(hh{j}, savename{j}, 'fig');
+    end
+% catch
+%     disp('Distance plotting not yet working...fix this section!')
+% end
+
+
 %% Group things into bar graphs...
 
-for j = 1:4
+for k = 1:4
   sesh_use(k).corr_win_mean = nanmean(sesh_use(k).corr_win);
   sesh_use(k).corr_win_std = nanstd(sesh_use(k).corr_win);
+  sesh_use(k).corr_win_ctrl_mean = nanmean(sesh_use(k).corr_win_ctrl);
+  sesh_use(k).corr_win_ctrl_std = nanstd(sesh_use(k).corr_win_ctrl);
   sesh_use(k).corr_mean = nanmean(sesh_use(k).corr_plot);
   sesh_use(k).corr_std = nanstd(sesh_use(k).corr_plot);
 end
+
+comb_sesh(1).name = ['Combined Arenas' rotate_txt];
+comb_sesh(3).name = ['Combined Arenas Center Only' rotate_txt];
+
+for k = 1:2:3
+    comb_sesh(k).corr_win_mean = nanmean([ sesh_use(k).corr_win ...
+        sesh_use(k+1).corr_win]);
+    comb_sesh(k).corr_win_std = nanstd([ sesh_use(k).corr_win ...
+        sesh_use(k+1).corr_win]);
+    comb_sesh(k).corr_win_ctrl_mean = nanmean([ sesh_use(k).corr_win_ctrl ...
+        sesh_use(k+1).corr_win_ctrl]);
+    comb_sesh(k).corr_win_ctrl_std = nanstd([ sesh_use(k).corr_win_ctrl ...
+        sesh_use(k+1).corr_win_ctrl]);
+    comb_sesh(k).corr_mean = nanmean([ sesh_use(k).corr_plot ...
+        sesh_use(k+1).corr_plot]);
+    comb_sesh(k).corr_std = nanstd([ sesh_use(k).corr_plot ...
+        sesh_use(k+1).corr_plot]);
+end
+
+plot_use = [comb_sesh(1).corr_win_mean sesh_use(1).corr_win_mean sesh_use(2).corr_win_mean ...
+    comb_sesh(1).corr_mean sesh_use(1).corr_mean sesh_use(2).corr_mean];
+control_use = [comb_sesh(1).corr_win_ctrl_mean sesh_use(1).corr_win_ctrl_mean sesh_use(2).corr_win_ctrl_mean ...
+    0 0 0];
+plot_use_std = [comb_sesh(1).corr_win_std sesh_use(1).corr_win_std sesh_use(2).corr_win_std ...
+    comb_sesh(1).corr_std sesh_use(1).corr_std sesh_use(2).corr_std];
+control_use_std = [comb_sesh(1).corr_win_ctrl_std sesh_use(1).corr_win_ctrl_std sesh_use(2).corr_win_ctrl_std ...
+    0.0001 0.0001 0.0001];
+
+figure
+barwitherr([plot_use_std; control_use_std]', [plot_use; control_use]')
+legend('1st-2nd half','Interleaved Controls')
+set(gca,'XTickLabel',{'Combined Within', 'Square Within', 'Octagon Within',...
+    'Combined Across', 'Square Across', 'Octagon Across'})
 
 
 %% Old Code
