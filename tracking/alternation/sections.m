@@ -30,9 +30,8 @@ function bounds = sections(x,y)
     center = getcenterarm(x,y); 
     
     %Establish maze arm widths. 
-    w = 40;              %Width of arms.
-    l = 80;              %Shift from top/bottom of maze for center stem. 
-    
+    w = 4; %40;              %Width of arms.
+    l = 8; % 80;              %Shift from top/bottom of maze for center stem. 
 %% Left arm. 
     left.x = [xmin, xmin, xmax, xmax];
     left.y = [ymin, ymin+w, ymin, ymin+w]; 

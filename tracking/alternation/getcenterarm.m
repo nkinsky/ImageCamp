@@ -17,11 +17,11 @@ function center = getcenterarm(x,y)
     ymid = mean([ymin ymax]); 
     
     %For now, width is manually set to 40 AU and downward shift is set to 20. 
-    w = 55; 
-    shift = 30; 
+    w = 5.5; % 55; 
+    shift = 3; % 30; 
     
     %l is the the length of center arm chopped off at the choice point. 
-    l = 80; 
+    l = 8; %80; 
     
     %Border. 
     center.x = [xmin+l, xmin+l, xmax-l, xmax-l]; 
