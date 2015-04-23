@@ -23,6 +23,8 @@ sesh_ind_use(4).cy = 5:8; sesh_ind_use(4).cx = 4:7; % Assumes 2.3 cm/bin and a 1
 sesh_type = {'square' 'octagon' 'square' 'octagon'};
 sesh_where = {'Whole Arena' 'Whole Arena' 'Center Only' 'Center Only'};
 
+comb_sesh_where = {'Whole Arena' 'Center Only' 'Whole Arena' 'Center Only'};
+
 for ll = 1:2
     for i = 1:4
         for j = 1:8
@@ -156,12 +158,15 @@ for ll = 1:2
            temp_6a = [temp_6a mega_corr((ll-1)*4+(ss-1)*2+m).day6_after];
            temp_ba = [temp_ba mega_corr((ll-1)*4+(ss-1)*2+m).before_after];
        end
+       comb_corr((ll-1)*2+ss).analysis_type = analysis_type{ll}; 
+       comb_corr((ll-1)*2+ss).arena = comb_sesh_where{(ll-1)*2+ss}; 
        comb_corr((ll-1)*2+ss).within = temp_w;
        comb_corr((ll-1)*2+ss).within_before = temp_wb;
        comb_corr((ll-1)*2+ss).day5_before = temp_5b;
        comb_corr((ll-1)*2+ss).day6_before = temp_6b;
        comb_corr((ll-1)*2+ss).day6_after = temp_6a;
        comb_corr((ll-1)*2+ss).before_after = temp_ba;
+       
    end
 end
 
@@ -175,17 +180,17 @@ for gg = 1:2
     end
     for m = 1:size(corr_mat_use,2)
         % Get mean, variance, and sem for all the comparisons
-        temp = mega_corr(m).within;
+        temp = corr_mat_use(m).within;
         stats(m).within.mvs = [mean(temp), var(temp), std(temp)/sqrt(length(temp))];
-        temp = mega_corr(m).within_before;
+        temp = corr_mat_use(m).within_before;
         stats(m).within_before.mvs = [mean(temp), var(temp), std(temp)/sqrt(length(temp))];
-        temp = mega_corr(m).day5_before;
+        temp = corr_mat_use(m).day5_before;
         stats(m).day5_before.mvs = [mean(temp), var(temp), std(temp)/sqrt(length(temp))];
-        temp = mega_corr(m).day6_before;
+        temp = corr_mat_use(m).day6_before;
         stats(m).day6_before.mvs = [mean(temp), var(temp), std(temp)/sqrt(length(temp))];
-        temp = mega_corr(m).day6_after;
+        temp = corr_mat_use(m).day6_after;
         stats(m).day6_after.mvs = [mean(temp), var(temp), std(temp)/sqrt(length(temp))];
-        temp = mega_corr(m).before_after;
+        temp = corr_mat_use(m).before_after;
         stats(m).before_after.mvs = [mean(temp), var(temp), std(temp)/sqrt(length(temp))];
         % Get the wald statistic for the difference between two means for all
         % the comparisons
@@ -216,19 +221,25 @@ for gg = 1:2
         shuffled_mean = 0.0638; shuffled_sem = 0.0068;
         plot_mean = [ stats(m).within.mvs(1) stats(m).within_before.mvs(1) ...
             stats(m).day5_before.mvs(1) stats(m).day6_before.mvs(1) ...
-            stats(m).day6_after.mvs(1) stats(m).before_after.mvs(1) ...
-            shuffled_mean];
+            stats(m).day6_after.mvs(1) stats(m).before_after.mvs(1)];
         plot_sem = [ stats(m).within.mvs(2) stats(m).within_before.mvs(2) ...
             stats(m).day5_before.mvs(2) stats(m).day6_before.mvs(2) ...
-            stats(m).day6_after.mvs(2) stats(m).before_after.mvs(2) ...
-            shuffled_sem];
-        figure(20+m)
-        barwitherr(plot_sem, plot_mean)
+            stats(m).day6_after.mvs(2) stats(m).before_after.mvs(2)];
+        figure(20*gg+m)
+        barwitherr(plot_sem, plot_mean); % Plot bars with sems
+        hold on;
+        plot(get(gca,'XLim'),[shuffled_mean shuffled_mean],'r--')
+        legend('Data','','Shuffled')
         set(gca,'XTickLabel',{'Within All Sessions' 'Between Sessions Days 1-4' ...
             'Day 5 to Days 1-4' 'Day 6 to Days 1-4' 'Day 6 to Days 7-8' ...
             'Days 1-4 to Days 7-8' 'Shuffled'})
-        if m <=4; rot_append = ''; else; rot_append = ' - No Rotation Control'; end
-        title([sesh_type{mod(m-1,4)+1} ' - ' sesh_where{mod(m-1,4)+1} rot_append])
+        if gg == 1
+            if m <=4; rot_append = ''; else; rot_append = ' - No Rotation Control'; end
+            title([sesh_type{mod(m-1,4)+1} ' - ' sesh_where{mod(m-1,4)+1} rot_append])
+        elseif gg == 2
+            if m <=2; rot_append = ''; else; rot_append = ' - No Rotation Control'; end
+            title(['Combined ' comb_sesh_where{m} rot_append]);
+        end
         
         % Save all the stats to the appropriate data structure
         if gg == 1
@@ -241,6 +252,17 @@ for gg = 1:2
     
 end
 
+% Plot day 5 to days 1:4 for square and octagon
+plot2_mean = [mega_corr(1).stats.day5_before.mvs(1),...
+    mega_corr(2).stats.day5_before.mvs(1)];
+plot2_sem = [mega_corr(1).stats.day5_before.mvs(3),...
+    mega_corr(2).stats.day5_before.mvs(3)];
+
+figure(20*gg+m+1)
+barwitherr(plot2_sem, plot2_mean)
+title('Day 5 to Day 1-4 correlations')
+set(gca,'XTickLabel',{'Square' 'Octagon'})
+ylim([-0.1 0.5]); xlim([0.5 2.5])
 
 
 
