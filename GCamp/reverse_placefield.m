@@ -28,7 +28,11 @@ function [ ] = reverse_placefield(folder, speed_thresh, grid_info, movie_type, r
 % "...,argument_name, argument_value, e.g. ...,general_filter,
 % ones(1,1000))
 % general_filter: general filter to exclude certain frames in the
-% analysis!!!
+% analysis.  logical - 1 = use frame, 0 = ignore.  Can be a vector either 
+% the length of the ICmovie, with indices matching the ICmovie, or a vector
+% the length of your interpolated data, with indices matching the
+% interpolated data time frames.  If left empty or not specified, default
+% is to include all frames.
 % method: 'z_smooth' or 'DF_smooth' - if blank, z_smooth is default
 % pass_thresh: number of passes that the mouse needs to make through a 
 % given grid for it to be counted in the final RVP (default = 4)
@@ -60,7 +64,7 @@ if ~exist('movie_type','var') || isempty(movie_type) % Assign movie_type if left
 end
 movie_name = [movie_type '.h5'];
 
-if ~exist('rot_overwrite','var') % Set rot_overwrite if not indicated
+if ~exist('rot_overwrite_batch','var') % Set rot_overwrite if not indicated
     rot_overwrite = 0; % No rotation of the data is assumed
 end
 
@@ -150,10 +154,8 @@ speed = [speed speed(end)];
 %% Load appropriate movie files
 try
     if strcmpi(movie_type,'ICmovie_smooth')
-        h5info( movie_path,'/Object');
         F0_savefile = 'F0_ICmovie.mat';
     elseif strcmpi(movie_type,'ChangeMovie')
-        h5info( movie_path,'/Object');
         F0_savefile = 'F0_ChangeMovie.mat';
     end
     
@@ -177,8 +179,22 @@ end
 
 % create general_filter to include all values if not added, otherwise
 % use the specified one.
+
+% keyboard % Use to figure out general filter!!!
+
+info = h5info( movie_path,'/Object'); % Get movie information
 if sum(cellfun(@(a) strcmpi(a,'general_filter'),varargin)) == 1
-    general_filter = varargin{find(cellfun(@(a) strcmpi(a,'general_filter'),varargin)) + 1};
+    gen_temp = varargin{find(cellfun(@(a) strcmpi(a,'general_filter'),varargin)) + 1};
+    % Correct the length of the filter...
+    if isempty(gen_temp) % Make all ones if left empty
+        general_filter = ones(size(x));
+    elseif length(gen_temp) == info.Dataspace.Size(3)  % Chop to match interpolated data if filter matches ICmovie length
+        general_filter = gen_temp(index_scopix_valid);
+    elseif length(gen_temp) == length(x) % Check to make sure it matches length of interpolated data
+    else % Error out if general filter has an ambiguous number of frames
+        error('General filter length must match either the imaging movie length or length of interpolated vectors!')
+    end
+        
 else
     general_filter = ones(size(x));
 end
@@ -200,11 +216,11 @@ vel_filter = speed >= speed_thresh;
 
 x_pos_valid = (x >= min(Xedges) & x <= max(Xedges));
 y_pos_valid = (y >= min(Yedges) & y <= max(Yedges));
-pos_valid = x_pos_valid & y_pos_valid & general_filter;
+pos_valid = x_pos_valid & y_pos_valid & general_filter; % Get valid positions, incorporating general filter
 
 %% 4) For each area, add up all the active frames and average
 
-info = h5info(movie_path,'/Object');
+% Note, info called above in section 2
 XDim = info.Dataspace.Size(1);
 YDim = info.Dataspace.Size(2);
 F0 = zeros(XDim,YDim);

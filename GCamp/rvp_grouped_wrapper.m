@@ -6,11 +6,11 @@ type = {'square' 'square' 'octagon' 'octagon'};
 rot_array = [0 1 0 1];
 
 for kk = 1:4
-    rot_overwrite = rot_array(kk);
+    rot_overwrite_batch = rot_array(kk);
     disp(['BATCH RUN OF ' type{kk} ' SESSIONS WITH rot_overwrite = ' num2str(rot_overwrite)])
     ind_use = 1:7; % Indices
     for jj = 1: length(ind_use)
-        clearvars -except jj kk ind_use type rot_array rot_overwrite start_time_batch task
+        clearvars -except jj kk ind_use type rot_array rot_overwrite_batch start_time_batch task
         close all
         
         

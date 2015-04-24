@@ -214,11 +214,20 @@ weight3 = weight1.*weight2./(weight1+weight2);
 res_weight = weight3/nansum(weight3(:));
 
 % Get correlations w/in sessions and between sessions
+% Session 1 to Session 2
 [ corr_1_2, dist_1_2] = corr_bw_sessions(sesh1.frame_use,sesh2.frame_use,exclude);
+% 2nd half of session 1 to 1st half of session 2
+[ corr_1b_2a, dist_1b_2a] = corr_bw_sessions(sesh1.frame_use_2nd,sesh2.frame_use_1st,exclude);
+% Within session 1
 [ corr_1_win, dist_1_win] = corr_bw_sessions(sesh1.frame_use_1st,sesh1.frame_use_2nd,exclude);
+% Within session 2
 [ corr_2_win, dist_2_win] = corr_bw_sessions(sesh2.frame_use_1st,sesh2.frame_use_2nd,exclude);
+% Within session 1 using interleaved time periods
 [ corr_1_win_ctrl, dist_1_win_ctrl] = corr_bw_sessions(sesh1.frame_use_1c, sesh1.frame_use_2c, exclude);
+% Within session 2 using interleaved time periods
 [ corr_2_win_ctrl, dist_2_win_ctrl] = corr_bw_sessions(sesh2.frame_use_1c, sesh2.frame_use_2c, exclude);
+
+keyboard
 
 corr_1_2_weighted_mean = nansum(res_weight(:).*corr_1_2(:));
 corr_1_win_weighted_mean = nansum(res_weight(:).*corr_1_win(:));
@@ -313,11 +322,13 @@ corrs.weight1 = weight1;
 corrs.weight2 = weight2;
 corrs.res_weight = res_weight;
 corrs.corr_1_2 = corr_1_2;
+corrs.corr_1b_2a = corr_1b_2a;
 corrs.corr_1_win = corr_1_win;
 corrs.corr_2_win = corr_2_win;
 corrs.corr_1_win_ctrl = corr_1_win_ctrl;
 corrs.corr_2_win_ctrl = corr_2_win_ctrl;
 corrs.dist_1_2 = dist_1_2;
+corrs.dist_1b_2a = dist_1b_2a;
 corrs.dist_1_win = dist_1_win;
 corrs.dist_2_win = dist_2_win;
 corrs.dist_1_win_ctrl = dist_1_win_ctrl;

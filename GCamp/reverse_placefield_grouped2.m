@@ -18,7 +18,6 @@ if ~exist('batch_run','var') || batch_run == 0
 % clear_all_s
 close all
 clearvars -except j ind_use
-rot_overwrite = 1; % Specify here for non batch running
 end
 
 start_time = tic;
@@ -29,6 +28,8 @@ cmperbin = 2.3; % starting size of cmperbin to use
 movie_type = 'ChangeMovie';
 auto_restrict = 0
 manual_enable = 1
+rot_overwrite = 0;
+
 % Set to 1 if you wish to analyze data that has intentionally NOT been 
 % rotated such that the local features align.
 analysis_type = 2; % 1 if you want to used smoothed data, 0 if not
@@ -47,6 +48,9 @@ smooth_append = smooth_type{analysis_type + 1};
 % NOTE THAT THIS OCCURS BELOW IN STEP 4 TO BE APPROXIMATELY OK FOR ALL SESSIONS FOR
 % G30 BUT IS A HACK AND WILL NEED TO BE MORE PRECISE IN THE FUTURE!
 
+if exist('rot_overwrite_batch','var') % Overwrite rot_overwrite if doing a batch run
+    rot_overwrite = rot_overwrite_batch;
+end
 
 if rot_overwrite == 0
     import_file = 'pos_corr_to_std.mat';
@@ -63,10 +67,10 @@ end
 %% 1) Get working folder location for both sessions and load data in
 % You can run this here using hardcoded sessions if you want...
 if ~exist('batch_run','var') || batch_run == 0
-    task = 'alternation_laptop'; % Specify task here for non-batch runs
+    task = '2env'; % Specify task here for non-batch runs
     if strcmpi(task,'2env')
-        analysis_day(1) = 1; analysis_session(1) = 1;
-        analysis_day(2) = 5; analysis_session(2) = 1;
+        analysis_day(1) = 7; analysis_session(1) = 1;
+        analysis_day(2) = 7; analysis_session(2) = 2;
     elseif strcmpi(task,'alternation_laptop')
         analysis_day(1) = 1; analysis_session(1) = 1;
         analysis_day(2) = 3; analysis_session(2) = 1;
@@ -194,12 +198,19 @@ disp('Here is your chance to compare occupancy grids')
 
 %% 3) run reverse_placefield4
 
+
 for j = 1:2
     disp(['Running reverse_placefield for session ' num2str(j)]);
     cd(sesh(j).folder);
+    % Load general filter if present
+    try
+        load('general_filter.mat');
+    catch
+        general_filter = [];
+    end
     reverse_placefield(sesh(j).folder , speed_thresh, sesh(j).grid_info,...
         movie_type, rot_overwrite, sesh(j).movie_folder,...
-        'num_divs_control',8);
+        'num_divs_control',8,'general_filter',general_filter);
 end
 
 %% 4) calculate intersession correlations and plot out for all!
