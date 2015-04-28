@@ -6,6 +6,7 @@ close all
 analysis_type = {'z_smooth' 'no_rotate_z_smooth' };
 
 % Session File locations
+plot_save_folder = 'J:\GCamp Mice\Working\2env\plots\2015APR26';
 square_sesh_path = 'J:\GCamp Mice\Working\2env\square_sessions.mat';
 octagon_sesh_path = 'J:\GCamp Mice\Working\2env\octagon_sessions.mat';
 load(square_sesh_path)
@@ -59,7 +60,7 @@ for ll = 1:2
             file_ind_use = [];
             for k = j+1:8
                 cd(sesh_db_use(k).folder) % Go to directory of kth session
-                corr_list = ls('*corrs_cmperbin2*.mat');
+                corr_list = ls('*corrs_cmperbin2*_z_smooth.mat');
                 text_search = ['day' num2str(day_use(j)) '_sesh' ...
                     num2str(sesh_use(j)) '_' analysis_type{ll}];
                 for m = 1:size(corr_list,1)
@@ -313,28 +314,30 @@ for gg = 1:2
         shuffled_mean = 0.0638; shuffled_sem = 0.0068;
         plot_mean = [ stats(m).within.mvs(1) stats(m).within_before.mvs(1) ...
             stats(m).day5_before.mvs(1) stats(m).day6_before.mvs(1) ...
-            stats(m).day6_after.mvs(1) stats(m).before_after.mvs(1)...
-            stats(m).before_day7.mvs(1)];
+            stats(m).day6_after.mvs(1) stats(m).before_after.mvs(1)]; % ...
+%             stats(m).before_day7.mvs(1)];
         plot_sem = [ stats(m).within.mvs(2) stats(m).within_before.mvs(2) ...
             stats(m).day5_before.mvs(2) stats(m).day6_before.mvs(2) ...
-            stats(m).day6_after.mvs(2) stats(m).before_after.mvs(2)...
-            stats(m).before_day7.mvs(2)];
-        figure(20*gg+m)
+            stats(m).day6_after.mvs(2) stats(m).before_after.mvs(2)]; %...
+%             stats(m).before_day7.mvs(2)];
+        hlist_fig(nfigh).h = figure(20*gg+m);
         hlist(nfigh).h = gca;
-        nfigh = nfigh + 1;
+        
         barwitherr(plot_sem, plot_mean); % Plot bars with sems
         hold on;
         plot(get(gca,'XLim'),[shuffled_mean shuffled_mean],'r--')
         legend('Data','','Shuffled')
         set(gca,'XTickLabel',{'Within All Sessions' 'Between Sessions Days 1-4' ...
             'Day 5 to Days 1-4' 'Day 6 to Days 1-4' 'Day 6 to Days 7-8' ...
-            'Days 1-4 to Days 7-8' 'Days 1-4 to Day 7-8s1'})
+            'Days 1-4 to Days 7-8'})
         if gg == 1
             if m <=4; rot_append = ''; else; rot_append = ' - No Rotation Control'; end
-            title([sesh_type{mod(m-1,4)+1} ' - ' sesh_where{mod(m-1,4)+1} rot_append])
+            plotname{nfigh}  = [sesh_type{mod(m-1,4)+1} ' - ' sesh_where{mod(m-1,4)+1} rot_append];
+            title(plotname{nfigh})
         elseif gg == 2
             if m <=2; rot_append = ''; else; rot_append = ' - No Rotation Control'; end
-            title(['Combined ' comb_sesh_where{m} rot_append]);
+            plotname{nfigh} = ['Combined ' comb_sesh_where{m} rot_append];
+            title(plotname{nfigh});
         end
         
         % Save all the stats to the appropriate data structure
@@ -343,6 +346,8 @@ for gg = 1:2
         elseif gg == 2
             comb_corr(m).stats = stats(m);
         end
+        
+        nfigh = nfigh + 1;
         
     end
     
@@ -354,16 +359,28 @@ plot2_mean = [mega_corr(1).stats.day5_before.mvs(1),...
 plot2_sem = [mega_corr(1).stats.day5_before.mvs(3),...
     mega_corr(2).stats.day5_before.mvs(3)];
 
-figure(20*gg+m+1)
+hlist_fig(nfigh).h = figure(20*gg+m+1);
 hlist(nfigh).h = gca;
-nfigh = nfigh + 1;
 barwitherr(plot2_sem, plot2_mean)
-title('Day 5 to Day 1-4 correlations')
+plotname{nfigh} = 'Day 5 to Day 1-4 correlations';
+title(plotname{nfigh})
 set(gca,'XTickLabel',{'Square' 'Octagon'})
 ylim([-0.1 0.5]); xlim([0.5 2.5])
 
 % Set x and y limits to be all the same
 match_xylim(hlist)
+
+%% Save Stuff
+
+% Save figures as jpgs and figs
+for j = 1:size(hlist_fig,2)
+    figure(hlist_fig(j).h);
+    set(hlist_fig(j).h, 'Position', get(0,'Screensize')); % My attempt to maximize the figure before saving so that it doesn't look funny
+    export_fig([plot_save_folder '\' plotname{j}] ,'-jpg');
+    saveas(hlist_fig(j).h, [plot_save_folder '\' plotname{j}], 'fig'); % Need to save the plots to a figure also
+end
+
+
 
 
 

@@ -227,7 +227,7 @@ res_weight = weight3/nansum(weight3(:));
 % Within session 2 using interleaved time periods
 [ corr_2_win_ctrl, dist_2_win_ctrl] = corr_bw_sessions(sesh2.frame_use_1c, sesh2.frame_use_2c, exclude);
 
-keyboard
+% keyboard
 
 corr_1_2_weighted_mean = nansum(res_weight(:).*corr_1_2(:));
 corr_1_win_weighted_mean = nansum(res_weight(:).*corr_1_win(:));

@@ -67,13 +67,13 @@ end
 %% 1) Get working folder location for both sessions and load data in
 % You can run this here using hardcoded sessions if you want...
 if ~exist('batch_run','var') || batch_run == 0
-    task = '2env'; % Specify task here for non-batch runs
+    task = 'alternation_laptop'; % Specify task here for non-batch runs
     if strcmpi(task,'2env')
-        analysis_day(1) = 7; analysis_session(1) = 1;
-        analysis_day(2) = 7; analysis_session(2) = 2;
+        analysis_day(1) = 4; analysis_session(1) = 1;
+        analysis_day(2) = 5; analysis_session(2) = 2;
     elseif strcmpi(task,'alternation_laptop')
-        analysis_day(1) = 1; analysis_session(1) = 1;
-        analysis_day(2) = 3; analysis_session(2) = 1;
+        analysis_day(1) = 8; analysis_session(1) = 1;
+        analysis_day(2) = 9; analysis_session(2) = 1;
     end
 end
 
@@ -85,7 +85,7 @@ registration_file = 'J:\GCamp Mice\Working\2env\RegistrationInfoX.mat';
 cell_mask_file = 'J:\GCamp Mice\Working\2env\11_19_2014\1 - 2env square left 201B\Working\AllICmask.mat';
 alternation_session_laptop = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\alternation_session.mat';
 registration_file_laptop = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\RegistrationInfoX.mat';
-cell_mask_file_laptop = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working\AllICmask.mat';
+cell_mask_file_laptop = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working\AllNeuronMask.mat';
 
 
 if strcmpi(task,'2env')
@@ -96,6 +96,12 @@ elseif strcmpi(task,'alternation_laptop')
     load(registration_file_laptop);
     load(alternation_session_laptop);
     load(cell_mask_file_laptop);
+end
+
+if exist('AllICMask','var')
+    neuron_mask = AllICMask;
+elseif exist('AllNeuronMask','var')
+    neuron_mask = AllNeuronMask;
 end
 
 % <<< Incorporate flag for task here...choose between 2env and alternation
@@ -232,7 +238,7 @@ exclude = zeros(size(AvgFrame_DF_reg));
 exclude(y_exclude,x_exclude) = ones(length(y_exclude),length(x_exclude));
 % keyboard
 % load(cell_mask_file);
-exclude = ~(AllICmask & ~exclude); 
+exclude = ~(neuron_mask & ~exclude); 
 % Exclude pixels due to registration
 for j = 1:2
     if ~isempty(tform(j).reg_pix_exclude)

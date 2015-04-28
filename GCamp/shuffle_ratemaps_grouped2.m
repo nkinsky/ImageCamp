@@ -63,7 +63,7 @@ session_ref_path = 'J:\GCamp Mice\Working\2env\session_ref.mat';
 square_sesh_path = 'J:\GCamp Mice\Working\2env\square_sessions.mat';
 octagon_sesh_path = 'J:\GCamp Mice\Working\2env\octagon_sessions.mat';
 registration_file = 'J:\GCamp Mice\Working\2env\RegistrationInfoX.mat';
-cell_mask_file = 'J:\GCamp Mice\Working\2env\11_19_2014\1 - 2env square left 201B\Working\AllICmask.mat';
+cell_mask_file = 'J:\GCamp Mice\Working\2env\11_19_2014\1 - 2env square left 201B\Working\AllNeuronMask.mat';
 alternation_session_laptop = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\alternation_session.mat';
 registration_file_laptop = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\RegistrationInfoX.mat';
 cell_mask_file_laptop = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working\AllICmask.mat';
@@ -77,6 +77,12 @@ elseif strcmpi(task,'alternation_laptop')
     load(registration_file_laptop);
     load(alternation_session_laptop);
     load(cell_mask_file_laptop);
+end
+
+if exist('AllICMask','var');
+    neuron_mask = AllICMask;
+elseif exist('AllNeuronMask','var')
+    neuron_mask = AllNeuronMask;
 end
 
 % <<< Incorporate flag for task here...choose between 2env and alternation
@@ -134,7 +140,7 @@ exclude = zeros(size(AvgFrame_DF_reg));
 exclude(y_exclude,x_exclude) = ones(length(y_exclude),length(x_exclude));
 % keyboard
 % load(cell_mask_file);
-exclude = ~(AllICmask & ~exclude); 
+exclude = ~(neuron_mask & ~exclude); 
 % Exclude pixels due to registration
 for j = 1:2
     if ~isempty(tform(j).reg_pix_exclude)
