@@ -1,4 +1,4 @@
-function [] = image_registerX(base_file, register_file, manual_reg_enable)
+function [RegistrationInfoX] = image_registerX(base_file, register_file, manual_reg_enable)
 % image_registerX(base_file, register_file)
 % Image Registration Function - THIS FUNCTION ONLY REGISTERS ONE IMAGE TO ANOTHER
 % AND DOES NOT DEAL WITH ANY INDIVIDUAL CELLS.
@@ -21,13 +21,8 @@ function [] = image_registerX(base_file, register_file, manual_reg_enable)
 %               image. Needs to be in the same directory as SignalTrace.mat
 %               to work.  Enter the same file as the base_file if you want
 %               to do a base mapping.
-% cell_merge:   How you deal with cell overlap for future registrations:
-%               'base' = keep the base IC (recommended)
-%               'merge' = merge the base and registered file ICs (not
-%               recommended - cell will eventually grow into monster cell!)
-%               'reg' = overwrite base IC with registered file IC (ok, but
-%               you need to manually verify that cell IC doesn't drift over
-%               time!)
+% manual_reg_enable: 0 if you want to disallow manually adjusting the
+%               registration, 1 if you want to allow it (default)
 %
 % OUTPUTS
 % cell_map:     cell array with each row corresponding to a given neuron,
@@ -37,9 +32,9 @@ function [] = image_registerX(base_file, register_file, manual_reg_enable)
 % GoocICf_comb: combines ICs from the base file and the registered file.
 %               Use this file as the base file for future registrations of
 %               a file to multiple previous sessions.
-% RegistrationInfo : saves the location of the base file, the registered
-%                file, the transform applied, and the Base and registered 
-%                AllIC masks
+% RegistrationInfoX : saves the location of the base file, the registered
+%                file, the transform applied, and statistics about the
+%                transform
 
 % To do:
 
@@ -47,45 +42,8 @@ function [] = image_registerX(base_file, register_file, manual_reg_enable)
 % 180 degrees...
 % - Automatically fill in expected neuron for base mapping
 
-% - Need way to cycle through different cells (only one at a time) where
-% there is multiple overlap (e.g. 57% with one cell and 63% with another
-% cell) - e.g. for the cell immediately after that which gets mapped to
-% cell 88 (G30, base session 9/23 1st session, registered session 9/24 1st
-% session)
-% - Need to number cells in reg image in case you need to make
-% corrections later on 
-% - Automatically plot blow up of area?
-% - Error checking - Need check to make sure that, in cases where there are lots of cells that
-% I don't accidentally assign two different cells to the same cell and thus
-% overwrite a previous mapping.
-% - Error checking - don't let person advance if they don't hit one of the
-% possible IC numbers or enter! Also, make them hit the same thing twice in
-% a row to advance...
-% - Error checking - check if largest percentage is not selected
-% - **** Add try-catch statement to prevent running all the time-intensive imreg
-% functions if we already have a good image reg and just want to run
-% through the mapping portion - maybe search for 'register_file' in RegInfo
-% and if it is already there, skip all the registration stuff? (DONE)
-% - Make imagesc ALWAYS use the same scale when stepping through... (DONE)
-% - Need to think through how to re-do a session more carefully.  It only
-% really works if it is the last session run, otherwise previously mapped
-% cells will get lost or indexed in the wrong place in the cell_map
-% variable...(DONE)
-% - **** Need section to check for double counted cell mappings, and then
-% resolve them.  This will be complicated but necessary.  If this happens,
-% we should either a)only keep the chosen cell mapping, and toss the other
-% cell, or b) toss all of them because they are a cluster we can't resolve.
-% (DONE kind of)
-% *** - No error checking for cells with <50% overlap - only need to hit
-% enter once!!!
-% - AUTOMATIC MAPPING - a)> 65%? (unless more than 2...) b)< 35% 
-% - Ability to discard a cell!!! Both in base mapping and later mapping?
-% - IF more than one cell gets assigned to previous cell, only use the
-% higher percentage overlap and discard the other?
-% - Clean everything up!  Too many lines, too many places to bomb out!
-
 close all;
- 
+
 %% User inputs - if set the same the function should run without any user input during the mapping portion
 
 
@@ -129,6 +87,12 @@ elseif nargin >= 2
     reg_path = register_file(1:max(regexp(register_file,'\','end')));
    
 end
+
+%% Step 1a: Skip out on everything if registration is already done!
+try
+    load([base_path 'RegistrationInfoX.mat'])
+    disp('REGISTRATION ALREADY RAN!!')
+catch
 
 %% Step 2a: Get Images and pre-process - Note that this step is vital as it helps
 % correct for differences in overall illumination or contrast between
@@ -187,16 +151,17 @@ tform_noreg = tform;
 tform_noreg.T = eye(3);
 
 % Apply registration to 2nd session
+base_ref = imref2d(size(base_image_gray));
 moving_reg = imwarp(reg_image,tform,'OutputView',imref2d(size(base_image)),...
     'InterpolationMethod','nearest');
 moving_reg_gray = imwarp(reg_image_gray,tform,'OutputView',...
-    imref2d(size(base_image_gray)),'InterpolationMethod','nearest');
+   base_ref,'InterpolationMethod','nearest');
 
 % Apply NO registrtion to 2nd session for comparison
 moving_noreg = imwarp(reg_image,tform_noreg,'OutputView',imref2d(size(base_image)),...
     'InterpolationMethod','nearest');
 moving_gray_noreg = imwarp(reg_image_gray,tform_noreg,'OutputView',...
-    imref2d(size(base_image_gray)),'InterpolationMethod','nearest');
+    base_ref,'InterpolationMethod','nearest');
 
 % Plot it out for comparison
 h_base_landmark = subplot(2,2,1);
@@ -298,6 +263,7 @@ RegistrationInfoX(size_info).register_file = register_file;
 RegistrationInfoX(size_info).tform = tform;
 RegistrationInfoX(size_info).exclude_pixels = exclude_pixels;
 RegistrationInfoX(size_info).regstats = regstats;
+RegistrationInfoX(size_info).base_ref = base_ref;
 
 if exist('T_manual','var')
     RegistrationInfoX(size_info).tform_manual = tform_manual;
@@ -307,5 +273,6 @@ end
 save ([ base_path 'RegistrationInfoX.mat'],'RegistrationInfoX');
 
 % keyboard;
+end % End try/catch statement
 
 end

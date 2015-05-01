@@ -113,7 +113,7 @@ end
 % tform = struct([]);
 for j = 1:2
     if exist('registration_file','var')
-        [tform_struct] = get_reginfo( sesh(j).folder, RegistrationInfoX );
+        [tform_struct] = get_reginfo([], sesh(j).folder, RegistrationInfoX );
     else
         tform_struct.RegistrationInfoX = [];
         tform_struct.tform_use = [];

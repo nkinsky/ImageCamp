@@ -60,5 +60,5 @@ for j = 1:size(cell_id,2)-1;
     end
 end
 
-num_same = sum(same_cell(:))
-num_notassigned = n
+num_same = sum(same_cell(:));
+num_notassigned = n;
