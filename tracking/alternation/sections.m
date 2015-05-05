@@ -1,5 +1,5 @@
-function bounds = sections(x,y)
-%function sections(x,y) 
+function bounds = sections(x,y,plot_flag)
+%function sections(x,y,plot_flag) 
 %   
 %   This function takes position data and partitions the maze into
 %   sections. 
@@ -7,6 +7,7 @@ function bounds = sections(x,y)
 %   INPUTS: 
 %       X and Y: Position vectors after passing through
 %       PreProcessMousePosition. 
+%       plot_flag: 1 = plot out bounds (default), 0 = suppress plotting.
 %
 %   OUTPUTS: 
 %       BOUNDS: Struct containing coordinates for the corners of maze
@@ -20,18 +21,23 @@ function bounds = sections(x,y)
 %           right = Right arm. 
 %           return_l = Returning to start position from left arm.
 %           return_r = Returning to start position right right arm. 
-%
+
+%% Check for plot_flag
+if ~exist('plot_flag','var')
+    plot_flag = 1; % Set to one if not specified
+end
 
 %% Get xy coordinate bounds for maze sections. 
     xmax = max(x); xmin = min(x); 
     ymax = max(y); ymin = min(y); 
     
-    %Find center arm borders. 
-    center = getcenterarm(x,y); 
-    
     %Establish maze arm widths. 
-    w = 4; %40;              %Width of arms.
-    l = 8; % 80;              %Shift from top/bottom of maze for center stem. 
+    w = (ymax-ymin)/6.5; %40; %Width of arms.
+    l = (xmax-xmin)/8.1; % 80; %Shift from top/bottom of maze for center stem. 
+    
+    %Find center arm borders. 
+    center = getcenterarm(x,y,w,l); 
+      
 %% Left arm. 
     left.x = [xmin, xmin, xmax, xmax];
     left.y = [ymin, ymin+w, ymin, ymin+w]; 
@@ -65,12 +71,14 @@ function bounds = sections(x,y)
     base.y = choice.y; 
     
 %% Check with plot. 
-    figure;
-    plot(x,y); 
-    hold on;
-    plot(left.x,left.y, 'r*', right.x, right.y, 'b.', return_l.x, return_l.y, 'k.',...
-    return_r.x, return_r.y, 'k.', choice.x, choice.y, 'g.', center.x, center.y, 'm.',...
-    base.x, base.y, 'g*', approach_l.x, approach_l.y, 'b.', approach_r.x, approach_r.y, 'k*'); 
+    if plot_flag == 1 % Suppress plotting if plot_flag == 0
+        figure;
+        plot(x,y);
+        hold on;
+        plot(left.x,left.y, 'r*', right.x, right.y, 'b.', return_l.x, return_l.y, 'k.',...
+            return_r.x, return_r.y, 'k.', choice.x, choice.y, 'g.', center.x, center.y, 'm.',...
+            base.x, base.y, 'g*', approach_l.x, approach_l.y, 'b.', approach_r.x, approach_r.y, 'k*');
+    end
 
 %% Output. 
     bounds.base = base; 

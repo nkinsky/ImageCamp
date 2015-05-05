@@ -1,9 +1,10 @@
-function sect = getsection(x,y)
-%function sect = getsection(x,y)
+function sect = getsection(x,y,plot_flag)
+%function sect = getsection(x,y,plot_flag)
 %   This function takes position data and transforms it into section
 %   number. 
 %
 %   X and Y are vectors indicating the mouse position.
+%   plot_flag: 1 = plot sections (default), 0 = suppress plotting
 %
 %   SECT is X x 2 vector where col1 is the frame # and col2 is section #: 
 %       1. Base
@@ -15,9 +16,13 @@ function sect = getsection(x,y)
 %       7. Right approach
 %       8. Right
 %       9. Right return
-    
+
+%% Set up plot_flag if not specified
+    if ~exist('plot_flag','var')
+       plot_flag = 1; 
+    end
 %% Get relevant section coordinates. 
-    bounds = sections(x,y);
+    bounds = sections(x,y,plot_flag);
     
     xmin = [bounds.base.x(1);               
             bounds.center.x(1);
