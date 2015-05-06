@@ -35,7 +35,7 @@ if ~exist('plot_flag','var')
     plot_flag = 1; % Set to one if not specified
 end
 %% Label position data with section numbers. 
-    sect = getsection(x,y,plot_flag);
+    [sect, goal] = getsection(x,y,plot_flag);
     
 %% Define important section numbers. 
     %Define sequences of section numbers that correspond to left or right

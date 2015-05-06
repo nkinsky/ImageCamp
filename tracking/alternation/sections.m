@@ -21,6 +21,8 @@ function bounds = sections(x,y,plot_flag)
 %           right = Right arm. 
 %           return_l = Returning to start position from left arm.
 %           return_r = Returning to start position right right arm. 
+%           goal_l = in reward zone on left arm
+%           goal_r = in reward zone on right arm
 
 %% Check for plot_flag
 if ~exist('plot_flag','var')
@@ -70,6 +72,14 @@ end
     base.x = return_l.x; 
     base.y = choice.y; 
     
+%% Right Goal
+    xmin_g = 0.7*(xmax-xmin)+xmin;
+    xmax_g = xmin_g + 0.1*(xmax-xmin);
+    goal_r.x = [ xmin_g xmin_g xmax_g xmax_g]; % Seems to work ok for our current maze...
+    goal_r.y = right.y; 
+%% Left Goal
+    goal_l.x = goal_r.x;
+    goal_l.y = left.y;
 %% Check with plot. 
     if plot_flag == 1 % Suppress plotting if plot_flag == 0
         figure;
@@ -90,4 +100,6 @@ end
     bounds.right = right; 
     bounds.return_l = return_l;
     bounds.return_r = return_r; 
+    bounds.goal_r = goal_r;
+    bounds.goal_l = goal_l;
 end
