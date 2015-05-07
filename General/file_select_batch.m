@@ -17,6 +17,7 @@ f = 1; p = 1; n = 1;
 while f ~= 0
    [f p] = uigetfile(filterspec,['Select Session ' num2str(n) 'File: ']);
    file(n).path = [p f];
+   file(n).folder = p;
    cd(p); % Go to directory of selected file
 end
 
