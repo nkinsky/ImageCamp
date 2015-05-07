@@ -1,5 +1,5 @@
-function data = postrials(x,y,plot_each_trial,numtrials)
-%function data = postrials(x,y,plot_each_trial,numtrials)
+function data = postrials(x,y,plot_each_trial,numtrials,plot_flag)
+%function data = postrials(x,y,plot_each_trial,numtrials,plot_flag)
 %   
 %   This function takes mouse position data and sorts them into trial
 %   numbers, left/right, and correct/incorrect.
@@ -12,6 +12,8 @@ function data = postrials(x,y,plot_each_trial,numtrials)
 %       function to plot the XY position of the mouse for each trial. 
 %
 %       numtrials: Number of trials ran this session. Default is 40. 
+%
+%       plot_flag: 1 - plot sections (default), 0 = suppress plotting
 %
 %   OUTPUTS:
 %       DATA: a struct with these fields:
@@ -28,8 +30,12 @@ function data = postrials(x,y,plot_each_trial,numtrials)
 %   TIP: To find frames for a particular trial of interest, you can do:
 %       data.frames(data.trial == TRIAL_OF_INTEREST).
 
+%% Check for plot_flag
+if ~exist('plot_flag','var')
+    plot_flag = 1; % Set to one if not specified
+end
 %% Label position data with section numbers. 
-    sect = getsection(x,y);
+    [sect, goal] = getsection(x,y,plot_flag);
     
 %% Define important section numbers. 
     %Define sequences of section numbers that correspond to left or right

@@ -1,23 +1,17 @@
 %% Reverse placefield wrapper function
 
 %%% TO-DO
-% 1) Adjust rvp4 to spit out only AvgFrame, F0, and var - AvgFrame can be
-% either z_smooth or DF_smooth based on a flag.
-% 2) Add in re-mapping control - compare 1st to 2nd half correlations to
-% interleaved (every alternate 2 minutes, or maybe 1st and 3rd quartile to
-% 2nd and 4th quartile).
-% 2.5) Write smoothing function!!! too much code right now in rvp4!!!
-% 3) (done?)Adjust shuffle function to reduce RAM usage - only load sessions right
-% before you need to use them1
-% 4)(low) Make it so I can look at 1st half only of combined sessions - will
-% need to add in a time filter...want to compare square days to adjacent
-% square sessions only, ditto for octagons, etc.
+% 1) Create session database file for alternation sessions
+% 2) Group register all sessions
+% 3) Run arena_align_batch for all sessions
+% 4) 
 
 % Clear workspace if NOT running a batch script
 if ~exist('batch_run','var') || batch_run == 0
 % clear_all_s
 close all
 clearvars -except j ind_use
+rot_overwrite = 0; % Specify here for non batch running
 end
 
 start_time = tic;
@@ -26,10 +20,8 @@ start_time = tic;
 speed_thresh = 5; % cm/s, speed threshold to use for both sessions
 cmperbin = 2.3; % starting size of cmperbin to use
 movie_type = 'ChangeMovie';
-auto_restrict = 0
+auto_restrict = 1
 manual_enable = 1
-rot_overwrite = 0;
-
 % Set to 1 if you wish to analyze data that has intentionally NOT been 
 % rotated such that the local features align.
 analysis_type = 2; % 1 if you want to used smoothed data, 0 if not
@@ -48,9 +40,6 @@ smooth_append = smooth_type{analysis_type + 1};
 % NOTE THAT THIS OCCURS BELOW IN STEP 4 TO BE APPROXIMATELY OK FOR ALL SESSIONS FOR
 % G30 BUT IS A HACK AND WILL NEED TO BE MORE PRECISE IN THE FUTURE!
 
-if exist('rot_overwrite_batch','var') % Overwrite rot_overwrite if doing a batch run
-    rot_overwrite = rot_overwrite_batch;
-end
 
 if rot_overwrite == 0
     import_file = 'pos_corr_to_std.mat';
@@ -67,14 +56,8 @@ end
 %% 1) Get working folder location for both sessions and load data in
 % You can run this here using hardcoded sessions if you want...
 if ~exist('batch_run','var') || batch_run == 0
-    task = 'alternation_laptop'; % Specify task here for non-batch runs
-    if strcmpi(task,'2env')
-        analysis_day(1) = 4; analysis_session(1) = 1;
-        analysis_day(2) = 5; analysis_session(2) = 2;
-    elseif strcmpi(task,'alternation_laptop')
-        analysis_day(1) = 8; analysis_session(1) = 1;
-        analysis_day(2) = 9; analysis_session(2) = 1;
-    end
+    analysis_day(1) = 1; analysis_session(1) = 1;
+    analysis_day(2) = 1; analysis_session(2) = 2;
 end
 
 % Hardcoded place where your reference files live...
@@ -82,42 +65,15 @@ session_ref_path = 'J:\GCamp Mice\Working\2env\session_ref.mat';
 square_sesh_path = 'J:\GCamp Mice\Working\2env\square_sessions.mat';
 octagon_sesh_path = 'J:\GCamp Mice\Working\2env\octagon_sessions.mat';
 registration_file = 'J:\GCamp Mice\Working\2env\RegistrationInfoX.mat';
-cell_mask_file = 'J:\GCamp Mice\Working\2env\11_19_2014\1 - 2env square left 201B\Working\AllICmask.mat';
-alternation_session_laptop = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\alternation_session.mat';
-registration_file_laptop = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\RegistrationInfoX.mat';
-cell_mask_file_laptop = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working\AllNeuronMask.mat';
-
-
-if strcmpi(task,'2env')
-    load(session_ref_path); load(square_sesh_path); load(octagon_sesh_path);
-    load(registration_file); load(cell_mask_file);
-elseif strcmpi(task,'alternation_laptop')
-    
-    load(registration_file_laptop);
-    load(alternation_session_laptop);
-    load(cell_mask_file_laptop);
-end
-
-if exist('AllICMask','var')
-    neuron_mask = AllICMask;
-elseif exist('AllNeuronMask','var')
-    neuron_mask = AllNeuronMask;
-end
-
-% <<< Incorporate flag for task here...choose between 2env and alternation
-% for now, can incorporate others...
+alternation_sesh_path = '';
+load(session_ref_path); load(square_sesh_path); load(octagon_sesh_path);
+load(registration_file);
 
 for j=1:2
-    if strcmpi(task,'2env')
-        [ sesh(j).folder, sesh(j).movie_folder ] = get_sesh_folders( ...
-            day(analysis_day(j)).session(analysis_session(j)),...
-            square_sessions, octagon_sessions );
-    elseif strcmpi(task,'alternation_laptop')
-        sesh(j).folder = alternation_session(analysis_day(j)).folder;
-        sesh(j).movie_folder = alternation_session(analysis_day(j)).movie_folder;
-    end
+    [ sesh(j).folder, sesh(j).movie_folder ] = get_sesh_folders( ...
+        day(analysis_day(j)).session(analysis_session(j)),...
+         square_sessions, octagon_sessions );   
 end
-
 
 userprofile = getenv('USERPROFILE');
 calib_file = [userprofile '\Dropbox\Imaging Project\MATLAB\tracking\2env arena calibration\arena_distortion_hack.mat'];
@@ -138,7 +94,7 @@ end
 % tform = struct([]);
 for j = 1:2
     if exist('registration_file','var')
-        [tform_struct] = get_reginfo([], sesh(j).folder, RegistrationInfoX );
+        [tform_struct] = get_reginfo( sesh(j).folder, RegistrationInfoX );
     else
         tform_struct.RegistrationInfoX = [];
         tform_struct.tform_use = [];
@@ -204,19 +160,12 @@ disp('Here is your chance to compare occupancy grids')
 
 %% 3) run reverse_placefield4
 
-
 for j = 1:2
     disp(['Running reverse_placefield for session ' num2str(j)]);
     cd(sesh(j).folder);
-    % Load general filter if present
-    try
-        load('general_filter.mat');
-    catch
-        general_filter = [];
-    end
-    reverse_placefield(sesh(j).folder , speed_thresh, sesh(j).grid_info,...
+    reverse_placefield4(sesh(j).folder , speed_thresh, sesh(j).grid_info,...
         movie_type, rot_overwrite, sesh(j).movie_folder,...
-        'num_divs_control',8,'general_filter',general_filter);
+        'num_divs_control',8);
 end
 
 %% 4) calculate intersession correlations and plot out for all!
@@ -232,13 +181,13 @@ disp('CALCULATING CORRELATIONS AND SHUFFLING DATA')
 AvgFrame_DF_reg = ones(tform(1).base_ref.ImageSize);
 num_x_pixels = size(AvgFrame_DF_reg,2);
 num_y_pixels = size(AvgFrame_DF_reg,1);
-x_exclude = 325:num_x_pixels; % in pixels
+x_exclude = 325:num_x_pixels; % in pixels - note this is for area of traveling waves in G30... may need to make a specific one for each mouse!!!
 y_exclude = 300:num_y_pixels;
 exclude = zeros(size(AvgFrame_DF_reg));
 exclude(y_exclude,x_exclude) = ones(length(y_exclude),length(x_exclude));
-% keyboard
-% load(cell_mask_file);
-exclude = ~(neuron_mask & ~exclude); 
+keyboard
+load(cell_mask_file);
+exclude = ~(AllICmask & ~exclude); 
 % Exclude pixels due to registration
 for j = 1:2
     if ~isempty(tform(j).reg_pix_exclude)

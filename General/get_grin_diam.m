@@ -1,14 +1,16 @@
 function [ ] = get_grin_diam( image_file )
 % Function to get diameter of grin lens in
 
-pixel_move = 10;
+keyboard
 
+pixel_move = 10;
+%% Load Files
 if nargin == 0
     [image_fname image_pname findex] = uigetfile('*.tif','Please select a TIF file');
     image_file = [image_pname image_fname];
 end
 brain_image = im2double(imread(image_file));
-ok = 'n';
+
 
 h_brain = figure;
 imagesc(brain_image); colormap(gray);
@@ -18,6 +20,8 @@ xc = input('Enter x coordinate for circle center: ');
 yc = input('Enter y coordinate for circle center: ');
 adj_mode = [];
 
+%% Match up diameter
+ok = 'n';
 while ~strcmpi(ok,'y')
     figure(h_brain)
     imagesc(brain_image); colormap(gray);

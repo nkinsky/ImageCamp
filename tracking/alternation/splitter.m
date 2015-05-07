@@ -1,4 +1,4 @@
-function stem_cells = splitter(x,y,FT,numtrials,plotme)
+function stem_cells = splitter(x,y,FT,TMap,numtrials,plotme)
 %function stem_cells = splitter(x,y,FT,numtrials,plotme)
 %
 %   This function takes the position data of the mouse plus FinalTraces.mat
@@ -7,10 +7,12 @@ function stem_cells = splitter(x,y,FT,numtrials,plotme)
 %   plots a place field for both left and right trials. 
 %
 %   INPUTS: 
-%       X & Y: Position vectors after passing through
-%       PreProcessMousePosition. 
+%       X & Y: Position vectors from PlaceMaps.mat file, matches FT in
+%       time.
 %       
-%       FT: FinalTraces.mat.
+%       FT:from PlaceMaps.mat, matches X and Y in time.
+%       
+%       TMap: placemap cell, output of CalculatePlaceFields
 %       
 %       numtrials: Number of laps the mouse ran. 
 %
@@ -42,11 +44,11 @@ function stem_cells = splitter(x,y,FT,numtrials,plotme)
     
 %% Occupancy histogram.
     %Define boundaries. 
-    num_pix = 15;
+    num_pix_x = 30; num_pix_y = 5;
     xmin = min(bounds.center.x); xmax = max(bounds.center.x); 
     ymin = min(bounds.center.y); ymax = max(bounds.center.y); 
-    xedges = linspace(xmin, xmax, num_pix); 
-    yedges = linspace(ymin, ymax, num_pix); 
+    xedges = linspace(xmin, xmax, num_pix_x); 
+    yedges = linspace(ymin, ymax, num_pix_y); 
     
     %Occupancy. 
     left_occ = hist2(x(left), y(left), xedges, yedges); 
@@ -74,20 +76,23 @@ function stem_cells = splitter(x,y,FT,numtrials,plotme)
         V.dt = 1/SR;
         P.gam = 0.988;  %0.941 no idea what this is. 
         V.fast_poiss = 1;
-        spiketrain = zeros(size(FT));
-
-        %Run oopsi. 
-        for i = 1:num_cells
-            if(sum(FT(i,:)) > 0)
-                spiketrain(i,:) = DWS_oopsi(FT(i,:),V,P);
-                spiketrain(i,find(spiketrain(i,:) <= 0.05)) = 0; %Takes care of a case where oopsi gives funky results for mostly 0 traces
-            else
-                spiketrain(i,:) = 0;
-            end
-        end
         
-        %Save traces. 
-        save WM_spiketrain.mat;
+        % NRK Edits
+        spiketrain = FT;
+%         spiketrain = zeros(size(FT));
+%         
+%         %Run oopsi.
+%         for i = 1:num_cells
+%             if(sum(FT(i,:)) > 0)
+%                 spiketrain(i,:) = DWS_oopsi(FT(i,:),V,P);
+%                 spiketrain(i,find(spiketrain(i,:) <= 0.05)) = 0; %Takes care of a case where oopsi gives funky results for mostly 0 traces
+%             else
+%                 spiketrain(i,:) = 0;
+%             end
+%         end
+%         
+%         %Save traces. 
+%         save WM_spiketrain.mat;
         
     end
     
@@ -138,8 +143,12 @@ function stem_cells = splitter(x,y,FT,numtrials,plotme)
                 max([max(left_place{this_cell}(:)), max(right_place{this_cell}(:))]) ]; 
             
             figure;
-            ha = tight_subplot(2,1,[.1 0.1],[.1 .1],[.1 .1]); 
-            axes(ha(1)); 
+            ha = tight_subplot(3,1,[.1 0.1],[.1 .1],[.1 .1]); 
+            
+            axes(ha(1));
+                imagesc(rot90(TMap{this_cell},1))
+            
+            axes(ha(2)); 
                 pcolor(left_place{this_cell});
                 shading flat; 
                 axis equal; axis tight;
@@ -148,7 +157,7 @@ function stem_cells = splitter(x,y,FT,numtrials,plotme)
                 colorbar;
                 caxis(color_range); 
   
-            axes(ha(2)); 
+            axes(ha(3)); 
                 pcolor(right_place{this_cell});
                 shading flat; 
                 axis equal; axis tight;
