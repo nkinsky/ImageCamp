@@ -48,9 +48,12 @@ for j = 1:length(epoch_use)
        % an epoch
        epoch_TMap(:) = nansum([epoch_TMap(:) activity_wt(active_cells(k))*TMap{active_cells(k)}(:)],2);
        % Same thing for binary TMap
-       TMap_bin = zeros(size(TMap{1})); % Set it up
-       TMap_bin(TMap{active_cells(k)} ~= 0 & ~isnan(TMap{active_cells(k)})) = ...
-           ones(size(find(TMap{active_cells(k)} ~= 0 & ~isnan(TMap{active_cells(k)})))); % Make all valid areas = 1
+       TMap_bin = make_binary_TMap(TMap{active_cells(k)});
+       % Old code for above function, keep around until you are sure above
+       % works!
+%        TMap_bin = zeros(size(TMap{1})); % Set it up
+%        TMap_bin(TMap{active_cells(k)} ~= 0 & ~isnan(TMap{active_cells(k)})) = ...
+%            ones(size(find(TMap{active_cells(k)} ~= 0 & ~isnan(TMap{active_cells(k)})))); % Make all valid areas = 1
        epoch_TMap_bin(:) = nansum([epoch_TMap_bin(:) activity_wt(active_cells(k))*TMap_bin(:)],2);
        
        % List centroids of each active cell

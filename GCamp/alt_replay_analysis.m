@@ -19,17 +19,17 @@ function [ ] = alt_replay_analysis( )
 
 num_trials = 40; % this will probably need to be fixed somehow or automatically counted in Will's script...
 % bonehead way is to increment num_trials up until you reach an error...
-vel_thresh = 7; % threshold in cm/s below which we consider the mouse not moving/not encoding placefields
+vel_thresh = 7; % NOT CURRENTLY USED - threshold in cm/s below which we consider the mouse not moving/not encoding placefields
 sig_level = 0.05; % p-value threshold, below which you include fields in the analysis
 
 %% Part 0: Hardcoded file locations for original writing of function
 
-working_dir = 'J:\GCamp Mice\Working\alternation\11_12_2014\Working'; %NORVAL 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_11_2014\Working'; % laptop
-pos_file = [working_dir '\pos_corr_to_std.mat'];
+working_dir = 'J:\GCamp Mice\Working\alternation\11_4_2014\Working'; %NORVAL 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_11_2014\Working'; % laptop
+% pos_file = [working_dir '\pos_corr_to_std.mat'];
 place_file = [working_dir '\PlaceMaps.mat'];
 pf_stats_file = [working_dir '\PFstats.mat'];
 
-load(pos_file)
+% load(pos_file)
 load(place_file)
 load(pf_stats_file)
 
@@ -58,7 +58,7 @@ pos_data = postrials(x, y, 0, num_trials, 0);
 
 
 % keyboard
-figure
+figure(11)
 plot(x,y,'b')
 for i = 1:length(trial_type)
     for j = 1:length(valid_sections)
@@ -113,6 +113,13 @@ for i = 1:length(trial_type)
                 epoch(n-1).end = ind_use(k+1);
             end
         end
+        
+        % Fill in epoch if k is empty
+        if isempty(k)
+            epoch(1).start = [];
+            epoch(1).end = [];
+        end
+        
         if i == 1
             section(valid_sections(j)).epoch_left = epoch; % assign epochs to section variable
         elseif i == 2
@@ -120,6 +127,8 @@ for i = 1:length(trial_type)
         end
     end
 end
+
+keyboard
 %% Step 2: Get locations of centers of mass of all placefields (convert from
 % TMap coordinates to centimeters...) and spit these out for each epoch a
 % mouse is in a given area (next step is to look at order of firing to see
@@ -239,7 +248,7 @@ for j = 1:length(valid_sections)
     clim_eq = max(abs(clims2));
     set(gca,'CLim',[-clim_eq clim_eq]);
     colormap jet;
-    colorbar('Ticks',[-clim_eq 0 clim_eq],'TickLabels', {'L < R' 'L = R' 'L > R'});
+    colorbar('Ticks',[-clim_eq 0 clim_eq],'TickLabels', {'R > L' 'L = R' 'L > R'});
     title(['Sum of Heatmaps for Non-Running Epochs in ' ...
         section_names{valid_sections(j)} ' Section: L-R trials']);
     hold on;
@@ -247,6 +256,21 @@ for j = 1:length(valid_sections)
     plot((bounds_use.x([1 2 3 4 1])-Xcm_min)/scale_use, ...
         (bounds_use.y([1 2 4 3 1])-Ycm_min)/scale_use,'r--') % Plot bounds boxes
 end
+
+keyboard
+%% Plot activations in order by epoch
+
+epoch_use = section(1).epoch_left;
+figure(50)
+for m = 1:length(epoch_use)
+    frames_use = epoch_use(m).start:epoch_use(m).end;
+    [ ~, ~, TMap_order ] = get_activation_order(frames_use, FT, TMap);
+    [~, TMap_order_nan ] = make_nan_TMap( OccMap, TMap_order );
+    imagesc_nan(rot90(TMap_order_nan,1)); colorbar; colormap jet;
+    
+   waitforbuttonpress
+end
+
 %% Keyboard statement if you want to debug/mess around at the end
 keyboard
 
