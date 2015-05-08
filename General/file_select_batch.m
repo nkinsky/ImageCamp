@@ -16,11 +16,18 @@ disp('Select file(s) you wish to analyze.  Hit Cancel after you have selected yo
 f = 1; p = 1; n = 1;
 while f ~= 0
    [f p] = uigetfile(filterspec,['Select Session ' num2str(n) 'File: ']);
-   file(n).path = [p f];
-   file(n).folder = p;
-   cd(p); % Go to directory of selected file
+   temp(n).path = [p f];
+   temp(n).folder = p;
+   if f ~= 0
+       n = n + 1;
+       cd(p);
+   end
+%    cd(p); % Go to directory of selected file
 end
 
+file = temp(1:n-1); % Grab only valid file selections, discard zeros due to hitting "Cancel"
 cd(curr_dir); % return to original directory
+
+% keyboard
 
 end

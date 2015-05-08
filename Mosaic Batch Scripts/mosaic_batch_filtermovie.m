@@ -2,7 +2,7 @@
 
 %% Filter Specifications
 filter_type = 'circular';
-filter_pixels = 3;
+filter_pixel_radius = 3;
 
 curr_dir = cd;
 
@@ -20,9 +20,9 @@ num_files = length(file);
 for j = 1:num_files
     inputMovie = mosaic.loadObjects(file(j).path);
     filterMovie = mosaic.filterMovie(inputMovie,'filterType', filter_type,...
-        'filterSize',filter_pixels);
+        'filterSize',filter_pixel_radius*2);
     cd(file(j).folder);
-    mosaic.saveOneObject(['ICmovie_smooth_' filtertype '_' num2str(filter_pixels)],filterMovie);
+    mosaic.saveOneObject(filterMovie,['ICmovie_smooth_' filter_type '_' num2str(filter_pixel_radius)]);
 end
 
 %% Terminate
