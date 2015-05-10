@@ -28,6 +28,8 @@ function [rotx, roty] = rotate_traj(x,y)
     w = angx(2)-angx(1);
     h = angy(2)-angy(1); 
     rotang = -atan(h/w); 
+    rotang_deg = radtodeg(rotang); 
+    disp(['Rotating animal trajectory by ', num2str(rotang_deg), ' degrees.']); 
     
     %Rotation array. 
     rotarray = [cos(rotang), -sin(rotang);...
