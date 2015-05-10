@@ -34,13 +34,12 @@ function bounds = sections(x,y,plot_flag)
     skewed = 1;
     while skewed
         
-        try load('rotationangle.mat');
+        %Try loading previous rotation angle. 
+        try load('rotated.mat');
             
         catch
-            [newx,newy] = rotate_traj(x,y);
+            [newx,newy,rotang] = rotate_traj(x,y);
         end
-        
-        [newx,newy] = rotate_traj(x,y,rotang);
         
     %% Get xy coordinate bounds for maze sections. 
         xmax = max(newx); xmin = min(newx); 
@@ -96,22 +95,26 @@ function bounds = sections(x,y,plot_flag)
         goal_l.y = left.y;
 
     %% Check with plot. 
-            if plot_flag == 1 % Suppress plotting if plot_flag == 0
-                figure;
-                plot(newx,newy);
-                hold on;
-                plot(left.x,left.y, 'r*', right.x, right.y, 'b.', return_l.x, return_l.y, 'k.',...
-                    return_r.x, return_r.y, 'k.', choice.x, choice.y, 'g.', center.x, center.y, 'm.',...
-                    base.x, base.y, 'g*', approach_l.x, approach_l.y, 'b.', approach_r.x, approach_r.y, 'k*');
-            end
+        if plot_flag == 1 % Suppress plotting if plot_flag == 0
+            figure;
+            plot(newx,newy);
+            hold on;
+            plot(left.x,left.y, 'r*', right.x, right.y, 'b.', return_l.x, return_l.y, 'k.',...
+                return_r.x, return_r.y, 'k.', choice.x, choice.y, 'g.', center.x, center.y, 'm.',...
+                base.x, base.y, 'g*', approach_l.x, approach_l.y, 'b.', approach_r.x, approach_r.y, 'k*');
+        end
 
-            %Sanity check for trajectory rotation. 
-            yn = input('Are you satisfied with the rotation?','s'); 
-            if strcmp(yn,'y')
-                skewed = 0;         %Break.
-            elseif strcmp(yn,'n');
-                close all;          %Try again.
+        %Sanity check for trajectory rotation. 
+        yn = input('Are you satisfied with the rotation?','s'); 
+        if strcmp(yn,'y')
+            skewed = 0;         %Break.
+            save rotated rotang newx newy;
+        elseif strcmp(yn,'n');
+            if exist('rotated.mat') == 2
+                delete rotated.mat;
             end
+            close all;          %Delete last rotation and try again.
+        end
         
     end
 
