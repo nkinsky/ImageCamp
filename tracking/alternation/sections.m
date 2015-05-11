@@ -1,5 +1,5 @@
-function bounds = sections(x,y,plot_flag)
-%function sections(x,y,plot_flag) 
+function bounds = sections(x,y)
+%function sections(x,y)
 %   
 %   This function takes position data and partitions the maze into
 %   sections. 
@@ -7,8 +7,6 @@ function bounds = sections(x,y,plot_flag)
 %   INPUTS: 
 %       X and Y: Position vectors after passing through
 %       PreProcessMousePosition. 
-%
-%       plot_flag: 1 = plot out bounds (default), 0 = suppress plotting.
 %
 %   OUTPUTS: 
 %       BOUNDS: Struct containing coordinates for the corners of maze
@@ -25,10 +23,6 @@ function bounds = sections(x,y,plot_flag)
 %           goal_l = in reward zone on left arm.
 %           goal_r = in reward zone on right arm.
 %
-%% Check for plot_flag
-    if ~exist('plot_flag','var')
-        plot_flag = 1; % Set to one if not specified
-    end
 
 %% Correct for rotated maze. 
     skewed = 1;
@@ -46,14 +40,14 @@ function bounds = sections(x,y,plot_flag)
         ymax = max(newy); ymin = min(newy); 
 
     %% Establish maze arm boundaries. 
-        w = (ymax-ymin)/6.5; %40;   Width of arms.
+        w = (ymax-ymin)/6.2; %40;   Width of arms.
         l = (xmax-xmin)/8.1; %80;   Shift from top/bottom of maze for center stem. 
 
         %Find center arm borders. 
         center = getcenterarm(newx,newy,w,l); 
 
         %Left arm. 
-        left.x = [xmin, xmax, xmax, xmin];
+        left.x = [xmin+l, xmax, xmax, xmin+l];
         left.y = [ymin, ymin, ymin+w, ymin+w]; 
 
         %Right arm. 
@@ -74,11 +68,11 @@ function bounds = sections(x,y,plot_flag)
 
     	%Left approach. 
         approach_l.x = choice.x;  
-        approach_l.y = [left.y(3), left.y(3), center.y(1), center.y(1)]; 
+        approach_l.y = [ymin, ymin, center.y(1), center.y(1)]; 
 
     	%Right approach. 
         approach_r.x = choice.x;
-        approach_r.y = [center.y(3), center.y(3), right.y(1), right.y(1)]; 
+        approach_r.y = [center.y(3), center.y(3), ymax ymax]; 
 
     	%Base. 
         base.x = return_l.x; 
@@ -87,41 +81,40 @@ function bounds = sections(x,y,plot_flag)
         %Right Goal
         xmin_g = 0.7*(xmax-xmin)+xmin;
         xmax_g = xmin_g + 0.1*(xmax-xmin);
-        goal_r.x = [ xmin_g xmin_g xmax_g xmax_g]; % Seems to work ok for our current maze...
+        goal_r.x = [xmin_g xmax_g xmin_g xmax_g]; % Seems to work ok for our current maze...
         goal_r.y = right.y; 
 
     	%Left Goal
         goal_l.x = goal_r.x;
         goal_l.y = left.y;
 
-    %% Check with plot. 
-        if plot_flag == 1 % Suppress plotting if plot_flag == 0
-            figure;
-            plot(newx,newy);
-            hold on;
-            plot([left.x left.x(1)],[left.y left.y(1)], 'k-', ...
-                [right.x right.x(1)],[right.y right.y(1)], 'k-', ...
-                [return_l.x return_l.x(1)], [return_l.y return_l.y(1)], 'k-', ...
-                [return_r.x return_r.x(1)], [return_r.y return_r.y(1)], 'k-', ...
-                [center.x center.x(1)], [center.y center.y(1)], 'k-', ...
-                [base.x base.x(1)], [base.y base.y(1)], 'g-', ...
-                [approach_l.x approach_l.x(1)], [approach_l.y approach_l.y(1)], 'k-', ...
-                [approach_r.x approach_r.x(1)], [approach_r.y approach_r.y(1)], 'k-', ...
-                [choice.x choice.x(1)], [choice.y choice.y(1)], 'r-');
-        end
+    %% Check with plot.   
+        figure(555);
+        plot(newx,newy);
+        hold on;
+        plot([left.x left.x(1)],[left.y left.y(1)], 'b-', ...
+            [right.x right.x(1)],[right.y right.y(1)], 'k-', ...
+            [return_l.x return_l.x(1)], [return_l.y return_l.y(1)], 'k-', ...
+            [return_r.x return_r.x(1)], [return_r.y return_r.y(1)], 'k-', ...
+            [center.x center.x(1)], [center.y center.y(1)], 'k-', ...
+            [base.x base.x(1)], [base.y base.y(1)], 'g-', ...
+            [approach_l.x approach_l.x(1)], [approach_l.y approach_l.y(1)], 'k-', ...
+            [approach_r.x approach_r.x(1)], [approach_r.y approach_r.y(1)], 'k-', ...
+            [choice.x choice.x(1)], [choice.y choice.y(1)], 'r-');
+        hold off; 
 
-     %% Sanity check for trajectory rotation. 
+    %Sanity check for trajectory rotation. 
         satisfied = input('Are you satisfied with the rotation? Enter y or n-->','s'); 
         if strcmp(satisfied,'y')       %Break.
             skewed = 0;         
             save rotated rotang newx newy;
         elseif strcmp(satisfied,'n');  %Delete last rotation and try again.
-            if exist('rotated.mat') == 2
+            if exist('rotated.mat','file') == 2
                 delete rotated.mat;
             end
             close all;          
         end
-        
+      
     end
 
 %% Output. 
@@ -134,6 +127,6 @@ function bounds = sections(x,y,plot_flag)
     bounds.right = right; 
     bounds.return_l = return_l;
     bounds.return_r = return_r; 
-    bounds.goal_r = goal_r;
     bounds.goal_l = goal_l;
+    bounds.goal_r = goal_r;
 end

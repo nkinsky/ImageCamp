@@ -1,5 +1,5 @@
-function data = postrials(x,y,plot_each_trial,numtrials,plot_flag)
-%function data = postrials(x,y,plot_each_trial,numtrials,plot_flag)
+function data = postrials(x,y,plot_each_trial)
+%function data = postrials(x,y,plot_each_trial)
 %   
 %   This function takes mouse position data and sorts them into trial
 %   numbers, left/right, and correct/incorrect.
@@ -10,10 +10,6 @@ function data = postrials(x,y,plot_each_trial,numtrials,plot_flag)
 %       
 %       plot_each_trial: Logical to determine whether or not you want the
 %       function to plot the XY position of the mouse for each trial. 
-%
-%       numtrials: Number of trials ran this session. Default is 40. 
-%
-%       plot_flag: 1 - plot sections (default), 0 = suppress plotting
 %
 %   OUTPUTS:
 %       DATA: a struct with these fields:
@@ -30,12 +26,8 @@ function data = postrials(x,y,plot_each_trial,numtrials,plot_flag)
 %   TIP: To find frames for a particular trial of interest, you can do:
 %       data.frames(data.trial == TRIAL_OF_INTEREST).
 
-%% Check for plot_flag
-if ~exist('plot_flag','var')
-    plot_flag = 1; % Set to one if not specified
-end
 %% Label position data with section numbers. 
-    [sect, goal] = getsection(x,y,plot_flag);
+    [sect,goal] = getsection(x,y);
     
 %% Define important section numbers. 
     %Define sequences of section numbers that correspond to left or right
@@ -60,7 +52,6 @@ end
 
     %Preallocate.
     epochs = start; 
-    trialtype = 1;
     
     %For each lap. 
     for this_trial = 1:100
@@ -110,7 +101,7 @@ end
         %catches when the mouse appears on both maze arms in what the
         %script believed to be a single trial. 
         if (ismember(left, sect(epochs(this_trial):epochs(next),2)) && trialtype(this_trial) == 2) || ...
-                (ismember(right, sect(epochs(this_trial):epochs(next),2)) && trialtype(this_trial) == 1)
+           (ismember(right, sect(epochs(this_trial):epochs(next),2)) && trialtype(this_trial) == 1)
             disp(['Warning: This epoch may contain more than one trial: Trial ', num2str(this_trial)]); 
         end
         
@@ -124,10 +115,6 @@ end
     numtrials = length(epochs); 
     
 %% Build up the struct. 
-    data = struct; 
-    data.trial = nan(1,length(x));
-    data.choice = nan(1,length(x));
-    data.alt = nan(1,length(x));
     data.frames = 1:length(x);          %Frames.
     
     %Vector containing correct vs. error using a trick: take the difference
