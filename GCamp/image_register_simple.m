@@ -47,10 +47,10 @@ for k = 1:2
     cd(sesh(k).folder);
     load('ProcOut.mat','NeuronImage');
     if k == 2 % Don't get registration info if base session
-        keyboard
+%         keyboard
         [tform_struct ] = get_reginfo(sesh(1).folder, sesh(2).folder, RegistrationInfoX );
     end
-    disp('Calculating cell center of masses')
+    disp(['Calculating cell center of masses for session ' num2str(k)])
     for j = 1:size(NeuronImage,2);
         temp = NeuronImage{j};
         if k == 2 % Don't do registration if base session
@@ -67,6 +67,7 @@ for k = 1:2
 end
 
 %% Get distance to all other cells
+disp('Calculating Distances between cells')
 for j = 1:size(day(1).cms,2);
     pos_cm(:,1) = [day(1).cms(j).x ; day(1).cms(j).y];
     for m = 1:size(day(2).cms,2)
@@ -120,7 +121,7 @@ figure;
 imagesc(sesh(1).AllNeuronMask + 2*sesh(2).AllNeuronMask); colorbar
 title('1 = session 1, 2 = session 2, 3 = both sessions')
 
-keyboard
+% keyboard
 
 %% Plot out each cell mapped to another to see how good the registraton is..
 
