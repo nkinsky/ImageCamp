@@ -11,16 +11,16 @@ function [ neuron_id, same_neuron, num_not_assigned] = image_register_simple( ba
 %       reg_file: full path to the file, also ICMovie_min_proj.tif, you
 %       wish you register to base_file
 %
-%       check_cell_mapping: 0 (default) = no check plots are generate.
+%       check_cell_mapping: 0 (default) = no check plots are generated.
 %       1 = go through cell-by-cell and check how well cells are mapped.
 %
 %   OUTPUTS
 %       neuron_id: 1xn cell where n is the number of neurons in the first
 %       session, and each value is the neuron number in the 2nd session
 %       that maps to the neurons in the 1st session.  An empty cell means
-%       that no cell from the 2nd session maps to that cell from the 1st
-%       session (either because the closes cell exceeds min_thresh OR
-%       because more than one cell is within min_thresh)
+%       that no neuron from the 2nd session maps to that neuron from the 1st
+%       session.  A value of NaN means that more than one neuron from the
+%       second session is within min_thresh of the 1st session neuron
 %
 %       same_neuron: n x m logical, where the a value of 1 indicates that
 %       more than one neuron from the second session maps to a cell in the
@@ -100,8 +100,8 @@ for j = 1:size(neuron_id,2)-1;
             same_neuron(j,k) = 1;
             % exclude 2nd session cells that map to the same cell in the
             % 1st session
-            neuron_id{j} = [];
-            neuron_id{k} = [];
+            neuron_id{j} = nan;
+            neuron_id{k} = nan;
         else
             same_cell(j,k) = 0;
         end
