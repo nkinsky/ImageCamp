@@ -59,7 +59,8 @@ end
     start = min(find(sect(:,2)==1)); 
 
     %Preallocate.
-    epochs(1) = start; 
+    epochs = start; 
+    trialtype = 1;
     
     %For each lap. 
     for this_trial = 1:100
@@ -123,7 +124,11 @@ end
     numtrials = length(epochs); 
     
 %% Build up the struct. 
-    data.frames = 1:length(x);    %Frames.
+    data = struct; 
+    data.trial = nan(1,length(x));
+    data.choice = nan(1,length(x));
+    data.alt = nan(1,length(x));
+    data.frames = 1:length(x);          %Frames.
     
     %Vector containing correct vs. error using a trick: take the difference
     %between consecutive trial types (left (1) vs. right (2)) such that
