@@ -91,7 +91,7 @@ end
 %% Step 1a: Skip out on everything if registration is already done!
 try
     load([base_path 'RegistrationInfoX.mat'])
-    disp('REGISTRATION ALREADY RAN!!')
+    disp('REGISTRATION ALREADY RAN!! Skipping this step')
 catch
 
 %% Step 2a: Get Images and pre-process - Note that this step is vital as it helps

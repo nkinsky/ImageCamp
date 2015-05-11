@@ -1,14 +1,41 @@
-function [ cell_id] = image_register_simple( base_file, reg_file)
+function [ neuron_id, same_neuron, num_not_assigned] = image_register_simple( base_file, reg_file, check_neuron_mapping)
 %image_register_simple( base_file, reg_file)
-%   Detailed explanation goes here
+%   Registers the image ICmovie_min_proj.tif from one session to another so
+%   as to map neurons from one session to the next.  Note that you must set
+%   the magic variable 'min_thresh' manually within the function code
+%
+%   INPUTS
+%       base_file: full path to the base_file, ICMovie_min_proj.tif, to
+%       which you wish to register a second session
+%
+%       reg_file: full path to the file, also ICMovie_min_proj.tif, you
+%       wish you register to base_file
+%
+%       check_cell_mapping: 0 (default) = no check plots are generate.
+%       1 = go through cell-by-cell and check how well cells are mapped.
+%
+%   OUTPUTS
+%       neuron_id: 1xn cell where n is the number of neurons in the first
+%       session, and each value is the neuron number in the 2nd session
+%       that maps to the neurons in the 1st session.  An empty cell means
+%       that no cell from the 2nd session maps to that cell from the 1st
+%       session (either because the closes cell exceeds min_thresh OR
+%       because more than one cell is within min_thresh)
+%
+%       same_neuron: n x m logical, where the a value of 1 indicates that
+%       more than one neuron from the second session maps to a cell in the
+%       first session.  Each row corresponds to a 1st session neuron, each
+%       column to a 2nd session neuron.
+%
+%       num_not_assigned: number of neurons that had no neurons in the
+%       second session within min_thresh.
 
 %% Magic variables
 min_thresh = 3; % distance in pixels beyond which we consider a cell a different cell
-
-manual_reg_enable = 0;
+manual_reg_enable = 0; % 0 = do not allow manual adjustment of registration
 
 %% Perform Image Registration
-RegistrationInfoX = image_registerX(base_file, reg_file, 0);
+RegistrationInfoX = image_registerX(base_file, reg_file, manual_reg_enable);
 
 %% Get working folders for each session
 
@@ -52,23 +79,29 @@ end
 
 cm_dist_min = min(cm_dist,[],2);
 
+% exclude cells whose closest neighbor exceeds the distance threshold you
+% set
 n = 0;
 for j = 1:length(cm_dist_min)
     if cm_dist_min(j) > min_thresh
-        cell_id{j} = [];
+        neuron_id{j} = [];
         n = n+1;
     else
-        cell_id{j} = find(cm_dist_min(j) == cm_dist(j,:));
+        neuron_id{j} = find(cm_dist_min(j) == cm_dist(j,:));
     end
     
 end
 
 % Check to see if any cells from session 1 map to the same cell in session
 % 2 or vice versa
-for j = 1:size(cell_id,2)-1; 
-    for k = j+1:size(cell_id,2)
-        if cell_id{j} == cell_id{k} 
-            same_cell(j,k) = 1;
+for j = 1:size(neuron_id,2)-1; 
+    for k = j+1:size(neuron_id,2)
+        if neuron_id{j} == neuron_id{k} 
+            same_neuron(j,k) = 1;
+            % exclude 2nd session cells that map to the same cell in the
+            % 1st session
+            neuron_id{j} = [];
+            neuron_id{k} = [];
         else
             same_cell(j,k) = 0;
         end
@@ -88,6 +121,38 @@ imagesc(sesh(1).AllNeuronMask + 2*sesh(2).AllNeuronMask); colorbar
 title('1 = session 1, 2 = session 2, 3 = both sessions')
 
 keyboard
+
+%% Plot out each cell mapped to another to see how good the registraton is..
+
+if exist('check_neuron_mapping','var') && check_neuron_mapping == 1
+    % Dump all neuron images into a single variable
+    for i = 1:2
+        cd(sesh(i).folder);
+        load('ProcOut.mat','NeuronImage');
+        for j = 1:size(NeuronImage,2)
+            temp5{i,j} = NeuronImage{j};
+        end
+    end
+    
+    % Check registration with a cell-by-cell plot
+    figure(50)
+    for i = 1:size(neuron_id,2)
+        if ~isempty(neuron_id{i})
+            % Register 2nd neuron's outline to 1st neuron
+            neuron2_reg = imwarp(temp5{2,neuron_id{i}},tform_struct.tform,'OutputView',...
+                tform_struct.base_ref,'InterpolationMethod','nearest');
+        else
+            % Make 2nd neuron mask all zeros if no cell maps to the 1st
+            neuron2_reg = zeros(size(temp5{1,1}));
+        end
+        imagesc(temp5{1,i} + 2*neuron2_reg); colorbar; colormap jet
+        title(['1st session neuron ' num2str(i) '. 2nd session neuron ' num2str(neuron_id{i})])
+        
+        waitforbuttonpress
+    end
+
+end
+
 
 end
 
