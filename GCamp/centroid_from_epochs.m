@@ -29,8 +29,12 @@ AllTMap = zeros(size(TMap{1})); % set up TMap
 AllTMap_bin = AllTMap; % set up binary TMap (0 = no activation, 1 = activation)
 AllTcent_cm = [];
 % keyboard
+
+%% Meat of the function
+n_frames = 0;
 for j = 1:length(epoch_use)
    frames_use = epoch_use(j).start:epoch_use(j).end; % Get frames to use for a given epoch
+   n_frames = n_frames + length(frames_use); % Total number of frames in whole epoch
    FT_epoch = FT(:,frames_use); % Pull only valid frames from FT
    activity_wt = sum(FT_epoch,2); % Sum up activity of cells
    
@@ -42,27 +46,32 @@ for j = 1:length(epoch_use)
    for k = 1:length(active_cells)
        % Sum up TMap of each cell multiplied by number of activations in
        % an epoch
-       epoch_TMap = epoch_TMap + activity_wt(active_cells(k))*TMap{active_cells(k)};
+       epoch_TMap(:) = nansum([epoch_TMap(:) activity_wt(active_cells(k))*TMap{active_cells(k)}(:)],2);
        % Same thing for binary TMap
-       TMap_bin = zeros(size(TMap{1})); % Set it up
-       TMap_bin(TMap{active_cells(k)} ~= 0) = ones(size(find(TMap{active_cells(k)} ~= 0))); % Make all valid areas = 1
-       epoch_TMap_bin = epoch_TMap_bin + activity_wt(active_cells(k))*TMap_bin;
+       TMap_bin = make_binary_TMap(TMap{active_cells(k)});
+       % Old code for above function, keep around until you are sure above
+       % works!
+%        TMap_bin = zeros(size(TMap{1})); % Set it up
+%        TMap_bin(TMap{active_cells(k)} ~= 0 & ~isnan(TMap{active_cells(k)})) = ...
+%            ones(size(find(TMap{active_cells(k)} ~= 0 & ~isnan(TMap{active_cells(k)})))); % Make all valid areas = 1
+       epoch_TMap_bin(:) = nansum([epoch_TMap_bin(:) activity_wt(active_cells(k))*TMap_bin(:)],2);
        
        % List centroids of each active cell
-       epoch_Tcent(k,1:2) = Tcent_cm(active_cells(k),:);
-       epoch_Tcent(k,3) = activity_wt(active_cells(k)); % Get number of times active
+       epoch_Tcent_cm(k,1:2) = Tcent_cm(active_cells(k),:);
+       epoch_Tcent_cm(k,3) = activity_wt(active_cells(k)); % Get number of times active
    end
    
    AllTMap(:) = nansum([AllTMap(:) epoch_TMap(:)],2); % Combine each epochs active TMaps into an overall set
    AllTMap_bin(:) = nansum([AllTMap_bin(:) epoch_TMap_bin(:)],2); % Combine each epochs active TMaps into an overall set
-   AllTcent_cm = [AllTcent_cm ; epoch_Tcent];
+   AllTcent_cm = [AllTcent_cm ; epoch_Tcent_cm];
 end
 
 
-% Dump into activations variable
+%% Dump into activations variable
 activations.AllTMap = AllTMap;
 activations.AllTMap_bin = AllTMap_bin;
 activations.AllTcent_cm = AllTcent_cm;
+activations.n_frames = n_frames;
 
 % keyboard
 

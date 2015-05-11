@@ -35,7 +35,7 @@ if ~exist('plot_flag','var')
     plot_flag = 1; % Set to one if not specified
 end
 %% Label position data with section numbers. 
-    sect = getsection(x,y,plot_flag);
+    [sect, goal] = getsection(x,y,plot_flag);
     
 %% Define important section numbers. 
     %Define sequences of section numbers that correspond to left or right
@@ -57,19 +57,14 @@ end
     %Define first trial. When does the mouse first enter the starting
     %location? 
     start = min(find(sect(:,2)==1)); 
-    
-    %Define number of trials if not defined as argument. 
-    if nargin == 3
-        numtrials = 40;
-    end
 
     %Preallocate.
-    epochs = nan(1,numtrials+1); 
     epochs(1) = start; 
-    trialtype = nan(1,numtrials-1); 
     
     %For each lap. 
-    for this_trial = 1:numtrials+1    
+    for this_trial = 1:100
+        
+        try
         
         %Index for next trial. 
         next = this_trial+1;    
@@ -117,7 +112,15 @@ end
                 (ismember(right, sect(epochs(this_trial):epochs(next),2)) && trialtype(this_trial) == 1)
             disp(['Warning: This epoch may contain more than one trial: Trial ', num2str(this_trial)]); 
         end
+        
+        catch
+            numtrials = this_trial; 
+            epochs(numtrials+1:end) = []; 
+        end
     end
+    
+    %Final number of trials. 
+    numtrials = length(epochs); 
     
 %% Build up the struct. 
     data.frames = 1:length(x);    %Frames.
@@ -152,5 +155,5 @@ end
     data.y = y;              %Y position. 
     
     %Summary. 
-    data.summary = [(1:numtrials+1)', trialtype', alt']; 
+    data.summary = [(1:numtrials)', trialtype', alt']; 
 end

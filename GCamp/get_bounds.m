@@ -1,4 +1,4 @@
-function [ bounds_use ] = get_bounds( bounds,index )
+function [ bounds_use ] = get_bounds( bounds,index,l_r)
 % [ bounds_use ] = get_bounds( bounds,index )
 % Maps appropriate bounds into bounds_use, using the index specified below
 % e.g. if index = 1, you will get bounds.base. 
@@ -11,6 +11,7 @@ function [ bounds_use ] = get_bounds( bounds,index )
 %       7. Right approach
 %       8. Right
 %       9. Right return
+%       10. Goals - if l_r = 1 then left goal, if l_r = 2 then right goal
 
 if index == 1
     bounds_use = bounds.base;
@@ -30,6 +31,12 @@ elseif index == 8
     bounds_use = bounds.right;
 elseif index == 9
     bounds_use = bounds.return_r;
+elseif index == 10
+    if l_r == 1
+        bounds_use = bounds.goal_l;
+    elseif l_r == 2
+        bounds_use = bounds.goal_r;
+    end
 end
 
 end

@@ -19,28 +19,33 @@ function [ ] = alt_replay_analysis( )
 
 num_trials = 40; % this will probably need to be fixed somehow or automatically counted in Will's script...
 % bonehead way is to increment num_trials up until you reach an error...
-vel_thresh = 7; % threshold in cm/s below which we consider the mouse not moving/not encoding placefields
+vel_thresh = 7; % NOT CURRENTLY USED - threshold in cm/s below which we consider the mouse not moving/not encoding placefields
 sig_level = 0.05; % p-value threshold, below which you include fields in the analysis
 
 %% Part 0: Hardcoded file locations for original writing of function
 
-working_dir = 'J:\GCamp Mice\Working\alternation\11_11_2014\Working'; %NORVAL 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_11_2014\Working'; % laptop
-pos_file = [working_dir '\pos_corr_to_std.mat'];
+working_dir = 'J:\GCamp Mice\Working\alternation\11_4_2014\Working'; %NORVAL 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_11_2014\Working'; % laptop
+% pos_file = [working_dir '\pos_corr_to_std.mat'];
 place_file = [working_dir '\PlaceMaps.mat'];
 pf_stats_file = [working_dir '\PFstats.mat'];
 
-load(pos_file)
+% load(pos_file)
 load(place_file)
 load(pf_stats_file)
 
-%% Part 1: get timestamps for when mouse is in choice or base
-valid_sections = [1 3]; % matches sections in 'sections.m' file by Will Mau
+% keyboard
+%% Part 1: get timestamps for when mouse is in choice or base, and separate
+% into left and right trials (and maybe correct/incorrect)
+trial_type = [1 2] ; % [left right]
+trial_type_text = {'Left Trials' 'Right Trials'};
+corr_trial = [1 0] ; % [correct incorrect]
+valid_sections = [1 2 3 10]; % matches sections in 'sections.m' file by Will Mau, except 10 = either goal location
 section_names = {'Start' 'Center' 'Choice' 'Left Approach' 'Left' 'Left Return' ...
-    'Right Approach' 'Right' 'Right Return'};
+    'Right Approach' 'Right' 'Right Return' 'Goal'};
 
 % Get relevant sections, bounds of those sections, and frames when the
 % mouse is in those sections
-sect = getsection(x, y, 1);
+[sect, goal] = getsection(x, y, 1);
 bounds = sections(x, y, 0);
 pos_data = postrials(x, y, 0, num_trials, 0);
 
@@ -50,26 +55,35 @@ pos_data = postrials(x, y, 0, num_trials, 0);
 % vel = [0 vel]; % Make this the same length as position data by saying the mouse's
 % % velocity at the first frame is 0.
 
-% below_thresh = vel < vel_thresh;
-below_thresh = ~isrunning;
 
-figure
+
+% keyboard
+figure(11)
 plot(x,y,'b')
-for j = 1:length(valid_sections)
-    sect_and_thresh{valid_sections(j)} = below_thresh & (sect(:,2) == valid_sections(j))';
-   % put something here to capture frames when the mouse is stopped in a specific area...
-   % look at distance of placefield activation from the mouse, and if they
-   % are in front of or behind the mouse...need to set up something that
-   % identifies areas as illegal, in front, or in back!  or at choie,
-   % correct choice or incorrect choice... start simple with just
-   % illegal/in front/in back
-   
-   % Plot to make sure everything above is working correctly (all points in
-   % section in yellow stars, below the speed threshold in red circles).
-   hold on
-   plot(x(sect(:,2) == valid_sections(j)), y(sect(:,2) == valid_sections(j)),...
-       'y*',x(sect_and_thresh{valid_sections(j)}), y(sect_and_thresh{valid_sections(j)}),'ro')
-   hold off
+for i = 1:length(trial_type)
+    for j = 1:length(valid_sections)
+        if valid_sections(j) <= 9 % Filter out only times he is in the specified section
+            sect_filter = sect(:,2) == valid_sections(j);
+        elseif valid_sections(j) == 10 % Filter out only the times he is in the goal location
+            sect_filter = (goal(:,2) == 1 | goal(:,2) == 2);
+        end
+        sect_and_thresh{i,valid_sections(j)} = ~isrunning & ...
+            (sect_filter)' & (pos_data.choice == i) ...
+            & (pos_data.alt == 1);
+        % put something here to capture frames when the mouse is stopped in a specific area...
+        % look at distance of placefield activation from the mouse, and if they
+        % are in front of or behind the mouse...need to set up something that
+        % identifies areas as illegal, in front, or in back!  or at choie,
+        % correct choice or incorrect choice... start simple with just
+        % illegal/in front/in back
+        
+        % Plot to make sure everything above is working correctly (all points in
+        % section in yellow stars, below the speed threshold in red circles).
+        hold on
+        plot(x(sect_filter), y(sect_filter),...
+            'y*',x(sect_and_thresh{i,valid_sections(j)}), y(sect_and_thresh{i,valid_sections(j)}),'ro')
+        hold off
+    end
 end
 
 % Define forward, backward, and illegal paths for each section
@@ -80,26 +94,41 @@ arms(3).forward = [5 8];
 arms(3).illegal = 2;
 % arms(3).back = 2;
 
+% keyboard
 %% Step 1.5) Parse out times below threshold into epochs...
-
-for j = 1:length(valid_sections)
-    n = 1;
-    ind_use = find(sect_and_thresh{valid_sections(j)});
-    clear epoch
-    for k = 1:length(ind_use)-1; % Set start of first epoch as first valid frame
-        if k == 1
-            epoch(n).start = ind_use(k);
-            n = n+1;
-        elseif ind_use(k-1) ~= ind_use(k) - 1 % assign beginning and ends of epochs
-            epoch(n).start = ind_use(k);
-            epoch(n-1).end = ind_use(k-1);
-            n = n+1;
-        elseif k == length(ind_use) - 1 % Set end of last epoch as last valid frame
-            epoch(n-1).end = length(ind_use) - 1;
+for i = 1:length(trial_type)
+    for j = 1:length(valid_sections)
+        n = 1;
+        ind_use = find(sect_and_thresh{i, valid_sections(j)});
+        clear epoch
+        for k = 1:length(ind_use)-1; % Set start of first epoch as first valid frame
+            if k == 1
+                epoch(n).start = ind_use(k);
+                n = n+1;
+            elseif ind_use(k-1) ~= ind_use(k) - 1 % assign beginning and ends of epochs
+                epoch(n).start = ind_use(k);
+                epoch(n-1).end = ind_use(k-1);
+                n = n+1;
+            elseif k == length(ind_use) - 1 % Set end of last epoch as last valid frame
+                epoch(n-1).end = ind_use(k+1);
+            end
+        end
+        
+        % Fill in epoch if k is empty
+        if isempty(k)
+            epoch(1).start = [];
+            epoch(1).end = [];
+        end
+        
+        if i == 1
+            section(valid_sections(j)).epoch_left = epoch; % assign epochs to section variable
+        elseif i == 2
+            section(valid_sections(j)).epoch_right = epoch; % assign epochs to section variable
         end
     end
-    section(valid_sections(j)).epoch = epoch; % assign epochs to section variable
 end
+
+keyboard
 %% Step 2: Get locations of centers of mass of all placefields (convert from
 % TMap coordinates to centimeters...) and spit these out for each epoch a
 % mouse is in a given area (next step is to look at order of firing to see
@@ -154,41 +183,95 @@ sig_fields = find(pval > (1-sig_level));
 % activations in each region of interest
 
 % Initialize data structure
-activations = struct('AllTMap',[],'AllTMap_bin',[],'AllTcent_cm',[],'AllTMap_nan',[],'AllTMap_bin_nan',[]);
+activations = struct('AllTMap',[],'AllTMap_bin',[],'AllTcent_cm',[],'n_frames',[],'AllTMap_nan',[],'AllTMap_bin_nan',[]);
 for j = 1:length(valid_sections)
-    % Get placefield information for all epochs in the section of interest
-    temp = centroid_from_epochs(section(valid_sections(j)).epoch,...
-        FT, TMap, Tcent_cm);
-    % put NaNs in places of zero occupancy for plotting purposes!
-    [ ~, TMap_nan ] = make_nan_TMap( OccMap, temp.AllTMap );
-    temp.AllTMap_nan = TMap_nan; 
-    [ ~, TMap_bin_nan ] = make_nan_TMap( OccMap, temp.AllTMap_bin );
-    temp.AllTMap_bin_nan = TMap_bin_nan; 
-    
-    if j ~= 1 % Hack to get data structure assignments to work!
-        activations(valid_sections(j)) = activations(1);
+    nn = 1; % Counter for subplot handles
+    for i = 1:length(trial_type)
+        % Get placefield information for all epochs in the section of interest
+        if i == 1
+            temp = centroid_from_epochs(section(valid_sections(j)).epoch_left,...
+                FT, TMap, Tcent_cm);
+        elseif i == 2
+            temp = centroid_from_epochs(section(valid_sections(j)).epoch_right,...
+                FT, TMap, Tcent_cm);
+        end
+        % put NaNs in places of zero occupancy for plotting purposes!
+        [ ~, TMap_nan ] = make_nan_TMap( OccMap, temp.AllTMap );
+        temp.AllTMap_nan = TMap_nan;
+        [ ~, TMap_bin_nan ] = make_nan_TMap( OccMap, temp.AllTMap_bin );
+        temp.AllTMap_bin_nan = TMap_bin_nan;
+        
+        if j ~= 1 % Hack to get data structure assignments to work!
+            activations(valid_sections(j),i) = activations(1);
+        end
+        activations(valid_sections(j),i) = temp; % Assign to activations data structure
+        
+        % Plot summed heatmap out for each section
+        figure(20+j)
+        h(nn) = subplot(2,1,i);  nn = nn + 1;
+        imagesc_nan(rot90(TMap_bin_nan/temp.n_frames,1)); colorbar; colormap jet;
+        clims(i,:) = get(gca,'CLim');
+        title(['Sum of Heatmaps for Non-Running Epochs in ' ...
+            section_names{valid_sections(j)} ' Section - ' trial_type_text{i}]);
+        hold on;
+        bounds_use = get_bounds(bounds,valid_sections(j),i); % Grab appropriate bounds for section
+        plot((bounds_use.x([1 2 3 4 1])-Xcm_min)/scale_use, ...
+            (bounds_use.y([1 2 4 3 1])-Ycm_min)/scale_use,'r--') % Plot bounds boxes
+        
+        
+        %     colorbar
+        %     subplot(2,1,2)
+        %     imagesc_nan(rot90(TMap_bin_nan,1));
+        %     title(['Sum of Binary Heatmaps for Non-Running Epochs in ' ...
+        %         section_names{valid_sections(j)} ' Section']);
+        %     colorbar
     end
-    activations(valid_sections(j)) = temp; % Assign to activations data structure
+    % Get min and max CLIM values for each subplot and make them the same
+    % for each subplot...
+    clim_min = min(clims(:,1)); clim_max = max(clims(:,2));
+    for k = 1: length(h)
+    set(h(k),'CLim',[0,clim_max]);
+    end
+end
     
-    % Plot summed heatmap out for each section
-    figure
-%     subplot(2,1,1)
-    imagesc_nan(rot90(TMap_nan,1));
+
+%% Get L-R plots
+for j = 1:length(valid_sections)
+    figure(30+j); 
+    left = activations(valid_sections(j),1);
+    right = activations(valid_sections(j),2);
+    LRdiff = left.AllTMap_bin_nan/left.n_frames...
+        - right.AllTMap_bin_nan/right.n_frames;
+    imagesc_nan(rot90(LRdiff,1)); % Plot and rotate
+    % Set CLim to be equal
+    clims2 = get(gca,'CLim');
+    clim_eq = max(abs(clims2));
+    set(gca,'CLim',[-clim_eq clim_eq]);
+    colormap jet;
+    colorbar('Ticks',[-clim_eq 0 clim_eq],'TickLabels', {'R > L' 'L = R' 'L > R'});
     title(['Sum of Heatmaps for Non-Running Epochs in ' ...
-        section_names{valid_sections(j)} ' Section']);
+        section_names{valid_sections(j)} ' Section: L-R trials']);
     hold on;
-    bounds_use = get_bounds(bounds,valid_sections(j)); % Grab appropriate bounds for section
+    bounds_use = get_bounds(bounds,valid_sections(j),1); % Grab appropriate bounds for section
     plot((bounds_use.x([1 2 3 4 1])-Xcm_min)/scale_use, ...
         (bounds_use.y([1 2 4 3 1])-Ycm_min)/scale_use,'r--') % Plot bounds boxes
-%     colorbar
-%     subplot(2,1,2)
-%     imagesc_nan(rot90(TMap_bin_nan,1));
-%     title(['Sum of Binary Heatmaps for Non-Running Epochs in ' ...
-%         section_names{valid_sections(j)} ' Section']);
-%     colorbar
-   
 end
 
+keyboard
+%% Plot activations in order by epoch
+
+epoch_use = section(1).epoch_left;
+figure(50)
+for m = 1:length(epoch_use)
+    frames_use = epoch_use(m).start:epoch_use(m).end;
+    [ ~, ~, TMap_order ] = get_activation_order(frames_use, FT, TMap);
+    [~, TMap_order_nan ] = make_nan_TMap( OccMap, TMap_order );
+    imagesc_nan(rot90(TMap_order_nan,1)); colorbar; colormap jet;
+    
+   waitforbuttonpress
+end
+
+%% Keyboard statement if you want to debug/mess around at the end
 keyboard
 
 end

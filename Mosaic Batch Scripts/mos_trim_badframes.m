@@ -17,7 +17,7 @@ mosaic.initialize();
 
 %% Step 1: Select Files to load, if multiple they will automatically be
 % concatenated
-if ~exist('movie_path', 'var')
+if ~exist('movie_path', 'var') || isempty(movie_path)
     [filename, pathname] = uigetfile({'*.mat', 'Object Files'},'Select File to load');
     
     if iscell(filename)
@@ -68,7 +68,7 @@ h = mos_tiff_to_fig(min_proj_cattrimmovie, [pathname 'TrimCatMovie_min_proj.tiff
 disp('Here is your chance to check if this is ok.  Type "return" to save the updated movie as "TrimCatMovie.mat"')
 keyboard
 
-mosaic.saveOneObject(CatMovie_goodframes,[pathname 'TrimCatMovie.mat']);
+mosaic.saveOneObject(CatMovie_goodframes,[pathname 'TrimCatMovie2.mat']);
 
 end
 
