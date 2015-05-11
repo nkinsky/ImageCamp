@@ -1,4 +1,4 @@
-function [rotx, roty, rot_ang] = rotate_traj(x,y,rot_ang)
+function [rotx, roty, rotang] = rotate_traj(x,y,rotang)
 %[rotx, roty] = rotate_traj(x,y)
 %
 %   This function takes the mouse's trajectory and rotates it along the x
@@ -6,9 +6,9 @@ function [rotx, roty, rot_ang] = rotate_traj(x,y,rot_ang)
 %   doesn't align with choice point). 
 %
 %   INPUTS: 
-%       X and Y: Position vectors from PFA.m.
+%       X & Y: X and Y position vectors from PFA.m.
 %
-%       rot_ang (optional): The angle at which you want to rotate the
+%       rotangle (optional): The angle at which you want to rotate the
 %       animal's trajectory (in radians). If not specified, function will
 %       prompt you to label to points on the maze to calculate an angle. 
 %
@@ -33,13 +33,13 @@ function [rotx, roty, rot_ang] = rotate_traj(x,y,rot_ang)
         %Calculate the angle. 
         w = angx(2)-angx(1);
         h = angy(2)-angy(1); 
-        rot_ang = -atan(h/w); 
+        rotang = -atan(h/w); 
     
     end
     
     %Rotation array. 
-    rotarray = [cos(rot_ang), -sin(rot_ang);...
-                sin(rot_ang), cos(rot_ang)]; 
+    rotarray = [cos(rotang), -sin(rotang);...
+                sin(rotang), cos(rotang)]; 
 
     %Initiliaze. 
     new_coords = nan(2,length(x));
@@ -54,7 +54,7 @@ function [rotx, roty, rot_ang] = rotate_traj(x,y,rot_ang)
     roty = new_coords(2,:);
   
     %Display degree of rotation. 
-    rotang_deg = radtodeg(rot_ang); 
+    rotang_deg = radtodeg(rotang); 
     disp(['Rotated animal trajectory by ', num2str(rotang_deg), ' degrees.']); 
 
 end
