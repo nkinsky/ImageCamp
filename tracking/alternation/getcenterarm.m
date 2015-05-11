@@ -1,5 +1,5 @@
 function center = getcenterarm(x,y,w,l)
-%function getcenterarm(x,y)
+%function getcenterarm(x,y,w,l)
 %   Takes position information and outputs boundaries of the center arm.
 %   
 %   X and Y are vectors of position information. 
@@ -8,11 +8,12 @@ function center = getcenterarm(x,y,w,l)
 %       x = x coordinates of the rectangle surrounding the center arm. 
 %       y = y coordinates of the rectangle surrounding the center arm. 
 %       w = width of arm, same value used in sections function
-%       l = length of maze, same value used in sections function
+%       l = length of shif from top/bottom of maze, same value used in 
+%       sections function
 %
 
 %%
-w_adj = 1.3; % Amount to increase width for center arm, since there seems to be a bit more jitter in the position for the center...
+    w_adj = 1.3; % Amount to increase width for center arm, since there seems to be a bit more jitter in the position for the center...
 
 %% Get xy coordinate bounds for center arm. 
     xmax = max(x); xmin = min(x); 
@@ -30,7 +31,7 @@ w_adj = 1.3; % Amount to increase width for center arm, since there seems to be 
 %     l = (xmax-xmin)/8.1; %80; 
     
     %Border. 
-    center.x = [xmin+l, xmin+l, xmax-l, xmax-l]; 
-    center.y = [ymid-shift, ymid-shift+w, ymid-shift, ymid-shift+w]; 
+    center.x = [xmin+l, xmax-l, xmax-l, xmin+l]; 
+    center.y = [ymid-shift, ymid-shift, ymid-shift+w, ymid-shift+w]; 
     
 end
