@@ -24,7 +24,8 @@ sig_level = 0.05; % p-value threshold, below which you include fields in the ana
 
 %% Part 0: Hardcoded file locations for original writing of function
 
-working_dir = 'J:\GCamp Mice\Working\alternation\11_4_2014\Working'; %NORVAL 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_11_2014\Working'; % laptop
+working_dir =  'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working'; % laptop
+% 'J:\GCamp Mice\Working\alternation\11_4_2014\Working'; %NORVAL
 % pos_file = [working_dir '\pos_corr_to_std.mat'];
 place_file = [working_dir '\PlaceMaps.mat'];
 pf_stats_file = [working_dir '\PFstats.mat'];
@@ -150,7 +151,7 @@ scale2 = Ycm_span/ygrid_size;
 scale_use = mean([scale1 scale2]);
 
 % Get centroids of TMap
-Tcentroid = TMap_centroid(TMap);
+[Tcentroid, TPixelList, TPixelList_all] = TMap_centroid(TMap);
 
 % Convert centroids to mouse position coordinates
 Tcent_cm(:,1) = Tcentroid(:,2)*scale_use + Xcm_min;
@@ -178,28 +179,42 @@ sig_fields = find(pval > (1-sig_level));
 %     waitforbuttonpress
 % end
 
-% keyboard
+keyboard
 %% Step 3: Get average heat map and place-field centroids for cell 
 % activations in each region of interest
 
 % Initialize data structure
-activations = struct('AllTMap',[],'AllTMap_bin',[],'AllTcent_cm',[],'n_frames',[],'AllTMap_nan',[],'AllTMap_bin_nan',[]);
+activations = struct('AllTMap',[],'AllTMap_bin',[],'AllTMap_bin_out',[],'AllTcent_cm',[],...
+    'n_frames',[],'AllTMap_nan',[],'AllTMap_bin_nan',[],'AllTMap_bin_out_nan',[]);
 for j = 1:length(valid_sections)
     nn = 1; % Counter for subplot handles
     for i = 1:length(trial_type)
+        % Get bounds of section you are looking at so that you can exclude
+        % cells who have a PF in that area...
+         section_bounds = get_section_bounds(valid_sections(j),bounds); % Won't work yet for goal locations...
+         if valid_sections(j) == 10 && trial_type(i) == 2 % hack to correctly assign section_bounds for right goal
+             section_bounds = get_section_bounds(11,bounds);
+         end
+         bounds_use.y = (section_bounds.x([1 2 3 4 1])-Xcm_min)/scale_use; % Swap these because TMap and x/y are currently set differently...
+         bounds_use.x = (section_bounds.y([1 2 4 3 1])-Ycm_min)/scale_use;
+        
         % Get placefield information for all epochs in the section of interest
+        % Not working correctly for goal locations currently - see lots of
+        % activations in the goal box!!! WTF!?!
         if i == 1
             temp = centroid_from_epochs(section(valid_sections(j)).epoch_left,...
-                FT, TMap, Tcent_cm);
+                FT, TMap, Tcent_cm,'exclude',bounds_use,TPixelList_all);
         elseif i == 2
             temp = centroid_from_epochs(section(valid_sections(j)).epoch_right,...
-                FT, TMap, Tcent_cm);
+                FT, TMap, Tcent_cm,'exclude',bounds_use,TPixelList_all);
         end
         % put NaNs in places of zero occupancy for plotting purposes!
         [ ~, TMap_nan ] = make_nan_TMap( OccMap, temp.AllTMap );
         temp.AllTMap_nan = TMap_nan;
         [ ~, TMap_bin_nan ] = make_nan_TMap( OccMap, temp.AllTMap_bin );
         temp.AllTMap_bin_nan = TMap_bin_nan;
+        [ ~, TMap_bin_out_nan ] = make_nan_TMap( OccMap, temp.AllTMap_bin_out );
+        temp.AllTMap_bin_out_nan = TMap_bin_out_nan;
         
         if j ~= 1 % Hack to get data structure assignments to work!
             activations(valid_sections(j),i) = activations(1);
@@ -209,7 +224,7 @@ for j = 1:length(valid_sections)
         % Plot summed heatmap out for each section
         figure(20+j)
         h(nn) = subplot(2,1,i);  nn = nn + 1;
-        imagesc_nan(rot90(TMap_bin_nan/temp.n_frames,1)); colorbar; colormap jet;
+        imagesc_nan(rot90(TMap_bin_out_nan/temp.n_frames,1)); colorbar; colormap jet;
         clims(i,:) = get(gca,'CLim');
         title(['Sum of Heatmaps for Non-Running Epochs in ' ...
             section_names{valid_sections(j)} ' Section - ' trial_type_text{i}]);
@@ -260,7 +275,7 @@ end
 keyboard
 %% Plot activations in order by epoch
 
-epoch_use = section(1).epoch_left;
+epoch_use = section(1).epoch_right;
 figure(50)
 for m = 1:length(epoch_use)
     frames_use = epoch_use(m).start:epoch_use(m).end;

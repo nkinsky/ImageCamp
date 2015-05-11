@@ -100,6 +100,6 @@ end
     bounds.right = right; 
     bounds.return_l = return_l;
     bounds.return_r = return_r; 
-    bounds.goal_r = goal_r;
-    bounds.goal_l = goal_l;
+    bounds.goal_l = goal_r;
+    bounds.goal_r = goal_l;
 end
