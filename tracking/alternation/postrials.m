@@ -25,6 +25,7 @@ function data = postrials(x,y,plot_each_trial)
 %
 %   TIP: To find frames for a particular trial of interest, you can do:
 %       data.frames(data.trial == TRIAL_OF_INTEREST).
+%
 
 %% Label position data with section numbers. 
     [sect,goal] = getsection(x,y);
@@ -54,9 +55,9 @@ function data = postrials(x,y,plot_each_trial)
     epochs = start; 
     
     %For each lap. 
-    for this_trial = 1:100
+    for this_trial = 1:200
         
-        try
+        try     %Try sorting a trial. 
         
         %Index for next trial. 
         next = this_trial+1;    
@@ -105,14 +106,16 @@ function data = postrials(x,y,plot_each_trial)
             disp(['Warning: This epoch may contain more than one trial: Trial ', num2str(this_trial)]); 
         end
         
+        %When postrials can no longer successfully sort a trial, stop the
+        %loop. 
         catch
             numtrials = this_trial; 
-            epochs(numtrials+1:end) = []; 
+            break; 
         end
     end
     
-    %Final number of trials. 
-    numtrials = length(epochs); 
+    %Display number of trials sorted. 
+    disp(['Successfully sorted ', num2str(numtrials), ' trials.']); 
     
 %% Build up the struct. 
     data.frames = 1:length(x);          %Frames.
