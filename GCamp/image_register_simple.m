@@ -121,7 +121,7 @@ figure;
 imagesc(sesh(1).AllNeuronMask + 2*sesh(2).AllNeuronMask); colorbar
 title('1 = session 1, 2 = session 2, 3 = both sessions')
 
-% keyboard
+keyboard
 
 %% Plot out each cell mapped to another to see how good the registraton is..
 
@@ -138,7 +138,7 @@ if exist('check_neuron_mapping','var') && check_neuron_mapping == 1
     % Check registration with a cell-by-cell plot
     figure(50)
     for i = 1:size(neuron_id,2)
-        if ~isempty(neuron_id{i})
+        if ~isempty(neuron_id{i}) && ~isnan(neuron_id{i})
             % Register 2nd neuron's outline to 1st neuron
             neuron2_reg = imwarp(temp5{2,neuron_id{i}},tform_struct.tform,'OutputView',...
                 tform_struct.base_ref,'InterpolationMethod','nearest');
