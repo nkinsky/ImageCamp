@@ -120,9 +120,10 @@ figure;
 imagesc(sesh(1).AllNeuronMask + 2*sesh(2).AllNeuronMask); colorbar
 title('1 = session 1, 2 = session 2, 3 = both sessions')
 
-keyboard
+% keyboard
 
 %% Plot out each cell mapped to another to see how good the registraton is..
+
 
 if exist('check_neuron_mapping','var') && check_neuron_mapping == 1
     % Dump all neuron images into a single variable
@@ -136,19 +137,30 @@ if exist('check_neuron_mapping','var') && check_neuron_mapping == 1
     
     % Check registration with a cell-by-cell plot
     figure(50)
-    for i = 1:size(neuron_id,2)
-        if ~isempty(neuron_id{i}) && ~isnan(neuron_id{i})
+    nn = 1; % Set initial conditions
+    tt = 1;
+    disp('Use left and right arrows to scroll through cells.  Hit ''esc'' to exit.')
+    while tt ~= 27
+        if ~isempty(neuron_id{nn}) && ~isnan(neuron_id{nn})
             % Register 2nd neuron's outline to 1st neuron
-            neuron2_reg = imwarp(temp5{2,neuron_id{i}},tform_struct.tform,'OutputView',...
+            neuron2_reg = imwarp(temp5{2,neuron_id{nn}},tform_struct.tform,'OutputView',...
                 tform_struct.base_ref,'InterpolationMethod','nearest');
         else
             % Make 2nd neuron mask all zeros if no cell maps to the 1st
             neuron2_reg = zeros(size(temp5{1,1}));
         end
-        imagesc(temp5{1,i} + 2*neuron2_reg); colorbar; colormap jet; caxis([0 3]);
-        title(['1st session neuron ' num2str(i) '. 2nd session neuron ' num2str(neuron_id{i})])
+        imagesc(temp5{1,nn} + 2*neuron2_reg); colorbar; colormap jet; caxis([0 3]);
+        title(['1st session neuron ' num2str(nn) '. 2nd session neuron ' num2str(neuron_id{nn})])
         
-        waitforbuttonpress
+        % Use arrow keys to navigate around
+        figure(50)
+        [~, ~, tt] = ginput(1);
+        if tt == 29 && nn ~= length(neuron_id)
+            nn = nn + 1;
+        elseif tt == 28 && nn ~= 1
+            nn = nn - 1;
+        end
+                
     end
 
 end

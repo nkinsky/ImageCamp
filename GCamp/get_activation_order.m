@@ -1,7 +1,7 @@
 function [ start_array, all_active_cells, TMap_order ] = get_activation_order(frames_use, FT, TMap )
 % [ start_array, all_active_cells, cell_activation_order ] = get_activation_order(frames_use,FT )
 %   Gets the temporal order of cell activations from full traces in FT
-%   during and epoch of frames who are listed in frames_use
+%   during an epoch of frames which are listed in frames_use
 
 % Get active cells during the epoch
 all_active_cells = find(sum(FT(:,frames_use),2) ~= 0);

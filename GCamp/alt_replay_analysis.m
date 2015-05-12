@@ -183,12 +183,12 @@ for j = 1:length(valid_sections)
     for i = 1:length(trial_type)
         % Get bounds of section you are looking at so that you can exclude
         % cells who have a PF in that area...
-         section_bounds = get_section_bounds(valid_sections(j),bounds); % Won't work yet for goal locations...
+         section_bounds = get_bounds(bounds,valid_sections(j),i); % Won't work yet for goal locations...
          if valid_sections(j) == 10 && trial_type(i) == 2 % hack to correctly assign section_bounds for right goal
              section_bounds = get_section_bounds(11,bounds);
          end
          bounds_use.y = (section_bounds.x([1 2 3 4 1])-Xcm_min)/scale_use; % Swap these because TMap and x/y are currently set differently...
-         bounds_use.x = (section_bounds.y([1 2 4 3 1])-Ycm_min)/scale_use;
+         bounds_use.x = (section_bounds.y([1 2 3 4 1])-Ycm_min)/scale_use;
         
         % Get placefield information for all epochs in the section of interest
         % Not working correctly for goal locations currently - see lots of
@@ -267,7 +267,7 @@ end
 keyboard
 %% Plot activations in order by epoch
 
-epoch_use = section(1).epoch_right;
+epoch_use = section(10).epoch_right;
 figure(50)
 for m = 1:length(epoch_use)
     frames_use = epoch_use(m).start:epoch_use(m).end;

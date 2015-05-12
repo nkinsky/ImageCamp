@@ -81,7 +81,7 @@ function [bounds,rot_x,rot_y] = sections(x,y)
         %Right Goal
         xmin_g = 0.7*(xmax-xmin)+xmin;
         xmax_g = xmin_g + 0.1*(xmax-xmin);
-        goal_r.x = [xmin_g xmax_g xmin_g xmax_g]; % Seems to work ok for our current maze...
+        goal_r.x = [xmin_g xmax_g xmax_g xmin_g]; % Seems to work ok for our current maze...
         goal_r.y = right.y; 
 
     	%Left Goal
