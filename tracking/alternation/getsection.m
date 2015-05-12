@@ -23,7 +23,7 @@ function [sect, goal] = getsection(x,y)
 %       2. In right goal zone
     
 %% Get relevant section coordinates. 
-    bounds = sections(x,y);
+    [bounds, rot_x, rot_y] = sections(x,y);
     
     xmin = [bounds.base.x(1);               
             bounds.center.x(1);
@@ -73,22 +73,22 @@ function [sect, goal] = getsection(x,y)
         
 %% Find mouse's current section. 
     %Preallocate section column. 
-    sect = nan(length(x),2); 
-    sect(:,1) = 1:length(x); % frame number
+    sect = nan(length(rot_x),2); 
+    sect(:,1) = 1:length(rot_x); % frame number
     
     for this_section = 1:9
-        ind = x > xmin(this_section) & x < xmax(this_section) & ...
-            y > ymin(this_section) & y < ymax(this_section);
+        ind = rot_x > xmin(this_section) & rot_x < xmax(this_section) & ...
+            rot_y > ymin(this_section) & rot_y < ymax(this_section);
         sect(ind,2) = this_section; 
     end
     
     %Preallocate goal column. 
-    goal = zeros(length(x),2); 
-    goal(:,1) = 1:length(x); % frame number
+    goal = zeros(length(rot_x),2); 
+    goal(:,1) = 1:length(rot_x); % frame number
     
     for this_section = 1:2
-        ind = x > xmin_goal(this_section) & x < xmax_goal(this_section) & ...
-            y > ymin_goal(this_section) & y < ymax_goal(this_section);
+        ind = rot_x > xmin_goal(this_section) & rot_x < xmax_goal(this_section) & ...
+            rot_y > ymin_goal(this_section) & rot_y < ymax_goal(this_section);
         goal(ind,2) = this_section; 
     end
     

@@ -1,6 +1,6 @@
 % Script to plot place-fields of cells from one day to the next
 
-day(1).folder = 'J:\GCamp Mice\Working\alternation\11_11_2014\Working';
+day(1).folder = 'J:\GCamp Mice\Working\alternation\11_12_2014\Working';
 day(2).folder = 'J:\GCamp Mice\Working\alternation\11_13_2014\Working';
 
 %% Load TMaps for each session

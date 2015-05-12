@@ -28,8 +28,7 @@ end
 %% Get section for trial and bounds of each part of arena
 [sect, goal] = getsection(x, y);
 [bounds, rot_x, rot_y] = sections(x, y);
-
-keyboard
+pos_data = postrials(x,y,0);
 
 %% Meat of function - here you designate where the mouse was, in linear 
 % space, for each trial
