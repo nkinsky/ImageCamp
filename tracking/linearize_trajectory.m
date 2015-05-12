@@ -1,8 +1,16 @@
-function lin_pos = linearize_trajectory(x, y, varargin)
+function [lin_pos] = linearize_trajectory(x, y, varargin)
 %UNTITLED2 Summary of this function goes here
 %   Goal is to linearize trajectories, such that each trial begins at zero
 %   and finishes at the end, with the length of each trajectory being equal
 %   to 2*l_arms + 2*l_return, specified below
+%   INPUTS
+%   x,y: mouse position
+%   'ArmLength','ReturnLength': available if you want to specify something
+%   different that the default
+%
+%   OUTPUTS
+%       lin_pos: first row is the linear position along the maze, second
+%       row is negative if a left trial and positive if a right trial
 
 %% Specify length of center arm and other areas
 l_arm_default = 60;     % length of center, left arm, and right arm, in centimeters
@@ -68,6 +76,18 @@ for j = 1: length(pos_data.frames)
        
 end
 
+%% Divvy up lin_pos into left and right trials
+% -5 = left, +5 = right
+
+for j = 1:length(lin_pos)
+    if pos_data.choice(j) == 1
+        lin_pos(2,j) = -100;
+    elseif pos_data.choice(j) == 2
+        lin_pos(2,j) = 100;
+    else
+        lin_pos(2,j) = 0;
+    end
+end
 
 end
 

@@ -117,7 +117,6 @@ function data = postrials(x,y,plot_each_trial)
     %Display number of trials sorted. 
     disp(['Successfully sorted ', num2str(numtrials), ' trials.']); 
     
-    keyboard
 %% Build up the struct. 
     data.frames = 1:length(x);          %Frames.
     

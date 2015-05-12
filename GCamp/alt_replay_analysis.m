@@ -24,8 +24,9 @@ sig_level = 0.05; % p-value threshold, below which you include fields in the ana
 
 %% Part 0: Hardcoded file locations for original writing of function
 
-working_dir =  'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working'; % laptop
-% 'J:\GCamp Mice\Working\alternation\11_4_2014\Working'; %NORVAL
+working_dir = 'J:\GCamp Mice\Working\alternation\11_4_2014\Working'; %NORVAL 
+% 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working'; % laptop
+ 
 % pos_file = [working_dir '\pos_corr_to_std.mat'];
 place_file = [working_dir '\PlaceMaps.mat'];
 pf_stats_file = [working_dir '\PFstats.mat'];
@@ -46,9 +47,9 @@ section_names = {'Start' 'Center' 'Choice' 'Left Approach' 'Left' 'Left Return' 
 
 % Get relevant sections, bounds of those sections, and frames when the
 % mouse is in those sections
-[sect, goal] = getsection(x, y, 1);
-bounds = sections(x, y, 0);
-pos_data = postrials(x, y, 0, num_trials, 0);
+[sect, goal] = getsection(x, y);
+bounds = sections(x, y);
+pos_data = postrials(x, y, 0);
 
 % Get mouse velocity - use isrunning here
 % vel = sqrt(diff(pos_align.x).^2+diff(pos_align.y).^2)/...
@@ -58,7 +59,8 @@ pos_data = postrials(x, y, 0, num_trials, 0);
 
 
 
-% keyboard
+keyboard
+%%
 figure(11)
 plot(x,y,'b')
 for i = 1:length(trial_type)
