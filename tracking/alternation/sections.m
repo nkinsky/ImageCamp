@@ -1,4 +1,4 @@
-function bounds = sections(x,y)
+function [bounds,rot_x,rot_y] = sections(x,y)
 %function sections(x,y)
 %   
 %   This function takes position data and partitions the maze into
@@ -29,22 +29,22 @@ function bounds = sections(x,y)
     while skewed
         
         %Try loading previous rotation angle. 
-        try load('rotated.mat');
+        try load(fullfile(pwd, 'rotated.mat'));
             
         catch
-            [newx,newy,rotang] = rotate_traj(x,y);
+            [rot_x,rot_y,rotang] = rotate_traj(x,y);
         end
         
     %% Get xy coordinate bounds for maze sections. 
-        xmax = max(newx); xmin = min(newx); 
-        ymax = max(newy); ymin = min(newy); 
+        xmax = max(rot_x); xmin = min(rot_x); 
+        ymax = max(rot_y); ymin = min(rot_y); 
 
     %% Establish maze arm boundaries. 
         w = (ymax-ymin)/6.2; %40;   Width of arms.
         l = (xmax-xmin)/8.1; %80;   Shift from top/bottom of maze for center stem. 
 
         %Find center arm borders. 
-        center = getcenterarm(newx,newy,w,l); 
+        center = getcenterarm(rot_x,rot_y,w,l); 
 
         %Left arm. 
         left.x = [xmin+l, xmax, xmax, xmin+l];
@@ -90,7 +90,7 @@ function bounds = sections(x,y)
 
     %% Check with plot.   
         figure(555);
-        plot(newx,newy);
+        plot(rot_x,rot_y);
         hold on;
         plot([left.x left.x(1)],[left.y left.y(1)], 'k-', ...
             [right.x right.x(1)],[right.y right.y(1)], 'k-', ...
@@ -107,9 +107,9 @@ function bounds = sections(x,y)
         satisfied = input('Are you satisfied with the rotation? Enter y or n-->','s'); 
         if strcmp(satisfied,'y')       %Break.
             skewed = 0;         
-            save rotated rotang newx newy;
+            save rotated rotang rot_x rot_y;
         elseif strcmp(satisfied,'n');  %Delete last rotation and try again.
-            if exist('rotated.mat','file') == 2
+            if exist(fullfile(pwd, 'rotated.mat'), 'file') == 2
                 delete rotated.mat;
             end
             close all;          

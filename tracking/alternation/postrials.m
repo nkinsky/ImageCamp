@@ -152,4 +152,7 @@ function data = postrials(x,y,plot_each_trial)
     
     %Summary. 
     data.summary = [(1:numtrials)', trialtype', alt']; 
+    
+    %Save. 
+    save Alternation data;
 end
