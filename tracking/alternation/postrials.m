@@ -53,6 +53,7 @@ function data = postrials(x,y,plot_each_trial)
 
     %Preallocate.
     epochs = start; 
+    mouse_running = 1;
     
     %For each lap. 
     for this_trial = 1:200
@@ -64,7 +65,7 @@ function data = postrials(x,y,plot_each_trial)
         epochs(next) = epochs(this_trial)+1;    %First glance: trials are at least 1 frame long. 
 
         %As long as the criteria are not satisfied (see below)...
-        while true
+        while mouse_running
             
             epochs(next) = epochs(next) + 1;    %...keep adding frames.
 
@@ -109,9 +110,13 @@ function data = postrials(x,y,plot_each_trial)
         %When postrials can no longer successfully sort a trial, stop the
         %loop. 
         catch
-            numtrials = this_trial; 
+            numtrials = this_trial-1;           %this_trial produced an error, so roll back a trial
+            if length(trialtype) > numtrials    %Sometimes, the mouse leaves the maze on a left/right arm so trialtype gets an extra entry.
+                trialtype(this_trial) = [];     %In that case, remove it. 
+            end
             break; 
         end
+        
     end
     
     %Display number of trials sorted. 
@@ -129,7 +134,7 @@ function data = postrials(x,y,plot_each_trial)
     alt = [1 abs(diff(trialtype))]; 
     
     %Trial numbers, trial type (left vs. right), and correct vs. incorrect. 
-    for this_trial = 1:length(epochs)-1
+    for this_trial = 1:numtrials
         next = this_trial+1; 
 
         data.trial(epochs(this_trial):epochs(next)) = this_trial; 
@@ -146,8 +151,9 @@ function data = postrials(x,y,plot_each_trial)
     end
     
     %Mouse position. 
-    data.x = x;              %X position.
-    data.y = y;              %Y position. 
+    data.x = x;                 %X position.
+    data.y = y;                 %Y position. 
+    data.section = sect(:,2)';  %Section number. Refer to getsection.m.
     
     %Summary. 
     data.summary = [(1:numtrials)', trialtype', alt']; 
