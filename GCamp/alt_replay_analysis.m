@@ -24,7 +24,7 @@ sig_level = 0.05; % p-value threshold, below which you include fields in the ana
 
 %% Part 0: Hardcoded file locations for original writing of function
 
-working_dir = 'J:\GCamp Mice\Working\alternation\11_4_2014\Working'; %NORVAL 
+working_dir = 'J:\GCamp Mice\Working\alternation\11_13_2014\Working\take2'; %NORVAL 
 % 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working'; % laptop
  
 % pos_file = [working_dir '\pos_corr_to_std.mat'];
@@ -56,10 +56,6 @@ pos_data = postrials(x, y, 0);
 %     (pos_align.time_interp(2)-pos_align.time_interp(1));
 % vel = [0 vel]; % Make this the same length as position data by saying the mouse's
 % % velocity at the first frame is 0.
-
-
-
-keyboard
 %%
 figure(11)
 plot(x,y,'b')
@@ -97,7 +93,6 @@ arms(3).forward = [5 8];
 arms(3).illegal = 2;
 % arms(3).back = 2;
 
-% keyboard
 %% Step 1.5) Parse out times below threshold into epochs...
 for i = 1:length(trial_type)
     for j = 1:length(valid_sections)
@@ -131,7 +126,6 @@ for i = 1:length(trial_type)
     end
 end
 
-keyboard
 %% Step 2: Get locations of centers of mass of all placefields (convert from
 % TMap coordinates to centimeters...) and spit these out for each epoch a
 % mouse is in a given area (next step is to look at order of firing to see
@@ -162,8 +156,6 @@ Tcent_cm(:,2) = Tcentroid(:,1)*scale_use + Ycm_min;
 % Get placefields that have significant p-values
 sig_fields = find(pval > (1-sig_level));
 
-% keyboard
-
 %% Step 2a: Check to see if placefield mapping is ok
 % figure(56); 
 % for tt = 1:length(sig_fields)
@@ -180,8 +172,6 @@ sig_fields = find(pval > (1-sig_level));
 %     
 %     waitforbuttonpress
 % end
-
-keyboard
 %% Step 3: Get average heat map and place-field centroids for cell 
 % activations in each region of interest
 
@@ -257,8 +247,8 @@ for j = 1:length(valid_sections)
     figure(30+j); 
     left = activations(valid_sections(j),1);
     right = activations(valid_sections(j),2);
-    LRdiff = left.AllTMap_bin_nan/left.n_frames...
-        - right.AllTMap_bin_nan/right.n_frames;
+    LRdiff = left.AllTMap_bin_out_nan/left.n_frames...
+        - right.AllTMap_bin_out_nan/right.n_frames;
     imagesc_nan(rot90(LRdiff,1)); % Plot and rotate
     % Set CLim to be equal
     clims2 = get(gca,'CLim');

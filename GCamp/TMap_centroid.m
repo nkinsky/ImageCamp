@@ -11,7 +11,6 @@ function [ Tcentroid, TPixelList, TPixelList_all ] = TMap_centroid( TMap)
 %   of the heat map with the highest average "firing" rate...
 %   TPixelList is the list of pixels in TMap that are non-zero
 
-% keyboard
 %%
 for j = 1:size(TMap,2)
     TMap_use = TMap{j};
@@ -20,11 +19,14 @@ for j = 1:size(TMap,2)
     stats = regionprops(make_binary_TMap(TMap_use),'all');
     mean_TR = 0;
     TPixelList_all{j} = [];
+    TPixelList{j} = [];
+    Tcentroid(j,:) = [0 0];
     for k = 1:length(stats)
        % get mean of each place-field transient rate
-       temp = mean(TMap_use(stats(k).PixelIdxList));
+       temp = nanmean(TMap_use(stats(k).PixelIdxList));
        % If multiple fields, only include the field with the highest mean
        % transient rate
+       
        if temp > mean_TR 
            mean_TR = temp; % update mean transient rate
            Tcentroid(j,:) = stats(k).Centroid; % Assign centroid
