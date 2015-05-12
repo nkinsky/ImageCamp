@@ -44,8 +44,7 @@ sesh(2).folder = reg_file(1:max(regexpi(reg_file,'\\'))-1);
 
 %% Get centers-of-mass of all cells after registering 2nd image to 1st image
 for k = 1:2
-    cd(sesh(k).folder);
-    load('ProcOut.mat','NeuronImage');
+    load(fullfile(sesh(k).folder, 'ProcOut.mat'),'NeuronImage');
     if k == 2 % Don't get registration info if base session
 %         keyboard
         [tform_struct ] = get_reginfo(sesh(1).folder, sesh(2).folder, RegistrationInfoX );
@@ -121,7 +120,7 @@ figure;
 imagesc(sesh(1).AllNeuronMask + 2*sesh(2).AllNeuronMask); colorbar
 title('1 = session 1, 2 = session 2, 3 = both sessions')
 
-% keyboard
+keyboard
 
 %% Plot out each cell mapped to another to see how good the registraton is..
 
@@ -138,7 +137,7 @@ if exist('check_neuron_mapping','var') && check_neuron_mapping == 1
     % Check registration with a cell-by-cell plot
     figure(50)
     for i = 1:size(neuron_id,2)
-        if ~isempty(neuron_id{i})
+        if ~isempty(neuron_id{i}) && ~isnan(neuron_id{i})
             % Register 2nd neuron's outline to 1st neuron
             neuron2_reg = imwarp(temp5{2,neuron_id{i}},tform_struct.tform,'OutputView',...
                 tform_struct.base_ref,'InterpolationMethod','nearest');
@@ -146,7 +145,7 @@ if exist('check_neuron_mapping','var') && check_neuron_mapping == 1
             % Make 2nd neuron mask all zeros if no cell maps to the 1st
             neuron2_reg = zeros(size(temp5{1,1}));
         end
-        imagesc(temp5{1,i} + 2*neuron2_reg); colorbar; colormap jet
+        imagesc(temp5{1,i} + 2*neuron2_reg); colorbar; colormap jet; caxis([0 3]);
         title(['1st session neuron ' num2str(i) '. 2nd session neuron ' num2str(neuron_id{i})])
         
         waitforbuttonpress
