@@ -1,4 +1,4 @@
-function [ neuron_id, same_neuron, num_not_assigned] = image_register_simple( base_file, reg_file, check_neuron_mapping)
+function [ neuron_id, same_neuron, num_bad_cells] = image_register_simple( base_file, reg_file, check_neuron_mapping)
 %image_register_simple( base_file, reg_file)
 %   Registers the image ICmovie_min_proj.tif from one session to another so
 %   as to map neurons from one session to the next.  Note that you must set
@@ -153,6 +153,11 @@ if exist('check_neuron_mapping','var') && check_neuron_mapping == 1
 
 end
 
+%% Find how many cells don't map onto the second session. 
+nonmapped = cellfun(@isempty, neuron_id);       %Cells that disappeared/appeared over the two sessions. 
+crappy = sum(cellfun(@sum,cellfun(@isnan,neuron_id,'UniformOutput',false)));    %Multiple of these cells in session 1 map onto session 2. 
+
+num_bad_cells = nonmapped + crappy;             %Number of cells that didn't make the cut. 
 
 end
 
