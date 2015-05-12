@@ -1,4 +1,4 @@
-function [ output_args ] = linearize_trajectory( x, y, num_trials, varargin)
+function [ output_args ] = linearize_trajectory( x, y, varargin)
 %UNTITLED2 Summary of this function goes here
 %   Goal is to linearize trajectories, such that each trial begins at zero
 %   and finishes at the end, with the length of each trajectory being equal
@@ -26,23 +26,13 @@ if ~exist('l_return','var')
 end
 
 %% Get section for trial and bounds of each part of arena
-[sect, goal] = getsection(x, y, 1);
-bounds = sections(x, y, 0);
+[sect, goal] = getsection(x, y);
+bounds = sections(x, y);
 
 %% Run postrials in an iterative fashion to determine the total number of 
 % trials
-done = 0; n = num_trials;
-while done == 0
-    try % Cycle through all trials
-        pos_data = postrials(x, y, 0, n , 0);
-    catch
-        pos_data = postrials(x, y, 0, n-1, 0);
-        num_trials_iterate = n - 1;
-        done = 1;
-    end
-    n = n + 1;
-end
 
+pos_data = postrials(x, y, 0);
 keyboard
 
 %% Meat of function - here you designate where the mouse was, in linear 
@@ -61,25 +51,26 @@ for j = 1: length(pos_data.frames)
    if sect(j,2) == 1
        lin_pos(j) = 0;
    elseif sect(j,2) == 2
-       lin_pos(j) = lin_interp(bounds.center.x([3 1]),[0 l_arm], x(j));
+       lin_pos(j) = lin_interp(bounds.center.x([2 1]),[0 l_arm], x(j));
    elseif sect(j,2) == 3
        lin_pos(j) = l_arm;
    elseif sect(j,2) == 4
-       lin_pos(j) = l_arm + lin_interp(bounds.approach_l.y([2 1]),[0 l_return], y(j));
+       lin_pos(j) = l_arm + lin_interp(bounds.approach_l.y([3 1]),[0 l_return], y(j));
    elseif sect(j,2) == 5
-       lin_pos(j) = l_arm + l_return + lin_interp(bounds.left.x([1 3]),[0 l_arm], x(j));
+       lin_pos(j) = l_arm + l_return + lin_interp(bounds.left.x([1 2]),[0 l_arm], x(j));
    elseif sect(j,2) == 6
        lin_pos(j) = 2*l_arm + l_return + lin_interp(bounds.return_l.y([1 2]),[0 l_return], y(j));
    elseif sect(j,2) == 7
-       lin_pos(j) = l_arm + lin_interp(bounds.approach_r.y([1 2]),[0 l_return], y(j));
+       lin_pos(j) = l_arm + lin_interp(bounds.approach_r.y([1 3]),[0 l_return], y(j));
    elseif sect(j,2) == 8
-       lin_pos(j) = l_arm + l_return + lin_interp(bounds.right.x([1 3]),[0 l_arm], x(j));
+       lin_pos(j) = l_arm + l_return + lin_interp(bounds.right.x([1 2]),[0 l_arm], x(j));
    elseif sect(j,2) == 9
-       lin_pos(j) = 2*l_arm + l_return + lin_interp(bounds.return_r.y([2 1]),[0 l_return], y(j));
+       lin_pos(j) = 2*l_arm + l_return + lin_interp(bounds.return_r.y([3 1]),[0 l_return], y(j));
    end
        
 end
 
-
+%%
+keyboard
 end
 
