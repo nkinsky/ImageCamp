@@ -29,7 +29,7 @@ function [bounds,rot_x,rot_y] = sections(x,y)
     while skewed
         
         %Try loading previous rotation angle. 
-        try load('rotated.mat');
+        try load(fullfile(pwd, 'rotated.mat'));
             
         catch
             [rot_x,rot_y,rotang] = rotate_traj(x,y);
@@ -109,7 +109,7 @@ function [bounds,rot_x,rot_y] = sections(x,y)
             skewed = 0;         
             save rotated rotang rot_x rot_y;
         elseif strcmp(satisfied,'n');  %Delete last rotation and try again.
-            if exist('rotated.mat','file') == 2
+            if exist(fullfile(pwd, 'rotated.mat'), 'file') == 2
                 delete rotated.mat;
             end
             close all;          
