@@ -47,6 +47,7 @@ section_names = {'Start' 'Center' 'Choice' 'Left Approach' 'Left' 'Left Return' 
 
 % Get relevant sections, bounds of those sections, and frames when the
 % mouse is in those sections
+cd(working_dir)
 [sect, goal] = getsection(x, y);
 bounds = sections(x, y);
 pos_data = postrials(x, y, 0);
@@ -221,7 +222,7 @@ for j = 1:length(valid_sections)
         title(['Sum of Heatmaps for Non-Running Epochs in ' ...
             section_names{valid_sections(j)} ' Section - ' trial_type_text{i}]);
         hold on;
-        bounds_use = get_bounds(bounds,valid_sections(j),i); % Grab appropriate bounds for section
+        bounds_use = get_bounds(bounds,valid_sections(j),i*-1+3); % Grab appropriate bounds for section - note hack to switch bounds for goal boxes - stupid MATLAB!
         plot((bounds_use.x([1 2 3 4 1])-Xcm_min)/scale_use, ...
             (bounds_use.y([1 2 4 3 1])-Ycm_min)/scale_use,'r--') % Plot bounds boxes
         
@@ -274,6 +275,7 @@ for m = 1:length(epoch_use)
     [ ~, ~, TMap_order ] = get_activation_order(frames_use, FT, TMap);
     [~, TMap_order_nan ] = make_nan_TMap( OccMap, TMap_order );
     imagesc_nan(rot90(TMap_order_nan,1)); colorbar; colormap jet;
+    title([num2str(m) ' of ' num2str(length(epoch_use))]);
     
    waitforbuttonpress
 end
