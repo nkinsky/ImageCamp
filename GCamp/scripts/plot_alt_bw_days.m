@@ -42,18 +42,18 @@ for j = 1:length(day(1).TMap)
     end
     % Plot Neuron masks
     subplot(2,3,1)
-    imagesc(day(1).NeuronImage{j}); title('Session 1');
+        imagesc(day(1).NeuronImage{j}); title('Session 1');
     subplot(2,3,4)
-    imagesc(day(1).NeuronImage{j} + 2*neuron2_reg); 
-    title('Session 1 + Session 2'); % colorbar; colormap jet;
+        imagesc(day(1).NeuronImage{j} + 2*neuron2_reg); 
+        title('Session 1 + Session 2'); % colorbar; colormap jet;
     subplot(2,3,[2 3])
-    [~, TMap1_nan] = make_nan_TMap(day(1).OccMap, day(1).TMap{j});
-    [~, TMap2_nan] = make_nan_TMap(day(2).OccMap, TMap2);
-    imagesc_nan(rot90(TMap1_nan,1))
-    title(['Neuron ' num2str(j)])
+        [~, TMap1_nan] = make_nan_TMap(day(1).OccMap, day(1).TMap{j});
+        [~, TMap2_nan] = make_nan_TMap(day(2).OccMap, TMap2);
+        imagesc_nan(rot90(TMap1_nan,1))
+        title(['Neuron ' num2str(j)])
     subplot(2,3,[5 6])
-    imagesc_nan(rot90(TMap2_nan,1))
-    title(['Neuron ' num2str(neuron_id{j})]);
+        imagesc_nan(rot90(TMap2_nan,1))
+        title(['Neuron ' num2str(neuron_id{j})]);
     
     waitforbuttonpress
     
