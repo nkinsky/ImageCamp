@@ -14,10 +14,16 @@ for j = 1:length(day)
 end
 
 %% Run image registration
-neuron_id = image_register_simple([day(1).folder '\ICMovie_min_proj.tif'],...
-    [day(2).folder '\ICMovie_min_proj.tif'],0);
+try
+    load([day(1).folder '\neuron_map.mat'])
+    neuron_id = neuron_map.neuron_id;
+    load([day(1).folder '\RegistrationInfoX.mat']);
+catch
+    [neuron_id, same_neuron, num_bad_cells] = image_register_simple([day(1).folder '\ICMovie_min_proj.tif'],...
+        [day(2).folder '\ICMovie_min_proj.tif'],0);
+    load ([day(1).folder '\RegistrationInfoX.mat']);
+end
 % Get registration info
-load ([day(1).folder '\RegistrationInfoX.mat']);
 [tform_struct ] = get_reginfo(day(1).folder, day(2).folder, RegistrationInfoX );
 
 %% Plot stuff
@@ -52,4 +58,32 @@ for j = 1:length(day(1).TMap)
     waitforbuttonpress
     
     
+end
+
+%% Look at correlations
+% Hack to get TMaps the same size...not very exact, but does scale TMaps to
+% be the same size...
+sizing = [size(day(2).TMap{1}); size(day(1).TMap{1})];
+size_use = min(sizing,[],1);
+for j = 1:length(day(1).TMap)
+    
+    if ~isempty(neuron_id{j}) && ~isnan(neuron_id{j})
+        % Register 2nd neuron's outline to 1st neuron
+        neuron2_reg = imwarp(day(2).NeuronImage{neuron_id{j}},tform_struct.tform,'OutputView',...
+            tform_struct.base_ref,'InterpolationMethod','nearest');
+        TMap2 = day(2).TMap{neuron_id{j}};
+    else
+        % Make 2nd neuron mask all zeros if no cell maps to the 1st
+        neuron2_reg = zeros(size(day(1).NeuronImage{1}));
+        TMap2 = zeros(size(day(2).TMap{1}));
+    end
+    % resize matrices so that they are the same size...
+    if isempty(neuron_id{j}) || isnan(neuron_id{j}) || sum(isnan(day(1).TMap{j}(:))) ~= 0 || sum(isnan(day(2).TMap{neuron_id{j}}(:))) ~= 0
+        corr_bw_sesh{j} = nan;
+    else
+        TMap1 = resize(day(1).TMap{j},size_use);
+        TMap2 = resize(TMap2,size_use);
+        temp = corrcoef(TMap1(:),TMap2(:));
+        corr_bw_sesh{j} = temp(1,2);
+    end
 end

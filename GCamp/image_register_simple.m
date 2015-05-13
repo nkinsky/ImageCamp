@@ -171,5 +171,12 @@ crappy = sum(cellfun(@sum,cellfun(@isnan,neuron_id,'UniformOutput',false)));    
 
 num_bad_cells = nonmapped + crappy;             %Number of cells that didn't make the cut. 
 
+
+%% Save neuron mapping - currently doesn't include multiple sessions...
+neuron_map.base_file = RegistrationInfoX.base_file;
+neuron_map.register_file = RegistrationInfoX.register_file;
+neuron_map.neuron_id = neuron_id;
+save([sesh(1).folder '\neuron_map.mat'], 'neuron_map');
+
 end
 
