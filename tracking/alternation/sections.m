@@ -1,5 +1,5 @@
 function [bounds,rot_x,rot_y] = sections(x,y)
-%function sections(x,y)
+%[bounds,rot_x,rot_y] = sections(x,y)
 %   
 %   This function takes position data and partitions the maze into
 %   sections. 
@@ -129,4 +129,6 @@ function [bounds,rot_x,rot_y] = sections(x,y)
     bounds.return_r = return_r; 
     bounds.goal_l = goal_l;
     bounds.goal_r = goal_r;
+    
+    save Bounds bounds; 
 end

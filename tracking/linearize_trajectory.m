@@ -33,10 +33,18 @@ if ~exist('l_return','var')
     l_return = l_return_default;
 end
 
-%% Get section for trial and bounds of each part of arena
-[sect, goal] = getsection(x, y);
-[bounds, rot_x, rot_y] = sections(x, y);
-pos_data = postrials(x,y,0);
+%% Load necessary information. 
+try 
+    load(fullfile(pwd,'Bounds.mat'));
+catch 
+    bounds = sections(x,y);
+end
+
+try 
+    load(fullfile(pwd,'Alternation.mat'))
+catch 
+    data = postrials(x,y);
+end
 
 %% Meat of function - here you designate where the mouse was, in linear 
 % space, for each trial
@@ -53,9 +61,32 @@ pos_data = postrials(x,y,0);
 %Preallocate.
 lin_pos = nan(1,length(pos_data.frames)); 
 
+%For the choice and start, find distance the mouse is from the middle of
+%the exit boundary. 
+base.ind.l = data.section == 1 && data.trial == 1; 
+base.ind.r = data.section == 1 && data.trial == 2; 
+choice.ind.l = data.section == 3 && data.trial == 1;
+choice.ind.r = data.section == 3 && data.trial == 2; 
+
+%Extract the referenc points. 
+refs.base.l = [mean(bounds.base.x(1:2)), bounds.base.y(1)];
+refs.base.r = [mean(bounds.base.x(1:2)), bounds.base.y(3)];
+refs.choice.l = [mean(bounds.choice.x(1:2)), bounds.base.y(1)]; 
+refs.choice.r = [mean(bounds.choice.x(1:2)), bounds.base.y(3)]; 
+
+%Get distances. 
+d.base.l = linearize_dist(refs.base.l(base.ind.l),x,y);
+d.base.r = linearize_dist(refs.base.r(base.ind.r),x,y); 
+d.choice.l = linearize_dist(refs.choice.l(choice.ind.l),x,y);
+d.choice.r = linearize_dist(refs.choice.r(choice.ind.r),x,y); 
+
+%Interpolate. 
 for j = 1: length(pos_data.frames)
-   if sect(j,2) == 1
-       lin_pos(j) = 0;
+   if data.section(j) == 1
+       if data.trial == 1
+           
+           
+           lin_pos(j) = lin_interp(%INSERT STUFF TO INTERPOLATE HERE%);
    elseif sect(j,2) == 2
        lin_pos(j) = lin_interp(bounds.center.x([2 1]),[0 l_arm], rot_x(j));
    elseif sect(j,2) == 3
