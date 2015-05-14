@@ -254,8 +254,8 @@ regstats.base_2nd_bw_diff_reg = sum(abs(base_image(:) - moving_reg(:)));
 
 
 % Determine if there are previously run versions of this registration
-if exist([base_path 'RegistrationInfoX.mat'],'file') == 2
-    load([base_path 'RegistrationInfoX.mat']);
+if exist([base_path 'RegistrationInfo ' reg_date '.mat'],'file') == 2
+    load([base_path 'RegistrationInfo ' reg_date '.mat']);
         size_info = size(RegistrationInfoX,2)+1;
 else
     size_info = 1;
