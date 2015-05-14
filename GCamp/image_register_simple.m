@@ -166,10 +166,11 @@ function [ neuron_id, same_neuron, num_bad_cells] = image_register_simple( base_
     end
 
 %% Find how many cells don't map onto the second session. 
-    nonmapped = cellfun(@isempty, neuron_id);       %Cells that disappeared/appeared over the two sessions. 
+    nonmapped = sum(cellfun(@isempty, neuron_id));          %Cells that disappeared/appeared over the two sessions. 
     crappy = sum(cellfun(@sum,cellfun(@isnan,neuron_id,'UniformOutput',false)));    %Multiple of these cells in session 1 map onto session 2. 
 
-    num_bad_cells = nonmapped + crappy;             %Number of cells that didn't make the cut. 
+    num_bad_cells.nonmapped = nonmapped;
+    num_bad_cells.crappy = crappy;                          %Number of cells that didn't make the cut. 
 
 end
 
