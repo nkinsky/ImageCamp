@@ -1,7 +1,9 @@
 function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_mapping)
 %multi_image_reg(base_file, num_session, check_neuron_mapping)
 %
-%   Registers multiple sessions.
+%   Registers a base file to multiple recording sessions and saves these
+%   registrations in a .mat file claled Reg_NeuronIDs.mat in your base file
+%   directory. 
 %
 %   INPUTS:
 %       base_file: Full file path of ICmovie_min_proj.tif to which you want
@@ -15,18 +17,25 @@ function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_m
 %
 %   OUTPUTS: 
 %       Reg_NeuronIDs: struct with the following fields...
-%           neuron_id: 1xn cell where n is the number of neurons in the first
-%           session, and each value is the neuron number in the 2nd session
-%           that maps to the neurons in the 1st session.  An empty cell means
-%           that no neuron from the 2nd session maps to that neuron from the 1st
-%           session.  A value of NaN means that more than one neuron from the
-%           second session is within min_thresh of the 1st session neuron
+%           neuron_id: 1xn cell where n is the number of neurons in the
+%           first session, and each value is the neuron number in the 2nd
+%           session that maps to the neurons in the 1st session.  An empty
+%           cell means that no neuron from the 2nd session maps to that
+%           neuron from the 1st session.  A value of NaN means that more
+%           than one neuron from the second session is within min_thresh of
+%           the 1st session neuron
 %
-%           same_neuron: n x m logical, where the a value of 1 indicates that
-%           more than one neuron from the second session maps to a cell in the
-%           first session.  Each row corresponds to a 1st session neuron, each
-%           column to a 2nd session neuron.
+%           same_neuron: n x m logical, where the a value of 1 indicates
+%           that more than one neuron from the second session maps to a
+%           cell in the first session.  Each row corresponds to a 1st
+%           session neuron, each column to a 2nd session neuron.
 %           
+%           num_bad_cells: struct containing the following fields:
+%               nonmapped: Neurons that weren't mapped onto the second
+%               session.
+%               crappy: Neurons that map onto a neuron that another neuron
+%               is mapping to. 
+%
     
 %% Check for check_neuron_mapping.
     if nargin < 3
