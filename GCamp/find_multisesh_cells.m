@@ -4,7 +4,7 @@ function [good_cells,final_masks] = find_multisesh_cells(Reg_NeuronIDs,check_neu
 %   Find neurons that are present across all specified registration
 %   sessions. Also plots the overlaid cell masks. 
 %
-%   INPUT:
+%   INPUTS:
 %       Reg_NeuronIDs: 1xN struct (where N is the number of registered
 %       sessions) from multi_image_reg.m 
 %
@@ -127,5 +127,7 @@ function [good_cells,final_masks] = find_multisesh_cells(Reg_NeuronIDs,check_neu
         end
     end
     
+    %Save. 
+    save(fullfile(base_path, 'MultiRegisteredCells.mat'), 'good_cells', 'final_masks', 'Reg_NeuronIDs'); 
 end
         
