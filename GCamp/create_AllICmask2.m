@@ -4,7 +4,7 @@ function [ All_ICmask, ICnz_mask ] = create_AllICmask2( IC_cell,ICnz )
 % single mask containing all the ICs in one array.  Note that IC_cell is the
 % full, non-edited IC, and ICnz is the index of the values where the
 % edited/masked IC is non-zero.
-% ICnz_mask = IC with ones for the mask and zeros outside the masek
+% ICnz_mask = IC with ones for the mask and zeros outside the mask
 
 
 All_ICmask = zeros(size(IC_cell{1}));

@@ -69,14 +69,14 @@ FigNum = 1; % Start off figures at this number
 %% Step 1: Select images to compare and import the images
 
 if nargin == 0
-[base_filename, base_path, filterindexbase] = uigetfile('*.tif',...
-    'Pick the base image file: ');
-base_file = [base_path base_filename];
+    [base_filename, base_path, filterindexbase] = uigetfile('*.tif',...
+        'Pick the base image file: ');
+    base_file = [base_path base_filename];
 
-[reg_filename, reg_path, filterindexbase] = uigetfile('*.tif',...
-    'Pick the image file to register with the base file: ',[base_path base_filename]);
-register_file = [reg_path reg_filename];
-cell_merge = 'base';
+    [reg_filename, reg_path, filterindexbase] = uigetfile('*.tif',...
+        'Pick the image file to register with the base file: ',[base_path base_filename]);
+    register_file = [reg_path reg_filename];
+    cell_merge = 'base';
 elseif nargin == 1
     error('Please input both a base image and image to register to base file')
 elseif nargin >= 2
@@ -88,9 +88,14 @@ elseif nargin >= 2
    
 end
 
+%% Get date with which you are registering the base file to. This is for loading and saving. 
+date_format = ['(?<month>\d+)-(?<day>\d+)-(?<year>\d+)'];
+temp = regexp(reg_path,date_format,'names'); 
+reg_date = [temp.month '-' temp.day '-' temp.year]; 
+
 %% Step 1a: Skip out on everything if registration is already done!
 try
-    load([base_path 'RegistrationInfoX.mat'])
+    load([base_path 'RegistrationInfo ', reg_date, '.mat'])
     disp('REGISTRATION ALREADY RAN!! Skipping this step')
 catch
 
@@ -249,8 +254,8 @@ regstats.base_2nd_bw_diff_reg = sum(abs(base_image(:) - moving_reg(:)));
 
 
 % Determine if there are previously run versions of this registration
-if exist([base_path 'RegistrationInfoX.mat'],'file') == 2
-    load([base_path 'RegistrationInfoX.mat']);
+if exist([base_path 'RegistrationInfo ' reg_date '.mat'],'file') == 2
+    load([base_path 'RegistrationInfo ' reg_date '.mat']);
         size_info = size(RegistrationInfoX,2)+1;
 else
     size_info = 1;
@@ -269,8 +274,8 @@ if exist('T_manual','var')
     RegistrationInfoX(size_info).tform_manual = tform_manual;
     regstats.base_2nd_bw_diff_reg_manual = sum(abs(base_image(:) - moving_reg_manual(:)));
 end
-
-save ([ base_path 'RegistrationInfoX.mat'],'RegistrationInfoX');
+ 
+save ([base_path 'RegistrationInfo ', reg_date, '.mat'],'RegistrationInfoX');
 
 % keyboard;
 end % End try/catch statement
