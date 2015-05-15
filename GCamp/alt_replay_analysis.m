@@ -1,4 +1,4 @@
-function [ ] = alt_replay_analysis( )
+function [ ] = alt_replay_analysis(working_dir )
 %UNTITLED2 Summary of this function goes here
 %   Gets  all times when the mouse is within the designated sections.
 
@@ -23,9 +23,12 @@ vel_thresh = 7; % NOT CURRENTLY USED - threshold in cm/s below which we consider
 sig_level = 0.05; % p-value threshold, below which you include fields in the analysis
 
 %% Part 0: Hardcoded file locations for original writing of function
-
-working_dir = 'J:\GCamp Mice\Working\alternation\11_13_2014\Working\take2'; %NORVAL 
+working_dir_hardcode =  'J:\GCamp Mice\Working\alternation\11_13_2014\Working\take2'; %NORVAL % 
 % 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working'; % laptop
+
+if ~exist('working_dir','var')
+    working_dir = working_dir_hardcode;
+end
  
 % pos_file = [working_dir '\pos_corr_to_std.mat'];
 place_file = [working_dir '\PlaceMaps.mat'];
@@ -38,7 +41,7 @@ load(pf_stats_file)
 % keyboard
 %% Part 1: get timestamps for when mouse is in choice or base, and separate
 % into left and right trials (and maybe correct/incorrect)
-trial_type = [1 2] ; % [left right]
+trial_type = [1 2]; % [left right]
 trial_type_text = {'Left Trials' 'Right Trials'};
 corr_trial = [1 0] ; % [correct incorrect]
 valid_sections = [1 2 3 10]; % matches sections in 'sections.m' file by Will Mau, except 10 = either goal location
@@ -48,9 +51,9 @@ section_names = {'Start' 'Center' 'Choice' 'Left Approach' 'Left' 'Left Return' 
 % Get relevant sections, bounds of those sections, and frames when the
 % mouse is in those sections
 cd(working_dir)
-[sect, goal] = getsection(x, y);
-bounds = sections(x, y);
 pos_data = postrials(x, y, 0);
+bounds = sections(x, y, 1 );
+[sect, goal] = getsection(x, y,'skip_rot_check',1);
 
 % Get mouse velocity - use isrunning here
 % vel = sqrt(diff(pos_align.x).^2+diff(pos_align.y).^2)/...
@@ -58,6 +61,7 @@ pos_data = postrials(x, y, 0);
 % vel = [0 vel]; % Make this the same length as position data by saying the mouse's
 % % velocity at the first frame is 0.
 %%
+disp('Getting epochs within specified zones')
 figure(11)
 plot(x,y,'b')
 for i = 1:length(trial_type)
@@ -173,9 +177,11 @@ sig_fields = find(pval > (1-sig_level));
 %     
 %     waitforbuttonpress
 % end
+
+% keyboard
 %% Step 3: Get average heat map and place-field centroids for cell 
 % activations in each region of interest
-
+disp('Getting heatmaps for everything and plotting stuff')
 % Initialize data structure
 activations = struct('AllTMap',[],'AllTMap_bin',[],'AllTMap_bin_out',[],'AllTcent_cm',[],...
     'n_frames',[],'AllTMap_nan',[],'AllTMap_bin_nan',[],'AllTMap_bin_out_nan',[]);
@@ -280,6 +286,79 @@ for m = 1:length(epoch_use)
    waitforbuttonpress
 end
 
+%% Get activation orders in linearized coordinates
+j = 4; i = 1;
+if trial_type(i) == 1
+    epoch_use = section(valid_sections(j)).epoch_left;
+elseif trial_type(k) == 2
+    epoch_use = section(valid_sections(j)).epoch_right;
+end
+
+section_bounds = get_bounds(bounds,valid_sections(j),i); % Won't work yet for goal locations...
+if valid_sections(j) == 10 && trial_type(i) == 2 % hack to correctly assign section_bounds for right goal
+    section_bounds = get_section_bounds(11,bounds);
+end
+
+mouse_pos_use = linearize_trajectory(x,y,'skip_rot_check',1,'x_add',...
+    [ceil(min(section_bounds.x)) floor(max(section_bounds.x))],'y_add',...
+    [ceil(min(section_bounds.y)) floor(max(section_bounds.y))]);
+
+for m = 1:length(epoch_use)
+    frames_use = epoch_use(m).start:epoch_use(m).end;
+    [ start_array, all_active_cells, TMap_order ] = get_activation_order(...
+        frames_use, FT, TMap);
+    raster_use_left = [];
+    raster_use_right = [];
+    for j = 1:size(start_array,2)
+        cells_use = all_active_cells(start_array(:,j));
+        Tcent_use = Tcent_cm(cells_use,:);
+        if ~isempty(Tcent_use)
+            lin_pos_use = linearize_trajectory(x,y,'skip_rot_check',1,...
+                'x_add',Tcent_use(:,1),'y_add',Tcent_use(:,2),...
+                'suppress_output',1);
+            raster_use_left = [raster_use_left; j*ones(length(cells_use),1) lin_pos_use(2,:)'];
+            raster_use_right = [raster_use_right; j*ones(length(cells_use),1) lin_pos_use(3,:)'];
+        end
+    end
+    figure(100); 
+    subplot(2,1,1)
+    if ~isempty(raster_use_left)
+        frame_max = max(raster_use_left(:,1));
+        plot(raster_use_left(:,2),raster_use_left(:,1),'b.',...
+            [mouse_pos_use(2,1) mouse_pos_use(2,1)], [0 frame_max],'r--',...
+            [mouse_pos_use(2,2) mouse_pos_use(2,2)], [0 frame_max],'r--',...
+            [0 0],[0 frame_max],'g--',[60 60], [0 frame_max], 'g--')
+        set(gca,'YLim',[0 frame_max])
+        legend('neuron firing','mouse position','mouse position','center begin','center end')
+        xlim([-5 150])
+        title(['Left Trajectories, epoch ' num2str(m) ' of ' num2str(length(epoch_use))]);
+        xlabel('PF centroid position')
+        ylabel('Frame Number/Time elapsed')
+    end
+    subplot(2,1,2)
+    if ~isempty(raster_use_right)
+        frame_max = max(raster_use_right(:,1));
+        plot(raster_use_right(:,2),raster_use_right(:,1),'b.',...
+            [mouse_pos_use(3,1) mouse_pos_use(3,1)], [0 frame_max],'r--',...
+            [mouse_pos_use(3,2) mouse_pos_use(3,2)], [0 frame_max],'r--',...
+            [0 0],[0 frame_max],'g--',[60 60], [0 frame_max], 'g--')
+        set(gca,'YLim',[0 frame_max])
+        legend('neuron firing','mouse position','mouse position','center begin','center end')
+        xlim([-5 150])
+        title(['Right Trajectories, epoch ' num2str(m) ' of ' num2str(length(epoch_use))]);
+        xlabel('PF centroid position')
+        ylabel('Frame Number/Time elapsed')
+    end
+    
+    waitforbuttonpress
+end
+    
+
+%% Next steps - look at this for other areas, as well as for running epochs!!!
+% Also, exclude any PFs whose field overlaps with the current position of
+% the mouse - will require converting PF pixels to mouse coordinates and
+% then searching using 'inpolygon' function...
+    
 %% Keyboard statement if you want to debug/mess around at the end
 keyboard
 
