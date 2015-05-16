@@ -7,12 +7,12 @@ function [tform_struct ] = get_reginfo( base_folder, reg_folder, RegistrationInf
 % Get
 for k = 1:size(RegistrationInfoX,2);
     if ~isempty(base_folder)
-        temp_base(k) = strcmpi(fullfile(base_folder, '\ICmovie_min_proj.tif'), ...
+        temp_base(k) = strcmpi(fullfile(base_folder, 'ICmovie_min_proj.tif'), ...
             RegistrationInfoX(k).base_file);
     else
         temp_base(k) = 1;
     end
-    temp_reg(k) = strcmpi(fullfile(reg_folder, '\ICmovie_min_proj.tif'), ...
+    temp_reg(k) = strcmpi(fullfile(reg_folder, 'ICmovie_min_proj.tif'), ...
         RegistrationInfoX(k).register_file);
 end
 temp = temp_base & temp_reg; % Get boolean to correct index in RegistrationInfoX
