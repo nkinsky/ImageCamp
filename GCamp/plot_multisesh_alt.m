@@ -66,46 +66,49 @@ function corrs = plot_multisesh_alt(base_path,check)
 %% Plot.
     %Initialize. 
     figure(600);
+    r = nan(num_cells,num_sessions); 
     
     %For each neuron, plot out its cell mask and TMap.
-    for this_neuron = 1:num_cells
-        %Start off the subplot index with 1. 
-        sesh_sub_ind = 1; 
-        
-        %For resizing. 
+    for this_neuron = 1:num_cells  
+        %Resizing variable.
         sizing = nan(num_sessions,1);
         
+        %Extract size information. 
         for this_sesh = 1:num_sessions
             sizing(this_sesh) = size(session(this_sesh).TMap{1}); 
         end
         
         %Normalized size. 
         size_use = min(sizing,[],1); 
+        
+        %Get base TMap. 
+        TMap_base = make_nan_TMap(session(1).OccMap, session(1).TMap{cell_list(this_neuron,this_sesh)}); 
+        TMap_base = resize(TMap_base,size_use);
 
-        for this_sesh = 1:num_sessions
+        for this_sesh = 2:num_sessions
             this_mask = session(this_sesh).NeuronImage{cell_list(this_neuron,this_sesh)}; 
-            [~,TMap_nan] = make_nan_TMap(session(this_sesh).OccMap, session(this_sesh).TMap{cell_list(this_neuron,this_sesh)});
-            TMap_nan = resize(TMap_nan,size_use); 
+            [~,TMap_reg] = make_nan_TMap(session(this_sesh).OccMap, session(this_sesh).TMap{cell_list(this_neuron,this_sesh)});
+            TMap_reg = resize(TMap_reg,size_use); 
             
-            if exist('check', 'var') && check == 1
-                subplot(num_sessions,3,sesh_sub_ind)
-                    imagesc(this_mask);
-                    title('Neuron Mask', 'fontsize', 12); 
-                subplot(num_sessions,3,[sesh_sub_ind+1:sesh_sub_ind+2]); 
-                    imagesc_nan(rot90(TMap_nan));
-                    title('TMap', 'fontsize', 12);
-            end
-
-                %Get next subplot index. 
-                sesh_sub_ind = sesh_sub_ind+3; 
+            r(this_neuron,this_sesh) = corr2(TMap_base,TMap_reg);
         end
     end
         
-    %Display instructions. 
-    if this_neuron == 1
-        disp('Use left and right arrow keys to scroll through cells. Press Esc to exit'); 
+    
+    if exist('check', 'var') && check == 1
+        subplot(num_sessions,3,sesh_sub_ind)
+            imagesc(this_mask);
+            title('Neuron Mask', 'fontsize', 12); 
+        subplot(num_sessions,3,[sesh_sub_ind+1:sesh_sub_ind+2]); 
+            imagesc_nan(rot90(TMap_reg));
+            title('TMap', 'fontsize', 12);
     end
 
+    %Get next subplot index. 
+    sesh_sub_ind = sesh_sub_ind+3;
+
+    
+ 
     %Scroll with arrow keys. 
     figure(600); 
     [~,~,key] = ginput(1); 
