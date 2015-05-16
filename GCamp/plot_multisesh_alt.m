@@ -1,4 +1,4 @@
-function plot_multisesh_alt(base_path)
+function corrs = plot_multisesh_alt(base_path,check)
 %plot_multisesh_alt(base_path)
 %
 %
@@ -30,19 +30,96 @@ function plot_multisesh_alt(base_path)
     end
     
 %% Useful parameters. 
-    num_reg_sessions = length(Reg_NeuronIDs);
+    num_sessions = length(Reg_NeuronIDs)+1;
+    num_cells = size(cell_list,1); 
 
 %% Extract data. 
-    for this_sesh = 1:num_reg_sessions
+    %Preallocate.
+    session = struct; 
+    disp('Extracting data...'); 
+    
+    %Base image stats. 
+    session(1).path = Reg_NeuronIDs(1).base_path; 
+    
+    load(fullfile(session(1).path, 'PlaceMaps.mat'), 'TMap', 'OccMap'); 
+    load(fullfile(session(1).path, 'ProcOut.mat'), 'NeuronImage'); 
+    
+    %Compile into struct. 
+    session(1).TMap = TMap; 
+    session(1).OccMap = OccMap; 
+    session(1).NeuronImage = NeuronImage; 
+    
+    for this_sesh = 2:num_sessions
         %Get registered image path. 
-        session(this_sesh).path = Reg_NeuronIDs(this_sesh).reg_path; 
+        session(this_sesh).path = Reg_NeuronIDs(this_sesh-1).reg_path; 
         
         %Load place fields and neuron mask. 
         load(fullfile(session(this_sesh).path, 'PlaceMaps.mat'), 'TMap', 'OccMap');
         load(fullfile(session(this_sesh).path, 'ProcOut.mat'), 'NeuronImage'); 
       
+        %Compile into struct. 
         session(this_sesh).TMap = TMap; 
+        session(this_sesh).OccMap = OccMap; 
         session(this_sesh).NeuronImage = NeuronImage; 
     end
     
+%% Plot.
+    %Initialize. 
+    figure(600);
+    
+    %For each neuron, plot out its cell mask and TMap.
+    for this_neuron = 1:num_cells
+        %Start off the subplot index with 1. 
+        sesh_sub_ind = 1; 
+        
+        %For resizing. 
+        sizing = nan(num_sessions,1);
+        
+        for this_sesh = 1:num_sessions
+            sizing(this_sesh) = size(session(this_sesh).TMap{1}); 
+        end
+        
+        %Normalized size. 
+        size_use = min(sizing,[],1); 
+
+        for this_sesh = 1:num_sessions
+            this_mask = session(this_sesh).NeuronImage{cell_list(this_neuron,this_sesh)}; 
+            [~,TMap_nan] = make_nan_TMap(session(this_sesh).OccMap, session(this_sesh).TMap{cell_list(this_neuron,this_sesh)});
+            TMap_nan = resize(TMap_nan,size_use); 
+            
+            if exist('check', 'var') && check == 1
+                subplot(num_sessions,3,sesh_sub_ind)
+                    imagesc(this_mask);
+                    title('Neuron Mask', 'fontsize', 12); 
+                subplot(num_sessions,3,[sesh_sub_ind+1:sesh_sub_ind+2]); 
+                    imagesc_nan(rot90(TMap_nan));
+                    title('TMap', 'fontsize', 12);
+            end
+
+                %Get next subplot index. 
+                sesh_sub_ind = sesh_sub_ind+3; 
+        end
+    end
+        
+    %Display instructions. 
+    if this_neuron == 1
+        disp('Use left and right arrow keys to scroll through cells. Press Esc to exit'); 
+    end
+
+    %Scroll with arrow keys. 
+    figure(600); 
+    [~,~,key] = ginput(1); 
+    if key == 29 && this_neuron < num_cells
+        this_neuron = this_neuron + 1; 
+    elseif key == 28 && this_neuron ~= 1
+        this_neuron = this_neuron - 1; 
+    elseif key == 27
+        keepgoing = 0; 
+        close(figure(600)); 
+    end
+    
+            
+        
+end
+                
 %% 
