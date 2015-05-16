@@ -1,10 +1,18 @@
-function [sect, goal] = getsection(x,y)
-%function [sect, goal] = getsection(x,y)
+function [sect, goal] = getsection(x,y,varargin)
+%function [sect, goal] = getsection(x,y,...)
 %   This function takes position data and transforms it into section
 %   number. 
 %
 %   X and Y are vectors indicating the mouse position.
+%   'skip_rot_check': 0 (default if left blank) - perform and/or plot
+%   rotation correction to position data in sections.mat, 1: skip it if you
+%   know it is already done
+%   'x_add','y_add': e.g. getsection(...,'x_add', xadd_vec, 'y_add',
+%   yadd_vec - takes points in  xadd_vec and yadd_vec and maps them onto
+%   the sect and goal vector indicated below.
 %
+%   OUTPUTS - NOTE that if 'x_add' and 'y_add' are specified, then sect and
+%       goal will correspond to them, NOT to x and y!
 %   SECT is X x 2 vector where col1 is the frame # and col2 is section #: 
 %       1. Base
 %       2. Center
@@ -21,9 +29,33 @@ function [sect, goal] = getsection(x,y)
 %       0. Not in a goal location
 %       1. In left goal zone
 %       2. In right goal zone
+
+% keyboard
+%% Process vargin
+for j = 1:2:length(varargin)-1
+   if strcmpi(varargin{j},'skip_rot_check')
+       skip_rot_check = varargin{j+1};
+   elseif strcmpi(varargin{j},'x_add')
+       x_add = varargin{j+1};
+   elseif strcmpi(varargin{j},'y_add')
+       y_add = varargin{j+1};
+   end
+end
+
+% set skip_rot_check if not specified
+if ~exist('skip_rot_check','var')
+    skip_rot_check = 0;
+end
     
 %% Get relevant section coordinates. 
-    [bounds, rot_x, rot_y] = sections(x,y);
+    [bounds, rot_x, rot_y] = sections(x,y,skip_rot_check);
+    
+    % overwrite rot_x and rot_y if x_add and y_add are specified, but still
+    % use bounds determined by x and y
+    if exist('x_add','var') && exist('y_add','var')
+        rot_x = x_add;
+        rot_y = y_add;
+    end
     
     xmin = [bounds.base.x(1);               
             bounds.center.x(1);

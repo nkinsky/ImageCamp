@@ -172,5 +172,12 @@ function [ neuron_id, same_neuron, num_bad_cells] = image_register_simple( base_
     num_bad_cells.nonmapped = nonmapped;
     num_bad_cells.crappy = crappy;                          %Number of cells that didn't make the cut. 
 
+
+%% Save neuron mapping - currently doesn't include multiple sessions...
+neuron_map.base_file = RegistrationInfoX.base_file;
+neuron_map.register_file = RegistrationInfoX.register_file;
+neuron_map.neuron_id = neuron_id;
+save([sesh(1).folder '\neuron_map.mat'], 'neuron_map');
+
 end
 

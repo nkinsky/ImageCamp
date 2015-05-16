@@ -1,5 +1,5 @@
-function data = postrials(x,y,plot_each_trial)
-%function data = postrials(x,y,plot_each_trial)
+function data = postrials(x,y,plot_each_trial,varargin)
+%function data = postrials(x,y,plot_each_trial,...)
 %   
 %   This function takes mouse position data and sorts them into trial
 %   numbers, left/right, and correct/incorrect.
@@ -10,6 +10,15 @@ function data = postrials(x,y,plot_each_trial)
 %       
 %       plot_each_trial: Logical to determine whether or not you want the
 %       function to plot the XY position of the mouse for each trial. 
+%
+%       'skip_rot_check': 0(default if left blank) = perform check of
+%       rotation of position data, 1 = skip it.  Enter as
+%       postrials(....,'skip_rot_check',0).
+%
+%       'suppress_output': 1 - suppresses any warning outputs, 0 (default)
+%       - provide outputs for number of trials and any warnings about
+%       epochs with multiple trials
+%       
 %
 %   OUTPUTS:
 %       DATA: a struct with these fields:
@@ -26,9 +35,21 @@ function data = postrials(x,y,plot_each_trial)
 %   TIP: To find frames for a particular trial of interest, you can do:
 %       data.frames(data.trial == TRIAL_OF_INTEREST).
 %
+%% Assign varargin
+for j = 1:2:length(varargin)-1
+    if strcmpi(varargin{j},'skip_rot_check')
+        skip_rot_check = varargin{j+1};
+    elseif strcmpi(varargin{j},'suppress_output')
+        suppress_output = varargin{j+1};  
+    end
+end
+
+if ~exist('skip_rot_check','var')
+    skip_rot_check = 0;
+end
 
 %% Label position data with section numbers. 
-    [sect,goal] = getsection(x,y);
+    [sect,goal] = getsection(x,y,'skip_rot_check',skip_rot_check);
     
 %% Define important section numbers. 
     %Define sequences of section numbers that correspond to left or right
@@ -102,9 +123,11 @@ function data = postrials(x,y,plot_each_trial)
         %Notify user of possible errors in the trial sorting script. This
         %catches when the mouse appears on both maze arms in what the
         %script believed to be a single trial. 
-        if (ismember(left, sect(epochs(this_trial):epochs(next),2)) && trialtype(this_trial) == 2) || ...
-           (ismember(right, sect(epochs(this_trial):epochs(next),2)) && trialtype(this_trial) == 1)
-            disp(['Warning: This epoch may contain more than one trial: Trial ', num2str(this_trial)]); 
+        if ~exist('suppress_output','var') || suppress_output ~= 1
+            if (ismember(left, sect(epochs(this_trial):epochs(next),2)) && trialtype(this_trial) == 2) || ...
+                    (ismember(right, sect(epochs(this_trial):epochs(next),2)) && trialtype(this_trial) == 1)
+                disp(['Warning: This epoch may contain more than one trial: Trial ', num2str(this_trial)]);
+            end
         end
         
         %When postrials can no longer successfully sort a trial, stop the
@@ -120,7 +143,9 @@ function data = postrials(x,y,plot_each_trial)
     end
     
     %Display number of trials sorted. 
+    if ~exist('suppress_output','var') || suppress_output ~= 1
     disp(['Successfully sorted ', num2str(numtrials), ' trials.']); 
+    end
     
 %% Build up the struct. 
     data.frames = 1:length(x);          %Frames.
