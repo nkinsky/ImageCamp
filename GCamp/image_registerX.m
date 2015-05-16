@@ -81,10 +81,10 @@ elseif nargin == 1
     error('Please input both a base image and image to register to base file')
 elseif nargin >= 2
    
-    base_filename = base_file(max(regexp(base_file,'\','end'))+1:end);
-    base_path = base_file(1:max(regexp(base_file,'\','end')));
-    reg_filename = register_file(max(regexp(register_file,'\','end'))+1:end);
-    reg_path = register_file(1:max(regexp(register_file,'\','end')));
+    base_filename = base_file(max(regexp(base_file,['\', '/'],'end'))+1:end);
+    base_path = base_file(1:max(regexp(base_file,['\', '/'],'end')));
+    reg_filename = register_file(max(regexp(register_file,['\', '/'],'end'))+1:end);
+    reg_path = register_file(1:max(regexp(register_file,['\', '/'],'end')));
    
 end
 

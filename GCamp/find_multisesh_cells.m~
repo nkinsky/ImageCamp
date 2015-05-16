@@ -14,9 +14,7 @@ function [cell_list,final_masks] = find_multisesh_cells(Reg_NeuronIDs,check_neur
 %   OUTPUTS: 
 %       cell_list: CxN+1 matrix where C is the number of neurons that were
 %       active for all chosen sessions and N is the number of registered
-%       sessions. The first column indexes the neurons from ProcOut.mat of
-%       the base image. The following columns index neurons from the
-%       sessions you chose in order. 
+%       sessions. The first coklu
 %
 %       final_masks: cell array containing the stacked cell masks of all
 %       the registered sessions. 
@@ -46,7 +44,7 @@ function [cell_list,final_masks] = find_multisesh_cells(Reg_NeuronIDs,check_neur
     num_good_cells = length(good_cells); 
     
     %List of cells. 
-    cell_list(:,1) = good_cells; 
+    cell_list(:,1) = [1:num_good_cells]'; 
     for this_sesh = 1:num_sessions
         cell_list(:,this_sesh+1) = cat(1,neuron_list{good_cells,this_sesh}); 
     end
