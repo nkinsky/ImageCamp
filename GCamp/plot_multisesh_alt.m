@@ -125,6 +125,9 @@ function [r,TMap_plot,TMap_resized,final_masks] = plot_multisesh_alt(base_path,c
             this_mask{this_neuron,this_sesh} = session(this_sesh).NeuronImage{neuron_ind};
             TMap_temp{this_neuron,this_sesh} = session(this_sesh).TMap{neuron_ind}; 
             
+            %Get TMap_nan. 
+            [~,TMap_plot{this_neuron,this_sesh}] = make_nan_TMap(session(this_sesh).OccMap, TMap_temp{this_neuron,this_sesh});
+            
             %Translate the mask if it's not the base session. 
             if this_sesh ~= 1
                 final_masks{this_neuron,this_sesh} = imwarp(this_mask{this_neuron,this_sesh},...
@@ -185,7 +188,6 @@ function [r,TMap_plot,TMap_resized,final_masks] = plot_multisesh_alt(base_path,c
                     
                 %Plot the TMap. 
                 subplot(num_sessions,3,[sesh_sub_ind+1:sesh_sub_ind+2]); 
-                    [~,TMap_plot{this_neuron,this_sesh}] = make_nan_TMap(session(this_sesh).OccMap, TMap_temp{this_neuron,this_sesh});
                     imagesc_nan(rot90(TMap_plot{this_neuron,this_sesh}));
                     
                     %Get session date. 
