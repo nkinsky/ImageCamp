@@ -53,7 +53,7 @@ function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_m
     end
 
 %% Get base path.
-    base_path = base_file(1:max(regexp(base_file,'\','end')));
+    base_path = base_file(1:max(regexp(base_file,'[\, /]','end')));
     
 %% Do the registrations. 
     %Preallocate.

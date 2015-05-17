@@ -70,7 +70,6 @@ function r = plot_multisesh_alt(base_path,check)
     this_mask = cell(num_cells,num_sessions); 
     TMap_temp = cell(num_cells,num_sessions); 
     TMap_plot = cell(num_cells,num_sessions); 
-    TMap_resized = cell(num_cells,num_sessions); 
     
     %For each neuron, get the resized TMap. 
     for this_neuron = 1:num_cells  
@@ -102,12 +101,12 @@ function r = plot_multisesh_alt(base_path,check)
                 r(this_neuron,this_sesh-1) = nan; 
             else
                 %Otherwise, resize the TMaps and do the correlation. 
-                TMap_resized{this_neuron,this_sesh} = resize(TMap_temp{this_neuron,this_sesh},size_use);
-                TMap_resized{this_neuron,1} = resize(TMap_temp{this_neuron,1},size_use); 
+                TMap_temp{this_neuron,this_sesh} = resize(TMap_temp{this_neuron,this_sesh},size_use);
+                TMap_temp_resized{this_neuron,1} = resize(TMap_temp{this_neuron,1},size_use); 
                 
                 %Correlate the TMap of the base image to that of the registered
                 %image. 
-                r(this_neuron,this_sesh-1) = corr2(TMap_resized{this_neuron,1},TMaps_resized{this_neuron,this_sesh});
+                r(this_neuron,this_sesh-1) = corr2(TMap_temp_resiz{this_neuron,1},TMap_temp_resized{this_neuron,this_sesh});
             end
         end
     end
@@ -126,10 +125,8 @@ function r = plot_multisesh_alt(base_path,check)
             %Plot each session. 
             for this_sesh = 1:num_sessions
                 subplot(num_sessions,3,sesh_sub_ind)
-                    
-                
                     imagesc(this_mask{this_neuron,this_sesh});
-                    title(['Neuron #', num2str(cell_list(this_neuron,this_sesh))], 'fontsize', 12); 
+                    title(['Neuron #', num2str(cell_list(this_neuron,this_sesh))]'fontsize', 12); 
                 subplot(num_sessions,3,[sesh_sub_ind+1:sesh_sub_ind+2]); 
                     [~,TMap_plot{this_neuron,this_sesh}] = make_nan_TMap(session(this_sesh).OccMap, TMap_temp{this_neuron,this_sesh});
                     imagesc_nan(rot90(TMap_plot{this_neuron,this_sesh}));
