@@ -1,5 +1,5 @@
-function [cell_list,final_masks] = find_multisesh_cells(Reg_NeuronIDs,check_neuron_mapping)
-%[cell_list,final] = find_multisesh_cells(Reg_NeuronIDs,check_neuron_mapping)
+function [cell_list,final_masks,tform_struct] = find_multisesh_cells(Reg_NeuronIDs,check_neuron_mapping)
+%[cell_list,final,tform_struct] = find_multisesh_cells(Reg_NeuronIDs,check_neuron_mapping)
 %
 %   Find neurons that are present across all specified registration
 %   sessions. Also plots the overlaid cell masks. 
@@ -20,6 +20,9 @@ function [cell_list,final_masks] = find_multisesh_cells(Reg_NeuronIDs,check_neur
 %
 %       final_masks: cell array containing the stacked cell masks of all
 %       the registered sessions. 
+%
+%       tform_struct: struct containing the translation information for
+%       registered sessions. 
 %
 
 %% Useful parameters. 
@@ -59,7 +62,7 @@ function [cell_list,final_masks] = find_multisesh_cells(Reg_NeuronIDs,check_neur
     %Dump neuron masks. 
     mask = cell(1,num_sessions+1); 
     mask{1} = NeuronImage; 
-    
+        
     %Get transformations. 
     for this_sesh = 1:num_sessions
         %Get path information. 
@@ -136,6 +139,6 @@ function [cell_list,final_masks] = find_multisesh_cells(Reg_NeuronIDs,check_neur
     end
     
     %Save. 
-    save(fullfile(base_path, 'MultiRegisteredCells.mat'), 'cell_list', 'final_masks', 'Reg_NeuronIDs'); 
+    save(fullfile(base_path, 'MultiRegisteredCells.mat'), 'cell_list', 'final_masks', 'Reg_NeuronIDs', 'tform_struct'); 
 end
         
