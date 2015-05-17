@@ -20,14 +20,14 @@ function [r,TMap_plot,TMap_resized,final_masks] = plot_multisesh_alt(base_path,c
 %       TMap_plot: NxS cell containing TMaps with NaNs for pixels that the
 %       mouse never visited.
 %
-%       TMap_resized: NxS cell containing TMaps for correlations.
+%       TMap_resized: NxS cell containing resized TMaps for correlations.
 %
 %       final_masks: NxS cell containing the translated neuron masks. 
 %
 
 %% Make sure you have the appropriate files. 
     try 
-        load(fullfile(base_path,'MultiRegisteredCells.mat')); 
+        load(fullfile(base_path,'MultiRegisteredCells.mat'), 'cell_list', 'Reg_NeuronIDs', 'tform_struct'); 
     catch
         disp('MultiRegisteredCells.mat not found! Trying to load Reg_NeuronIDs.mat...'); 
         try 
@@ -35,7 +35,7 @@ function [r,TMap_plot,TMap_resized,final_masks] = plot_multisesh_alt(base_path,c
             disp('Running find_multisesh_cells...'); 
             
             find_multisesh_cells(Reg_NeuronIDs,1);
-            load(fullfile(base_path,'MultiRegisteredCells.mat')); 
+            load(fullfile(base_path,'MultiRegisteredCells.mat'), 'cell_list', 'Reg_NeuronIDs', 'tform_struct'); 
         catch
             disp('Reg_NeuronIDs.mat not found! Preparing to run multi_image_reg...'); 
             num_sessions = input('How many sessions would you like to register your base image to? '); 
@@ -47,7 +47,7 @@ function [r,TMap_plot,TMap_resized,final_masks] = plot_multisesh_alt(base_path,c
             disp('Running find_multisesh_cells...'); 
             
             find_multisesh_cells(Reg_NeuronIDs,0);
-            load(fullfile(base_path,'MultiRegisteredCells.mat')); 
+            load(fullfile(base_path,'MultiRegisteredCells.mat'), 'cell_list', 'Reg_NeuronIDs', 'tform_struct'); 
         end
     end
     
@@ -106,12 +106,14 @@ function [r,TMap_plot,TMap_resized,final_masks] = plot_multisesh_alt(base_path,c
     TMap_plot = cell(num_cells,num_sessions); 
     TMap_resized = cell(num_cells,num_sessions); 
     
-    %For each neuron, get the resized TMap. 
+    %For each neuron, get sizing information, TMaps, transformation
+    %information, and neuron masks.
+    disp('Transforming neurons...'); 
     for this_neuron = 1:num_cells  
         %Resizing variable.
         sizing = nan(num_sessions,2);
         
-        %Extract size information. 
+        %Extract.  
         for this_sesh = 1:num_sessions
             %Get the size of a TMap. 
             sizing(this_sesh,[1:2]) = size(session(this_sesh).TMap{1}); 
@@ -123,12 +125,23 @@ function [r,TMap_plot,TMap_resized,final_masks] = plot_multisesh_alt(base_path,c
             this_mask{this_neuron,this_sesh} = session(this_sesh).NeuronImage{neuron_ind};
             TMap_temp{this_neuron,this_sesh} = session(this_sesh).TMap{neuron_ind}; 
             
+            %Translate the mask if it's not the base session. 
+            if this_sesh ~= 1
+                final_masks{this_neuron,this_sesh} = imwarp(this_mask{this_neuron,this_sesh},...
+                    tform_struct(this_sesh-1).tform,'OutputView',tform_struct(this_sesh-1).base_ref,...
+                    'InterpolationMethod','nearest');
+            else
+                final_masks{this_neuron,this_sesh} = this_mask{this_neuron,this_sesh}; 
+            end
+            
         end
         
         %Normalized size. 
         size_use = min(sizing,[],1); 
     end
 
+    %Correlations. 
+    disp('Calculating correlations...'); 
     for this_neuron = 1:num_cells
         for this_sesh = 2:num_sessions
             %Some TMaps are full of NaNs. Exclude them from the
@@ -164,15 +177,6 @@ function [r,TMap_plot,TMap_resized,final_masks] = plot_multisesh_alt(base_path,c
 
             %Plot each session. 
             for this_sesh = 1:num_sessions
-                %Translate the mask if it's not the base session. 
-                if this_sesh ~= 1
-                    final_masks{this_neuron,this_sesh} = imwarp(this_mask{this_neuron,this_sesh},...
-                        tform_struct(this_sesh-1).tform,'OutputView',tform_struct(this_sesh-1).base_ref,...
-                        'InterpolationMethod','nearest');
-                else
-                    final_masks{this_neuron,this_sesh} = this_mask{this_neuron,this_sesh}; 
-                end
-
                 %Plot the mask. 
                 subplot(num_sessions,3,sesh_sub_ind)     
                     imagesc(final_masks{this_neuron,this_sesh});

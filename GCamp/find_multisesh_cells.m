@@ -1,4 +1,4 @@
-function [cell_list,final_masks,tform_struct] = find_multisesh_cells(Reg_NeuronIDs,check_neuron_mapping)
+function [cell_list,stacked_masks,tform_struct] = find_multisesh_cells(Reg_NeuronIDs,check_neuron_mapping)
 %[cell_list,final,tform_struct] = find_multisesh_cells(Reg_NeuronIDs,check_neuron_mapping)
 %
 %   Find neurons that are present across all specified registration
@@ -100,12 +100,12 @@ function [cell_list,final_masks,tform_struct] = find_multisesh_cells(Reg_NeuronI
     end
     
     %Preallocate. 
-    final_masks = cell(1,num_good_cells); 
+    stacked_masks = cell(1,num_good_cells); 
 
     %Compress the masks. Essentially stacking the masks. 
     for this_neuron = 1:num_good_cells
         comp = cat(3,penultimate{this_neuron,:}); 
-        final_masks{this_neuron} = sum(comp,3); 
+        stacked_masks{this_neuron} = sum(comp,3); 
     end
     
     if exist('check_neuron_mapping','var') && check_neuron_mapping == 1
@@ -119,7 +119,7 @@ function [cell_list,final_masks,tform_struct] = find_multisesh_cells(Reg_NeuronI
         while keepgoing
             figure(50); 
             %Plot the stacked cell masks. 
-            imagesc(final_masks{this_neuron}); 
+            imagesc(stacked_masks{this_neuron}); 
                 colorbar;
                 caxis([0 num_sessions]); 
                 title(['Neuron #', num2str(good_cells(this_neuron)), ' from session 1'], 'fontsize', 12); 
@@ -139,6 +139,6 @@ function [cell_list,final_masks,tform_struct] = find_multisesh_cells(Reg_NeuronI
     end
     
     %Save. 
-    save(fullfile(base_path, 'MultiRegisteredCells.mat'), 'cell_list', 'final_masks', 'Reg_NeuronIDs', 'tform_struct'); 
+    save(fullfile(base_path, 'MultiRegisteredCells.mat'), 'cell_list', 'stacked_masks', 'Reg_NeuronIDs', 'tform_struct'); 
 end
         
