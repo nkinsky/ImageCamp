@@ -15,13 +15,13 @@ end
 
 %% Run image registration
 try
-    load([day(1).folder '\neuron_map.mat'])
+    load(fullfile(day(1).folder, 'neuron_map.mat'))
     neuron_id = neuron_map.neuron_id;
-    load([day(1).folder '\RegistrationInfoX.mat']);
+    load(fullfile(day(1).folder, 'RegistrationInfoX.mat'));
 catch
-    [neuron_id, same_neuron, num_bad_cells] = image_register_simple([day(1).folder '\ICMovie_min_proj.tif'],...
-        [day(2).folder '\ICMovie_min_proj.tif'],0);
-    load ([day(1).folder '\RegistrationInfoX.mat']);
+    [neuron_id, same_neuron, num_bad_cells] = image_register_simple(fullfile(day(1).folder, 'ICMovie_min_proj.tif'),...
+        fullfile(day(2).folder, 'ICMovie_min_proj.tif'),0);
+    load(fullfile(day(1).folder, 'RegistrationInfoX.mat'));
 end
 % Get registration info
 [tform_struct ] = get_reginfo(day(1).folder, day(2).folder, RegistrationInfoX );
