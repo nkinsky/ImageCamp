@@ -273,7 +273,7 @@ if exist('T_manual','var')
     regstats.base_2nd_bw_diff_reg_manual = sum(abs(base_image(:) - moving_reg_manual(:)));
 end
  
-save ([base_path 'RegistrationInfo ', reg_date, '.mat'],'RegistrationInfoX');
+save (fullfile(base_path, ['RegistrationInfo ', reg_date, '.mat']),'RegistrationInfoX');
 
 % keyboard;
 end % End try/catch statement
