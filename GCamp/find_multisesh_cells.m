@@ -141,4 +141,3 @@ function [cell_list,stacked_masks,tform_struct] = find_multisesh_cells(Reg_Neuro
     %Save. 
     save(fullfile(base_path, 'MultiRegisteredCells.mat'), 'cell_list', 'stacked_masks', 'Reg_NeuronIDs', 'tform_struct'); 
 end
-        

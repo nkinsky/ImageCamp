@@ -177,7 +177,7 @@ function [ neuron_id, same_neuron, num_bad_cells] = image_register_simple( base_
 neuron_map.base_file = RegistrationInfoX.base_file;
 neuron_map.register_file = RegistrationInfoX.register_file;
 neuron_map.neuron_id = neuron_id;
-save([sesh(1).folder '\neuron_map.mat'], 'neuron_map');
+save(fullfile(sesh(1).folder, 'neuron_map.mat'), 'neuron_map');
 
 end
 

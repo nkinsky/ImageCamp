@@ -99,9 +99,7 @@ function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_m
         Reg_NeuronIDs(this_session).num_bad_cells = num_bad_cells;
         
         %Save. 
-        save ([base_path 'Reg_NeuronIDs.mat'], 'Reg_NeuronIDs'); 
+        save (fullfile(base_path,'Reg_NeuronIDs.mat'), 'Reg_NeuronIDs'); 
     end
     
 end
-        
-        
