@@ -81,11 +81,9 @@ elseif nargin == 1
     error('Please input both a base image and image to register to base file')
 elseif nargin >= 2
    
-    base_filename = base_file(max(regexp(base_file,['\', '/'],'end'))+1:end);
-    base_path = base_file(1:max(regexp(base_file,['\', '/'],'end')));
-    reg_filename = register_file(max(regexp(register_file,['\', '/'],'end'))+1:end);
-    reg_path = register_file(1:max(regexp(register_file,['\', '/'],'end')));
-   
+    [base_path,base_filename] = fileparts(base_file);
+    [reg_path,reg_filename] = fileparts(register_file);
+
 end
 
 %% Get date with which you are registering the base file to. This is for loading and saving. 
@@ -95,8 +93,8 @@ reg_date = [temp.month '-' temp.day '-' temp.year];
 
 %% Step 1a: Skip out on everything if registration is already done!
 try
-    load([base_path 'RegistrationInfo ', reg_date, '.mat'])
-    disp('REGISTRATION ALREADY RAN!! Skipping this step')
+    load(fullfile(base_path, ['RegistrationInfo ',reg_date,'.mat']));
+    disp('REGISTRATION ALREADY RAN!! Skipping this step');
 catch
 
 %% Step 2a: Get Images and pre-process - Note that this step is vital as it helps
