@@ -19,10 +19,12 @@ function [r,r_shuf] = pairwise_corr(TMap)
 
 %% Useful parameters.
     [num_cells,num_sessions] = size(TMap); 
+    thresh = 0.02; 
     [l,w] = cellfun(@size,TMap,'UniformOutput',false);
     sizing = max(max(cellfun(@max, l))).*max(max(cellfun(@max, w)));    %Total number of pixels. 
     
     %Preallocate. 
+    B = 100; 
     TMap_lin = nan(sizing,num_sessions,num_cells); 
     TMap_shuf = nan(sizing,num_sessions,num_cells); 
     r = nan(num_sessions,num_sessions,num_cells); 
