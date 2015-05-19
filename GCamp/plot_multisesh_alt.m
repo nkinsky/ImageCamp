@@ -152,8 +152,7 @@ function [r,TMap_plot,TMap_resized,final_masks] = plot_multisesh_alt(base_path,c
             if sum(isnan(TMap_temp{this_neuron,this_sesh}(:))) ~= 0 || sum(isnan(TMap_temp{this_neuron,1}(:))) ~= 0
                 r(this_neuron,this_sesh-1) = nan; 
             else
-                %Otherwise, resize the TMaps and do the correlation. **NOTE
-                %ISSUES WITH THIS** (see email on 5/17)
+                %Otherwise, resize the TMaps and do the correlation. 
                 TMap_resized{this_neuron,this_sesh} = resize(TMap_temp{this_neuron,this_sesh},size_use);
                 TMap_resized{this_neuron,1} = resize(TMap_temp{this_neuron,1},size_use); 
                 
