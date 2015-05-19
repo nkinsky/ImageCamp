@@ -1,4 +1,4 @@
-function [r,r_boot] = corr_cdf(TMap,sessions)
+function [r,r_boot] = corr_cdfp(TMap,sessions,pvals,thresh,plot_flag)
 %[r,r_boot] = corr_cdfs(TMap,sessions)
 %
 %   Plots the CDF of the empirical R values found for each neuron when
@@ -24,9 +24,9 @@ function [r,r_boot] = corr_cdf(TMap,sessions)
     num_sessions = 2; 
     [l,w] = cellfun(@size,TMap,'UniformOutput',false);
     sizing = max(max(cellfun(@max, l))).*max(max(cellfun(@max, w)));    %Total number of pixels. 
-    B = 500; 
+    B = 100; 
 
-    %Initialize
+    %Initialize.
     good_neurons = []; 
  
 %% Perform correlations on non-empty TMaps.  
@@ -47,7 +47,12 @@ function [r,r_boot] = corr_cdf(TMap,sessions)
     %Do the correlations. 
     for this_neuron = 1:num_good
         neuron_ind = good_neurons(this_neuron); 
-        r(this_neuron) = corr2(TMap{neuron_ind,sessions(1)}, TMap{neuron_ind,sessions(2)}); 
+        
+        if all(pvals(neuron_ind,:) > thresh)
+            r(this_neuron) = corr2(TMap{neuron_ind,sessions(1)}, TMap{neuron_ind,sessions(2)}); 
+        elseif all(pvals(neuron_ind,:) < thresh)
+            r(this_neuron) = nan; 
+        end
     end
             
 %% Shuffle.
@@ -61,22 +66,28 @@ function [r,r_boot] = corr_cdf(TMap,sessions)
             neuron_ind = good_neurons(shuffle_ind(this_neuron)); 
             
             %Do the correlations. 
-            TMap1 = TMap{good_neurons(this_neuron),sessions(1)}; 
-            r_boot(i,this_neuron) = corr2(TMap1,TMap{neuron_ind,sessions(2)}); 
+            if all(pvals(neuron_ind,:) > thresh)
+                TMap1 = TMap{good_neurons(this_neuron),sessions(1)}; 
+                r_boot(i,this_neuron) = corr2(TMap1,TMap{neuron_ind,sessions(2)}); 
+            elseif all(pvals(neuron_ind,:) < thresh)
+                r_boot(i,this_neuron) = nan; 
+            end
         end
     end 
     
 %% Plot CDFs. 
-    [r_p,r_x] = ecdf(r); 
-    
-    figure;
-        hold on;
-        ecdf(r_boot(:), 'bounds', 'on');            %Shuffled.   
-        plot(r_x,r_p,'k');                          %Empirical, nonshuffled
-        hold off;
-        
-        title('Cumulative Distribution of Correlation Coefficients', 'fontsize', 12); 
-        xlabel('R values', 'fontsize', 12); 
-        ylabel('Proportion', 'fontsize', 12); 
-        set(gca, 'ticklength', [0 0]); 
+    if plot_flag == 1
+        [r_p,r_x] = ecdf(r); 
+
+        figure;
+            hold on;
+            ecdf(r_boot(:), 'bounds', 'on');            %Shuffled.   
+            plot(r_x,r_p,'k');                          %Empirical, nonshuffled
+            hold off;
+
+            title(num2str(thresh), 'fontsize', 12); 
+            xlabel('R values', 'fontsize', 12); 
+            ylabel('Proportion', 'fontsize', 12); 
+            set(gca, 'ticklength', [0 0]); 
+    end
 end

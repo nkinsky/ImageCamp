@@ -1,4 +1,4 @@
-function [cell_list,stacked_masks,tform_struct] = find_multisesh_cells(Reg_NeuronIDs,check_neuron_mapping)
+function [cell_list,stacked_masks,pvals,tform_struct] = find_multisesh_cells(Reg_NeuronIDs,check_neuron_mapping)
 %[cell_list,final,tform_struct] = find_multisesh_cells(Reg_NeuronIDs,check_neuron_mapping)
 %
 %   Find neurons that are present across all specified registration
@@ -27,6 +27,7 @@ function [cell_list,stacked_masks,tform_struct] = find_multisesh_cells(Reg_Neuro
 
 %% Useful parameters. 
     num_sessions = length(Reg_NeuronIDs);
+    base_path = Reg_NeuronIDs.base_path; 
     
 %% Extract same neurons.
     %Extract neuron list. 
@@ -48,15 +49,25 @@ function [cell_list,stacked_masks,tform_struct] = find_multisesh_cells(Reg_Neuro
     good_cells = intersect(exist_cells, not_crappy_cells); 
     num_good_cells = length(good_cells); 
     
-    %List of cells. 
+    %List of cells. Also get the pvals of TMaps.  
     cell_list(:,1) = good_cells; 
+    pvals = nan(num_good_cells,num_sessions+1);
+    
+    %Load base session pvals. 
+    load(fullfile(base_path, 'PlaceMaps.mat'), 'pval'); 
+    pvals(:,1) = pval(good_cells); 
+    
     for this_sesh = 1:num_sessions
         cell_list(:,this_sesh+1) = cat(1,neuron_list{good_cells,this_sesh}); 
     end
     
+    for this_sesh = 1:num_sessions
+        ind = cell_list(:,this_sesh+1); 
+        pvals(:,this_sesh+1) = Reg_NeuronIDs(this_sesh).pval(ind); 
+    end
+    
 %% Sanity check with a cell-by-cell plot. 
     %Load the base file NeuronImage. 
-    base_path = Reg_NeuronIDs.base_path; 
     load(fullfile(base_path, 'ProcOut.mat'), 'NeuronImage'); 
     
     %Dump neuron masks. 
@@ -86,7 +97,7 @@ function [cell_list,stacked_masks,tform_struct] = find_multisesh_cells(Reg_Neuro
     penultimate = cell(num_good_cells,num_sessions); 
     
     %Get the cell masks. 
-    for this_sesh = 1:num_sessions
+    parfor this_sesh = 1:num_sessions
         disp(['Registering cells from session ', num2str(this_sesh), '...']); 
         for this_neuron = 1:num_good_cells
             %Get indices. 
@@ -139,5 +150,5 @@ function [cell_list,stacked_masks,tform_struct] = find_multisesh_cells(Reg_Neuro
     end
     
     %Save. 
-    save(fullfile(base_path, 'MultiRegisteredCells.mat'), 'cell_list', 'stacked_masks', 'Reg_NeuronIDs', 'tform_struct'); 
+    save(fullfile(base_path, 'MultiRegisteredCells.mat'), 'cell_list', 'stacked_masks', 'Reg_NeuronIDs', 'tform_struct', 'pvals'); 
 end
