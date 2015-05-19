@@ -26,3 +26,14 @@ for j = 1:length(mouse)
    success_combined(j,(max_length-length(mouse(j).success_approx)+1:end)) = ...
        mouse(j).success_approx;
 end
+
+comb_mean = nanmean(success_combined,1);
+comb_sem = nanstd(success_combined,1)./sqrt(nansum(~isnan(success_combined),1));
+
+%%
+figure;
+plot(1:length(comb_mean),comb_mean,'b*-',[1 length(comb_mean)],[0.5 0.5],'r--',...
+    [1 length(comb_mean)],[0.75 0.75],'g--');
+hold on
+errorbar(1:length(comb_mean),comb_mean,comb_sem)
+ylim([0 1]);

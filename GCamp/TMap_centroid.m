@@ -20,7 +20,7 @@ for j = 1:size(TMap,2)
     mean_TR = 0;
     TPixelList_all{j} = [];
     TPixelList{j} = [];
-    Tcentroid(j,:) = [0 0];
+    Tcentroid(j,:) = [nan nan];
     for k = 1:length(stats)
        % get mean of each place-field transient rate
        temp = nanmean(TMap_use(stats(k).PixelIdxList));
@@ -58,5 +58,6 @@ for j = 1:size(TMap,2)
 
 end
 
+% keyboard
 end
 

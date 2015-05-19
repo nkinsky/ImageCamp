@@ -30,7 +30,7 @@ function [bounds,rot_x,rot_y] = sections(x,y,skip_rot_check)
 
 % keyboard
 %% Assign skip_rot_check if not specified
-if ~exist('skip_rot_check','var')
+if ~exist('skip_rot_check','var') || ~exist(fullfile(pwd, 'rotated.mat'),'file')
     skip_rot_check = 0;
 end
 %% Correct for rotated maze. 
