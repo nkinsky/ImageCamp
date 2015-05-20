@@ -39,8 +39,8 @@ function [ neuron_id, same_neuron, num_bad_cells] = image_register_simple( base_
 
 %% Get working folders for each session
 
-    sesh(1).folder = base_file(1:max(regexpi(base_file,'[\\,/]'))-1);
-    sesh(2).folder = reg_file(1:max(regexpi(reg_file,'[\\,/]'))-1);
+    sesh(1).folder = fileparts(base_file);
+    sesh(2).folder = fileparts(reg_file);
 
 %% Get centers-of-mass of all cells after registering 2nd image to 1st image
     for k = 1:2

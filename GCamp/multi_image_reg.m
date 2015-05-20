@@ -66,14 +66,14 @@ function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_m
         [reg_filename{this_session}, reg_path{this_session}] = uigetfile('*.tif', ['Pick file to register #', num2str(this_session), ': ']);
         
         %Get date.
-        date_format = ['(?<month>\d+)-(?<day>\d+)-(?<year>\d+)'];
+        date_format = ['(?<month>\d+)_(?<day>\d+)_(?<year>\d+)'];
         temp = regexp(reg_path{this_session},date_format,'names'); 
-        reg_date{this_session} = [temp.month '-' temp.day '-' temp.year]; 
+        reg_date{this_session} = [temp.month '_' temp.day '_' temp.year]; 
     end
     
     %Get base date. 
     temp = regexp(base_file,date_format,'names');
-    base_date = [temp.month '-' temp.day '-' temp.year];
+    base_date = [temp.month '_' temp.day '_' temp.year];
     
     %Get mouse name. 
     mouse_format = '(?<name>G\d+)';
