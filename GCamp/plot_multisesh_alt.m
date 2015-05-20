@@ -164,6 +164,8 @@ function [r,TMap_plot,TMap_resized,final_masks] = plot_multisesh_alt(base_path,c
         end
     end
     
+    keyboard
+    
 %% Plot the masks and TMaps.  
     keepgoing = 1; 
     this_neuron = 1; 

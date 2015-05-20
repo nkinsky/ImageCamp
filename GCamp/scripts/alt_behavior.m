@@ -37,3 +37,5 @@ plot(1:length(comb_mean),comb_mean,'b*-',[1 length(comb_mean)],[0.5 0.5],'r--',.
 hold on
 errorbar(1:length(comb_mean),comb_mean,comb_sem)
 ylim([0 1]);
+xlabel('Session number'); ylabel('Correct Ratio')
+title('Alternation Learning Curves')

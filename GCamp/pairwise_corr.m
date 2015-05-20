@@ -54,8 +54,8 @@ function [r,r_shuf] = pairwise_corr(TMap)
                 %Assign random TMap to the this_neuronth space. 
                 if ~isempty(TMap{shuffle_ind(this_neuron),this_sesh})
                     TMap_shuf(:,this_sesh,this_neuron) = TMap{shuffle_ind(this_neuron),this_sesh}(:); 
-                    bad = find(TMap_shuf(:,this_sesh,this_neuron) < thresh); 
-                    TMap_shuf(bad,this_sesh,this_neuron) = 0; 
+%                     bad = find(TMap_shuf(:,this_sesh,this_neuron) < thresh); 
+%                     TMap_shuf(bad,this_sesh,this_neuron) = 0; 
                 else
                     TMap_shuf(:,this_sesh,this_neuron) = nan(sizing,1); 
                 end

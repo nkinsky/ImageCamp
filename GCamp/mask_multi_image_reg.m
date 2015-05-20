@@ -1,5 +1,5 @@
-function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_mapping)
-%Reg_NeuronIDs = multi_image_reg(base_file, num_session, check_neuron_mapping)
+function [] = mask_multi_image_reg(base_file, num_sessions, mask, varargin)
+% mask_multi_image_reg(base_file, num_sessions, mask, ...)
 %
 %   Registers a base file to multiple recording sessions and saves these
 %   registrations in a .mat file claled Reg_NeuronIDs.mat in your base file
@@ -9,11 +9,17 @@ function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_m
 %       base_file: Full file path of ICmovie_min_proj.tif to which you want
 %       to register other sessions.
 %
-%       num_session: Number of sessions you want to register base_file to. 
+%       num_session: Number of sessions you want to register base_file to.
+%       You will be prompted via gui to select this number of files for
+%       registration
 %
-%       check_neuron_mapping: Logical vector where each element corresponds
-%       to whether or not you want to check how well each neuron maps.
-%       Default is zero for all sessions. 
+%       mask: the mask you wish to register to all the subsequent sessions
+%       
+%       OPTIONAL
+%       'reg_files': this string, followed by a 1xn cell array with the
+%       filenames of the sessions you want to register the, allows you to
+%       batch register the base mask to the sessions listed, and will place
+%       mask.mat in the folder containing the file specified
 %
 %   OUTPUTS: 
 %       Reg_NeuronIDs: 1xN struct (where N is the number of registered
@@ -46,11 +52,14 @@ function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_m
 %               crappy: Neurons that map onto a neuron that another neuron
 %               is mapping to. 
 %
-    
-%% Check for check_neuron_mapping.
-    if nargin < 3
-        check_neuron_mapping = zeros(1,num_sessions);
+    keyboard
+%% Check for reg_file list
+for j = 1:length(varargin)
+    if strcmpi(varargin{j},'reg_files')
+        reg_files = varargin{j+1};
+        num_sessions = size(reg_files,2);
     end
+end
 
 %% Get base path.
     base_path = fileparts(base_file);
@@ -63,8 +72,12 @@ function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_m
 
     %Select all the files first. 
     for this_session = 1:num_sessions
-        [reg_filename{this_session}, reg_path{this_session}] = uigetfile('*.tif', ['Pick file to register #', num2str(this_session), ': ']);
-        
+        if ~exist('reg_files','var')
+            [reg_filename{this_session}, reg_path{this_session}] = uigetfile('*.tif', ['Pick file to register #', num2str(this_session), ': ']);
+        else
+            [reg_path{this_session}, name, ext] = fileparts(reg_files{this_session});
+            reg_filename{this_session} = [name ext];
+        end
         %Get date.
         date_format = ['(?<month>\d+)_(?<day>\d+)_(?<year>\d+)'];
         temp = regexp(reg_path{this_session},date_format,'names'); 
@@ -87,19 +100,18 @@ function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_m
         %Display.
         disp(['Registering ', base_date, ' to ', reg_date{this_session}, '...']); 
 
-        %Perform image registration. 
-        [neuron_id, same_neuron, num_bad_cells] = image_register_simple(base_file, reg_file{this_session}, check_neuron_mapping(this_session));
+        %Perform image registration. Note that this is backward from what
+        %we usually do, as we are now taking the base file and registering
+        %it to all the files in reg_file, not vice versa...
+        reginfo_temp = image_registerX(reg_file{this_session}, ...
+            base_file, 0);
         
         %Build the struct. 
-        Reg_NeuronIDs(this_session).mouse = mouse.name; 
-        Reg_NeuronIDs(this_session).base_path = base_path; 
-        Reg_NeuronIDs(this_session).reg_path = reg_path{this_session};
-        Reg_NeuronIDs(this_session).neuron_id = neuron_id;
-        Reg_NeuronIDs(this_session).same_neuron = same_neuron;
-        Reg_NeuronIDs(this_session).num_bad_cells = num_bad_cells;
+        mask_reg = imwarp(mask,reginfo_temp.tform,'OutputView',...
+                    reginfo_temp.base_ref,'InterpolationMethod','nearest');
         
-        %Save. 
-        save (fullfile(base_path,'Reg_NeuronIDs.mat'), 'Reg_NeuronIDs'); 
+        %Save the registered mask in the registered session file
+        save (fullfile(reg_path{this_session},'mask_reg.mat'), 'mask_reg'); 
     end
     
 end

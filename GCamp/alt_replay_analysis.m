@@ -2,29 +2,23 @@ function [ ] = alt_replay_analysis(working_dir )
 %UNTITLED2 Summary of this function goes here
 %   Gets  all times when the mouse is within the designated sections.
 
-% Workflow:
-% 1) Get timestamps for when the mouse is in the choice or base (make this
-% flexible, so that one could use a vargin to designate the areas we want
-% to look at, or maybe in the future it will look at all sections!)
-% 2) speed threshold to only look at statationary or low-velocity times
-% 3) Calculate the locations of ALL calcium transients that occur during
-% these times and see where they are - before, after, opposite sides...
-% 3a) look at how close together these transients place fields are...
-% 3b) look to see if they move in order away from the mouse...
-% 4) 
-
+% To-do:
+% 1) shuffle data a bunch and get distribution of number of cells active in
+% valid sequences by chance
+% 2) Compare across sessions
 % keyboard
 
 close all
 
 %% Magic Variables - will want to make these as few as possible in the future!
 
+SR = 20; % sample rate in fps
 lap_length = 144; % Used in various areas
 num_trials = 40; % this will probably need to be fixed somehow or automatically counted in Will's script...
 % bonehead way is to increment num_trials up until you reach an error...
 vel_thresh = 7; % NOT CURRENTLY USED - threshold in cm/s below which we consider the mouse not moving/not encoding placefields
 sig_level = 0.05; % p-value threshold, below which you include fields in the analysis
-frame_threshold = 3; % Any neurons who fire after this threshold from the frame in question will not be considered in a sequence
+frame_threshold = 2; % Any neurons who fire after this threshold from the frame in question will not be considered in a sequence
 dist_threshold = lap_length/4; % distance threshold (cm) - any cells in a potential sequence that are farther apart than this will not be considered
 
 %% Part 0: Hardcoded file locations for original writing of function
@@ -296,14 +290,14 @@ end
 skip = 1; % easy way to skip it!
 
 if skip ~= 1
-j = 4; i = 1;
+j = 4; i = 2;
 if trial_type(i) == 1
     epoch_use = section(valid_sections(j)).epoch_left;
-elseif trial_type(k) == 2
+elseif trial_type(i) == 2
     epoch_use = section(valid_sections(j)).epoch_right;
 end
 
-section_bounds = get_bounds(bounds,valid_sections(j),i); % Won't work yet for goal locations...
+section_bounds = get_bounds(bounds,valid_sections(j),i); 
 if valid_sections(j) == 10 && trial_type(i) == 2 % hack to correctly assign section_bounds for right goal
     section_bounds = get_section_bounds(11,bounds);
 end
@@ -331,90 +325,140 @@ for m = 1:length(epoch_use)
         end
     end
     figure(100); 
-    subplot(3,1,1)
+    subplot(2,1,1)
     if ~isempty(raster_use_left)
         frame_max = max(raster_use_left(:,1));
-        plot(raster_use_left(:,2),raster_use_left(:,1),'b.',...
+        plot(raster_use_left(:,2),raster_use_left(:,1)/SR,'b.',...
             [mouse_pos_use(2,1) mouse_pos_use(2,1)], [0 frame_max],'r--',...
             [mouse_pos_use(2,2) mouse_pos_use(2,2)], [0 frame_max],'r--',...
             [0 0],[0 frame_max],'g--',[60 60], [0 frame_max], 'g--')
-        set(gca,'YLim',[0 frame_max])
+        set(gca,'YLim',[0 frame_max/SR])
         legend('neuron firing','mouse position','mouse position','center begin','center end')
         xlim([-5 150])
         title(['Left Trajectories, epoch ' num2str(m) ' of ' num2str(length(epoch_use))]);
         xlabel('PF centroid position')
-        ylabel('Frame Number/Time elapsed')
+        ylabel('Time elapsed (s)')
     end
-    subplot(3,1,2)
+    subplot(2,1,2)
     if ~isempty(raster_use_right)
         frame_max = max(raster_use_right(:,1));
-        plot(raster_use_right(:,2),raster_use_right(:,1),'b.',...
+        plot(raster_use_right(:,2),raster_use_right(:,1)/SR,'b.',...
             [mouse_pos_use(3,1) mouse_pos_use(3,1)], [0 frame_max],'r--',...
             [mouse_pos_use(3,2) mouse_pos_use(3,2)], [0 frame_max],'r--',...
             [0 0],[0 frame_max],'g--',[60 60], [0 frame_max], 'g--')
-        set(gca,'YLim',[0 frame_max])
+        set(gca,'YLim',[0 frame_max/SR])
+        
         legend('neuron firing','mouse position','mouse position','center begin','center end')
         xlim([-5 150])
         title(['Right Trajectories, epoch ' num2str(m) ' of ' num2str(length(epoch_use))]);
         xlabel('PF centroid position')
-        ylabel('Frame Number/Time elapsed')
+        ylabel('Time elapsed (s)')
     end
     
-    subplot(3,1,3)
-    frames_use = epoch_use(m).start:epoch_use(m).end;
-    [ ~, ~, TMap_order ] = get_activation_order(frames_use, FT, TMap);
-    [~, TMap_order_nan ] = make_nan_TMap( OccMap, TMap_order );
-    imagesc_nan(rot90(TMap_order_nan,1)); colorbar; colormap jet;
-    title([num2str(m) ' of ' num2str(length(epoch_use))]);
-    hold on;
-    bounds_use = get_bounds(bounds,valid_sections(j),i*-1+3); % Grab appropriate bounds for section
-    plot((bounds_use.x([1 2 3 4 1])-Xcm_min)/scale_use, ...
-        (bounds_use.y([1 2 4 3 1])-Ycm_min)/scale_use,'r--') % Plot bounds boxes
-    hold off
+%     subplot(3,1,3)
+%     frames_use = epoch_use(m).start:epoch_use(m).end;
+%     [ ~, ~, TMap_order ] = get_activation_order(frames_use, FT, TMap);
+%     [~, TMap_order_nan ] = make_nan_TMap( OccMap, TMap_order );
+%     imagesc_nan(rot90(TMap_order_nan,1)); colorbar; colormap jet;
+%     title([num2str(m) ' of ' num2str(length(epoch_use))]);
+%     hold on;
+%     bounds_use = get_bounds(bounds,valid_sections(j),i*-1+3); % Grab appropriate bounds for section
+%     plot((bounds_use.x([1 2 3 4 1])-Xcm_min)/scale_use, ...
+%         (bounds_use.y([1 2 4 3 1])-Ycm_min)/scale_use,'r--') % Plot bounds boxes
+%     hold off
     
     waitforbuttonpress
 end
     
 end
 %% Next steps - look at this for other areas, as well as for running epochs!!!
-% Also, exclude any PFs whose field overlaps with the current position of
-% the mouse - will require converting PF pixels to mouse coordinates and
-% then searching using 'inpolygon' function...
+
+keyboard
 
 %% Start replay analysis - looking for replay sequences
 disp('LOOKING FOR REPLAYS')
-j = 4; i = 1;
+for i = 2
+j = 4; % i = 2;
 if trial_type(i) == 1
     epoch_use = section(valid_sections(j)).epoch_left;
-elseif trial_type(k) == 2
+elseif trial_type(i) == 2
     epoch_use = section(valid_sections(j)).epoch_right;
 end
+
+% Get bounds of section the mouse is in for the given epochs
+section_bounds = get_bounds(bounds,valid_sections(j),i); 
+if valid_sections(j) == 10 && trial_type(i) == 2 % hack to correctly assign section_bounds for right goal
+    section_bounds = get_section_bounds(11,bounds);
+end
+
+cd(working_dir); % Necessary to make sure you don't accidentally load the wrong rotated.mat file
+mouse_pos_use = linearize_trajectory(x,y,'skip_rot_check',1,'x_add',...
+    [ceil(min(section_bounds.x)) floor(max(section_bounds.x))],'y_add',...
+    [ceil(min(section_bounds.y)) floor(max(section_bounds.y))]);
+for bb = 1:1 % Shuffling for loop
 for m = 1:length(epoch_use)
     frames_use = epoch_use(m).start:epoch_use(m).end;
     [ start_array, all_active_cells, TMap_order ] = get_activation_order(...
         frames_use, FT, TMap);
     
-    lin_pos_active = linearize_trajectory(x,y,'skip_rot_check',1,...
-        'x_add',Tcent_cm(all_active_cells,1),'y_add',Tcent_cm(all_active_cells,2),...
-        'suppress_output',1);
-    lin_pos_active = lin_pos_active(1,:);
+    if ~isempty(start_array)
+        lin_pos_active = linearize_trajectory(x,y,'skip_rot_check',1,...
+            'x_add',Tcent_cm(all_active_cells,1),'y_add',Tcent_cm(all_active_cells,2),...
+            'suppress_output',1);
+        lin_pos_active = lin_pos_active(1,:);
+        
+        % Get all forward replays
+        [epoch_use(m).forward_seq_use, epoch_use(m).forward_seq_pos_use] = get_replays(start_array,...
+            lin_pos_active, frame_threshold, dist_threshold, 'forward',...
+            'exclude',mouse_pos_use(1,:));
+        % Get all backward replays
+        [epoch_use(m).backward_seq_use, epoch_use(m).backward_seq_pos_use] = get_replays(start_array,...
+            lin_pos_active, frame_threshold, dist_threshold, 'backward',...
+            'exclude',mouse_pos_use(1,:));
+        epoch_use(m).num_activations = sum(start_array(:));
+        epoch_use(m).forward_num_activations_in_seq = sum(cellfun(@(a) length(a),...
+            epoch_use(m).forward_seq_use));
+        epoch_use(m).backward_num_activations_in_seq = sum(cellfun(@(a) length(a),...
+            epoch_use(m).backward_seq_use));
+        epoch_use(m).start_array = start_array;
+        epoch_use(m).all_active_cells = all_active_cells;
+        epoch_use(m).Tcent_cm = Tcent_cm;
+        
+        % shuffle cell activation orders to test if the number of replays we
+        % see is greater than chance
+        start_array_shuffle = start_array(:,randperm(size(start_array,2)));
+%         start_array_shuffle = start_array(randperm(size(start_array,1)),:);
+%         start_array_shuffle = start_array(randperm(size(start_array,1)),...
+%             randperm(size(start_array,2)));
+        % Get all forward shuffled replays
+        [epoch_use(m).forward_shuf_seq_use, epoch_use(m).forward_shuf_seq_pos_use] = get_replays(start_array_shuffle,...
+            lin_pos_active, frame_threshold, dist_threshold, 'forward',...
+            'exclude',mouse_pos_use(1,:));
+        % Get all backward shuffled replays
+        [epoch_use(m).backward_shuf_seq_use, epoch_use(m).backward_shuf_seq_pos_use] = get_replays(start_array_shuffle,...
+            lin_pos_active, frame_threshold, dist_threshold, 'backward',...
+            'exclude',mouse_pos_use(1,:));
+        epoch_use(m).forward_shuf_num_activations_in_seq = sum(cellfun(@(a) length(a),...
+            epoch_use(m).forward_shuf_seq_use));
+        epoch_use(m).backward_shuf_num_activations_in_seq = sum(cellfun(@(a) length(a),...
+            epoch_use(m).backward_shuf_seq_use));
+    else
+        lin_pos_active = [];
+        epoch_use(m).num_activations = 0;
+        epoch_use(m).forward_num_activations_in_seq = 0;
+        epoch_use(m).backward_num_activations_in_seq = 0;
+        epoch_use(m).forward_shuf_num_activations_in_seq = 0;
+        epoch_use(m).backward_shuf_num_activations_in_seq = 0;
+    end
     
-    % Get all forward replays
-    [epoch_use(m).forward_seq_use epoch_use(m).forward_seq_pos_use] = get_replays(start_array,...
-        lin_pos_active, frame_threshold, dist_threshold, 'forward');
-    [epoch_use(m).backward_seq_use epoch_use(m).backward_seq_pos_use] = get_replays(start_array,...
-        lin_pos_active, frame_threshold, dist_threshold, 'backward');
-    epoch_use(m).num_activations = sum(start_array(:));
-    epoch_use(m).forward_num_activations_in_seq = sum(cellfun(@(a) length(a),...
-        epoch_use(m).forward_seq_use));
-    epoch_use(m).backward_num_activations_in_seq = sum(cellfun(@(a) length(a),...
-        epoch_use(m).backward_seq_use));
-    % Get all backward replays
-    disp(['Finished epoch ' num2str(m) ' of ' num2str(length(epoch_use))])
+%     disp(['Finished epoch ' num2str(m) ' of ' num2str(length(epoch_use))])
 end
 
 forward_num_activations_in_seq_total = arrayfun(@(a) a.forward_num_activations_in_seq, epoch_use);
 backward_num_activations_in_seq_total = arrayfun(@(a) a.backward_num_activations_in_seq, epoch_use);
+
+forward_shuf_num_activations_in_seq_total = arrayfun(@(a) a.forward_shuf_num_activations_in_seq, epoch_use);
+backward_shuf_num_activations_in_seq_total = arrayfun(@(a) a.backward_shuf_num_activations_in_seq, epoch_use);
 
 num_activations_total = arrayfun(@(a) a.num_activations,epoch_use);
 
@@ -422,15 +466,33 @@ fratio = sum(forward_num_activations_in_seq_total(:))/sum(num_activations_total(
 bratio = sum(backward_num_activations_in_seq_total(:))/sum(num_activations_total(:));
 fb_ratio = fratio/bratio;
 
+check_matrix = [sum(forward_num_activations_in_seq_total) sum(backward_num_activations_in_seq_total) sum(num_activations_total);...
+    sum(forward_shuf_num_activations_in_seq_total) sum(backward_shuf_num_activations_in_seq_total) sum(num_activations_total)];
+
+shuf_valid_forward_seq_activations(i,bb) = sum(forward_shuf_num_activations_in_seq_total);
+shuf_valid_backward_seq_activations(i,bb) = sum(backward_shuf_num_activations_in_seq_total);
+disp(['Finished shuffle ' num2str(bb) ' of 100'])
+end
+num_valid_forward_activations(i) = sum(forward_num_activations_in_seq_total);
+num_valid_backward_activations(i) = sum(backward_num_activations_in_seq_total);
+num_activations_total_array(i) = sum(num_activations_total);
+
+end
 %% Calculate stats for activations in each direction
 % number of cells, avg distance between place fields
 forward_length = []; 
 backward_length = [];
 forward_dist = [];
 backward_dist = [];
+forward_shuf_length = []; 
+backward_shuf_length = [];
+forward_shuf_dist = [];
+backward_shuf_dist = [];
 for m = 1:length(epoch_use); 
     forward_length = [forward_length cellfun(@(a) length(a), epoch_use(m).forward_seq_use)];
     backward_length = [backward_length cellfun(@(a) length(a), epoch_use(m).backward_seq_use)];
+    forward_shuf_length = [forward_shuf_length cellfun(@(a) length(a), epoch_use(m).forward_shuf_seq_use)];
+    backward_shuf_length = [backward_shuf_length cellfun(@(a) length(a), epoch_use(m).backward_shuf_seq_use)];
     
     % Forward distance traveled
     temp_fd = cellfun(@(a) diff(a), epoch_use(m).forward_seq_pos_use,...
@@ -449,14 +511,58 @@ for m = 1:length(epoch_use);
         backward_dist = [backward_dist temp_bd{ll}];
     end
     backward_dist(backward_dist > 0) = backward_dist(backward_dist > 0) - lap_length;
+    
+    %%% SHUFFLED SEQUENCES %%%
+    % Forward distance traveled
+    temp_shuf_fd = cellfun(@(a) diff(a), epoch_use(m).forward_shuf_seq_pos_use,...
+        'UniformOutput',0);
+    for k = 1:length(temp_shuf_fd)
+        forward_shuf_dist = [forward_shuf_dist temp_shuf_fd{k}];
+    end
+    % Fix negative distances (where mouse crossed from end of lap into
+    % center stem) by adding in the length of a lap
+    forward_shuf_dist(forward_shuf_dist < 0) = forward_shuf_dist(forward_shuf_dist < 0) + lap_length;
+    
+    % Backward distance traveled
+    temp_shuf_bd = cellfun(@(a) diff(a), epoch_use(m).backward_shuf_seq_pos_use,...
+        'UniformOutput',0);
+    for ll = 1:length(temp_shuf_bd)
+        backward_shuf_dist = [backward_shuf_dist temp_shuf_bd{ll}];
+    end
+    backward_shuf_dist(backward_shuf_dist > 0) = backward_shuf_dist(backward_shuf_dist > 0) - lap_length;
+    
 end
 
 stats2.forward = replay_stats(forward_length, forward_dist);
 stats2.backward = replay_stats(backward_length, backward_dist);
+stats2.forward_shuf = replay_stats(forward_shuf_length, forward_shuf_dist);
+stats2.backward_shuf = replay_stats(backward_shuf_length, backward_shuf_dist);
 
 
 %% Keyboard statement if you want to debug/mess around at the end
 keyboard
+
+%% Hack to plot replay output
+
+proportion_valid = [254/1110+376/1336, 117/827+143/1076, 12/531+84/937, ...
+    92/710+85/783, 97/565+42/245]/2;
+
+shuffle_mean_proportion = [253/1110+332/1336, 110/827+116/1076, 27/531+111/937,...
+    88/710+103/783, 80/565+30/245]/2;
+
+pvalue =[ 0.28 0.045 0.48 0.6 0.075];
+
+shuffle_err = shuffle_mean_proportion.*[0.1 0.05 0.2 0.2 0.15];
+
+figure
+plot(1:5,proportion_valid,'ro',1:5,shuffle_mean_proportion,'bd')
+hold on
+errorbar(1:5,shuffle_mean_proportion,shuffle_err)
+set(gca,'XTick',[1 2 3 4 5]);
+xlabel('Session Number')
+ylabel('Proportion of Active Cells in a Valid Replay')
+title('Replay Analysis')
+legend('Data','Shuffled Data')
 
 end
 
