@@ -1,4 +1,4 @@
-function [r,TMap_plot,TMap_resized,final_masks] = plot_multisesh_alt(base_path,check)
+function [r,TMap_plot,TMap_resized,final_masks,p] = plot_multisesh_alt(base_path,check)
 %[r,TMap_plot,TMap_resized,final_masks] = plot_multisesh_alt(base_path,check)
 %
 %   Get neuron masks and TMaps for each neuron that is active for all
@@ -27,29 +27,28 @@ function [r,TMap_plot,TMap_resized,final_masks] = plot_multisesh_alt(base_path,c
 
 %% Make sure you have the appropriate files. 
     try 
-        load(fullfile(base_path,'MultiRegisteredCells.mat'), 'cell_list', 'Reg_NeuronIDs', 'tform_struct'); 
+        load(fullfile(base_path,'MultiRegisteredCells.mat'), 'cell_list', 'Reg_NeuronIDs', 'tform_struct', 'pvals'); 
     catch
         disp('MultiRegisteredCells.mat not found! Trying to load Reg_NeuronIDs.mat...'); 
+        
         try 
             load(fullfile(base_path,'Reg_NeuronIDs.mat')); 
-            disp('Running find_multisesh_cells...'); 
-            
-            find_multisesh_cells(Reg_NeuronIDs,1);
-            load(fullfile(base_path,'MultiRegisteredCells.mat'), 'cell_list', 'Reg_NeuronIDs', 'tform_struct'); 
         catch
             disp('Reg_NeuronIDs.mat not found! Preparing to run multi_image_reg...'); 
             num_sessions = input('How many sessions would you like to register your base image to? '); 
-            
+                
             base_file = fullfile(base_path, 'ICmovie_min_proj.tif'); 
             multi_image_reg(base_file,num_sessions,zeros(num_sessions)); 
-            
+
             load(fullfile(base_path,'Reg_NeuronIDs.mat')); 
-            disp('Running find_multisesh_cells...'); 
-            
-            find_multisesh_cells(Reg_NeuronIDs,0);
-            load(fullfile(base_path,'MultiRegisteredCells.mat'), 'cell_list', 'Reg_NeuronIDs', 'tform_struct'); 
         end
+            disp('Running find_multisesh_cells...');     
+            find_multisesh_cells(Reg_NeuronIDs,1);
+            load(fullfile(base_path,'MultiRegisteredCells.mat'), 'cell_list', 'Reg_NeuronIDs', 'tform_struct', 'pvals');
     end
+
+    %Get pvals. 
+    p = pvals; 
     
 %% Useful parameters. 
     %Number of total sessions, including the base file. 
@@ -152,8 +151,7 @@ function [r,TMap_plot,TMap_resized,final_masks] = plot_multisesh_alt(base_path,c
             if sum(isnan(TMap_temp{this_neuron,this_sesh}(:))) ~= 0 || sum(isnan(TMap_temp{this_neuron,1}(:))) ~= 0
                 r(this_neuron,this_sesh-1) = nan; 
             else
-                %Otherwise, resize the TMaps and do the correlation. **NOTE
-                %ISSUES WITH THIS** (see email on 5/17)
+                %Otherwise, resize the TMaps and do the correlation. 
                 TMap_resized{this_neuron,this_sesh} = resize(TMap_temp{this_neuron,this_sesh},size_use);
                 TMap_resized{this_neuron,1} = resize(TMap_temp{this_neuron,1},size_use); 
                 

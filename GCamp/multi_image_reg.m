@@ -1,5 +1,5 @@
 function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_mapping)
-%Reg_NeuronIDs = multi_image_reg(base_file, num_session, check_neuron_mapping)
+%Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_mapping)
 %
 %   Registers a base file to multiple recording sessions and saves these
 %   registrations in a .mat file claled Reg_NeuronIDs.mat in your base file
@@ -89,6 +89,9 @@ function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_m
 
         %Perform image registration. 
         [neuron_id, same_neuron, num_bad_cells] = image_register_simple(base_file, reg_file{this_session}, check_neuron_mapping(this_session));
+       
+        %Also get the pval for TMaps. 
+        load(fullfile(reg_path{this_session},'PlaceMaps.mat'), 'pval'); 
         
         %Build the struct. 
         Reg_NeuronIDs(this_session).mouse = mouse.name; 
@@ -97,6 +100,7 @@ function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_m
         Reg_NeuronIDs(this_session).neuron_id = neuron_id;
         Reg_NeuronIDs(this_session).same_neuron = same_neuron;
         Reg_NeuronIDs(this_session).num_bad_cells = num_bad_cells;
+        Reg_NeuronIDs(this_session).pval = pval;
         
         %Save. 
         save (fullfile(base_path,'Reg_NeuronIDs.mat'), 'Reg_NeuronIDs'); 
