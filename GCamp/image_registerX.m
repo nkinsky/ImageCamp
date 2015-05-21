@@ -87,9 +87,9 @@ elseif nargin >= 2
 end
 
 %% Get date with which you are registering the base file to. This is for loading and saving. 
-date_format = ['(?<month>\d+)-(?<day>\d+)-(?<year>\d+)'];
+date_format = ['(?<month>\d+)_(?<day>\d+)_(?<year>\d+)'];
 temp = regexp(reg_path,date_format,'names'); 
-reg_date = [temp.month '-' temp.day '-' temp.year]; 
+reg_date = [temp.month '_' temp.day '_' temp.year]; 
 
 %% Step 1a: Skip out on everything if registration is already done!
 try
