@@ -28,6 +28,7 @@ function data = postrials(x,y,plot_each_trial,varargin)
 %           alt = Correct (1) vs. incorrect (0). 
 %           x = X position.
 %           y = Y position.
+%           section = section number. Refer to getsection.m. 
 %           summary = Summary of trials. The first column is trial number
 %           followed by left/right and correct/incorrect in the same format
 %           as above. 
@@ -49,7 +50,7 @@ if ~exist('skip_rot_check','var')
 end
 
 %% Label position data with section numbers. 
-    [sect,goal] = getsection(x,y,'skip_rot_check',skip_rot_check);
+    [sect,goal,rot_x,rot_y] = getsection(x,y,'skip_rot_check',skip_rot_check);
     
 %% Define important section numbers. 
     %Define sequences of section numbers that correspond to left or right
@@ -144,7 +145,7 @@ end
     
     %Display number of trials sorted. 
     if ~exist('suppress_output','var') || suppress_output ~= 1
-    disp(['Successfully sorted ', num2str(numtrials), ' trials.']); 
+        disp(['Successfully sorted ', num2str(numtrials), ' trials.']); 
     end
     
 %% Build up the struct. 
@@ -176,9 +177,9 @@ end
     end
     
     %Mouse position. 
-    data.x = x;                 %X position.
-    data.y = y;                 %Y position. 
-    data.section = sect(:,2)';  %Section number. Refer to getsection.m.
+    data.x = rot_x;                 %X position.
+    data.y = rot_y;                 %Y position. 
+    data.section = sect(:,2)';      %Section number. Refer to getsection.m.
     
     %Summary. 
     data.summary = [(1:numtrials)', trialtype', alt']; 
