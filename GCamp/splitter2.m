@@ -31,10 +31,10 @@ function [leftpcthit,rightpcthit,lefthits,righthits] = splitter2(session,Alt)
     stem_cells = unique(cell_ind); 
     num_stem_cells = length(stem_cells); 
     loc_index = sub2ind(size(TMap{1}),Xbin,Ybin);
-    lefthits = zeros(num_stem_cells,1);
-    righthits = zeros(num_stem_cells,1);
-    total_epochs = zeros(num_stem_cells,1); 
-    
+    lefthits = zeros(num_stem_cells,size(PFepochs,2)); 
+    righthits = zeros(num_stem_cells,size(PFepochs,2)); 
+    total_epochs = zeros(num_stem_cells,size(PFepochs,2)); 
+
 %% Calculate PF hit rates sorted by trial type. 
     %For each neuron that is active on the stem...
     for this_neuron = 1:num_stem_cells
@@ -46,7 +46,7 @@ function [leftpcthit,rightpcthit,lefthits,righthits] = splitter2(session,Alt)
         for this_PF = 1:num_stemPFs
             PF_epochs = PFnumepochs(neuronID,PFIDs(this_PF));                   %Get number of epochs when the mouse is in PF. 
             stemPFpix = PFpixels{neuronID,PFIDs(this_PF)};                      %Get the pixels associated with this PF.
-            total_epochs(this_neuron) = total_epochs(this_neuron) + PF_epochs;  %Total number of epochs in this PF.
+            total_epochs(this_neuron,this_PF) = PF_epochs;                      %Total number of epochs in this PF.
             
             %For each of the visits...
             for this_epoch = 1:PF_epochs
@@ -56,9 +56,9 @@ function [leftpcthit,rightpcthit,lefthits,righthits] = splitter2(session,Alt)
                 %If mouse is in PF and the neuron is firing... 
                 if any(FT(neuronID,epoch_ind) == 1) && any(ismember(loc_index(epoch_ind),stemPFpix)); 
                     if unique(Alt.choice(epoch_ind)) == 1
-                        lefthits(this_neuron) = lefthits(this_neuron) + 1; 
+                        lefthits(this_neuron,this_PF) = lefthits(this_neuron,this_PF) + 1; 
                     elseif unique(Alt.choice(epoch_ind)) == 2
-                        righthits(this_neuron) = righthits(this_neuron) + 1; 
+                        righthits(this_neuron,this_PF) = righthits(this_neuron,this_PF) + 1; 
                     end
                 end
             end
@@ -67,6 +67,7 @@ function [leftpcthit,rightpcthit,lefthits,righthits] = splitter2(session,Alt)
    
     %Get percent hit rate (number of times place cell was active in its PF
     %divided by the number of visits). 
-    leftpcthit = lefthits.*100./total_epochs;
-    rightpcthit = righthits.*100./total_epochs;
+    leftpcthit = lefthits.*100./total_epochs; leftpcthit = nanmean(leftpcthit,2);
+    rightpcthit = righthits.*100./total_epochs; rightpcthit = nanmean(rightpcthit,2);
+    
 end

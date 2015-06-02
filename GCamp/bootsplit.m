@@ -60,4 +60,6 @@ function [pval,lefthitpct,righthitpct,bootleft,bootright] = bootsplit(session)
     
     pval = 1 - pval; 
     
+    %Save. 
+    save Splitters.mat pval; 
 end
