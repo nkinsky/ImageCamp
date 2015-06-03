@@ -60,17 +60,20 @@ function INFO = CalculateSpatialInfo(session)
     INFO = nan(num_cells,1); 
 
     for this_neuron = 1:num_cells
-        lambda(this_neuron) = mean(FT(this_neuron,:));                           %Lambda. 
+        if mod(this_neuron,10) == 0
+            disp(['Calculating spatial information score for neuron #', num2str(this_neuron), '...']); 
+        end
+        lambda(this_neuron) = mean(FT(this_neuron,:));                     %Lambda. 
         
         parfor i = 1:num_bins
             in_bin = loc_index == i; 
             dwell = sum(in_bin); 
-            p_i(i,this_neuron) = dwell / num_bins;                               %p_i. 
+            p_i(i,this_neuron) = dwell / num_frames;                       %p_i. 
             
-            lambda_i(i,this_neuron) = sum(FT(this_neuron,in_bin))/num_frames;    %Lambda_i. 
+            lambda_i(i,this_neuron) = sum(FT(this_neuron,in_bin))/dwell;   %Lambda_i. 
         end
         
-        INFO(this_neuron) = sum(p_i(:,this_neuron).*lambda_i(:,this_neuron).*log2(lambda_i(:,this_neuron)./lambda(this_neuron)));
+        INFO(this_neuron) = nansum(p_i(:,this_neuron).*lambda_i(:,this_neuron).*log2(lambda_i(:,this_neuron)./lambda(this_neuron)));
     end
 end
 
