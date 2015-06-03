@@ -13,16 +13,21 @@ function [ seq_use, seq_pos_use ] = get_replays( start_array, lin_pos_active, fr
 %   
 %       type = 'forward' or 'backward' - types of replays to consider
 %
+%       OPTIONAL
 %       'exclude' = 1 x 2 array, any cells between these two points will be
 %       excluded from analysis
+%       'min_length_replay' = minimum number of cells that must be involved
+%       in a replay event for that replay even to be considered valid.  If
+%       not specified, default is 3.
 %
 %   OUTPUTS
 %       seq_use = a 1 x m cell, where m is the number of sequences
 %       and the contents of each array are the indices of the cell numbers
 %       in start_array and lin_pos_active that are included in the sequence
+
 %%
 maze_length = 144; % Used for thesholding if points are close enough
-min_length_replay = 3; % minimum number of cells that must be involved in a replay to count
+min_length_replay = 3; % default: minimum number of cells that must be involved in a replay to count
 
 tt = 1; %debugging counter
 % n_frame = 1; % not relevant anymore because assigned within while loop
@@ -41,8 +46,11 @@ neuron_used(1) = 1; % Tracks if a neuron had been used or not, so start out
 % keyboard
 %% Exclude cells that are in the exclusion zone 
 for j = 1:length(varargin)
-    if strcmpi(varargin{1},'exclude')
-        exclude_bounds = varargin{2};
+    if strcmpi(varargin{j},'exclude')
+        exclude_bounds = varargin{j+1};
+    end
+    if strcmpi(varargin{j},'min_length_replay')
+        min_length_replay = varargin{j+1};
     end
 end
 
@@ -50,7 +58,7 @@ if exist('exclude_bounds','var')
     valid_neurons = (lin_pos_active < exclude_bounds(1)) | ...
         (lin_pos_active > exclude_bounds(2)); % Include only cells outside of exclude_bounds
 else
-    valid_neurons = logical(ones(size(lin_pos_active)));
+    valid_neurons = true(size(lin_pos_active));
 end
 
 % Pull only valid neurons

@@ -19,7 +19,9 @@ function [] = mask_multi_image_reg(base_file, num_sessions, mask, varargin)
 %       'reg_files': this string, followed by a 1xn cell array with the
 %       full path to the filenames of the sessions you want to register the, 
 %       allows you to batch register the base mask to the sessions listed, 
-%       and will place mask.mat in the folder containing the file specified. 
+%       and will place mask.mat in the folder containing the file
+%       specified.  If not specified, you will be prompted to select each
+%       of the files you want to register.
 %       Example: mask_multi_image_reg(...,'reg_files',{'file1', 'file2',...})
 %
 %   OUTPUTS: 

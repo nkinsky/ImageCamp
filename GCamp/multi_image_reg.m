@@ -1,5 +1,5 @@
-function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_mapping)
-%Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_mapping)
+function [Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, check_neuron_mapping)
+%[ Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, check_neuron_mapping)
 %
 %   Registers a base file to multiple recording sessions and saves these
 %   registrations in a .mat file claled Reg_NeuronIDs.mat in your base file
@@ -46,6 +46,10 @@ function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_m
 %               crappy: Neurons that map onto a neuron that another neuron
 %               is mapping to. 
 %
+% Version Tracking
+% 0.8: only tracks neurons that correspond to neurons from the 1st session.
+%  Does NOT include capability to map new cells from the 2nd session onto
+%  subsequent sessions (yet!).
     
 %% Check for check_neuron_mapping.
     if nargin < 3
@@ -54,52 +58,59 @@ function Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_m
 
 %% Get base path.
     base_path = fileparts(base_file);
-    
 %% Do the registrations. 
     %Preallocate.
     reg_filename = cell(1,num_sessions);
     reg_path = cell(1,num_sessions);
     reg_date = cell(1,num_sessions); 
-
+    reg_session = cell(1,num_sessions);
+    mouse_name  = cell(1,num_sessions);
+    
+    [ mouse, base_date, base_session ] = get_name_date_session( base_path );
+    
+    
     %Select all the files first. 
     for this_session = 1:num_sessions
-        [reg_filename{this_session}, reg_path{this_session}] = uigetfile('*.tif', ['Pick file to register #', num2str(this_session), ': ']);
         
-        %Get date.
-        date_format = ['(?<month>\d+)_(?<day>\d+)_(?<year>\d+)'];
-        temp = regexp(reg_path{this_session},date_format,'names'); 
-        reg_date{this_session} = [temp.month '-' temp.day '-' temp.year]; 
+        
+        [reg_filename{this_session}, reg_path{this_session}] = ...
+            uigetfile('*.tif', ['Pick file to register #', num2str(this_session), ': ']);
+        
+        [ mouse_name{this_session}, reg_date{this_session}, reg_session{this_session} ] = ...
+            get_name_date_session(reg_path{this_session});
+        
+       
+        % Check to make sure you are looking at the same mouse for each
+        % session
+        if ~strcmpi(mouse,mouse_name{this_session})
+            error('You are not analyzing the same mouse in the base and registered files!')
+        end
     end
     
-    %Get base date. 
-    temp = regexp(base_file,date_format,'names');
-    base_date = [temp.month '_' temp.day '_' temp.year];
-    
-    %Get mouse name. 
-    mouse_format = '(?<name>G\d+)';
-    mouse = regexp(base_file,mouse_format,'names'); 
-    
-    %Get full file path. 
+    %Get full file path to all registered files
     reg_file = fullfile(reg_path, reg_filename); 
         
     %Do the registrations. 
     for this_session = 1:num_sessions
         %Display.
-        disp(['Registering ', base_date, ' to ', reg_date{this_session}, '...']); 
+        disp(['Registering ', mouse '_' base_date, '_session' base_session ...
+            ' to ', mouse '_' reg_date{this_session}, '_session' ...
+            reg_session{this_session} '...']); 
 
         %Perform image registration. 
-        [neuron_id, same_neuron, num_bad_cells] = image_register_simple(base_file, reg_file{this_session}, check_neuron_mapping(this_session));
+        neuron_map = image_register_simple(base_file, ...
+            reg_file{this_session}, check_neuron_mapping(this_session));
        
         %Also get the pval for TMaps. 
         load(fullfile(reg_path{this_session},'PlaceMaps.mat'), 'pval'); 
         
         %Build the struct. 
-        Reg_NeuronIDs(this_session).mouse = mouse.name; 
+        Reg_NeuronIDs(this_session).mouse = mouse; 
         Reg_NeuronIDs(this_session).base_path = base_path; 
         Reg_NeuronIDs(this_session).reg_path = reg_path{this_session};
-        Reg_NeuronIDs(this_session).neuron_id = neuron_id;
-        Reg_NeuronIDs(this_session).same_neuron = same_neuron;
-        Reg_NeuronIDs(this_session).num_bad_cells = num_bad_cells;
+        Reg_NeuronIDs(this_session).neuron_id = neuron_map.neuron_id;
+        Reg_NeuronIDs(this_session).same_neuron = neuron_map.same_neuron;
+        Reg_NeuronIDs(this_session).num_bad_cells = neuron_map.num_bad_cells;
         Reg_NeuronIDs(this_session).pval = pval;
         
         %Save. 
