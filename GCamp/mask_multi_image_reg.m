@@ -24,39 +24,7 @@ function [] = mask_multi_image_reg(base_file, num_sessions, mask, varargin)
 %       of the files you want to register.
 %       Example: mask_multi_image_reg(...,'reg_files',{'file1', 'file2',...})
 %
-%   OUTPUTS: 
-%       Reg_NeuronIDs: 1xN struct (where N is the number of registered
-%       sessions) containing the following fields...
-%
-%           mouse: string containing the name of the mouse. Usually in the
-%           format 'GXX' where X is a digit. 
-%
-%           base_path: path to your base file. 
-%
-%           reg_path: path to the file to which you registered to for that
-%           N. 
-%
-%           neuron_id: 1xn cell where n is the number of neurons in the
-%           first session, and each value is the neuron number in the 2nd
-%           session that maps to the neurons in the 1st session.  An empty
-%           cell means that no neuron from the 2nd session maps to that
-%           neuron from the 1st session.  A value of NaN means that more
-%           than one neuron from the second session is within min_thresh of
-%           the 1st session neuron
-%
-%           same_neuron: n x m logical, where the a value of 1 indicates
-%           that more than one neuron from the second session maps to a
-%           cell in the first session.  Each row corresponds to a 1st
-%           session neuron, each column to a 2nd session neuron.
-%           
-%           num_bad_cells: struct containing the following fields:
-%               nonmapped: Neurons that weren't mapped onto the second
-%               session.
-%               crappy: Neurons that map onto a neuron that another neuron
-%               is mapping to. 
-%
-%
-keyboard
+
 %% Check for reg_file list
 for j = 1:length(varargin)
     if strcmpi(varargin{j},'reg_files')
