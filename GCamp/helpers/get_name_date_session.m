@@ -11,7 +11,7 @@ mouse_format = '\\(?<name>G\w+\d+)';
 % Get date.
 temp = regexp(folder_path,date_format,'names');
 temp_start = regexp(folder_path,date_format); % Get start index of date folder
-session_date = [temp.month '_' temp.day '_' temp.year]
+session_date = [temp.month '_' temp.day '_' temp.year];
 
 % Get session number
 temp_folder =folder_path(temp_start + 9:end); % Grab everything after date
@@ -21,7 +21,7 @@ if isempty(temp2)
     % the date folder
     session_num = num2str(1);
 else
-    session_num = temp2.sesh_number
+    session_num = temp2.sesh_number;
 end
 %Get mouse name.
 temp3 = regexp(folder_path,mouse_format,'names');
