@@ -72,6 +72,7 @@ function [Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, ch
 %  assining the 2nd session cell to have the first of multiple cells from
 %  the base session register to it.
     
+keyboard
 %% Check for check_neuron_mapping.
     if nargin < 3
         check_neuron_mapping = zeros(1,num_sessions);
@@ -191,6 +192,11 @@ function [Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, ch
     end
     
     %% Bulid cell_map from Reg_NeuronIDs and save it
+   all_session_map = build_multisesh_mapping(Reg_NeuronIDs);
+   Reg_NeuronIDs(1).all_session_map = all_session_map;
+   
+   %Save.
+   save (fullfile(base_path,'Reg_NeuronIDs.mat'), 'Reg_NeuronIDs');
    
     
 end
