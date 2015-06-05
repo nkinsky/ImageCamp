@@ -50,6 +50,9 @@ function [Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, ch
 % 0.8: only tracks neurons that correspond to neurons from the 1st session.
 %  Does NOT include capability to map new cells from the 2nd session onto
 %  subsequent sessions (yet!).
+%
+% This is a test comment for nat's image-reg-branch to see if branching is
+% working correctly.
     
 %% Check for check_neuron_mapping.
     if nargin < 3
