@@ -38,6 +38,9 @@ function [ neuron_map] = image_register_simple( base_file, reg_file, check_neuro
 % Possible false negatives occur due to two factors: 1) drastically
 % different shapes of neurons from day 1 to day 2 (unfixable), and 2) two
 % different neurons in session 1 mapping to the same neuron in session
+%
+% 0.85 (working): need to add in some type of flag to load AllMasks when
+% doing multiple session registrations
 
 %% Magic variables
 min_thresh = 3; % distance in pixels beyond which we consider a cell a different cell
