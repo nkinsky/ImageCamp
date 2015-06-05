@@ -6,7 +6,7 @@ function [ mouse_name, session_date, session_num ] = get_name_date_session( fold
 % Formats for pulling files and sessions
 date_format = '(?<month>\d+)_(?<day>\d+)_(?<year>\d+)';
 session_format = '(?<sesh_number>\d?) -';
-mouse_format = '\\(?<name>G\w+)';
+mouse_format = '\\(?<name>G\w+\d+)';
 
 % Get date.
 temp = regexp(folder_path,date_format,'names');
