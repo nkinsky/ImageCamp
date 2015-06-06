@@ -56,7 +56,7 @@ manual_reg_enable = 0; % 0 = do not allow manual adjustment of registration
 multi_reg = 0;
 for j = 1:length(varargin)
    if strcmpi('multi_reg',varargin{j})
-       multi_reg = 1;
+       multi_reg = varargin{j+1};
    end
 end
 
@@ -74,9 +74,14 @@ sesh(2).folder = reg_file(1:max(regexpi(reg_file,'[\\,/]'))-1);
 
 % Define unique filename for file you are registering to that you will
 % eventually save in the base path
-map_unique_filename = fullfile(sesh(1).folder,['neuron_map-' mouse_name '-' reg_date '-session' ...
-    reg_session '.mat']);
-    
+if multi_reg == 0
+    map_unique_filename = fullfile(sesh(1).folder,['neuron_map-' mouse_name '-' reg_date '-session' ...
+        reg_session '.mat']);
+elseif multi_reg == 1
+    map_unique_filename = fullfile(sesh(1).folder,['neuron_map-' mouse_name '-' reg_date '-session' ...
+    reg_session '_multi.mat']);
+end
+
 %% Check to see if this has already been run - if so,
 
 try
@@ -90,10 +95,10 @@ for k = 1:2
         [tform_struct ] = get_reginfo(sesh(1).folder, sesh(2).folder, RegistrationInfoX );
     end
     
-    % overwrite NeuronImage to include ALLmasks if doing multiple
+    % overwrite NeuronImage to include ALLmasks for base folder if doing multiple
     % sessions
-    if multi_reg == 1
-        load(fullfile(base_path,'Reg_NeuronIDs.mat'));
+    if k == 1 && multi_reg == 1
+        load(fullfile(sesh(1).folder,'Reg_NeuronIDs.mat'));
         NeuronImage = Reg_NeuronIDs(1).AllMasks;
     end
     
@@ -140,10 +145,10 @@ for j = 1:length(cm_dist_min)
     
 end
 
-
 %% Look for false positives due to multiple cells in the 1st session mapping
 % to a single cell in the 2nd session
 
+disp('Sorting out multiple base session cells mapping to the same cell in the second session')
 % Initialize same_neuron variable
 same_neuron = zeros(size(day(1).NeuronImage_reg,2),size(day(2).NeuronImage_reg,2));
 for j = 1:size(neuron_id,1);
@@ -174,8 +179,6 @@ end
 figure;
 imagesc(sesh(1).AllNeuronMask + 2*sesh(2).AllNeuronMask); colorbar
 title('1 = session 1, 2 = session 2, 3 = both sessions')
-
-% keyboard
 
 %% Plot out each cell mapped to another to see how good the registraton is..
 

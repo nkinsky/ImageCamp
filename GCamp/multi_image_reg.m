@@ -30,13 +30,14 @@ function [Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, ch
 %           AllMasks: this only occurs in Reg_NeuronIDs(1) and included the
 %           masks for ALL cells that accumulate with each session!
 %
-%           neuron_id: 1xn cell where n is the number of neurons in the
-%           first session, and each value is the neuron number in the 2nd
+%           neuron_id: 1x(n+new) cell where n is the number of neurons in the
+%           first session and new is the number of new neurons in the 2nd session
+%           Each value is the neuron number in the 2nd
 %           session that maps to the neurons in the 1st session.  An empty
 %           cell means that no neuron from the 2nd session maps to that
 %           neuron from the 1st session.  A value of NaN means that more
 %           than one neuron from the second session is within min_thresh of
-%           the 1st session neuron
+%           the 1st session neuron.
 %
 %           same_neuron: n x m logical, where the a value of 1 indicates
 %           that more than one neuron from the second session maps to a
@@ -71,8 +72,10 @@ function [Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, ch
 %  For 0.9: take care of multiple mapping cells by letting arbitrarily
 %  assining the 2nd session cell to have the first of multiple cells from
 %  the base session register to it.
+
+% Current notes 6/5/2015: Something is going funky when creating multiple
+% maps
     
-keyboard
 %% Check for check_neuron_mapping.
     if nargin < 3
         check_neuron_mapping = zeros(1,num_sessions);
@@ -101,6 +104,9 @@ keyboard
         [ mouse_name{this_session}, reg_date{this_session}, reg_session{this_session} ] = ...
             get_name_date_session(reg_path{this_session});
         
+        unique_filename{this_session} = fullfile(base_path,['RegistrationInfo-' mouse_name{this_session}...
+            '-' reg_date{this_session} '-session' reg_session{this_session} '.mat']);
+        
        
         % Check to make sure you are looking at the same mouse for each
         % session
@@ -113,8 +119,10 @@ keyboard
     reg_file = fullfile(reg_path, reg_filename); 
         
     %Do the registrations. 
-    base_masks = load(fullfile(pwd,'ProcOut.mat'),'NeuronImage');
+    load(fullfile(base_path,'ProcOut.mat'),'NeuronImage');
+    base_masks = NeuronImage;
     for this_session = 1:num_sessions
+        %%
         %Display.
         disp(['Registering ', mouse '_' base_date, '_session' base_session ...
             ' to ', mouse '_' reg_date{this_session}, '_session' ...
@@ -125,8 +133,15 @@ keyboard
         % registration or involves multiple sessions (at which point you
         % want to load AllMasks, not just NeuronImage from the base
         % session!!!)
-        neuron_map = image_register_simple(base_file, ...
-            reg_file{this_session}, check_neuron_mapping(this_session));
+        if this_session == 1
+            neuron_map = image_register_simple(base_file, ...
+                reg_file{this_session}, check_neuron_mapping(this_session),...
+                'multi_reg',0);
+        elseif this_session > 1
+            neuron_map = image_register_simple(base_file, ...
+                reg_file{this_session}, check_neuron_mapping(this_session),...
+                'multi_reg',1);
+        end
        
         %Also get the pval for TMaps. 
         load(fullfile(reg_path{this_session},'PlaceMaps.mat'), 'pval');
@@ -138,39 +153,44 @@ keyboard
         % neurons from the base session map to it
         [~, temp] = find(neuron_map.same_neuron);
         same_ind = unique(temp); % Vector containing all the neurons in the second session that have multiple neurons in the first session mapping to them...
+        % Create boolean to ID session 2 neurons with multiple neurons
+        % in 1 mapping to them
+        multiple_maps = zeros(size(neuron_map.same_neuron,2),1); % Pre-allocate
+        multiple_maps(same_ind,1) = ones(length(same_ind),1);
         
         % Pre-allocate
         is_registered = zeros(size(neuron_map.same_neuron,2),1);
-        multiple_maps = zeros(size(neuron_map.same_neuron,2),1);
         
         for j = 1:size(neuron_map.same_neuron,2)
-            % Get all neurons in session 2 that map to session 1, not including
+            % Get all neurons in session 2 that map tosum session 1, not including
             % any NaNs
-            is_registered(j) = sum(cellfun(@(a) ~isempty(a) && a == j,test(1).neuron_id)) ~= 0;
-            % Create boolean to ID session 2 neurons with multiple neurons
-            % in 1 mapping to them
-            if sum(is_registered(j) == same_ind) > 0
-                multiple_maps = 1;
-            end
+            is_registered(j,1) = sum(cellfun(@(a) ~isempty(a) && a == j,neuron_map.neuron_id)) ~= 0;
+           
         end
         
         is_new_cell = find(~is_registered & ~multiple_maps); % New cell numbers in session 2
         
         % Load registered session Neuron masks so that you can get masks
         % for new file
-        reg_masks = load(full_file(reg_path,'ProcOut.mat'),'NeuronImage');
+        load(fullfile(reg_path{this_session},'ProcOut.mat'),'NeuronImage');
+        reg_masks = NeuronImage;
         if this_session ~= 1
             AllMasks = Reg_NeuronIDs(1).AllMasks;
+        elseif this_session == 1
+            AllMasks = base_masks;
         end
             
         % Add in new neurons to neuron_map. There is probably a more
         % elegant way to do this in one line of code, but I don't know it.
         id_temp = neuron_map.neuron_id;
         n = size(AllMasks,2) + 1;
+        load(unique_filename{this_session})
         for kk = 1:length(is_new_cell);
             % Add in new neurons to bottom of id_temp
-            id_temp{1,n} = is_new_cell(kk);
-            AllMasks{1,n} = reg_masks.NeuronImage{is_new_cell(kk)}; % Update cells masks to include new cell
+            id_temp{n,1} = is_new_cell(kk);
+            temp = imwarp(reg_masks{is_new_cell(kk)},RegistrationInfoX.tform,'OutputView',...
+                RegistrationInfoX.base_ref,'InterpolationMethod','nearest');
+            AllMasks{1,n} = temp; % Update cells masks to include new cell
             n = n + 1;
         end
         neuron_map.neuron_id = id_temp;
@@ -181,12 +201,12 @@ keyboard
         Reg_NeuronIDs(this_session).reg_path = reg_path{this_session};
         Reg_NeuronIDs(1).AllMasks = AllMasks; % This ALWAYS stays only in the 1st index for future registrations
         Reg_NeuronIDs(this_session).neuron_id = neuron_map.neuron_id;
-        Reg_NeuronIDs(this_session).is_new_cell = is_new_cell;
+        Reg_NeuronIDs(this_session).new_neurons = is_new_cell;
         Reg_NeuronIDs(this_session).multiple_maps = multiple_maps;
         Reg_NeuronIDs(this_session).same_neuron = neuron_map.same_neuron;
         Reg_NeuronIDs(this_session).num_bad_cells = neuron_map.num_bad_cells;
         Reg_NeuronIDs(this_session).pval = pval;
-        
+        %%
         %Save. 
         save (fullfile(base_path,'Reg_NeuronIDs.mat'), 'Reg_NeuronIDs'); 
     end

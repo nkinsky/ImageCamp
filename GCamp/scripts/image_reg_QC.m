@@ -123,3 +123,44 @@ for j = 1:same_index
     imagesc(temp_plot);
     waitforbuttonpress;
 end
+
+%% QC for multi_image_reg
+
+folder{1} = 'j:\GCamp Mice\Working\G30\alternation\11_11_2014\Working';
+folder{2} = 'j:\GCamp Mice\Working\G30\alternation\11_12_2014\Working';
+folder{3} = 'j:\GCamp Mice\Working\G30\alternation\11_13_2014\Working\take2';
+
+reg_file{2} = 'RegistrationInfo-G30-11_12_2014-session1.mat';
+reg_file{3} = 'RegistrationInfo-G30-11_13_2014-session1.mat';
+
+for k = 1:3
+    load(fullfile(folder{k},'ProcOut.mat'),'NeuronImage');
+    session(k).neurons = NeuronImage;
+    if k > 1
+        load(fullfile(folder{1},reg_file{k}));
+        session(k).reginfo = RegistrationInfoX;
+    end
+end
+
+figure(560)
+for j = 1208:1220
+   for k = 1:3
+      if isempty(all_map{j,k}) || isnan(all_map{j,k}) || all_map{j,k} > size(session(k).neurons,2)
+          mask{k} = zeros(size(session(1).neurons{1}));
+      else
+          if k == 1
+              mask{k} = session(k).neurons{j};
+          elseif k > 1
+              temp = session(k).neurons{all_map{j,k}};
+              mask{k} = imwarp(temp, session(k).reginfo.tform,'OutputView',...
+                session(k).reginfo.base_ref,'InterpolationMethod','nearest');
+          end
+      end
+   end
+   
+   imagesc(mask{1} + 2*mask{2} + 3*mask{3});
+   colormap jet
+   colorbar
+   
+   waitforbuttonpress
+end
