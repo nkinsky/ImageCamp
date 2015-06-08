@@ -30,7 +30,7 @@ function [bounds,rot_x,rot_y] = sections(x,y,skip_rot_check)
 
 % keyboard
 %% Assign skip_rot_check if not specified
-if ~exist('skip_rot_check','var') || ~exist(fullfile(pwd, 'rotated.mat'),'file')
+if ~exist('skip_rot_check','var') || ~exist(fullfile(pwd,'rotated.mat'),'file')
     skip_rot_check = 0;
 end
 %% Correct for rotated maze. 
@@ -38,8 +38,8 @@ skewed = 1;
 while skewed
     
     %Try loading previous rotation angle.
-    try load(fullfile(pwd, 'rotated.mat'));
-        
+    try 
+        load(fullfile(pwd,'rotated.mat'));   
     catch
         [rot_x,rot_y,rotang] = rotate_traj(x,y);
     end
@@ -49,7 +49,7 @@ while skewed
     ymax = max(rot_y); ymin = min(rot_y);
     
     %% Establish maze arm boundaries.
-    w = (ymax-ymin)/6.2; %40;   Width of arms.
+    w = (ymax-ymin)/5; %40;   Width of arms.
     l = (xmax-xmin)/8.1; %80;   Shift from top/bottom of maze for center stem.
     
     %Find center arm borders.

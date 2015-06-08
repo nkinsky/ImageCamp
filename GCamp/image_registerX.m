@@ -87,7 +87,7 @@ elseif nargin >= 2
 end
 
 %% Get date with which you are registering the base file to. This is for loading and saving. 
-[ mouse_name, reg_date, reg_session ] = get_name_date_session(reg_path);
+[ mouse_name, reg_date, reg_session ] = get_name_date_session(base_file);
 
 % Define unique filename for file you are registering to that you will
 % eventually save in the base path
