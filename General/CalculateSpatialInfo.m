@@ -1,4 +1,4 @@
-function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session)
+function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,varargin)
 %INFO = CalculateSpatialInfo(session)
 %
 %   Finds the spatial information of each neuron according to the formula
@@ -21,7 +21,7 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session)
 %
 
 %% Load appropriate files. 
-    load(fullfile(session,'ProcOut.mat')); 
+    load(fullfile(session,'ProcOut.mat'),'FT','NumNeurons'); 
     
 %% Useful parameters.
     Pix2Cm = 0.15;
@@ -40,6 +40,13 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session)
 
     NumFrames = size(FT,2); 
     x = rot_x; y = rot_y;
+    
+%% Optional: For looking at left/right spatial information in Alternation. 
+    if exist('varargin','var')
+        turn_ind = varargin{1};
+    else
+        turn_ind = logical(ones(NumFrames,1)); 
+    end
     
 %% Bin spatial position.
     %Range in XY position. 
@@ -65,26 +72,30 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session)
     Xbin(Xbin == 0) = 1;
     Ybin(Ybin == 0) = 1;
     
-    %Linearize bins. 
+    %Linearize bins. loc_index is a Tx1 vector where T is number of frames.
+    %It contains the pixel that the mouse is in at a timestep. 
     loc_index = sub2ind([NumXBins,NumYBins],Xbin,Ybin);
-    num_bins = length(unique(loc_index)); 
+    bins = unique(loc_index); 
+    num_bins = length(bins); 
     
 %% Find spatial information.
     %Preallocate.
-    lambda = nan(NumNeurons,1); 
-    lambda_i = nan(NumNeurons,num_bins); 
-    p_i = nan(1,num_bins); 
-    INFO = nan(NumNeurons,1); 
-    in_bin = logical(zeros(NumFrames,num_bins)); 
-    dwell = nan(num_bins,1); 
+    lambda = nan(NumNeurons,1);                     %Mean firing rate of each neuron. 
+    lambda_i = nan(NumNeurons,num_bins);            %Mean firing rate of each neuron in each bin. 
+    p_i = nan(1,num_bins);                          %Number of frames occupying this pixel divided by total session length. 
+    INFO = nan(NumNeurons,1);                       %Spatial information for each neuron. 
+    in_bin = logical(zeros(NumFrames,num_bins));    %R: Timestep. C: Spatial bin. Boolean vector where 1 means in that bin at that time.  
+    dwell = nan(num_bins,1);                        %Sum of in_bin across time. 
+    LR_Frames = sum(turn_ind); 
     
-    parfor i = 1:num_bins
+    for i = 1:num_bins
         %Find all frames where the mouse was in that spatial bin. 
-        in_bin(:,i) = loc_index == i; 
+        this_bin = bins(i);
+        in_bin(:,i) = loc_index == this_bin; 
 
         %Number of frames in spatial bin.
-        dwell(i) = sum(in_bin(:,i)); 
-        p_i(i) = dwell(i) / NumFrames;                                             %p_i.
+       	dwell(i) = sum(in_bin(turn_ind,i)); 
+        p_i(i) = dwell(i) / LR_Frames;              %p_i.
     end
      
     %Eliminate frames where occupancy < 50 ms. 
@@ -101,12 +112,12 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session)
         end
         
         %Mean firing rate. 
-        lambda(this_neuron) = mean(FT(this_neuron,:));                              %Lambda. 
+        lambda(this_neuron) = mean(FT(this_neuron,turn_ind'));                                   %Lambda. 
 
         %Mean firing rate for each neuron for each bin. 
         for this_bin = 1:num_good
             i = good(this_bin); 
-            lambda_i(this_neuron,i) = sum(FT(this_neuron,in_bin(:,i)))/dwell(i);    %Lambda_i. 
+            lambda_i(this_neuron,i) = sum(FT(this_neuron,turn_ind & in_bin(:,i)))/dwell(i);     %Lambda_i. 
         end
         
         %I = sum(p_i * lambda_i * log2(lambda_i/lambda))
@@ -119,7 +130,4 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session)
         INFO(this_neuron) = nansum(p_i.*lambda_i(this_neuron,:).*log2(lambda_i(this_neuron,:)./lambda(this_neuron)));
     end
     
-    save SpatInfo.mat INFO lambda lambda_i p_i; 
 end
-
-    
