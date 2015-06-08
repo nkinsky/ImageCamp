@@ -87,13 +87,16 @@ elseif nargin >= 2
 end
 
 %% Get date with which you are registering the base file to. This is for loading and saving. 
-date_format = ['(?<month>\d+)-(?<day>\d+)-(?<year>\d+)'];
-temp = regexp(reg_path,date_format,'names'); 
-reg_date = [temp.month '-' temp.day '-' temp.year]; 
+[ mouse_name, reg_date, reg_session ] = get_name_date_session(base_file);
+
+% Define unique filename for file you are registering to that you will
+% eventually save in the base path
+unique_filename = fullfile(base_path,['RegistrationInfo-' mouse_name '-' reg_date '-session' ...
+        reg_session '.mat']);
 
 %% Step 1a: Skip out on everything if registration is already done!
 try
-    load(fullfile(base_path, ['RegistrationInfo ',reg_date,'.mat']));
+    load(unique_filename);
     disp('REGISTRATION ALREADY RAN!! Skipping this step');
 catch
 
@@ -236,7 +239,6 @@ while strcmpi(manual_flag,'y')
     
     manual_flag = input('Do you wish to manually adjust again? (y/n)', 's');
 %     use_manual_adjust = 1;
-
     
 end
 
@@ -252,8 +254,10 @@ regstats.base_2nd_bw_diff_reg = sum(abs(base_image(:) - moving_reg(:)));
 
 
 % Determine if there are previously run versions of this registration
-if exist([base_path 'RegistrationInfo ' reg_date '.mat'],'file') == 2
-    load([base_path 'RegistrationInfo ' reg_date '.mat']);
+% I think that this is no longer necessary since each registration is saved
+% with a unique filename, but keeping it for now
+if exist(unique_filename,'file') == 2
+    load(unique_filename);
         size_info = size(RegistrationInfoX,2)+1;
 else
     size_info = 1;
@@ -273,7 +277,7 @@ if exist('T_manual','var')
     regstats.base_2nd_bw_diff_reg_manual = sum(abs(base_image(:) - moving_reg_manual(:)));
 end
  
-save (fullfile(base_path, ['RegistrationInfo ', reg_date, '.mat']),'RegistrationInfoX');
+save (unique_filename,'RegistrationInfoX');
 
 % keyboard;
 end % End try/catch statement

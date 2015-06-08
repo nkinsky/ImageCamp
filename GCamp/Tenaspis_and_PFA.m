@@ -1,5 +1,5 @@
-function [ output_args ] = Tenaspis_and_PFA( infile, mask_file, roomstr, rawfile)
-%UNTITLED Summary of this function goes here
+function [ ] = Tenaspis_and_PFA( infile, mask_file, roomstr, rawfile)
+% Tenaspis_and_PFA( infile, mask_file, roomstr, rawfile)
 %% Tenaspis
 if ~isempty(mask_file)
     load(mask_file)

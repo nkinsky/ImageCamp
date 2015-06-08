@@ -1,6 +1,6 @@
-function [ seq_use, seq_pos_use ] = get_replays( start_array, lin_pos_active, frame_threshold, dist_threshold, type)
-%UNTITLED2 Summary of this function goes here
-
+function [ seq_use, seq_pos_use ] = get_replays( start_array, lin_pos_active, frame_threshold, dist_threshold, type, varargin)
+% [ seq_use, seq_pos_use ] = get_replays( start_array, lin_pos_active, frame_threshold, dist_threshold, type, ...)
+%
 %   INPUTS
 %       start_array = logical with each column being a frame, each row being a
 %       cell, and a 1 if the cell starts a transient on that frame and 0 if it
@@ -13,13 +13,21 @@ function [ seq_use, seq_pos_use ] = get_replays( start_array, lin_pos_active, fr
 %   
 %       type = 'forward' or 'backward' - types of replays to consider
 %
+%       OPTIONAL
+%       'exclude' = 1 x 2 array, any cells between these two points will be
+%       excluded from analysis
+%       'min_length_replay' = minimum number of cells that must be involved
+%       in a replay event for that replay even to be considered valid.  If
+%       not specified, default is 3.
+%
 %   OUTPUTS
 %       seq_use = a 1 x m cell, where m is the number of sequences
 %       and the contents of each array are the indices of the cell numbers
 %       in start_array and lin_pos_active that are included in the sequence
+
 %%
 maze_length = 144; % Used for thesholding if points are close enough
-min_length_replay = 3; % minimum number of cells that must be involved in a replay to count
+min_length_replay = 3; % default: minimum number of cells that must be involved in a replay to count
 
 tt = 1; %debugging counter
 % n_frame = 1; % not relevant anymore because assigned within while loop
@@ -34,6 +42,28 @@ neuron_used = zeros(1,size(start_array,1));
 neuron_used(1) = 1; % Tracks if a neuron had been used or not, so start out
 % with neuron 1 as used
 % n_neuron_used = 0;
+
+% keyboard
+%% Exclude cells that are in the exclusion zone 
+for j = 1:length(varargin)
+    if strcmpi(varargin{j},'exclude')
+        exclude_bounds = varargin{j+1};
+    end
+    if strcmpi(varargin{j},'min_length_replay')
+        min_length_replay = varargin{j+1};
+    end
+end
+
+if exist('exclude_bounds','var')
+    valid_neurons = (lin_pos_active < exclude_bounds(1)) | ...
+        (lin_pos_active > exclude_bounds(2)); % Include only cells outside of exclude_bounds
+else
+    valid_neurons = true(size(lin_pos_active));
+end
+
+% Pull only valid neurons
+start_array = start_array(valid_neurons,:);
+lin_pos_active = lin_pos_active(valid_neurons);
 
 %% Keyboard statement for debugging
 % keyboard
@@ -147,7 +177,12 @@ end
 %% Next - need to eliminate any redundant sequences - that is, smaller sequences
 % that occur within a larger sequence
 
-[seq_use, seq_pos_use] = elim_redundant_seq(seq, seq_pos, min_length_replay);
+if exist('seq','var')
+    [seq_use, seq_pos_use] = elim_redundant_seq(seq, seq_pos, min_length_replay);
+else
+    seq_use = cell(0,1);
+    seq_pos_use = cell(0,1);
+end
 
 end
 
