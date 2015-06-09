@@ -1,4 +1,4 @@
-function [L_INFO,R_INFO,active] = splitter_info(session)
+function [L_INFO,R_INFO,active] = splitter_info(session,Alt,TMap)
 %[L_INFO,R_INFO,active] = splitter_info(session)
 %
 %   Finds the spatial information for neurons after sorting alternation
@@ -16,17 +16,8 @@ function [L_INFO,R_INFO,active] = splitter_info(session)
 %       active: Vector containing booleans indicating cells that have place
 %       fields. 
 %
-
-%% Sort trials. 
-    try 
-        load(fullfile(session,'Alternation.mat')); 
-    catch
-        load(fullfile(session,'PlaceMaps.mat'),'x','y','TMap'); 
-        Alt = postrials(x,y,0); 
-    end
     
 %% Parameters.
-    load(fullfile(session,'PlaceMaps.mat'),'TMap'); 
     NumNeurons = size(TMap,2); 
     
 %% Get left/right frames. 
