@@ -62,7 +62,8 @@ end
 
 
 %% Perform Image Registration
-RegistrationInfoX = image_registerX(base_file, reg_file, manual_reg_enable);
+RegistrationInfoX = image_registerX(mouse_name, base_date, base_session, ...
+    reg_date, reg_session, manual_reg_enable);
 
 %% Get working folders for each session
 
