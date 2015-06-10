@@ -1,15 +1,19 @@
-function [Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, check_neuron_mapping)
-%[ Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, check_neuron_mapping)
+function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, check_neuron_mapping)
+% Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, check_neuron_mapping)
 %
 %   Registers a base file to multiple recording sessions and saves these
 %   registrations in a .mat file claled Reg_NeuronIDs.mat in your base file
 %   directory. 
 %
 %   INPUTS:
-%       base_file: Full file path of ICmovie_min_proj.tif to which you want
-%       to register other sessions.
+%       base_struct: data structure (length 1) with .Animal (string), .Date (string,
+%       DD_MM_YYYY), and .Session (integer) pointing to the base session.
 %
-%       num_session: Number of sessions you want to register base_file to. 
+%       reg_struct: same as base_struct, but with as many entries as
+%       sessions you wish to analyze.  NOTE that if base_struct OR
+%       reg_struct are left blank, you will be prompted to enter in the
+%       locations of the ICmovie_min_proj.tif files you wish to register
+%       manually!
 %
 %       check_neuron_mapping: Logical vector where each element corresponds
 %       to whether or not you want to check how well each neuron maps.
@@ -48,8 +52,6 @@ function [Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, ch
 %           not appear in the first.  This does NOT include 2nd session
 %           cells that have multiple cells in the 1st session mapping to
 %           them.
-%
-%           multiple_map: 
 %           
 %           num_bad_cells: struct containing the following fields:
 %               nonmapped: Neurons that weren't mapped onto the second
@@ -57,32 +59,51 @@ function [Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, ch
 %               crappy: Neurons that map onto a neuron that another neuron
 %               is mapping to. 
 %
-% Version Tracking
+%  Version Tracking - Current version is 0.85.
 %  0.8: only tracks neurons that correspond to neurons from the 1st session.
 %  Does NOT include capability to map new cells from the 2nd session onto
 %  subsequent sessions (yet!).
 %
-%  For 0.85: Save all NeuronImage masks as you progress (i.e. add in masks
+%  0.85: Save all NeuronImage masks as you progress (i.e. add in masks
 %  of new neurons found in subsequent sessions).  Test by registering two
 %  sessions each directly to the base session (e.g. 1-2 and 1-3), then
 %  comparing the 1-3 mapping you get when you register through session 2
-%  (e.g. 1-2 and 2-3). Currently anytime a cell has multiple cells mapping
+%  (e.g. 1-2 and 2-3). Results - ~5% of cells don't pass the test, the rest do, with
+%  the exception of those that have multiple maps.
+%  Currently anytime a cell has multiple cells mapping
 %  to it from another session it will not be included in future analyses!
 %
 %  For 0.9: take care of multiple mapping cells by letting arbitrarily
 %  assining the 2nd session cell to have the first of multiple cells from
 %  the base session register to it.
-
-% Current notes 6/5/2015: Something is going funky when creating multiple
-% maps
     
-%% Check for check_neuron_mapping.
+
+%% Get base path & number of sessions
+
+    if isempty(base_struct)
+        [~, base_path] = uigetfile('*.tif', 'Pick base file : ');
+        
+        % Pull legit animal name, date, and session based on working folder
+        % location
+        [ base_struct(1).Animal, base_struct(1).Date,...
+            base_struct(1).Session ] = ChangeDirectorybackwards( base_path );
+    elseif ~isempty(base_struct)
+        currdir = cd;
+        base_path = ChangeDirectory(base_struct.Animal, base_struct.Date, ...
+            base_struct.Session);
+        cd(currdir);
+    end
+    
+    if isempty(reg_struct)
+        num_sessions = input('How many sessions do you wish to register? ');
+    else
+        num_sessions = length(reg_struct);
+    end
+    
+    %% Check for check_neuron_mapping.
     if nargin < 3
         check_neuron_mapping = zeros(1,num_sessions);
     end
-
-%% Get base path.
-    base_path = fileparts(base_file);
 %% Do the registrations. 
     %Preallocate.
     reg_filename = cell(1,num_sessions);
@@ -91,26 +112,39 @@ function [Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, ch
     reg_session = cell(1,num_sessions);
     mouse_name  = cell(1,num_sessions);
     
-    [ mouse, base_date, base_session ] = get_name_date_session( base_path );
-    
+    mouse = base_struct.Animal;
+    base_date = base_struct.Date;
+    base_session = base_struct.Session;
     
     %Select all the files first. 
     for this_session = 1:num_sessions
         
+        if isempty(reg_struct)
+            [reg_filename{this_session}, reg_path{this_session}] = ...
+                uigetfile('*.tif', ['Pick file to register #', num2str(this_session), ': ']);
+            
+            [ reg_struct(this_session).Animal, reg_struct(this_session).Date,...
+                reg_struct(this_session).Session ] = ...
+                ChangeDirectorybackwards( reg_path{this_session} );
+            
+%             [ reg_struct(this_session).mouse_name, reg_struct(this_session).date,...
+%                 reg_struct(this_session).session ] = ...
+%                 get_name_date_session(reg_path{this_session});
+        else
+            currdir = cd;
+            reg_path{this_session} = ChangeDirectory(reg_struct(this_session).Animal,...
+                reg_struct(this_session).Date, reg_struct(this_session).Session);
+            cd(currdir)
+        end
         
-        [reg_filename{this_session}, reg_path{this_session}] = ...
-            uigetfile('*.tif', ['Pick file to register #', num2str(this_session), ': ']);
-        
-        [ mouse_name{this_session}, reg_date{this_session}, reg_session{this_session} ] = ...
-            get_name_date_session(reg_path{this_session});
-        
-        unique_filename{this_session} = fullfile(base_path,['RegistrationInfo-' mouse_name{this_session}...
-            '-' reg_date{this_session} '-session' reg_session{this_session} '.mat']);
+        unique_filename{this_session} = fullfile(base_path,['RegistrationInfo-' ...
+            reg_struct(this_session).Animal '-' reg_struct(this_session).Date ...
+            '-session' num2str(reg_struct(this_session).Session) '.mat']);
         
        
         % Check to make sure you are looking at the same mouse for each
         % session
-        if ~strcmpi(mouse,mouse_name{this_session})
+        if ~strcmpi(mouse,reg_struct(this_session).Animal)
             error('You are not analyzing the same mouse in the base and registered files!')
         end
     end
@@ -118,15 +152,14 @@ function [Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, ch
     %Get full file path to all registered files
     reg_file = fullfile(reg_path, reg_filename); 
         
-    %Do the registrations. 
+    %% Do the registrations. 
     load(fullfile(base_path,'ProcOut.mat'),'NeuronImage');
     base_masks = NeuronImage;
     for this_session = 1:num_sessions
-        %%
         %Display.
-        disp(['Registering ', mouse '_' base_date, '_session' base_session ...
-            ' to ', mouse '_' reg_date{this_session}, '_session' ...
-            reg_session{this_session} '...']); 
+        disp(['Registering ', mouse '_' base_date, '_session' num2str(base_session) ...
+            ' to ', mouse '_' reg_struct(this_session).Date, '_session' ...
+            num2str(reg_struct(this_session).Session) '...']); 
 
         %Perform image registration. 
         % Add in something here to indicate if this is a simple
@@ -134,20 +167,16 @@ function [Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, ch
         % want to load AllMasks, not just NeuronImage from the base
         % session!!!)
         if this_session == 1
-            neuron_map = image_register_simple(base_file, ...
-                reg_file{this_session}, check_neuron_mapping(this_session),...
+            neuron_map = image_register_simple(mouse, base_struct.Date,...
+                base_struct.Session, reg_struct(this_session).Date, ...
+                reg_struct(this_session).Session, check_neuron_mapping(this_session),...
                 'multi_reg',0);
         elseif this_session > 1
-            neuron_map = image_register_simple(base_file, ...
-                reg_file{this_session}, check_neuron_mapping(this_session),...
+            neuron_map = image_register_simple(mouse, base_struct.Date,...
+                base_struct.Session, reg_struct(this_session).Date, ...
+                reg_struct(this_session).Session, check_neuron_mapping(this_session),...
                 'multi_reg',1);
         end
-       
-        %Also get the pval for TMaps. 
-        load(fullfile(reg_path{this_session},'PlaceMaps.mat'), 'pval');
-        
-        %%% Get all new cells that appear in registered session (i.e. cell
-        %%% numbers that DON'T appear in neuron_id and are NOT NaNs
         
         % First, get all neurons in registered session that have multiple
         % neurons from the base session map to it
@@ -196,8 +225,12 @@ function [Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, ch
         neuron_map.neuron_id = id_temp;
         
         %Build the struct. 
-        Reg_NeuronIDs(this_session).mouse = mouse; 
+        Reg_NeuronIDs(this_session).mouse = mouse;
+        Reg_NeuronIDs(this_session).base_date = base_date;
+        Reg_NeuronIDs(this_session).base_session = base_session;
         Reg_NeuronIDs(this_session).base_path = base_path; 
+        Reg_NeuronIDs(this_session).reg_date = reg_struct(this_session).Date;
+        Reg_NeuronIDs(this_session).reg_session = reg_struct.Session;
         Reg_NeuronIDs(this_session).reg_path = reg_path{this_session};
         Reg_NeuronIDs(1).AllMasks = AllMasks; % This ALWAYS stays only in the 1st index for future registrations
         Reg_NeuronIDs(this_session).neuron_id = neuron_map.neuron_id;
@@ -205,7 +238,6 @@ function [Reg_NeuronIDs, cell_map] = multi_image_reg(base_file, num_sessions, ch
         Reg_NeuronIDs(this_session).multiple_maps = multiple_maps;
         Reg_NeuronIDs(this_session).same_neuron = neuron_map.same_neuron;
         Reg_NeuronIDs(this_session).num_bad_cells = neuron_map.num_bad_cells;
-        Reg_NeuronIDs(this_session).pval = pval;
         %%
         %Save. 
         save (fullfile(base_path,'Reg_NeuronIDs.mat'), 'Reg_NeuronIDs'); 

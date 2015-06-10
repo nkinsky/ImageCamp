@@ -80,10 +80,10 @@ cd(currdir)
 % eventually save in the base path
 if multi_reg == 0
     map_unique_filename = fullfile(sesh(1).folder,['neuron_map-' mouse_name '-' reg_date '-session' ...
-        reg_session '.mat']);
+        num2str(reg_session) '.mat']);
 elseif multi_reg == 1
     map_unique_filename = fullfile(sesh(1).folder,['neuron_map-' mouse_name '-' reg_date '-session' ...
-    reg_session '_multi.mat']);
+    num2str(reg_session) '_multi.mat']);
 end
 
 %% Check to see if this has already been run - if so,
@@ -96,7 +96,7 @@ catch
 for k = 1:2
     load(fullfile(sesh(k).folder, 'ProcOut.mat'),'NeuronImage');
     if k == 2 % Don't get registration info if base session
-        >>>> NRK Edit here!!!
+        
         [tform_struct ] = get_reginfo(sesh(1).folder, sesh(2).folder, RegistrationInfoX );
     end
     
@@ -111,8 +111,8 @@ for k = 1:2
     for j = 1:size(NeuronImage,2);
         temp = NeuronImage{j};
         if k == 2 % Don't do registration if base session
-            neuron_image_use = imwarp(temp,tform_struct.tform,'OutputView',...
-                tform_struct.base_ref,'InterpolationMethod','nearest');
+            neuron_image_use = imwarp(temp,RegistrationInfoX.tform,'OutputView',...
+                RegistrationInfoX.base_ref,'InterpolationMethod','nearest');
         elseif k == 1
             neuron_image_use = temp;
         end
@@ -205,8 +205,8 @@ title('1 = session 1, 2 = session 2, 3 = both sessions')
         while tt ~= 27
             if ~isempty(neuron_id{nn}) && ~isnan(neuron_id{nn})
                 % Register 2nd neuron's outline to 1st neuron
-                neuron2_reg = imwarp(temp5{2,neuron_id{nn}},tform_struct.tform,'OutputView',...
-                    tform_struct.base_ref,'InterpolationMethod','nearest');
+                neuron2_reg = imwarp(temp5{2,neuron_id{nn}},RegistrationInfoX.tform,'OutputView',...
+                    RegistrationInfoX.base_ref,'InterpolationMethod','nearest');
             else
                 % Make 2nd neuron mask all zeros if no cell maps to the 1st
                 neuron2_reg = zeros(size(temp5{1,1}));
@@ -236,7 +236,12 @@ title('1 = session 1, 2 = session 2, 3 = both sessions')
 
 
 %% Save neuron mapping - currently doesn't include multiple sessions...
+neuron_map.mouse = mouse_name;
+neuron_map.base_date = base_date;
+neuron_map.base_session = base_session;
 neuron_map.base_file = RegistrationInfoX.base_file;
+neuron_map.reg_date = reg_date;
+neuron_map.reg_session = reg_session;
 neuron_map.register_file = RegistrationInfoX.register_file;
 neuron_map.neuron_id = neuron_id;
 neuron_map.same_neuron = same_neuron;
