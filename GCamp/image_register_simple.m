@@ -1,15 +1,19 @@
-function [ neuron_map] = image_register_simple( base_file, reg_file, check_neuron_mapping, varargin)
-%image_register_simple( base_file, reg_file)
+function [ neuron_map] = image_register_simple( mouse_name, base_date, base_session, reg_date, reg_session, check_neuron_mapping, varargin)
+%image_register_simple( mouse_name, base_date, base_session, reg_date, reg_session, check_neuron_mapping, ...)
 %   Registers the image ICmovie_min_proj.tif from one session to another so
 %   as to map neurons from one session to the next.  Note that you must set
 %   the magic variable 'min_thresh' manually within the function code
 %
 %   INPUTS
-%       base_file: full path to the base_file, ICMovie_min_proj.tif, to
-%       which you wish to register a second session
+%       mouse_name:   string with mouse name
 %
-%       reg_file: full path to the file, also ICMovie_min_proj.tif, you
-%       wish you register to base_file
+%       base_date: date of base session
+%
+%       base_session: session number for base session
+%
+%       reg_date: date of session to register to base
+%
+%       reg_session: session number for session to register to base
 %
 %       check_cell_mapping: 0 (default) = no check plots are generated.
 %       1 = go through cell-by-cell and check how well cells are mapped.
@@ -67,11 +71,10 @@ RegistrationInfoX = image_registerX(mouse_name, base_date, base_session, ...
 
 %% Get working folders for each session
 
-sesh(1).folder = base_file(1:max(regexpi(base_file,'[\\,/]'))-1);
-sesh(2).folder = reg_file(1:max(regexpi(reg_file,'[\\,/]'))-1);
-
-% Get registration info and create filename to save neuron_map later
-[ mouse_name, reg_date, reg_session ] = get_name_date_session(sesh(2).folder);
+currdir = cd;
+sesh(1).folder = ChangeDirectory(mouse_name, base_date, base_session);
+sesh(2).folder = ChangeDirectory(mouse_name, reg_date, reg_session);
+cd(currdir)
 
 % Define unique filename for file you are registering to that you will
 % eventually save in the base path
@@ -93,6 +96,7 @@ catch
 for k = 1:2
     load(fullfile(sesh(k).folder, 'ProcOut.mat'),'NeuronImage');
     if k == 2 % Don't get registration info if base session
+        >>>> NRK Edit here!!!
         [tform_struct ] = get_reginfo(sesh(1).folder, sesh(2).folder, RegistrationInfoX );
     end
     

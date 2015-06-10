@@ -95,7 +95,7 @@ end
 %% Define unique filename for file you are registering to that you will
 % eventually save in the base path
 unique_filename = fullfile(base_path,['RegistrationInfo-' mouse_name '-' reg_date '-session' ...
-        reg_session '.mat']);
+        num2str(reg_session) '.mat']);
 
 %% Step 1a: Skip out on everything if registration is already done!
 try
@@ -271,8 +271,10 @@ FigNum = FigNum + 1;
 RegistrationInfoX(size_info).mouse = mouse_name;
 RegistrationInfoX(size_info).base_date = base_date;
 RegistrationInfoX(size_info).base_session = base_session;
+RegistrationInfoX(size_info).base_file = base_file;
 RegistrationInfoX(size_info).register_date = reg_date;
 RegistrationInfoX(size_info).register_session = reg_session;
+RegistrationInfoX(size_info).register_file = register_file;
 RegistrationInfoX(size_info).tform = tform;
 RegistrationInfoX(size_info).exclude_pixels = exclude_pixels;
 RegistrationInfoX(size_info).regstats = regstats;
