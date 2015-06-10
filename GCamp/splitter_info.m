@@ -30,8 +30,8 @@ function [L_INFO,R_INFO,active] = splitter_info(session,Alt,TMap)
     right(Alt.choice == 2) = 1; 
 
 %% Find spatial information for left and right trials. 
-    [R_INFO,p_i,L_lambda,L_lambda_i] = CalculateSpatialInfo(session,right); 
-    [L_INFO,p_i,R_lambda,R_lambda_i] = CalculateSpatialInfo(session,left); 
+    [L_INFO,p_i,L_lambda,L_lambda_i] = CalculateSpatialInfo(session,left); 
+    [R_INFO,p_i,R_lambda,R_lambda_i] = CalculateSpatialInfo(session,right); 
     
     %Get indices of neurons with no active PFs. 
     active = zeros(NumNeurons,1);
@@ -42,4 +42,6 @@ function [L_INFO,R_INFO,active] = splitter_info(session,Alt,TMap)
     end
     
     active = logical(active); 
+    
+    save Splitter_Info.mat L_INFO R_INFO active;
 end

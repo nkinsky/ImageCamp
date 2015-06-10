@@ -36,6 +36,7 @@ function Alt = postrials(x,y,plot_each_trial,varargin)
 %   TIP: To find frames for a particular trial of interest, you can do:
 %       data.frames(data.trial == TRIAL_OF_INTEREST).
 %
+
 %% Assign varargin
 for j = 1:2:length(varargin)-1
     if strcmpi(varargin{j},'skip_rot_check')

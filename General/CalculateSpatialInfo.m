@@ -41,6 +41,9 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,varargin)
     NumFrames = size(FT,2); 
     x = rot_x; y = rot_y;
     
+    %Get section number. 
+    sect = getsection(x,y,'skip_rot_check',1); 
+    
 %% Optional: For looking at left/right spatial information in Alternation. 
     if exist('varargin','var')
         turn_ind = varargin{1};
@@ -75,8 +78,9 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,varargin)
     %Linearize bins. loc_index is a Tx1 vector where T is number of frames.
     %It contains the pixel that the mouse is in at a timestep. 
     loc_index = sub2ind([NumXBins,NumYBins],Xbin,Ybin);
-    bins = unique(loc_index); 
-    num_bins = length(bins); 
+    stem = loc_index(sect(:,2) == 2);
+    stem = unique(stem); 
+    num_bins = length(stem); 
     
 %% Find spatial information.
     %Preallocate.
@@ -90,7 +94,7 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,varargin)
     
     for i = 1:num_bins
         %Find all frames where the mouse was in that spatial bin. 
-        this_bin = bins(i);
+        this_bin = stem(i);
         in_bin(:,i) = loc_index == this_bin; 
 
         %Number of frames in spatial bin.
@@ -108,7 +112,7 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,varargin)
      
     for this_neuron = 1:NumNeurons
         if mod(this_neuron,10) == 0
-            disp(['Calculating spatial information score for neuron #', num2str(this_neuron), '...']); 
+            disp(['Calculating spatial information for neuron #', num2str(this_neuron), '...']); 
         end
         
         %Mean firing rate. 
@@ -126,7 +130,7 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,varargin)
         %give high spatial information to neurons that fire extremely
         %rarely because they will necessarily only fire in one place in
         %that one instance. Below is how Tonegawa does it, but not Skaggs,
-        %but Skaggs used ephys data.
+        %though Skaggs used ephys data.
         INFO(this_neuron) = nansum(p_i.*lambda_i(this_neuron,:).*log2(lambda_i(this_neuron,:)./lambda(this_neuron)));
     end
     
