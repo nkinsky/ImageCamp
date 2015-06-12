@@ -101,7 +101,7 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, check_neuron
     end
     
     %% Check for check_neuron_mapping.
-    if nargin < 3
+    if ~exist('check_neuron_mapping','var') || 
         check_neuron_mapping = zeros(1,num_sessions);
     end
 %% Do the registrations. 

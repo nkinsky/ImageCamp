@@ -188,8 +188,10 @@ for j = 1:length(Reg_NeuronIDs)
    end
     
 end
-
-figure(100); 
+%% 
+figure(100);
+for i = 1:length(Reg_NeuronIDs)
+    same_neuron = Reg_NeuronIDs(1).same_neuron;
 for j = 1:11; 
     temp = find(neuron_map.same_neuron(:,multi_neurons2(j))); 
     % Put in something here to id if cell is from session 1 or session 2 or
@@ -199,4 +201,5 @@ for j = 1:11;
     waitforbuttonpress; 
     % 
     export_fig(['Cell ' num2str(temp(1)) ' and ' num2str(temp(2))  ' and ' num2str(temp(3)) ' from 09_29_2014']); 
+end
 end
