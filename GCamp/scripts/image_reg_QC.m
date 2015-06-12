@@ -123,3 +123,39 @@ for j = 1:same_index
     imagesc(temp_plot);
     waitforbuttonpress;
 end
+
+%% More stuff
+
+currdir = cd;
+ChangeDirectory(Reg_NeuronIDs(1).mouse,Reg_NeuronIDs(1).base_date, ...
+    Reg_NeuronIDs(1).base_session);
+load('ProcOut.mat','NeuronImage');
+cd(currdir)
+sesh(1).NeuronImage = NeuronImage;
+base_mds.Animal = Reg_NeuronIDs(1).mouse;
+base_mds.Date = Reg_NeuronIDs(1).base_date;
+base_mds.Session = Reg_NeuronIDs(1).base_session;
+% Register Neurons from Future sessions to previous ones
+for j = 1:length(Reg_NeuronIDs)
+    reg_mds.Animal = Reg_NeuronIDs(j).mouse;
+    reg_mds.Date = Reg_NeuronIDs(j).reg_date;
+    reg_mds.Session = Reg_NeuronIDs(j).reg_session;
+    
+   sesh(j+1).NeuronImage = get_regNeuronImage( base_mds, reg_mds );
+   if j == 1
+       all_session_map = Reg_NeuronIDs(1).all_session_map;
+   end
+    
+end
+
+figure(100); 
+for j = 1:11; 
+    temp = find(neuron_map.same_neuron(:,multi_neurons2(j))); 
+    % Put in something here to id if cell is from session 1 or session 2 or
+    % session n and add it in.  Also to create a name identifying it in the
+    % title or savename... will need to register stuff too
+    imagesc(NeuronImage{temp(1)} + 2*NeuronImage{temp(2)} + 3*NeuronImage{temp(3)}); 
+    waitforbuttonpress; 
+    % 
+    export_fig(['Cell ' num2str(temp(1)) ' and ' num2str(temp(2))  ' and ' num2str(temp(3)) ' from 09_29_2014']); 
+end
