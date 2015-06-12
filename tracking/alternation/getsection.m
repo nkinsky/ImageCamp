@@ -1,4 +1,4 @@
-function [sect, goal] = getsection(x,y,varargin)
+function [sect,goal,rot_x,rot_y] = getsection(x,y,varargin)
 %function [sect, goal] = getsection(x,y,...)
 %   This function takes position data and transforms it into section
 %   number. 
@@ -123,5 +123,6 @@ end
             rot_y > ymin_goal(this_section) & rot_y < ymax_goal(this_section);
         goal(ind,2) = this_section; 
     end
+    
     
 end

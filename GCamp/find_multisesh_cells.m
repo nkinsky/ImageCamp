@@ -78,9 +78,9 @@ function [cell_list,stacked_masks,pvals,tform_struct] = find_multisesh_cells(Reg
     for this_sesh = 1:num_sessions
         %Get path information. 
         this_reg_path = Reg_NeuronIDs(this_sesh).reg_path; 
-        date_format = ['(?<month>\d+)-(?<day>\d+)-(?<year>\d+)'];
+        date_format = ['(?<month>\d+)_(?<day>\d+)_(?<year>\d+)'];
         temp = regexp(this_reg_path,date_format,'names'); 
-        this_date = [temp.month '-' temp.day '-' temp.year];
+        this_date = [temp.month '_' temp.day '_' temp.year];
         
         %Load neuron masks. 
         load(fullfile(this_reg_path, 'ProcOut.mat'), 'NeuronImage'); 

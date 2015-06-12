@@ -53,7 +53,7 @@ for this_session = 1:num_sessions
     %Get date.
     date_format = ['(?<month>\d+)_(?<day>\d+)_(?<year>\d+)'];
     temp = regexp(reg_path{this_session},date_format,'names');
-    reg_date{this_session} = [temp.month '-' temp.day '-' temp.year];
+    reg_date{this_session} = [temp.month '_' temp.day '_' temp.year];
 end
 
 %Get base date.

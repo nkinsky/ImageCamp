@@ -54,7 +54,7 @@ function [r,TMap_plot,TMap_resized,final_masks,p] = plot_multisesh_alt(base_path
     %Number of total sessions, including the base file. 
     num_sessions = length(Reg_NeuronIDs)+1;
     num_cells = size(cell_list,1); 
-    date_format = ['(?<month>\d+)-(?<day>\d+)-(?<year>\d+)'];
+    date_format = ['(?<month>\d+)_(?<day>\d+)_(?<year>\d+)'];
     
 
 %% Extract data. 
