@@ -247,6 +247,11 @@ neuron_map.neuron_id = neuron_id;
 neuron_map.same_neuron = same_neuron;
 neuron_map.num_bad_cells = num_bad_cells;
 
+if multi_reg == 1
+    neuron_map.base_date = 'Multiple - all prior sessions in Reg_NeuronIDs in base directory';
+    neuron_map.base_session = 'Multiple - all prior sessions in Reg_NeuronIDs in base directory';
+end
+
 save(map_unique_filename, 'neuron_map');
 
 end % End try/catch statement

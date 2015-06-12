@@ -192,8 +192,12 @@ end
 figure(100);
 for i = 1:length(Reg_NeuronIDs)
     same_neuron = Reg_NeuronIDs(1).same_neuron;
+    multi_neurons = find(sum(same_neuron,1) > 0);
 for j = 1:11; 
-    temp = find(neuron_map.same_neuron(:,multi_neurons2(j))); 
+    temp = find(neuron_map.same_neuron(:,multi_neurons(j))); % Get rows of neurons that map to the same session
+    for k = 1:length(temp)
+        col_num(k) = find(cellfun(@(a) ~isempty(a) && ~isnan(a), all_session_map(temp(1),2:end)),1,'first')+1;
+    end
     % Put in something here to id if cell is from session 1 or session 2 or
     % session n and add it in.  Also to create a name identifying it in the
     % title or savename... will need to register stuff too

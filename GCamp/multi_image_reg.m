@@ -15,7 +15,7 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, check_neuron
 %       locations of the ICmovie_min_proj.tif files you wish to register
 %       manually!
 %
-%       check_neuron_mapping: Logical vector where each element corresponds
+%       check_neuron_mapping (optional): Logical vector where each element corresponds
 %       to whether or not you want to check how well each neuron maps.
 %       Default is zero for all sessions. 
 %
@@ -101,8 +101,12 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, check_neuron
     end
     
     %% Check for check_neuron_mapping.
-    if ~exist('check_neuron_mapping','var') || 
+    if ~exist('check_neuron_mapping','var')
         check_neuron_mapping = zeros(1,num_sessions);
+    end
+    
+    if length(check_neuron_mapping) == 1 && length(check_neuron_mappin) < num_sessions
+        check_neuron_mapping = ones(1,num_session)*check_neuron_mapping;
     end
 %% Do the registrations. 
     %Preallocate.
