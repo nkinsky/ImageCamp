@@ -25,7 +25,7 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,stem_only,var
     
 %% Useful parameters.
     Pix2Cm = 0.15;
-    cmperbin = .5;
+    cmperbin = .25;
 
 %% Align tracking to imaging then rotate. 
     %Align. 
