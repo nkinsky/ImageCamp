@@ -1,4 +1,4 @@
-function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,varargin)
+function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,stem_only,varargin)
 %INFO = CalculateSpatialInfo(session)
 %
 %   Finds the spatial information of each neuron according to the formula
@@ -78,9 +78,15 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,varargin)
     %Linearize bins. loc_index is a Tx1 vector where T is number of frames.
     %It contains the pixel that the mouse is in at a timestep. 
     loc_index = sub2ind([NumXBins,NumYBins],Xbin,Ybin);
-    stem = loc_index(sect(:,2) == 2);
-    stem = unique(stem); 
-    num_bins = length(stem); 
+    
+    if stem_only
+        bins = loc_index(sect(:,2) == 2);
+        bins = unique(bins); 
+    elseif ~stem_only
+        bins = unique(loc_index); 
+    end
+    
+    num_bins = length(bins); 
     
 %% Find spatial information.
     %Preallocate.
@@ -94,7 +100,7 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,varargin)
     
     for i = 1:num_bins
         %Find all frames where the mouse was in that spatial bin. 
-        this_bin = stem(i);
+        this_bin = bins(i);
         in_bin(:,i) = loc_index == this_bin; 
 
         %Number of frames in spatial bin.

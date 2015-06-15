@@ -5,11 +5,10 @@ function [bootL,bootR,L_pval,R_pval] = bootsplit2(session,Alt,TMap)
 
 %% Parameters and preallocate. 
     load(fullfile(session,'ProcOut.mat'),'NumNeurons'); 
-    B = 200; 
+    B = 500; 
     bootL = nan(NumNeurons,B); 
     bootR = nan(NumNeurons,B); 
-    L_pval = nan(NumNeurons,1); 
-    R_pval = nan(NumNeurons,1); 
+    pval = nan(NumNeurons,1); 
     
 %% Empirical.
     try 
@@ -25,9 +24,12 @@ function [bootL,bootR,L_pval,R_pval] = bootsplit2(session,Alt,TMap)
         [bootL(:,i),bootR(:,i),~] = splitter_info(session,Alt_shuff,TMap); 
     end
     
+    %Difference between spatial information scores for left and right. 
+    INFO_DIFF = abs(L_INFO - R_INFO); 
+    bootINFO_DIFF = abs(bootL - bootR); 
+    
     parfor this_neuron = 1:NumNeurons
-        L_pval(this_neuron) = sum(bootL(this_neuron,:) > L_INFO(this_neuron))/B; 
-        R_pval(this_neuron) = sum(bootR(this_neuron,:) > R_INFO(this_neuron))/B; 
+        pval(this_neuron) = sum(bootINFO_DIFF(this_neuron,:) > INFO_DIFF(this_neuron))/B; 
     end
     
     boot = [bootL; bootR]; 

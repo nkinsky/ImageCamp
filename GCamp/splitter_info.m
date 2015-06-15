@@ -19,6 +19,7 @@ function [L_INFO,R_INFO,active] = splitter_info(session,Alt,TMap)
     
 %% Parameters.
     NumNeurons = size(TMap,2); 
+    stem_only = 1;                  %Do you want to calculate the spatial information based solely on stem visits? 
     
 %% Get left/right frames. 
     NumFrames = max(Alt.frames); 
@@ -30,8 +31,8 @@ function [L_INFO,R_INFO,active] = splitter_info(session,Alt,TMap)
     right(Alt.choice == 2) = 1; 
 
 %% Find spatial information for left and right trials. 
-    [L_INFO,p_i,L_lambda,L_lambda_i] = CalculateSpatialInfo(session,left); 
-    [R_INFO,p_i,R_lambda,R_lambda_i] = CalculateSpatialInfo(session,right); 
+    [L_INFO,p_i,L_lambda,L_lambda_i] = CalculateSpatialInfo(session,stem_only,left); 
+    [R_INFO,p_i,R_lambda,R_lambda_i] = CalculateSpatialInfo(session,stem_only,right); 
     
     %Get indices of neurons with no active PFs. 
     active = zeros(NumNeurons,1);
