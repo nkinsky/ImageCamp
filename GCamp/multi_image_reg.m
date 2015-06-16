@@ -105,8 +105,8 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, check_neuron
         check_neuron_mapping = zeros(1,num_sessions);
     end
     
-    if length(check_neuron_mapping) == 1 && length(check_neuron_mappin) < num_sessions
-        check_neuron_mapping = ones(1,num_session)*check_neuron_mapping;
+    if length(check_neuron_mapping) == 1 && length(check_neuron_mapping) < num_sessions
+        check_neuron_mapping = ones(1,num_sessions)*check_neuron_mapping;
     end
 %% Do the registrations. 
     %Preallocate.
