@@ -156,9 +156,12 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, check_neuron
     %Get full file path to all registered files
     reg_file = fullfile(reg_path, reg_filename); 
         
+%     keyboard
     %% Do the registrations. 
     load(fullfile(base_path,'ProcOut.mat'),'NeuronImage');
+    load(fullfile(base_path,'MeanBlobs.mat'),'BinBlobs');
     base_masks = NeuronImage;
+    base_masks_mean = BinBlobs;
     for this_session = 1:num_sessions
         %Display.
         disp(['Registering ', mouse '_' base_date, '_session' num2str(base_session) ...
@@ -181,7 +184,6 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, check_neuron
                 reg_struct(this_session).Session, check_neuron_mapping(this_session),...
                 'multi_reg',1);
         end
-        
         % First, get all neurons in registered session that have multiple
         % neurons from the base session map to it
         [~, temp] = find(neuron_map.same_neuron);
@@ -206,11 +208,15 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, check_neuron
         % Load registered session Neuron masks so that you can get masks
         % for new file
         load(fullfile(reg_path{this_session},'ProcOut.mat'),'NeuronImage');
+        load(fullfile(reg_path{this_session},'MeanBlobs.mat'),'BinBlobs');
         reg_masks = NeuronImage;
+        reg_masks_mean = BinBlobs;
         if this_session ~= 1
             AllMasks = Reg_NeuronIDs(1).AllMasks;
+            AllMasksMean = Reg_NeuronIDs(1).AllMasksMean;
         elseif this_session == 1
             AllMasks = base_masks;
+            AllMasksMean = base_masks_mean;
         end
             
         % Add in new neurons to neuron_map. There is probably a more
@@ -221,9 +227,13 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, check_neuron
         for kk = 1:length(is_new_cell);
             % Add in new neurons to bottom of id_temp
             id_temp{n,1} = is_new_cell(kk);
+            % Register mask and mean mask for each neuron to base session
             temp = imwarp(reg_masks{is_new_cell(kk)},RegistrationInfoX.tform,'OutputView',...
                 RegistrationInfoX.base_ref,'InterpolationMethod','nearest');
+            temp2 = imwarp(reg_masks_mean{is_new_cell(kk)},RegistrationInfoX.tform,'OutputView',...
+                RegistrationInfoX.base_ref,'InterpolationMethod','nearest');
             AllMasks{1,n} = temp; % Update cells masks to include new cell
+            AllMasksMean{1,n} = temp2;
             n = n + 1;
         end
         neuron_map.neuron_id = id_temp;
@@ -237,16 +247,18 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, check_neuron
         Reg_NeuronIDs(this_session).reg_session = reg_struct.Session;
         Reg_NeuronIDs(this_session).reg_path = reg_path{this_session};
         Reg_NeuronIDs(1).AllMasks = AllMasks; % This ALWAYS stays only in the 1st index for future registrations
+        Reg_NeuronIDs(1).AllMasksMean = AllMasksMean;
         Reg_NeuronIDs(this_session).neuron_id = neuron_map.neuron_id;
         Reg_NeuronIDs(this_session).new_neurons = is_new_cell;
         Reg_NeuronIDs(this_session).multiple_maps = multiple_maps;
         Reg_NeuronIDs(this_session).same_neuron = neuron_map.same_neuron;
         Reg_NeuronIDs(this_session).num_bad_cells = neuron_map.num_bad_cells;
-        %%
+        
         %Save. 
         save (fullfile(base_path,'Reg_NeuronIDs.mat'), 'Reg_NeuronIDs'); 
     end
     
+    keyboard
     %% Bulid cell_map from Reg_NeuronIDs and save it
    all_session_map = build_multisesh_mapping(Reg_NeuronIDs);
    Reg_NeuronIDs(1).all_session_map = all_session_map;

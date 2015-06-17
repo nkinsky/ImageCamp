@@ -1,4 +1,4 @@
-function [RegistrationInfoX] = image_registerX(mouse_name, base_date, base_session, reg_date, reg_session, manual_reg_enable)
+function [RegistrationInfoX] = image_registerX(mouse_name, base_date, base_session, reg_date, reg_session, manual_reg_enable, varargin)
 % RegistrationInfoX = image_registerX(mouse_name, base_date, base_session, reg_date, reg_session, manual_reg_enable)
 % Image Registration Function - THIS FUNCTION ONLY REGISTERS ONE IMAGE TO ANOTHER
 % AND DOES NOT DEAL WITH ANY INDIVIDUAL CELLS.
@@ -16,12 +16,17 @@ function [RegistrationInfoX] = image_registerX(mouse_name, base_date, base_sessi
 %
 % base_session: session number for base session
 %
-% reg_date: date of session to register to base
+% reg_date: date of session to register to base.  List as 'mask' if you are
+% using in conjuction with mask_multi_image_reg.
 %
-% reg_session: session number for session to register to base
+% reg_session: session number for session to register to base. List as 'mask' if you are
+% using in conjuction with mask_multi_image_reg.
 %
 % manual_reg_enable: 0 if you want to disallow manually adjusting the
 %               registration, 1 if you want to allow it (default)
+%
+% 'mask_reg': this optional argument MUST be followed by the pathname to
+% the mask file for running Tenaspis
 %
 % OUTPUTS
 % cell_map:     cell array with each row corresponding to a given neuron,
@@ -68,6 +73,14 @@ multi_init_rad = 6.25e-4; % optimizer.InitialRadius = 6.25e-3 default
 
 FigNum = 1; % Start off figures at this number
 
+%% Step 0: Get varargins
+
+for j = 1:length(varargin)
+    if strcmpi('mask_reg',varargin{j})
+        mask_reg_file = varargin{j+1};
+    end
+end
+
 %% Step 1: Select images to compare and import the images
 
 if nargin == 0 % Prompt user to manually enter in files to register if no inputs are specified
@@ -80,16 +93,19 @@ if nargin == 0 % Prompt user to manually enter in files to register if no inputs
     register_file = [reg_path reg_filename];
     [ mouse_name, reg_date, reg_session ] = get_name_date_session(reg_path);
 else
-    currdir = cd;
-    base_path = ChangeDirectory(mouse_name, base_date, base_session);
-    reg_path = ChangeDirectory(mouse_name, reg_date, reg_session);
-    cd(currdir)
-    
     % Create strings to point to minimum projection files in each working
     % directory for registration
+    currdir = cd;
+    base_path = ChangeDirectory(mouse_name, base_date, base_session);
     base_file = fullfile(base_path,'ICmovie_min_proj.tif');
-    register_file = fullfile(reg_path,'ICmovie_min_proj.tif');
-
+    if ~exist('mask_reg_file','var')
+        reg_path = ChangeDirectory(mouse_name, reg_date, reg_session);
+        register_file = fullfile(reg_path,'ICmovie_min_proj.tif');
+    elseif exist('mask_reg_file','var')
+        register_file = mask_reg_file;
+        reg_date = 'neuron_mask';
+    end
+    cd(currdir)
 end
 
 %% Define unique filename for file you are registering to that you will

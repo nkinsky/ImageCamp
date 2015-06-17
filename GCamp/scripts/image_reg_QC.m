@@ -232,3 +232,57 @@ for i = 1:length(Reg_NeuronIDs)
             fig_name),'-jpg');
     end
 end
+
+%% Check multiple mapping neurons
+same_neuron_list = find(sum(same_neuron,1));
+figure(200)
+for j = 1:length(same_neuron_list)
+    % Get boundaries of 2nd session neuron
+    bounds_image = bwboundaries(day(2).NeuronImage_reg{same_neuron_list(j)});
+    bounds_mean = bwboundaries(day(2).NeuronMean_reg{same_neuron_list(j)});
+    same_neuron1 = find(same_neuron(:,same_neuron_list(j)));
+    temp_image = zeros(size(day(1).NeuronImage_reg{1}));
+    temp_mean = zeros(size(day(1).NeuronImage_reg{1}));
+    for k = 1:length(same_neuron1)
+       temp_image = temp_image + day(1).NeuronImage_reg{same_neuron1(k)};
+       temp_mean = temp_mean + day(1).NeuronMean_reg{same_neuron1(k)};
+    end
+    
+    bounds_plot_x = [min(bounds_mean{1}(:,2))-5 max(bounds_mean{1}(:,2))+5];
+    bounds_plot_y = [min(bounds_mean{1}(:,1))-5 max(bounds_mean{1}(:,1))+5];
+    
+    subplot(2,2,1)
+    imagesc(day(1).NeuronImage_reg{same_neuron1(1)}); colorbar
+    hold on; 
+    plot(bounds_image{1}(:,2),bounds_image{1}(:,1),'r');
+    hold off
+    xlim(bounds_plot_x); ylim(bounds_plot_y);
+    title(['NeuronImage: 1st session neuron = ' num2str(same_neuron1(1)) '. 2nd session =  ' num2str(same_neuron_list(j))])
+    
+    subplot(2,2,2)
+    imagesc(day(1).NeuronImage_reg{same_neuron1(2)}); colorbar
+    hold on; 
+    plot(bounds_image{1}(:,2),bounds_image{1}(:,1),'r');
+    hold off
+    xlim(bounds_plot_x); ylim(bounds_plot_y);
+    title(['NeuronImage: 1st session neuron = ' num2str(same_neuron1(2)) '. 2nd session =  ' num2str(same_neuron_list(j))])
+    
+    subplot(2,2,3)
+    imagesc(day(1).NeuronMean_reg{same_neuron1(1)}); colorbar
+    hold on; 
+    plot(bounds_mean{1}(:,2),bounds_mean{1}(:,1),'r');
+    hold off
+    xlim(bounds_plot_x); ylim(bounds_plot_y);
+    title(['NeuronMean: 1st session neuron = ' num2str(same_neuron1(1)) '. 2nd session =  ' num2str(same_neuron_list(j))])
+    
+    subplot(2,2,4)
+    imagesc(day(1).NeuronMean_reg{same_neuron1(2)}); colorbar
+    hold on; 
+    plot(bounds_mean{1}(:,2),bounds_mean{1}(:,1),'r');
+    hold off
+    xlim(bounds_plot_x); ylim(bounds_plot_y);
+    title(['NeuronMean: 1st session neuron = ' num2str(same_neuron1(2)) '. 2nd session =  ' num2str(same_neuron_list(j))])
+    
+    waitforbuttonpress
+end
+

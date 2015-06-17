@@ -23,6 +23,10 @@ function [ neuron_map] = image_register_simple( mouse_name, base_date, base_sess
 %       of neurons.  1 - used only in conjunction with multi_image_reg -
 %       uses AllMasks from Reg_NeuronID for future registrations
 %
+%       'check_multiple_mapping': (optional) scroll through multiple
+%       mapping neurons - 2nd session neuron is in a red outline, 1st
+%       session neurons will be in yellow
+%
 %   OUTPUTS 
 %       neuron_map contains the following fields and is also saved in the
 %       base directory:
@@ -55,12 +59,19 @@ function [ neuron_map] = image_register_simple( mouse_name, base_date, base_sess
 min_thresh = 3; % distance in pixels beyond which we consider a cell a different cell
 manual_reg_enable = 0; % 0 = do not allow manual adjustment of registration
 
-%% Determine if multiple sessions are happening
+%% Determine if multiple sessions are happening, or if debug_escape is specified
 
 multi_reg = 0;
+debug_escape = 0;
 for j = 1:length(varargin)
    if strcmpi('multi_reg',varargin{j})
        multi_reg = varargin{j+1};
+   end
+   if strcmpi('debug_escape',varargin{j})
+      debug_escape = varargin{j+1};
+   end
+   if strcmpi('check_multiple_mapping',varargin{j})
+       check_multiple_mapping = varargin{j+1};
    end
 end
 
@@ -94,7 +105,9 @@ try
 catch
 %% Get centers-of-mass of all cells after registering 2nd image to 1st image
 for k = 1:2
+    % Load Neuron Masks and average activation
     load(fullfile(sesh(k).folder, 'ProcOut.mat'),'NeuronImage');
+    load(fullfile(sesh(k).folder, 'MeanBlobs.mat'),'BinBlobs');
     if k == 2 % Don't get registration info if base session
         
         [tform_struct ] = get_reginfo(sesh(1).folder, sesh(2).folder, RegistrationInfoX );
@@ -105,25 +118,44 @@ for k = 1:2
     if k == 1 && multi_reg == 1
         load(fullfile(sesh(1).folder,'Reg_NeuronIDs.mat'));
         NeuronImage = Reg_NeuronIDs(1).AllMasks;
+        BinBlobs = Reg_NeuronIDs(1).AllMasksMean;
     end
     
     disp(['Calculating cell center of masses for session ' num2str(k)])
     for j = 1:size(NeuronImage,2);
         temp = NeuronImage{j};
-        if k == 2 % Don't do registration if base session
+        temp2 = BinBlobs{j};
+        if k == 2 % do registration if in 2nd session
             neuron_image_use = imwarp(temp,RegistrationInfoX.tform,'OutputView',...
                 RegistrationInfoX.base_ref,'InterpolationMethod','nearest');
-        elseif k == 1
+            neuron_mean_use = imwarp(temp2,RegistrationInfoX.tform,'OutputView',...
+                RegistrationInfoX.base_ref,'InterpolationMethod','nearest');
+        elseif k == 1 % Don't do registration if base session
             neuron_image_use = temp;
+            neuron_mean_use = temp2;
         end
-        [it, jt] = find(neuron_image_use == 1);
-        day(k).cms(j).x = mean(jt);
-        day(k).cms(j).y = mean(it);
+%         [it, jt] = find(neuron_image_use == 1);
+        temp3 = regionprops(neuron_image_use,'Centroid');
+%         day(k).cms(j).x = mean(jt);
+%         day(k).cms(j).y = mean(it);  
+        % Dump centers-of-mass of neurons into day structure
+        if size(temp3,1) == 1
+            day(k).cms(j).x = temp3.Centroid(1);
+            day(k).cms(j).y = temp3.Centroid(2);
+        else % If multiple blobs are present for a neuron, only use the largest one
+            temp4 = regionprops(neuron_image_use,'ConvexArea');
+            sizes = arrayfun(@(a) a.ConvexArea,temp4);
+            blob_use = max(sizes) == sizes;
+            day(k).cms(j).x = temp3(blob_use).Centroid(1);
+            day(k).cms(j).x = temp3(blob_use).Centroid(2);
+        end
+        
         day(k).NeuronImage_reg{j} = neuron_image_use;
+        day(k).NeuronMean_reg{j} = neuron_mean_use;
     end
 end
 
-%% Get distance to all other cells
+%% Get distance to all other neurons
 disp('Calculating Distances between cells')
 for j = 1:size(day(1).cms,2);
     pos_cm(:,1) = [day(1).cms(j).x ; day(1).cms(j).y];
@@ -135,7 +167,7 @@ for j = 1:size(day(1).cms,2);
     end
 end
 
-cm_dist_min = min(cm_dist,[],2);
+cm_dist_min = min(cm_dist,[],2); % Get minimum distance to nearest neighbor for all cells
 
 % exclude cells whose closest neighbor exceeds the distance threshold you
 % set
@@ -150,24 +182,48 @@ for j = 1:length(cm_dist_min)
     
 end
 
+neuron_id_temp = neuron_id; % Save neuron_id for later debugging purposes
 %% Look for false positives due to multiple cells in the 1st session mapping
 % to a single cell in the 2nd session
-
 disp('Sorting out multiple base session cells mapping to the same cell in the second session')
 % Initialize same_neuron variable
 same_neuron = zeros(size(day(1).NeuronImage_reg,2),size(day(2).NeuronImage_reg,2));
-for j = 1:size(neuron_id,1);
+neuron_id_nan = neuron_id;
+for j = 1:size(day(2).NeuronImage_reg,2);
+    j;
     % Find cases where more than one neuron in the 1st session maps to
     % the same neuron in the second session
     same_ind = find(cellfun(@(a) ~isempty(a) && a == j,neuron_id));
     if length(same_ind) > 1
+%         keyboard
+        overlap_ratio = zeros(1,length(same_ind)); % Pre-allocate
         for k = 1:length(same_ind)
             % Note neurons in the 1st session that map to the same cell
             % in the 2nd session and set their values to NaN in the
             % neuron_id variable
             same_neuron(same_ind(k),j) = 1;
-            %                 neuron_id{j} = nan;
-            neuron_id{same_ind(k)} = nan;
+            neuron_id_nan{same_ind(k)} = nan;
+            overlap_pixels = sum(day(1).NeuronMean_reg{same_ind(k)}(:) & ...
+                day(2).NeuronMean_reg{j}(:));
+            total_pixels = sum(day(1).NeuronMean_reg{same_ind(k)}(:) | ...
+                day(2).NeuronMean_reg{j}(:));
+%             min_neuron_size = min([sum(day(1).NeuronMean_reg{same_ind(k)}(:)) ...
+%                 sum(day(2).NeuronMean_reg{j}(:))]);
+%             overlap_ratio(k) = overlap_pixels/min_neuron_size; 
+            overlap_ratio(k) = overlap_pixels/total_pixels;
+        end
+        % Get neuron whose mask has the most overlap with the cell in the registration session
+        most_overlap = max(overlap_ratio) == overlap_ratio; 
+        least_overlap = find(~most_overlap);
+        if sum(most_overlap) == 1 % Only choose the cell with the most overlap if it is truly the most
+            neuron_id{same_ind(most_overlap)} = j;   
+        elseif sum(most_overlap) > 1 % send all to nans if more than one neuron is completely inside the other
+            for m = 1: length(most_overlap)
+                neuron_id{same_ind(most_overlap(m))} = nan;
+            end
+        end
+        for m = 1:length(least_overlap)
+            neuron_id{same_ind(least_overlap(m))} = nan;
         end
     end
     
@@ -225,6 +281,68 @@ title('1 = session 1, 2 = session 2, 3 = both sessions')
 
         end
 
+    end
+    
+    %% Check multiple mapping neurons
+    
+    if exist('check_multiple_mapping','var') && check_multiple_mapping == 1
+        same_neuron_list = find(sum(same_neuron,1));
+        figure(200)
+        for j = 1:length(same_neuron_list)
+            % Get boundaries of 2nd session neuron
+            bounds_image = bwboundaries(day(2).NeuronImage_reg{same_neuron_list(j)});
+            bounds_mean = bwboundaries(day(2).NeuronMean_reg{same_neuron_list(j)});
+            same_neuron1 = find(same_neuron(:,same_neuron_list(j)));
+            temp_image = zeros(size(day(1).NeuronImage_reg{1}));
+            temp_mean = zeros(size(day(1).NeuronImage_reg{1}));
+            for k = 1:length(same_neuron1)
+                temp_image = temp_image + day(1).NeuronImage_reg{same_neuron1(k)};
+                temp_mean = temp_mean + day(1).NeuronMean_reg{same_neuron1(k)};
+            end
+            
+            bounds_plot_x = [min(bounds_mean{1}(:,2))-5 max(bounds_mean{1}(:,2))+5];
+            bounds_plot_y = [min(bounds_mean{1}(:,1))-5 max(bounds_mean{1}(:,1))+5];
+            
+            subplot(2,2,1)
+            imagesc(day(1).NeuronImage_reg{same_neuron1(1)}); colorbar
+            hold on;
+            plot(bounds_image{1}(:,2),bounds_image{1}(:,1),'r');
+            hold off
+            xlim(bounds_plot_x); ylim(bounds_plot_y);
+            title(['NeuronImage: 1st session neuron = ' num2str(same_neuron1(1)) '. 2nd session =  ' num2str(same_neuron_list(j))])
+            
+            subplot(2,2,2)
+            imagesc(day(1).NeuronImage_reg{same_neuron1(2)}); colorbar
+            hold on;
+            plot(bounds_image{1}(:,2),bounds_image{1}(:,1),'r');
+            hold off
+            xlim(bounds_plot_x); ylim(bounds_plot_y);
+            title(['NeuronImage: 1st session neuron = ' num2str(same_neuron1(2)) '. 2nd session =  ' num2str(same_neuron_list(j))])
+            
+            subplot(2,2,3)
+            imagesc(day(1).NeuronMean_reg{same_neuron1(1)}); colorbar
+            hold on;
+            plot(bounds_mean{1}(:,2),bounds_mean{1}(:,1),'r');
+            hold off
+            xlim(bounds_plot_x); ylim(bounds_plot_y);
+            title(['NeuronMean: 1st session neuron = ' num2str(same_neuron1(1)) '. 2nd session =  ' num2str(same_neuron_list(j))])
+            
+            subplot(2,2,4)
+            imagesc(day(1).NeuronMean_reg{same_neuron1(2)}); colorbar
+            hold on;
+            plot(bounds_mean{1}(:,2),bounds_mean{1}(:,1),'r');
+            hold off
+            xlim(bounds_plot_x); ylim(bounds_plot_y);
+            title(['NeuronMean: 1st session neuron = ' num2str(same_neuron1(2)) '. 2nd session =  ' num2str(same_neuron_list(j))])
+            
+            waitforbuttonpress
+        end
+
+    end
+    
+    %% Escape to keyboard for debugging if specified
+    if debug_escape == 1
+        keyboard
     end
 
 %% Find how many cells don't map onto the second session. 
