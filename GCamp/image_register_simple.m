@@ -155,15 +155,34 @@ for k = 1:2
     end
 end
 
+% keyboard
 %% Get distance to all other neurons
 disp('Calculating Distances between cells')
-for j = 1:size(day(1).cms,2);
-    pos_cm(:,1) = [day(1).cms(j).x ; day(1).cms(j).y];
-    for m = 1:size(day(2).cms,2)
-        pos_cm(:,2) = [day(2).cms(m).x ; day(2).cms(m).y];
-        temp = dist(pos_cm);
-        cm_dist(j,m) = temp(1,2);
-        
+cm_dist = 100*ones(size(day(1).cms,2),size(day(2).cms,2)); % Set all values to arbitrarily large distances to start.
+for j = 1:size(day(1).cms,2); % Cycle through all base session neurons
+    if ~isempty(day(1).cms(j).x)
+        pos_cm(:,1) = [day(1).cms(j).x ; day(1).cms(j).y];
+        for m = 1:size(day(2).cms,2) % get distances to all registration session neurons
+            if ~isempty(day(2).cms(m).x)
+                try % Error catching try/catch statement
+                    pos_cm(:,2) = [day(2).cms(m).x ; day(2).cms(m).y];
+                catch
+                    disp(['Error at j = ' num2str(j) ' & m = ' num2str(m)])
+                    keyboard
+                end
+                temp = dist(pos_cm);
+                cm_dist(j,m) = temp(1,2);
+            elseif isempty(day(2).cms(m).x)
+                % Edge case where one of the neurons has disappeared during
+                % registration (probably due to being near the edge of the 
+                % screen - shouldn't happen if you are using the same base
+                % session for both Tenaspis and multi_image_reg, but can if you
+                % are doing independent registrations
+                cm_dist(j,m) = 100; % Set distance to very far for these neurons so they never get mapped to another neuron
+            end
+        end
+    elseif isempty(day(1).cms(j).x)
+        cm_dist(j,:) = 100*ones(size(cm_dist(j,:)));
     end
 end
 
@@ -190,7 +209,6 @@ disp('Sorting out multiple base session cells mapping to the same cell in the se
 same_neuron = zeros(size(day(1).NeuronImage_reg,2),size(day(2).NeuronImage_reg,2));
 neuron_id_nan = neuron_id;
 for j = 1:size(day(2).NeuronImage_reg,2);
-    j;
     % Find cases where more than one neuron in the 1st session maps to
     % the same neuron in the second session
     same_ind = find(cellfun(@(a) ~isempty(a) && a == j,neuron_id));
