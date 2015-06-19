@@ -286,3 +286,75 @@ for j = 1:length(same_neuron_list)
     waitforbuttonpress
 end
 
+%% Scroll through cells mapped to the same neuron after multi session registration
+all_map = Reg_NeuronIDs(1).all_session_map;
+
+currdir = cd;
+ChangeDirectory(Reg_NeuronIDs(1).mouse,Reg_NeuronIDs(1).base_date,...
+    Reg_NeuronIDs(1).base_session);
+mouse = Reg_NeuronIDs(1).mouse;
+load('ProcOut.mat','NeuronImage')
+sesh(1).NeuronImage_reg = NeuronImage;
+sesh(1).Date = Reg_NeuronIDs(1).base_date;
+sesh(1).Session = Reg_NeuronIDs(1).base_session;
+% Go through each registered session, load each sessions neuron masks,
+% register them to the base session, and then display them
+for j = 1:length(Reg_NeuronIDs)
+    load_filename = fullfile(Reg_NeuronIDs(j).base_path,['RegistrationInfo-'...
+        mouse '-' Reg_NeuronIDs(j).reg_date '-session' ...
+        num2str(Reg_NeuronIDs(j).reg_session) '.mat']);
+    load(load_filename);
+    sesh(j+1).reginfo = RegistrationInfoX;
+    load(fullfile(Reg_NeuronIDs(j).reg_path,'\ProcOut.mat'),'NeuronImage');
+    % Register each mask in that session to the base
+    disp(['Registering session ' num2str(j+1) ' neuron masks'])
+    for k = 1:length(NeuronImage)
+        sesh(j+1).NeuronImage_reg{k} = imwarp_NK(NeuronImage{k},RegistrationInfoX);
+    end
+    sesh(j+1).Date = Reg_NeuronIDs(j).reg_date;
+    sesh(j+1).Session = Reg_NeuronIDs(j).reg_session;
+end
+
+%%
+figure(100)
+n_total = size(all_map,2)+1;
+n_sesh = size(all_map,2)-1;
+num_neurons = size(all_map,1)-1;
+empty_neuron = zeros(size(sesh(1).NeuronImage_reg{1}));
+nan_neuron = nan*ones(size(sesh(1).NeuronImage_reg{1}));
+for j = 1:num_neurons
+    neuron_plot_all = empty_neuron;
+    n = 1;
+    bounds_use = [];
+   for k = 1:n_sesh
+       neuron_ind = all_map{j,k+1};
+       subplot_auto(n_total,k)
+       if isempty(neuron_ind)
+           neuron_plot = empty_neuron;
+       elseif isnan(neuron_ind)
+           neuron_plot = nan_neuron;
+       else
+           neuron_plot = sesh(k).NeuronImage_reg{neuron_ind};
+           neuron_plot_all = neuron_plot_all + neuron_plot;
+           if isempty(bounds_use)
+               bounds_image = bwboundaries(neuron_plot);
+               bounds_use(1,:) = [min(bounds_image{1}(:,2)) - 5, max(bounds_image{1}(:,2)) + 5];
+               bounds_use(2,:) = [min(bounds_image{1}(:,1)) - 5, max(bounds_image{1}(:,1)) + 5];
+           end
+       end
+       imagesc(neuron_plot)
+       xlim(bounds_use(1,:)); ylim(bounds_use(2,:)); 
+       title(['Neuron # ' num2str(neuron_ind) ' from ' sesh(k).Date ' Session ' ...
+           num2str(sesh(k).Session)])
+       % Put in title of each neuron and session date here
+       % Scale each neuron the same!
+   end
+   subplot_auto(n_total,n_total)
+   imagesc(neuron_plot_all);
+   xlim(bounds_use(1,:)); ylim(bounds_use(2,:)); 
+   title('All Neurons overlaid')
+   % Include heat map and/or firing plot!
+   % Scale bars the same!
+   
+   waitforbuttonpress
+end

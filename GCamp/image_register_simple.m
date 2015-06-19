@@ -136,43 +136,43 @@ for k = 1:2
         end
 %         [it, jt] = find(neuron_image_use == 1);
         temp3 = regionprops(neuron_image_use,'Centroid');
-%         day(k).cms(j).x = mean(jt);
-%         day(k).cms(j).y = mean(it);  
+%         sesh(k).cms(j).x = mean(jt);
+%         sesh(k).cms(j).y = mean(it);  
         % Dump centers-of-mass of neurons into day structure
         if size(temp3,1) == 1
-            day(k).cms(j).x = temp3.Centroid(1);
-            day(k).cms(j).y = temp3.Centroid(2);
+            sesh(k).cms(j).x = temp3.Centroid(1);
+            sesh(k).cms(j).y = temp3.Centroid(2);
         else % If multiple blobs are present for a neuron, only use the largest one
             temp4 = regionprops(neuron_image_use,'ConvexArea');
             sizes = arrayfun(@(a) a.ConvexArea,temp4);
             blob_use = max(sizes) == sizes;
-            day(k).cms(j).x = temp3(blob_use).Centroid(1);
-            day(k).cms(j).x = temp3(blob_use).Centroid(2);
+            sesh(k).cms(j).x = temp3(blob_use).Centroid(1);
+            sesh(k).cms(j).x = temp3(blob_use).Centroid(2);
         end
         
-        day(k).NeuronImage_reg{j} = neuron_image_use;
-        day(k).NeuronMean_reg{j} = neuron_mean_use;
+        sesh(k).NeuronImage_reg{j} = neuron_image_use;
+        sesh(k).NeuronMean_reg{j} = neuron_mean_use;
     end
 end
 
 % keyboard
 %% Get distance to all other neurons
 disp('Calculating Distances between cells')
-cm_dist = 100*ones(size(day(1).cms,2),size(day(2).cms,2)); % Set all values to arbitrarily large distances to start.
-for j = 1:size(day(1).cms,2); % Cycle through all base session neurons
-    if ~isempty(day(1).cms(j).x)
-        pos_cm(:,1) = [day(1).cms(j).x ; day(1).cms(j).y];
-        for m = 1:size(day(2).cms,2) % get distances to all registration session neurons
-            if ~isempty(day(2).cms(m).x)
+cm_dist = 100*ones(size(sesh(1).cms,2),size(sesh(2).cms,2)); % Set all values to arbitrarily large distances to start.
+for j = 1:size(sesh(1).cms,2); % Cycle through all base session neurons
+    if ~isempty(sesh(1).cms(j).x)
+        pos_cm(:,1) = [sesh(1).cms(j).x ; sesh(1).cms(j).y];
+        for m = 1:size(sesh(2).cms,2) % get distances to all registration session neurons
+            if ~isempty(sesh(2).cms(m).x) && ~isempty(sesh(2).cms(m).y)
                 try % Error catching try/catch statement
-                    pos_cm(:,2) = [day(2).cms(m).x ; day(2).cms(m).y];
+                    pos_cm(:,2) = [sesh(2).cms(m).x ; sesh(2).cms(m).y];
                 catch
                     disp(['Error at j = ' num2str(j) ' & m = ' num2str(m)])
                     keyboard
                 end
                 temp = dist(pos_cm);
                 cm_dist(j,m) = temp(1,2);
-            elseif isempty(day(2).cms(m).x)
+            elseif isempty(sesh(2).cms(m).x)
                 % Edge case where one of the neurons has disappeared during
                 % registration (probably due to being near the edge of the 
                 % screen - shouldn't happen if you are using the same base
@@ -181,7 +181,7 @@ for j = 1:size(day(1).cms,2); % Cycle through all base session neurons
                 cm_dist(j,m) = 100; % Set distance to very far for these neurons so they never get mapped to another neuron
             end
         end
-    elseif isempty(day(1).cms(j).x)
+    elseif isempty(sesh(1).cms(j).x)
         cm_dist(j,:) = 100*ones(size(cm_dist(j,:)));
     end
 end
@@ -206,9 +206,9 @@ neuron_id_temp = neuron_id; % Save neuron_id for later debugging purposes
 % to a single cell in the 2nd session
 disp('Sorting out multiple base session cells mapping to the same cell in the second session')
 % Initialize same_neuron variable
-same_neuron = zeros(size(day(1).NeuronImage_reg,2),size(day(2).NeuronImage_reg,2));
+same_neuron = zeros(size(sesh(1).NeuronImage_reg,2),size(sesh(2).NeuronImage_reg,2));
 neuron_id_nan = neuron_id;
-for j = 1:size(day(2).NeuronImage_reg,2);
+for j = 1:size(sesh(2).NeuronImage_reg,2);
     % Find cases where more than one neuron in the 1st session maps to
     % the same neuron in the second session
     same_ind = find(cellfun(@(a) ~isempty(a) && a == j,neuron_id));
@@ -221,12 +221,12 @@ for j = 1:size(day(2).NeuronImage_reg,2);
             % neuron_id variable
             same_neuron(same_ind(k),j) = 1;
             neuron_id_nan{same_ind(k)} = nan;
-            overlap_pixels = sum(day(1).NeuronMean_reg{same_ind(k)}(:) & ...
-                day(2).NeuronMean_reg{j}(:));
-            total_pixels = sum(day(1).NeuronMean_reg{same_ind(k)}(:) | ...
-                day(2).NeuronMean_reg{j}(:));
-%             min_neuron_size = min([sum(day(1).NeuronMean_reg{same_ind(k)}(:)) ...
-%                 sum(day(2).NeuronMean_reg{j}(:))]);
+            overlap_pixels = sum(sesh(1).NeuronMean_reg{same_ind(k)}(:) & ...
+                sesh(2).NeuronMean_reg{j}(:));
+            total_pixels = sum(sesh(1).NeuronMean_reg{same_ind(k)}(:) | ...
+                sesh(2).NeuronMean_reg{j}(:));
+%             min_neuron_size = min([sum(sesh(1).NeuronMean_reg{same_ind(k)}(:)) ...
+%                 sum(sesh(2).NeuronMean_reg{j}(:))]);
 %             overlap_ratio(k) = overlap_pixels/min_neuron_size; 
             overlap_ratio(k) = overlap_pixels/total_pixels;
         end
@@ -252,7 +252,7 @@ num_notassigned = n;
 
 %% Plot out combined sessions
 for k = 1:2
-    sesh(k).AllNeuronMask = create_AllICmask(day(k).NeuronImage_reg);
+    sesh(k).AllNeuronMask = create_AllICmask(sesh(k).NeuronImage_reg);
 end
 
 figure;
@@ -308,21 +308,21 @@ title('1 = session 1, 2 = session 2, 3 = both sessions')
         figure(200)
         for j = 1:length(same_neuron_list)
             % Get boundaries of 2nd session neuron
-            bounds_image = bwboundaries(day(2).NeuronImage_reg{same_neuron_list(j)});
-            bounds_mean = bwboundaries(day(2).NeuronMean_reg{same_neuron_list(j)});
+            bounds_image = bwboundaries(sesh(2).NeuronImage_reg{same_neuron_list(j)});
+            bounds_mean = bwboundaries(sesh(2).NeuronMean_reg{same_neuron_list(j)});
             same_neuron1 = find(same_neuron(:,same_neuron_list(j)));
-            temp_image = zeros(size(day(1).NeuronImage_reg{1}));
-            temp_mean = zeros(size(day(1).NeuronImage_reg{1}));
+            temp_image = zeros(size(sesh(1).NeuronImage_reg{1}));
+            temp_mean = zeros(size(sesh(1).NeuronImage_reg{1}));
             for k = 1:length(same_neuron1)
-                temp_image = temp_image + day(1).NeuronImage_reg{same_neuron1(k)};
-                temp_mean = temp_mean + day(1).NeuronMean_reg{same_neuron1(k)};
+                temp_image = temp_image + sesh(1).NeuronImage_reg{same_neuron1(k)};
+                temp_mean = temp_mean + sesh(1).NeuronMean_reg{same_neuron1(k)};
             end
             
             bounds_plot_x = [min(bounds_mean{1}(:,2))-5 max(bounds_mean{1}(:,2))+5];
             bounds_plot_y = [min(bounds_mean{1}(:,1))-5 max(bounds_mean{1}(:,1))+5];
             
             subplot(2,2,1)
-            imagesc(day(1).NeuronImage_reg{same_neuron1(1)}); colorbar
+            imagesc(sesh(1).NeuronImage_reg{same_neuron1(1)}); colorbar
             hold on;
             plot(bounds_image{1}(:,2),bounds_image{1}(:,1),'r');
             hold off
@@ -330,7 +330,7 @@ title('1 = session 1, 2 = session 2, 3 = both sessions')
             title(['NeuronImage: 1st session neuron = ' num2str(same_neuron1(1)) '. 2nd session =  ' num2str(same_neuron_list(j))])
             
             subplot(2,2,2)
-            imagesc(day(1).NeuronImage_reg{same_neuron1(2)}); colorbar
+            imagesc(sesh(1).NeuronImage_reg{same_neuron1(2)}); colorbar
             hold on;
             plot(bounds_image{1}(:,2),bounds_image{1}(:,1),'r');
             hold off
@@ -338,7 +338,7 @@ title('1 = session 1, 2 = session 2, 3 = both sessions')
             title(['NeuronImage: 1st session neuron = ' num2str(same_neuron1(2)) '. 2nd session =  ' num2str(same_neuron_list(j))])
             
             subplot(2,2,3)
-            imagesc(day(1).NeuronMean_reg{same_neuron1(1)}); colorbar
+            imagesc(sesh(1).NeuronMean_reg{same_neuron1(1)}); colorbar
             hold on;
             plot(bounds_mean{1}(:,2),bounds_mean{1}(:,1),'r');
             hold off
@@ -346,7 +346,7 @@ title('1 = session 1, 2 = session 2, 3 = both sessions')
             title(['NeuronMean: 1st session neuron = ' num2str(same_neuron1(1)) '. 2nd session =  ' num2str(same_neuron_list(j))])
             
             subplot(2,2,4)
-            imagesc(day(1).NeuronMean_reg{same_neuron1(2)}); colorbar
+            imagesc(sesh(1).NeuronMean_reg{same_neuron1(2)}); colorbar
             hold on;
             plot(bounds_mean{1}(:,2),bounds_mean{1}(:,1),'r');
             hold off
