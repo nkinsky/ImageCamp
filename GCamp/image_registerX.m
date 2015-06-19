@@ -1,37 +1,44 @@
-function [RegistrationInfoX] = image_registerX(base_file, register_file, manual_reg_enable)
-% image_registerX(base_file, register_file)
+function [RegistrationInfoX] = image_registerX(mouse_name, base_date, base_session, reg_date, reg_session, manual_reg_enable, varargin)
+% RegistrationInfoX = image_registerX(mouse_name, base_date, base_session, reg_date, reg_session, manual_reg_enable)
 % Image Registration Function - THIS FUNCTION ONLY REGISTERS ONE IMAGE TO ANOTHER
 % AND DOES NOT DEAL WITH ANY INDIVIDUAL CELLS.
 % this fuction allows you to register a given
 % recording session (the registered session) to a previous sesison ( the
 % base session) to track neuronal activity from session to session.  It
 % also outputs a combined set of ICs so that you can register a given
-% session to multiple previous sessions.  Note that you must enter an
-% approximate rotation if you used a different focuse for the registered
-% file, or else the in-house MATLAB image registration funcRtions won't
-% work...
+% session to multiple previous sessions.  
 %
-% INPUT VARIABLES
-% base_file:    .tif file for the minimimum projection of the motion
-%               corrected ICmovie for the base image.  Needs to be in the
-%               same directory as SignalTrace.mat (or CellRegisterBase.mat
-%               for multiple sessions) to work
-% register_file:.tif file (min projection of the motion corrected ICmovie)
-%               for the image/recording you wish to register to the base
-%               image. Needs to be in the same directory as SignalTrace.mat
-%               to work.  Enter the same file as the base_file if you want
-%               to do a base mapping.
+% INPUT VARIABLES (if none are entered, you will be prompted to enter in
+% the files to register manually)
+% mouse_name:   string with mouse name
+%
+% base_date: date of base session
+%
+% base_session: session number for base session
+%
+% reg_date: date of session to register to base.  List as 'mask' if you are
+% using in conjuction with mask_multi_image_reg.
+%
+% reg_session: session number for session to register to base. List as 'mask' if you are
+% using in conjuction with mask_multi_image_reg.
+%
 % manual_reg_enable: 0 if you want to disallow manually adjusting the
 %               registration, 1 if you want to allow it (default)
+%
+% 'mask_reg': this optional argument MUST be followed by the pathname to
+% the mask file for running Tenaspis
 %
 % OUTPUTS
 % cell_map:     cell array with each row corresponding to a given neuron,
 %               and each column corresponding to a recording session.  The value
 %               corresponds to the GoodICf number from that session for that neuron.
+%
 % cell_map_header: contains info for each column in cell_map
+%
 % GoocICf_comb: combines ICs from the base file and the registered file.
 %               Use this file as the base file for future registrations of
 %               a file to multiple previous sessions.
+%
 % RegistrationInfoX : saves the location of the base file, the registered
 %                file, the transform applied, and statistics about the
 %                transform
@@ -66,33 +73,45 @@ multi_init_rad = 6.25e-4; % optimizer.InitialRadius = 6.25e-3 default
 
 FigNum = 1; % Start off figures at this number
 
+%% Step 0: Get varargins
+
+for j = 1:length(varargin)
+    if strcmpi('mask_reg',varargin{j})
+        mask_reg_file = varargin{j+1};
+    end
+end
+
 %% Step 1: Select images to compare and import the images
 
-if nargin == 0
-    [base_filename, base_path, filterindexbase] = uigetfile('*.tif',...
+if nargin == 0 % Prompt user to manually enter in files to register if no inputs are specified
+    [base_filename, base_path, ~] = uigetfile('*.tif',...
         'Pick the base image file: ');
     base_file = [base_path base_filename];
 
-    [reg_filename, reg_path, filterindexbase] = uigetfile('*.tif',...
+    [reg_filename, reg_path, ~] = uigetfile('*.tif',...
         'Pick the image file to register with the base file: ',[base_path base_filename]);
     register_file = [reg_path reg_filename];
-    cell_merge = 'base';
-elseif nargin == 1
-    error('Please input both a base image and image to register to base file')
-elseif nargin >= 2
-   
-    [base_path,base_filename] = fileparts(base_file);
-    [reg_path,reg_filename] = fileparts(register_file);
-
+    [ mouse_name, reg_date, reg_session ] = get_name_date_session(reg_path);
+else
+    % Create strings to point to minimum projection files in each working
+    % directory for registration
+    currdir = cd;
+    base_path = ChangeDirectory(mouse_name, base_date, base_session);
+    base_file = fullfile(base_path,'ICmovie_min_proj.tif');
+    if ~exist('mask_reg_file','var')
+        reg_path = ChangeDirectory(mouse_name, reg_date, reg_session);
+        register_file = fullfile(reg_path,'ICmovie_min_proj.tif');
+    elseif exist('mask_reg_file','var')
+        register_file = mask_reg_file;
+        reg_date = 'neuron_mask';
+    end
+    cd(currdir)
 end
 
-%% Get date with which you are registering the base file to. This is for loading and saving. 
-[ mouse_name, reg_date, reg_session ] = get_name_date_session(base_file);
-
-% Define unique filename for file you are registering to that you will
+%% Define unique filename for file you are registering to that you will
 % eventually save in the base path
 unique_filename = fullfile(base_path,['RegistrationInfo-' mouse_name '-' reg_date '-session' ...
-        reg_session '.mat']);
+        num2str(reg_session) '.mat']);
 
 %% Step 1a: Skip out on everything if registration is already done!
 try
@@ -265,7 +284,12 @@ end
 FigNum = FigNum + 1;
 
 % Save info into RegistrationInfo data structure.
+RegistrationInfoX(size_info).mouse = mouse_name;
+RegistrationInfoX(size_info).base_date = base_date;
+RegistrationInfoX(size_info).base_session = base_session;
 RegistrationInfoX(size_info).base_file = base_file;
+RegistrationInfoX(size_info).register_date = reg_date;
+RegistrationInfoX(size_info).register_session = reg_session;
 RegistrationInfoX(size_info).register_file = register_file;
 RegistrationInfoX(size_info).tform = tform;
 RegistrationInfoX(size_info).exclude_pixels = exclude_pixels;
