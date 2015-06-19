@@ -1,4 +1,4 @@
-function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,varargin)
+function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,stem_only,varargin)
 %INFO = CalculateSpatialInfo(session)
 %
 %   Finds the spatial information of each neuron according to the formula
@@ -25,7 +25,7 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,varargin)
     
 %% Useful parameters.
     Pix2Cm = 0.15;
-    cmperbin = .5;
+    cmperbin = .25;
 
 %% Align tracking to imaging then rotate. 
     %Align. 
@@ -40,6 +40,9 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,varargin)
 
     NumFrames = size(FT,2); 
     x = rot_x; y = rot_y;
+    
+    %Get section number. 
+    sect = getsection(x,y,'skip_rot_check',1); 
     
 %% Optional: For looking at left/right spatial information in Alternation. 
     if exist('varargin','var')
@@ -75,7 +78,14 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,varargin)
     %Linearize bins. loc_index is a Tx1 vector where T is number of frames.
     %It contains the pixel that the mouse is in at a timestep. 
     loc_index = sub2ind([NumXBins,NumYBins],Xbin,Ybin);
-    bins = unique(loc_index); 
+    
+    if stem_only
+        bins = loc_index(sect(:,2) == 2);
+        bins = unique(bins); 
+    elseif ~stem_only
+        bins = unique(loc_index); 
+    end
+    
     num_bins = length(bins); 
     
 %% Find spatial information.
@@ -108,7 +118,7 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,varargin)
      
     for this_neuron = 1:NumNeurons
         if mod(this_neuron,10) == 0
-            disp(['Calculating spatial information score for neuron #', num2str(this_neuron), '...']); 
+            disp(['Calculating spatial information for neuron #', num2str(this_neuron), '...']); 
         end
         
         %Mean firing rate. 
@@ -126,7 +136,7 @@ function [INFO,p_i,lambda,lambda_i] = CalculateSpatialInfo(session,varargin)
         %give high spatial information to neurons that fire extremely
         %rarely because they will necessarily only fire in one place in
         %that one instance. Below is how Tonegawa does it, but not Skaggs,
-        %but Skaggs used ephys data.
+        %though Skaggs used ephys data.
         INFO(this_neuron) = nansum(p_i.*lambda_i(this_neuron,:).*log2(lambda_i(this_neuron,:)./lambda(this_neuron)));
     end
     

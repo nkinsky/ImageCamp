@@ -30,7 +30,7 @@ function [sect,goal,rot_x,rot_y] = getsection(x,y,varargin)
 %       1. In left goal zone
 %       2. In right goal zone
 
-% keyboard
+
 %% Process vargin
 for j = 1:2:length(varargin)-1
    if strcmpi(varargin{j},'skip_rot_check')

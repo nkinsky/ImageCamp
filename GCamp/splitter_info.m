@@ -1,4 +1,4 @@
-function [L_INFO,R_INFO,active] = splitter_info(session)
+function [L_INFO,R_INFO,active] = splitter_info(session,Alt,TMap)
 %[L_INFO,R_INFO,active] = splitter_info(session)
 %
 %   Finds the spatial information for neurons after sorting alternation
@@ -16,18 +16,10 @@ function [L_INFO,R_INFO,active] = splitter_info(session)
 %       active: Vector containing booleans indicating cells that have place
 %       fields. 
 %
-
-%% Sort trials. 
-    try 
-        load(fullfile(session,'Alternation.mat')); 
-    catch
-        load(fullfile(session,'PlaceMaps.mat'),'x','y','TMap'); 
-        Alt = postrials(x,y,0); 
-    end
     
 %% Parameters.
-    load(fullfile(session,'PlaceMaps.mat'),'TMap'); 
     NumNeurons = size(TMap,2); 
+    stem_only = 1;                  %Do you want to calculate the spatial information based solely on stem visits? 
     
 %% Get left/right frames. 
     NumFrames = max(Alt.frames); 
@@ -39,8 +31,8 @@ function [L_INFO,R_INFO,active] = splitter_info(session)
     right(Alt.choice == 2) = 1; 
 
 %% Find spatial information for left and right trials. 
-    [R_INFO,p_i,L_lambda,L_lambda_i] = CalculateSpatialInfo(session,right); 
-    [L_INFO,p_i,R_lambda,R_lambda_i] = CalculateSpatialInfo(session,left); 
+    [L_INFO,p_i,L_lambda,L_lambda_i] = CalculateSpatialInfo(session,stem_only,left); 
+    [R_INFO,p_i,R_lambda,R_lambda_i] = CalculateSpatialInfo(session,stem_only,right); 
     
     %Get indices of neurons with no active PFs. 
     active = zeros(NumNeurons,1);
@@ -51,4 +43,6 @@ function [L_INFO,R_INFO,active] = splitter_info(session)
     end
     
     active = logical(active); 
+    
+    save Splitter_Info.mat L_INFO R_INFO active;
 end
