@@ -124,6 +124,47 @@ for j = 1:same_index
     waitforbuttonpress;
 end
 
+%% QC for multi_image_reg
+
+folder{1} = 'j:\GCamp Mice\Working\G30\alternation\11_11_2014\Working';
+folder{2} = 'j:\GCamp Mice\Working\G30\alternation\11_12_2014\Working';
+folder{3} = 'j:\GCamp Mice\Working\G30\alternation\11_13_2014\Working\take2';
+
+reg_file{2} = 'RegistrationInfo-G30-11_12_2014-session1.mat';
+reg_file{3} = 'RegistrationInfo-G30-11_13_2014-session1.mat';
+
+for k = 1:3
+    load(fullfile(folder{k},'ProcOut.mat'),'NeuronImage');
+    session(k).neurons = NeuronImage;
+    if k > 1
+        load(fullfile(folder{1},reg_file{k}));
+        session(k).reginfo = RegistrationInfoX;
+    end
+end
+
+figure(560)
+for j = 1208:1220
+   for k = 1:3
+      if isempty(all_map{j,k}) || isnan(all_map{j,k}) || all_map{j,k} > size(session(k).neurons,2)
+          mask{k} = zeros(size(session(1).neurons{1}));
+      else
+          if k == 1
+              mask{k} = session(k).neurons{j};
+          elseif k > 1
+              temp = session(k).neurons{all_map{j,k}};
+              mask{k} = imwarp(temp, session(k).reginfo.tform,'OutputView',...
+                session(k).reginfo.base_ref,'InterpolationMethod','nearest');
+          end
+      end
+   end
+   
+   imagesc(mask{1} + 2*mask{2} + 3*mask{3});
+   colormap jet
+   colorbar
+   
+   waitforbuttonpress
+end
+
 %% More stuff
 
 currdir = cd;
@@ -147,15 +188,173 @@ for j = 1:length(Reg_NeuronIDs)
    end
     
 end
+%% 
+figure(100);
+for i = 1:length(Reg_NeuronIDs)
+    same_neuron = Reg_NeuronIDs(i).same_neuron;
+    multi_neurons = find(sum(same_neuron,1) > 0);
+    for j = 1: length(multi_neurons)
+        temp = find(same_neuron(:,multi_neurons(j))); % Get rows of neurons that map to the same session
+        for k = 1:length(temp)
+            col_num(k) = find(cellfun(@(a) ~isempty(a) && ~isnan(a), all_session_map(temp(1),2:end)),1,'first')+1;
+        end
+        % Put in something here to id if cell is from session 1 or session 2 or
+        % session n and add it in.  Also to create a name identifying it in the
+        % title or savename... will need to register stuff too
+        temp2 = zeros(size(sesh(1).NeuronImage{1}));
+        fig_name = 'Cell ';
+        for k = 1:length(temp)
+            sesh_num = 1;
+            neuron_num = all_session_map{temp(k),sesh_num+1};
+            while isempty(neuron_num)
+                sesh_num = sesh_num + 1;
+                neuron_num = all_session_map{temp(k),sesh_num+1};
+            end
+            temp2 = temp2 + sesh(sesh_num).NeuronImage{neuron_num}*k;
+            if k < length(temp)
+                fig_name = [fig_name num2str(neuron_num) ' from session ' num2str(sesh_num)  ' and ' ];
+            else
+                fig_name = [fig_name num2str(neuron_num) ' from session ' num2str(sesh_num) ...
+                     ' to ' num2str(multi_neurons(j)) ' from session ' num2str(i+1)];
+            end
+        end
+        
+        outlines = bwboundaries(sesh(i+1).NeuronImage{multi_neurons(j)});
+        imagesc(temp2)
+        colorbar
+        hold on
+        plot(outlines{1}(:,2),outlines{1}(:,1),'r');
+        title(fig_name)
+        hold off
+%         waitforbuttonpress
+        %
+        export_fig(fullfile(pwd,'plots',[Reg_NeuronIDs(i).base_date ' to ' Reg_NeuronIDs(i).reg_date], ...
+            fig_name),'-jpg');
+    end
+end
 
-figure(100); 
-for j = 1:11; 
-    temp = find(neuron_map.same_neuron(:,multi_neurons2(j))); 
-    % Put in something here to id if cell is from session 1 or session 2 or
-    % session n and add it in.  Also to create a name identifying it in the
-    % title or savename... will need to register stuff too
-    imagesc(NeuronImage{temp(1)} + 2*NeuronImage{temp(2)} + 3*NeuronImage{temp(3)}); 
-    waitforbuttonpress; 
-    % 
-    export_fig(['Cell ' num2str(temp(1)) ' and ' num2str(temp(2))  ' and ' num2str(temp(3)) ' from 09_29_2014']); 
+%% Check multiple mapping neurons
+same_neuron_list = find(sum(same_neuron,1));
+figure(200)
+for j = 1:length(same_neuron_list)
+    % Get boundaries of 2nd session neuron
+    bounds_image = bwboundaries(day(2).NeuronImage_reg{same_neuron_list(j)});
+    bounds_mean = bwboundaries(day(2).NeuronMean_reg{same_neuron_list(j)});
+    same_neuron1 = find(same_neuron(:,same_neuron_list(j)));
+    temp_image = zeros(size(day(1).NeuronImage_reg{1}));
+    temp_mean = zeros(size(day(1).NeuronImage_reg{1}));
+    for k = 1:length(same_neuron1)
+       temp_image = temp_image + day(1).NeuronImage_reg{same_neuron1(k)};
+       temp_mean = temp_mean + day(1).NeuronMean_reg{same_neuron1(k)};
+    end
+    
+    bounds_plot_x = [min(bounds_mean{1}(:,2))-5 max(bounds_mean{1}(:,2))+5];
+    bounds_plot_y = [min(bounds_mean{1}(:,1))-5 max(bounds_mean{1}(:,1))+5];
+    
+    subplot(2,2,1)
+    imagesc(day(1).NeuronImage_reg{same_neuron1(1)}); colorbar
+    hold on; 
+    plot(bounds_image{1}(:,2),bounds_image{1}(:,1),'r');
+    hold off
+    xlim(bounds_plot_x); ylim(bounds_plot_y);
+    title(['NeuronImage: 1st session neuron = ' num2str(same_neuron1(1)) '. 2nd session =  ' num2str(same_neuron_list(j))])
+    
+    subplot(2,2,2)
+    imagesc(day(1).NeuronImage_reg{same_neuron1(2)}); colorbar
+    hold on; 
+    plot(bounds_image{1}(:,2),bounds_image{1}(:,1),'r');
+    hold off
+    xlim(bounds_plot_x); ylim(bounds_plot_y);
+    title(['NeuronImage: 1st session neuron = ' num2str(same_neuron1(2)) '. 2nd session =  ' num2str(same_neuron_list(j))])
+    
+    subplot(2,2,3)
+    imagesc(day(1).NeuronMean_reg{same_neuron1(1)}); colorbar
+    hold on; 
+    plot(bounds_mean{1}(:,2),bounds_mean{1}(:,1),'r');
+    hold off
+    xlim(bounds_plot_x); ylim(bounds_plot_y);
+    title(['NeuronMean: 1st session neuron = ' num2str(same_neuron1(1)) '. 2nd session =  ' num2str(same_neuron_list(j))])
+    
+    subplot(2,2,4)
+    imagesc(day(1).NeuronMean_reg{same_neuron1(2)}); colorbar
+    hold on; 
+    plot(bounds_mean{1}(:,2),bounds_mean{1}(:,1),'r');
+    hold off
+    xlim(bounds_plot_x); ylim(bounds_plot_y);
+    title(['NeuronMean: 1st session neuron = ' num2str(same_neuron1(2)) '. 2nd session =  ' num2str(same_neuron_list(j))])
+    
+    waitforbuttonpress
+end
+
+%% Scroll through cells mapped to the same neuron after multi session registration
+all_map = Reg_NeuronIDs(1).all_session_map;
+
+currdir = cd;
+ChangeDirectory(Reg_NeuronIDs(1).mouse,Reg_NeuronIDs(1).base_date,...
+    Reg_NeuronIDs(1).base_session);
+mouse = Reg_NeuronIDs(1).mouse;
+load('ProcOut.mat','NeuronImage')
+sesh(1).NeuronImage_reg = NeuronImage;
+sesh(1).Date = Reg_NeuronIDs(1).base_date;
+sesh(1).Session = Reg_NeuronIDs(1).base_session;
+% Go through each registered session, load each sessions neuron masks,
+% register them to the base session, and then display them
+for j = 1:length(Reg_NeuronIDs)
+    load_filename = fullfile(Reg_NeuronIDs(j).base_path,['RegistrationInfo-'...
+        mouse '-' Reg_NeuronIDs(j).reg_date '-session' ...
+        num2str(Reg_NeuronIDs(j).reg_session) '.mat']);
+    load(load_filename);
+    sesh(j+1).reginfo = RegistrationInfoX;
+    load(fullfile(Reg_NeuronIDs(j).reg_path,'\ProcOut.mat'),'NeuronImage');
+    % Register each mask in that session to the base
+    disp(['Registering session ' num2str(j+1) ' neuron masks'])
+    for k = 1:length(NeuronImage)
+        sesh(j+1).NeuronImage_reg{k} = imwarp_NK(NeuronImage{k},RegistrationInfoX);
+    end
+    sesh(j+1).Date = Reg_NeuronIDs(j).reg_date;
+    sesh(j+1).Session = Reg_NeuronIDs(j).reg_session;
+end
+
+%%
+figure(100)
+n_total = size(all_map,2)+1;
+n_sesh = size(all_map,2)-1;
+num_neurons = size(all_map,1)-1;
+empty_neuron = zeros(size(sesh(1).NeuronImage_reg{1}));
+nan_neuron = nan*ones(size(sesh(1).NeuronImage_reg{1}));
+for j = 1:num_neurons
+    neuron_plot_all = empty_neuron;
+    n = 1;
+    bounds_use = [];
+   for k = 1:n_sesh
+       neuron_ind = all_map{j,k+1};
+       subplot_auto(n_total,k)
+       if isempty(neuron_ind)
+           neuron_plot = empty_neuron;
+       elseif isnan(neuron_ind)
+           neuron_plot = nan_neuron;
+       else
+           neuron_plot = sesh(k).NeuronImage_reg{neuron_ind};
+           neuron_plot_all = neuron_plot_all + neuron_plot;
+           if isempty(bounds_use)
+               bounds_image = bwboundaries(neuron_plot);
+               bounds_use(1,:) = [min(bounds_image{1}(:,2)) - 5, max(bounds_image{1}(:,2)) + 5];
+               bounds_use(2,:) = [min(bounds_image{1}(:,1)) - 5, max(bounds_image{1}(:,1)) + 5];
+           end
+       end
+       imagesc(neuron_plot)
+       xlim(bounds_use(1,:)); ylim(bounds_use(2,:)); 
+       title(['Neuron # ' num2str(neuron_ind) ' from ' sesh(k).Date ' Session ' ...
+           num2str(sesh(k).Session)])
+       % Put in title of each neuron and session date here
+       % Scale each neuron the same!
+   end
+   subplot_auto(n_total,n_total)
+   imagesc(neuron_plot_all);
+   xlim(bounds_use(1,:)); ylim(bounds_use(2,:)); 
+   title('All Neurons overlaid')
+   % Include heat map and/or firing plot!
+   % Scale bars the same!
+   
+   waitforbuttonpress
 end

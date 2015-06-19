@@ -1,4 +1,4 @@
-function data = postrials(x,y,plot_each_trial,varargin)
+function Alt = postrials(x,y,plot_each_trial,varargin)
 %function data = postrials(x,y,plot_each_trial,...)
 %   
 %   This function takes mouse position data and sorts them into trial
@@ -28,6 +28,7 @@ function data = postrials(x,y,plot_each_trial,varargin)
 %           alt = Correct (1) vs. incorrect (0). 
 %           x = X position.
 %           y = Y position.
+%           section = section number. Refer to getsection.m. 
 %           summary = Summary of trials. The first column is trial number
 %           followed by left/right and correct/incorrect in the same format
 %           as above. 
@@ -49,7 +50,7 @@ if ~exist('skip_rot_check','var')
 end
 
 %% Label position data with section numbers. 
-    [sect,goal] = getsection(x,y,'skip_rot_check',skip_rot_check);
+    [sect,goal,rot_x,rot_y] = getsection(x,y,'skip_rot_check',skip_rot_check);
     
 %% Define important section numbers. 
     %Define sequences of section numbers that correspond to left or right
@@ -144,11 +145,11 @@ end
     
     %Display number of trials sorted. 
     if ~exist('suppress_output','var') || suppress_output ~= 1
-    disp(['Successfully sorted ', num2str(numtrials), ' trials.']); 
+        disp(['Successfully sorted ', num2str(numtrials), ' trials.']); 
     end
     
 %% Build up the struct. 
-    data.frames = 1:length(x);          %Frames.
+    Alt.frames = 1:length(x);          %Frames.
     
     %Vector containing correct vs. error using a trick: take the difference
     %between consecutive trial types (left (1) vs. right (2)) such that
@@ -162,27 +163,27 @@ end
     for this_trial = 1:numtrials
         next = this_trial+1; 
 
-        data.trial(epochs(this_trial):epochs(next)) = this_trial; 
-        data.choice(epochs(this_trial):epochs(next)) = trialtype(this_trial); 
-        data.alt(epochs(this_trial):epochs(next)) = alt(this_trial); 
+        Alt.trial(epochs(this_trial):epochs(next)) = this_trial; 
+        Alt.choice(epochs(this_trial):epochs(next)) = trialtype(this_trial); 
+        Alt.alt(epochs(this_trial):epochs(next)) = alt(this_trial); 
     end
     
     %This script may not cover the entire session. If that's the case, pad
     %the rest of it with 0s or NaNs.
-    if length(data.trial) < length(x)
-        data.trial(end:length(x)) = 0; 
-        data.choice(end:length(x)) = 0;
-        data.alt(end:length(x)) = NaN;      %NaNs so that the last uncaptured trials don't register as errors. 
+    if length(Alt.trial) < length(x)
+        Alt.trial(end:length(x)) = 0; 
+        Alt.choice(end:length(x)) = 0;
+        Alt.alt(end:length(x)) = NaN;      %NaNs so that the last uncaptured trials don't register as errors. 
     end
     
     %Mouse position. 
-    data.x = x;                 %X position.
-    data.y = y;                 %Y position. 
-    data.section = sect(:,2)';  %Section number. Refer to getsection.m.
+    Alt.x = rot_x;                 %X position.
+    Alt.y = rot_y;                 %Y position. 
+    Alt.section = sect(:,2)';      %Section number. Refer to getsection.m.
     
     %Summary. 
-    data.summary = [(1:numtrials)', trialtype', alt']; 
+    Alt.summary = [(1:numtrials)', trialtype', alt']; 
     
     %Save. 
-    save Alternation data;
+    save Alternation Alt;
 end

@@ -24,8 +24,11 @@ end
 
 
 currdir = cd;
-ChangeDirectory(base_mds.Animal, base_mds.Date, base_mds.Session);
+% Load Registration Session Neuron masks
+ChangeDirectory(base_mds.Animal, reg_mds.Date, reg_mds.Session);
 load('ProcOut.mat','NeuronImage');
+% Load Registration Info between base and register sessions
+ChangeDirectory(base_mds.Animal, base_mds.Date, base_mds.Session);
 load(['RegistrationInfo-' base_mds.Animal '-' reg_mds.Date ...
     '-session' num2str(reg_mds.Session)]);
 
