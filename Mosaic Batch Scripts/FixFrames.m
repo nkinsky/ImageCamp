@@ -54,7 +54,7 @@ function FixFrames(filename)
         goodframes = input('Are these all bad frames? If not, enter frame numbers. Otherwise, leave empty. ', 's');
         goodframes = str2num(goodframes); 
         if ~isempty(goodframes)
-            badframes(badframes == goodframes) = []; 
+            badframes(ismember(badframes,goodframes)) = []; 
         end
     end
     
@@ -76,5 +76,7 @@ function FixFrames(filename)
         delete(filename); 
         FileRename(outputname,filename);
     end
+    
+    save([filename(1:end-4), 'fixed.mat'],'badframes'); 
     
 end

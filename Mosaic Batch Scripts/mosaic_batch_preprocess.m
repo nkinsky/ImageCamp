@@ -37,8 +37,10 @@ for i=1:num_files
     
     for j=1:numchunks
         filetofix = chunks(j).name;
-        disp(['Checking ', filetofix, ' for bad frames...']);
-        FixFrames(filetofix); 
+        if ~exist([filetofix(1:end-4),'fixed.mat'],'file');
+            disp(['Checking ', filetofix, ' for bad frames...']);
+            FixFrames(filetofix); 
+        end
     end
 end
 
