@@ -107,7 +107,13 @@ catch
 for k = 1:2
     % Load Neuron Masks and average activation
     load(fullfile(sesh(k).folder, 'ProcOut.mat'),'NeuronImage');
-    load(fullfile(sesh(k).folder, 'MeanBlobs.mat'),'BinBlobs');
+    try
+        load(fullfile(sesh(k).folder, 'MeanBlobs.mat'),'BinBlobs');
+    catch
+        disp(['Running MakeMeanBlobs for session ' num2str(k) ' - this may take awhile'])
+        load(fullfile(sesh(k).folder,'ProcOut.mat'),'c','cTon','GoodTrs');
+        MakeMeanBlobs(c,cTon,GoodTrs)
+    end
     if k == 2 % Don't get registration info if base session
         
         [tform_struct ] = get_reginfo(sesh(1).folder, sesh(2).folder, RegistrationInfoX );
