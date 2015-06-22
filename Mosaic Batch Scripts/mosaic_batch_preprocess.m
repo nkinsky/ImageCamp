@@ -25,6 +25,25 @@ else
     num_files = 1;
 end
 
+%% Step 1.32: Fix bad frames
+for i=1:num_files
+    if num_files > 1
+        thisfile = filename{i}(1:end-4); 
+    elseif num_files == 1
+        thisfile = filename(1:end-4); 
+    end
+    chunks = dir([thisfile, '*.tif']); 
+    numchunks = length(chunks);
+    
+    for j=1:numchunks
+        filetofix = chunks(j).name;
+        if ~exist([filetofix(1:end-4),'fixed.mat'],'file');
+            disp(['Checking ', filetofix, ' for bad frames...']);
+            FixFrames(filetofix); 
+        end
+    end
+end
+
 %% Step 1.33: Load files
 
 for j = 1:num_files
