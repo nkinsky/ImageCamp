@@ -1,5 +1,5 @@
-function [bounds,rot_x,rot_y] = sections(x,y,skip_rot_check)
-%function sections(x,y)
+function [bounds,rot_x,rot_y, rotang] = sections(x,y,skip_rot_check)
+%function [bounds,rot_x,rot_y, rot_ang] = sections(x,y,skip_rot_check)
 %   
 %   This function takes position data and partitions the maze into
 %   sections. 
