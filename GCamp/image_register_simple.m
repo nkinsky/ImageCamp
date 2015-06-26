@@ -153,13 +153,21 @@ for k = 1:2
             sizes = arrayfun(@(a) a.ConvexArea,temp4);
             blob_use = max(sizes) == sizes;
             sesh(k).cms(j).x = temp3(blob_use).Centroid(1);
-            sesh(k).cms(j).x = temp3(blob_use).Centroid(2);
+            sesh(k).cms(j).y = temp3(blob_use).Centroid(2);
         end
         
         sesh(k).NeuronImage_reg{j} = neuron_image_use;
         sesh(k).NeuronMean_reg{j} = neuron_mean_use;
+        % Dump center of mass info into one array for each session for
+        % later use
+        sesh(k).cms_all(j,:) = [sesh(k).cms(j).x sesh(k).cms(j).y];
     end
+    
+    % Dump cms into arrays
+
 end
+
+
 
 % keyboard
 %% Get distance to all other neurons
@@ -382,11 +390,14 @@ neuron_map.mouse = mouse_name;
 neuron_map.base_date = base_date;
 neuron_map.base_session = base_session;
 neuron_map.base_file = RegistrationInfoX.base_file;
+neuron_map.base_cms = sesh(1).cms_all;
 neuron_map.reg_date = reg_date;
 neuron_map.reg_session = reg_session;
 neuron_map.register_file = RegistrationInfoX.register_file;
+neuron_map.reg_cms = sesh(2).cms_all;
 neuron_map.neuron_id = neuron_id;
 neuron_map.same_neuron = same_neuron;
+ 
 neuron_map.num_bad_cells = num_bad_cells;
 
 if multi_reg == 1
@@ -401,225 +412,4 @@ end % End try/catch statement
 
 
 end
-
-%% Old code we may be able to harvest to get cell overlaps and include for
-% registering cells in some fashion
-
-% new_cell_add = 3;
-% num_reg_ICs = size(reg_data.GoodICf,2);
-%
-% figure(FigNum)
-%
-% if use_manual_adjust == 1
-%     tform = tform_manual;
-% end
-%
-% reg_GoodICf = cellfun(@(a) imwarp(a,tform,'OutputView',imref2d(size(base_image)),'InterpolationMethod','nearest'), ...
-%     reg_data.GoodICf,'UniformOutput',0); % Register each IC to the base image
-%
-% % Create cell map cell variable if one doesn't already exist
-% if base_map == 1
-%     cell_map = cell(size(base_IC,2),2);
-%     cell_overlap = cell(size(base_IC,2),2);
-%     COM_weighted = cell(size(base_IC,2),2);
-%     for j = 1:size(cell_map,1)
-%         cell_map{j,1} = j;
-%         cell_overlap{j,1} = 1;
-%     end
-%     reg_col = 2;
-% elseif base_map == 0
-%     cell_map = base_data.cell_map;
-%     cell_overlap = base_data.cell_overlap;
-%     COM_weighted = base_data.COM_weighted;
-%     cell_map_header = base_data.cell_map_header;
-%     reg_col = size(cell_map,2) + 1;
-% end
-%
-%
-% % Step through each cell in registered image and match to base image cells.
-% % Note that if this is the base mapping, you are registering the GoodICfs
-% % to all the ICs from the base session.
-% overlap = cell(1,size(reg_data.GoodICf,2));
-% overlap_ratio = cell(1,size(reg_data.GoodICf,2));
-%
-%  % Get registered COMs
-%
-%  for j = 1:num_reg_ICs
-%      [reg_COM_weighted{j}(2) reg_COM_weighted{j}(1)] = transformPointsForward(tform,...
-%          reg_data.COM_weighted{j}(2),reg_data.COM_weighted{j}(1));
-%  end
-%
-% % NK Note - need to automate this for base mapping now? All ICs are good,
-% % apparently...
-% base_map_error_cells = [];
-% if base_map == 1
-%     runthrough = input('Do you want to step through and check each cell for the base mapping (y/n)?','s');
-% else
-%     runthrough = 'y';
-% end
-%
-%
-% CLIM_upper = max(max(base_data.AllIC,[],1),[],2) + new_cell_add;
-% h1 = figure(FigNum);
-% if strcmpi(runthrough,'y')
-%     for j = 1:num_reg_ICs
-%         num_cells_total = size(cell_map,1); % Get total number of cells
-%
-%         % Get union of each IC from the base image with the given registered IC
-%         temp = cellfun(@(a) a & reg_GoodICf{j},base_IC, ...
-%             'UniformOutput',0);
-%         overlap{j} = find(cellfun(@(a) sum(sum(a)) > 0,temp));
-%
-%         if ~isempty(overlap{j})
-% %             keyboard
-%             for k = 1:size(overlap{j},2)
-%                 overlap_ratio{j}(k) = sum(sum(temp{overlap{j}(k)}))/...
-%                     sum(sum(base_IC{overlap{j}(k)})); % Get ratio of mask that overlaps with each cell in base image
-%                 if overlap_ratio{j}(k) == 1 % Make overlap ratio > 100% if base IC is completely enveloped by reg IC
-%                    overlap_ratio{j}(k) = sum(sum(reg_GoodICf{j}))...
-%                        /sum(sum(base_IC{overlap{j}(k)}));
-%                 end
-%
-%             end
-%
-%             % Sort from most to least overlap
-%             if size(overlap{j},2) > 1
-%                 ii = [];
-%                 [overlap_ratio{j} ii] = sort(overlap_ratio{j},'descend');
-%                 overlap{j} = overlap{j}(ii);
-%             end
-%
-%             % Auto-assign cells that meet criteria
-%             override = [];
-%             if overlap_ratio{j}(1) >= overlap_auto_same && ...
-%                     sum(overlap_ratio{j} >= overlap_auto_same) == 1 % Auto-assign as same cell (unless more than 1 cell meets the criteria)
-%                 temp2 = overlap{j}(1);
-%                 disp([num2str(j) '/' num2str(num_reg_ICs) ') Automatically assigned to base image cell #' num2str(overlap{j}(1)) ]);
-% %                 override = input('Hit enter to proceed.  Hit "o" to override: ','s');
-%
-%             elseif overlap_ratio{j} < overlap_auto_new % Auto-assign as a new cell
-%                 temp2 = [];
-%                 disp([num2str(j) '/' num2str(num_reg_ICs) ')Automatically assigned as a new cell']);
-% %                 override = input('Hit enter to proceed.  Hit "o" to override: ','s');
-%             else  % Display overlap ratios on the screen if not auto-sorted
-%
-%                 % Calculate limits for plotting
-%                 zoom_pix = 25; % +/- pixels to zoom in
-%                 comb_level = max(max(base_data.AllIC + (base_data.AllIC + new_cell_add*reg_GoodICf{j}),[],1),[],2);
-%                 if comb_level == new_cell_add % catch if entirely new cell
-%                     comb_level = new_cell_add + 1;
-%                 end
-%                 xlim_zoom = [reg_COM_weighted{j}(2) - zoom_pix reg_COM_weighted{j}(2) + zoom_pix];
-%                 ylim_zoom = [reg_COM_weighted{j}(1) - zoom_pix reg_COM_weighted{j}(1) + zoom_pix];
-%
-%                 figure(FigNum)
-%                 subplot(3,3,[1 2 4 5]) % Overall View
-%                 imagesc(base_data.AllIC + new_cell_add*reg_GoodICf{j},[0 CLIM_upper]);
-%                 colorbar('YTick',[0 1 new_cell_add comb_level],'YTickLabel',...
-%                     {'','Base Image Cells','Reg Image Cells','Overlapping Cells'});
-%                 subplot(3,3,9) % Zoom-in View
-%                 imagesc(base_data.AllIC + new_cell_add*reg_GoodICf{j},[0 CLIM_upper]);
-%                 xlim(xlim_zoom); ylim(ylim_zoom);
-%
-%
-%                 for k = 1:size(overlap{j},2)
-%                     disp([num2str(j) '/' num2str(num_reg_ICs) ') This cell overlaps with base image cell #' ...
-%                         num2str(overlap{j}(k)) ' by ' num2str(100*overlap_ratio{j}(k),'%10.f') '%.'])
-%                 end
-%
-%
-%
-%
-%                 figure(FigNum); % For some reason figure 3 gets hidden occassionally when I get to this point, manually overriding. Doesn't work!
-%
-%                 % For cells with multiple overlap, plot out one cell at a time
-%                 % only!
-%                 if size(overlap{j},2) >= 1
-%
-%
-%                     subplot(3,3,3)
-%                     imagesc(base_data.GoodICf_comb{overlap{j}(1)} + new_cell_add*reg_GoodICf{j},[0 CLIM_upper]);
-%                     xlim(xlim_zoom); ylim(ylim_zoom); title(['Overlap with cell ' num2str(overlap{j}(1)) ' only']);
-%
-%                     if size(overlap{j},2) > 1
-%                         subplot(3,3,6)
-%                         imagesc(base_data.GoodICf_comb{overlap{j}(2)} + new_cell_add*reg_GoodICf{j},[0 CLIM_upper]);
-%                         xlim(xlim_zoom); ylim(ylim_zoom); title(['Overlap with cell ' num2str(overlap{j}(2)) ' only']);
-%                     else
-%                         subplot(3,3,6)
-%                         imagesc(zeros(size(base_data.GoodICf_comb{1})),[0 CLIM_upper]);
-%                     end
-%                 else
-%                     subplot(3,3,3)
-%                     imagesc(zeros(size(base_data.GoodICf_comb{1})),[0 CLIM_upper]);
-%                     subplot(3,3,6)
-%                     imagesc(zeros(size(base_data.GoodICf_comb{1})),[0 CLIM_upper]);
-%                 end
-%
-%             end
-%
-%             if base_map == 1
-%                 temp2 = overlap{j}(k); % THIS ISN'T IN A FOR LOOP, NEEDS TO BE CORRECTED/CHECKED
-%                 temp3 = input('Hit enter to confirm.  Enter cell number to log error in mapping this cell: ');
-%                 base_map_error_cells = [base_map_error_cells temp3];
-%             elseif strcmpi(override,'o') && base_map ~= 1 % NRK - make this simpler.  Automatically fill in cell with most overlap, and have user overwrite if not ok...?
-%                 temp2 = input('Enter base image cell number to register with this neuron (enter nothing for new neuron):');
-%                 % Check to make sure you didn't make an obvious error
-%                 if isempty(temp2) || sum(overlap{j} == temp2) == 0 && sum(overlap_ratio{j} >= 0.5) == 1
-%                     % Check if you entered a cell number that doesn't overlap, or
-%                     % new neuron was entered even though there is more than 80%
-%                     % overlap with a cell
-%                     temp2 = input('Possible error detected.  Confirm previous cell number entry: ');
-%                 elseif sum(overlap{j} == temp2) == 1 && overlap_ratio{j}(overlap{j} == temp2) < 0.5
-%                     % Check if you entered the neuron with lesser overlap by
-%                     % accident
-%                     temp2 = input('Possible error detected.  Confirm previous cell number entry: ');
-%                 end
-%
-%             end
-%
-%             if ~isempty(temp2)
-%                 cell_map{temp2,reg_col} = j; % Assign registered image good IC number to appropriate base image IC
-%                 cell_overlap{temp2,reg_col} = overlap_ratio{j}(overlap{j} == temp2); % Track overlap percentage
-%                 COM_weighted{temp2,reg_col} = reg_COM_weighted{j};
-%             elseif isempty(temp2)
-%                 cell_map{num_cells_total+1,reg_col} = j;
-%                 cell_overlap{num_cells_total+1,reg_col} = 1;
-%                 COM_weighted{num_cells_total+1,reg_col} = reg_COM_weighted{j};
-%             end
-%
-%
-%         elseif isempty(overlap{j})
-%
-%             % clear out the zoomed in single cell overlap subplots
-%             subplot(3,3,3)
-%             imagesc(zeros(size(base_data.GoodICf_comb{1})),[0 CLIM_upper]);
-%             subplot(3,3,6)
-%             imagesc(zeros(size(base_data.GoodICf_comb{1})),[0 CLIM_upper]);
-%
-%             disp([num2str(j) '/' num2str(num_reg_ICs) ...
-%                 ') No overlap with previous cells.  Automatically assigned as a new cell'])
-% %
-% %             temp4 = input([num2str(j) '/' num2str(num_reg_ICs) ...
-% %                 ')This cell does not overlap with any cells from base image. Hit any key to proceed.']);
-%             cell_map{num_cells_total+1,reg_col} = j;
-%             cell_overlap{num_cells_total+1,reg_col} = 1;
-%             COM_weighted{num_cells_total+1,reg_col} = reg_COM_weighted{j};
-%         end
-%
-%
-%     end
-% elseif strcmpi(runthrough,'n')
-%     cell_map(:,2) = cell_map(:,1);
-%     [cell_overlap{:,2}] = deal(1);
-%     COM_weighted(:,2) = reg_COM_weighted;
-% end
-%
-% FigNum = FigNum + 1;
-%
-% figure(FigNum) % Plot out combined cells after registration
-% subplot(2,1,1)
-% imagesc(base_data.AllIC+ AllIC_reg*new_cell_add,[0 CLIM_upper]); title('Combined Image Cells'); colormap(jet)
-% h = colorbar('YTick',[0 1 new_cell_add new_cell_add+1],'YTickLabel', {'','Base Image Cells','Reg Image Cells','Overlapping Cells'});
-
 

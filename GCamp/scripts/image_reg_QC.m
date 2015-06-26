@@ -345,7 +345,7 @@ for j = 1:num_neurons
        else
            neuron_plot = sesh(k).NeuronImage_reg{neuron_ind};
            neuron_plot_all = neuron_plot_all + neuron_plot;
-           if isempty(bounds_use)
+           if isempty(bounds_use) % Use the same zoom boundaries for each neuron
                bounds_image = bwboundaries(neuron_plot);
                bounds_use(1,:) = [min(bounds_image{1}(:,2)) - 5, max(bounds_image{1}(:,2)) + 5];
                bounds_use(2,:) = [min(bounds_image{1}(:,1)) - 5, max(bounds_image{1}(:,1)) + 5];
