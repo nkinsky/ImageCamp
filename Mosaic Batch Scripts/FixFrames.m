@@ -43,7 +43,7 @@ function FixFrames(filename)
     if isempty(badframes)
         disp('All frames in this recording are good!');
     elseif ~isempty(badframes)
-        disp('Bad frames detected:');
+        disp('Bad frame(s) detected:');
         for i=1:numbadframes
             disp(badframes(i));
         end
@@ -51,9 +51,11 @@ function FixFrames(filename)
     
     %Manual check. 
     if ~isempty(badframes)
-        goodframes = input('Are these all bad frames? If not, enter frame numbers. Otherwise, leave empty. ', 's');
+        goodframes = input('Manual check for false alarms. Enter good frame numbers or "all". If all frames listed are bad, leave empty. ', 's');
         goodframes = str2num(goodframes); 
-        if ~isempty(goodframes)
+        if strcmp(goodframes, 'all')
+            badframes = []; 
+        elseif ~isempty(goodframes) && ~strcmp(goodframes, 'all')
             badframes(ismember(badframes,goodframes)) = []; 
         end
     end
