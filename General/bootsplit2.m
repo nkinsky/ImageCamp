@@ -1,4 +1,4 @@
-function [bootL,bootR,L_pval,R_pval] = bootsplit2(session,Alt,TMap)
+function [bootL,bootR,pval] = bootsplit2(session,Alt,TMap)
 %
 %
 %
