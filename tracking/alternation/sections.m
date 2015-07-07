@@ -1,5 +1,5 @@
-function [bounds,rot_x,rot_y, rotang] = sections(x,y,skip_rot_check)
-%function [bounds,rot_x,rot_y, rot_ang] = sections(x,y,skip_rot_check)
+function [bounds, rot_x, rot_y, rotang] = sections(x, y, skip_rot_check, varargin)
+% [bounds, rot_x, rot_y, rot_ang] = sections(x, y, skip_rot_check, ...)
 %   
 %   This function takes position data and partitions the maze into
 %   sections. 
@@ -11,6 +11,10 @@ function [bounds,rot_x,rot_y, rotang] = sections(x,y,skip_rot_check)
 %           maze, 1: skip manual check - use this if you know you have already
 %           performed a rotation and have a previously saved 'rotated.mat' file
 %           in the working directory
+%       manual_rot_overwrite(optional): default = 0, 1 will perform manual
+%       rotation even if 'rotated.mat' exists in the working directory.
+%       Use this to overwrite previously performed rotations. Sample use:
+%       sections(x,y,0,'manual_rot_overwrite',1).,
 %
 %   OUTPUTS: 
 %       BOUNDS: Struct containing coordinates for the corners of maze
@@ -28,7 +32,12 @@ function [bounds,rot_x,rot_y, rotang] = sections(x,y,skip_rot_check)
 %           goal_r = in reward zone on right arm.
 %
 
-% keyboard
+%% Get varargins
+for j = 1:length(varargin)
+   if strcmpi(varargin{j},'manual_rot_overwrite') 
+      manual_rot_overwrite = varargin{j+1}; 
+   end
+end
 %% Assign skip_rot_check if not specified
 if ~exist('skip_rot_check','var') || ~exist(fullfile(pwd,'rotated.mat'),'file')
     skip_rot_check = 0;
@@ -39,10 +48,15 @@ while skewed
     
     %Try loading previous rotation angle.
     try 
-        load(fullfile(pwd,'rotated.mat'));   
+        load(fullfile(pwd,'rotated.mat'));
+        % Run the rotation anyway if manual override is specified
+        if manual_rot_overwrite == 1
+           [rot_x,rot_y,rotang] = rotate_traj(x,y);
+        end
     catch
         [rot_x,rot_y,rotang] = rotate_traj(x,y);
     end
+    
     
     %% Get xy coordinate bounds for maze sections.
     xmax = max(rot_x); xmin = min(rot_x);
