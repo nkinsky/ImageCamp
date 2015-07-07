@@ -1,4 +1,4 @@
-function [loc_index,bins,numbins,FT] = SpatBin(FT,ind)
+function [loc_index,bins,allbins,FT,NumXBins,NumYBins] = SpatBin(FT,ind)
 %
 %
 %
@@ -15,7 +15,7 @@ function [loc_index,bins,numbins,FT] = SpatBin(FT,ind)
     try 
         load(fullfile(session,'rotated.mat')); 
     catch
-        [bounds,rot_x,rot_y] = sections(x,y);     
+        [bounds,rot_x,rot_y] = sections(x,y,1);     
     end
 
     x = rot_x; y = rot_y; 
@@ -56,6 +56,5 @@ function [loc_index,bins,numbins,FT] = SpatBin(FT,ind)
     
     %Bin numbers. 
     bins = unique(loc_index); 
-    numbins = length(bins); 
-    
+    allbins = [1:NumXBins*NumYBins]; 
 end

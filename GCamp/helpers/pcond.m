@@ -1,4 +1,4 @@
-function [pBgA,pA,pB] = pcond(a,b)
+function [pBgA,pA,pB] = pcond(a,b,sampsize)
 %x = pcond(a,b)
 %   
 %   Finds the conditional probability of B given A [P(B|A)]. Also the
@@ -6,6 +6,8 @@ function [pBgA,pA,pB] = pcond(a,b)
 %
 %   INPUTS: 
 %       a and b: Logical vectors. 
+%
+%       sampsize: Sample size. 
 %
 %   OUTPUT: 
 %       pAB: P(B|A). As a proportion. 
@@ -15,18 +17,15 @@ function [pBgA,pA,pB] = pcond(a,b)
 %       pB: P(B). 
 
 %% Calculate condition probability. 
-    %Length of the session. 
-    duration = length(a); 
-    
     %P(A & B)
     i = a & b; 
-    pAB = sum(i)/duration;
+    pAB = sum(i)/sampsize;
     
     %P(A) 
-    pA = sum(a)/duration;
+    pA = sum(a)/sampsize;
     
     %P(B)
-    pB = sum(b)/duration; 
+    pB = sum(b)/sampsize; 
     
     %P(B|A)
     pBgA = pAB/pA; 
