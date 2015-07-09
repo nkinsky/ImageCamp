@@ -101,7 +101,7 @@ end
 
 try
     load(map_unique_filename)
-    disp('Registration Already ran! (neuron_map file detected in base directory). Delete file to re-run');
+    disp('Neuron Registration Already ran! (neuron_map file detected in base directory). Delete file to re-run');
 catch
 %% Get centers-of-mass of all cells after registering 2nd image to 1st image
 for k = 1:2
