@@ -1,5 +1,5 @@
 function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
-% Reg_NeuronIDs = multi_image_reg(base_file, num_sessions, ...)
+% Reg_NeuronIDs = multi_image_reg(base_struct, reg_struct, varargin)
 %
 %   Registers a base file to multiple recording sessions and saves these
 %   registrations in a .mat file claled Reg_NeuronIDs.mat in your base file
@@ -206,7 +206,7 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
         is_registered = zeros(size(neuron_map.same_neuron,2),1);
         
         for j = 1:size(neuron_map.same_neuron,2)
-            % Get all neurons in session 2 that map tosum session 1, not including
+            % Get all neurons in session 2 that map to session 1, not including
             % any NaNs
             is_registered(j,1) = sum(cellfun(@(a) ~isempty(a) && a == j,neuron_map.neuron_id)) ~= 0;
            
@@ -228,7 +228,7 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
             AllMasksMean = base_masks_mean;
         end
             
-        % 
+        % Update each neurons's mask to the most recent session
         if update_masks == 1
            id_temp = neuron_map.neuron_id;
            n = size(AllMasks,2);
@@ -241,8 +241,8 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
                       RegistrationInfoX.base_ref,'InterpolationMethod','nearest');
                   temp2 = imwarp(reg_masks_mean{id_temp{kk,1}},RegistrationInfoX.tform,'OutputView',...
                       RegistrationInfoX.base_ref,'InterpolationMethod','nearest');
-                  AllMasks{1,n} = temp; % Update cells masks to include newest session masks
-                  AllMasksMean{1,n} = temp2;
+                  AllMasks{1,kk} = temp; % Update cells masks to include newest session masks
+                  AllMasksMean{1,kk} = temp2;
               end
            end
         end
