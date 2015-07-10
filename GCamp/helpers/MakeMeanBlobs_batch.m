@@ -1,6 +1,6 @@
 function [ ] = MakeMeanBlobs_batch( session_struct, suppress_output )
 % Takes a structure with .Animal, .Date, and .Session and does a batch run
-% of MakeMeanBlobs.  suppress_outpu = 1 updates progress to your screen
+% of MakeMeanBlobs.  suppress_output = 0 updates progress to your screen
 
 for j = 1:length(session_struct)
     ChangeDirectory_NK(session_struct(j));

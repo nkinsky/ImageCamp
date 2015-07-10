@@ -216,6 +216,7 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
         
         % Load registered session Neuron masks so that you can get masks
         % for new file
+        disp('Loading session data and incorporating new neurons into all_neuron_map')
         load(fullfile(reg_path{this_session},'ProcOut.mat'),'NeuronImage');
         load(fullfile(reg_path{this_session},'MeanBlobs.mat'),'BinBlobs');
         reg_masks = NeuronImage;
