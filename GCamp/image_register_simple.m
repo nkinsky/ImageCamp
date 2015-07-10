@@ -235,6 +235,7 @@ for j = 1:size(sesh(2).NeuronImage_reg,2);
             % neuron_id variable
             same_neuron(same_ind(k),j) = 1;
             neuron_id_nan{same_ind(k)} = nan;
+            % Calculate overlapping pixels 
             overlap_pixels = sum(sesh(1).NeuronMean_reg{same_ind(k)}(:) & ...
                 sesh(2).NeuronMean_reg{j}(:));
             total_pixels = sum(sesh(1).NeuronMean_reg{same_ind(k)}(:) | ...
@@ -245,11 +246,11 @@ for j = 1:size(sesh(2).NeuronImage_reg,2);
             overlap_ratio(k) = overlap_pixels/total_pixels;
         end
         % Get neuron whose mask has the most overlap with the cell in the registration session
-        most_overlap = max(overlap_ratio) == overlap_ratio; 
+        most_overlap = find(max(overlap_ratio) == overlap_ratio);
         least_overlap = find(~most_overlap);
-        if sum(most_overlap) == 1 % Only choose the cell with the most overlap if it is truly the most
+        if length(most_overlap) == 1 % Only choose the cell with the most overlap if it is truly the most
             neuron_id{same_ind(most_overlap)} = j;   
-        elseif sum(most_overlap) > 1 % send all to nans if more than one neuron is completely inside the other
+        elseif length(most_overlap) > 1 % send all to nans if more than one neuron is completely inside the other
             for m = 1: length(most_overlap)
                 neuron_id{same_ind(most_overlap(m))} = nan;
             end
