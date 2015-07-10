@@ -2,8 +2,8 @@
 % test
 
 %% 1) Load both Reg_NeuronID files (updatemasks = 0 and updatemasks = 1).
-reg_file_updatemask{1} = 'J:\GCamp Mice\Working\G30\alternation\11_04_2014\Working\Reg_NeuronIDs_updatemasks0.mat';
-reg_file_updatemask{2} = 'J:\GCamp Mice\Working\G30\alternation\11_04_2014\Working\Reg_NeuronIDs_updatemasks1.mat';
+reg_file_updatemask{1} = 'j:\GCamp Mice\Working\G30\alternation\10_16_2014\Working\Reg_NeuronIDs_updatemasks0.mat';
+reg_file_updatemask{2} = 'j:\GCamp Mice\Working\G30\alternation\10_16_2014\Working\Reg_NeuronIDs_updatemasks1.mat';
 
 for j = 1:2
     load(reg_file_updatemask{j})
@@ -54,8 +54,9 @@ end
 % Get limits to compare across - look only at the neurons from the first
 % day plus the new neurons from the second day (hack)
 limits = length(sesh(1).TMap) + length(Reg_NeuronID_trans(j).Reg_NeuronIDs(1).new_neurons);
-trans_test = cellfun(@(a,b) ~((~isempty(a) & isempty(b)) || (isempty(a) & ~isempty(b))) ...
-    && ((isempty(a) & isempty(b)) || (isnan(a) & isnan(b)) || ...
+% look for all neurons that match between each all_neuron_map
+trans_test = cellfun(@(a,b) ~((~isempty(a) && isempty(b)) || (isempty(a) && ~isempty(b))) ...
+    && ((isempty(a) && isempty(b)) || (isnan(a) && isnan(b)) || ...
     (~isempty(a) && ~isnan(a) && ~isempty(b) && ~isnan(b) && (a == b))), ...
     all_session_map(1).map(1:limits,3:end), all_session_map(2).map(1:limits,3:end));
 
@@ -70,9 +71,16 @@ pass_test = find(sum(trans_test,2) == size(trans_test,2)); % neurons that are th
 for j = 1:length(pass_test)
     for k = 1:3
         for ll = k+1:3
-            temp = corrcoef(sesh(k).TMap{all_session_map(1).map(pass_test{j,k})}(:),...
-                sesh(ll).TMap{all_session_map(1).map(pass_test{j,ll})}(:));
-            corr_matrix(k,ll,j) = temp(1,2);
+            sesh1_neuron = all_session_map(1).map{pass_test(j),k+1};
+            sesh2_neuron = all_session_map(1).map{pass_test(j),ll+1};
+            if ~isempty(sesh1_neuron) && ~isempty(sesh2_neuron) && ...
+                    ~isnan(sesh1_neuron) && ~isnan(sesh2_neuron)
+                temp = corrcoef(sesh(k).TMap{sesh1_neuron}(:),...
+                    sesh(ll).TMap{sesh2_neuron}(:));
+                corr_matrix(k,ll,j) = temp(1,2);
+            else
+                corr_matrix(k,ll,j) = nan;
+            end
         end
         
     end
