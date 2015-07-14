@@ -9,7 +9,7 @@ function [inbin,FT,allbins,goodbins,NumXBins,NumYBins] = GetPixLocation(FT,ind)
     
     %Eliminate bins that the mouse visited fewer than two frames. 
     hits = hist(loc_index,bins); 
-    goodbins = bins(hits>=2);
+    goodbins = bins;
     NumBins = length(allbins);
     NumGoodBins = length(goodbins); 
     

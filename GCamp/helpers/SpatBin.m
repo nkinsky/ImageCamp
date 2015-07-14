@@ -4,8 +4,8 @@ function [loc_index,bins,allbins,FT,NumXBins,NumYBins] = SpatBin(FT,ind)
 %
 
 %% Useful parameters. 
-    Pix2Cm = 0.15;
-    cmperbin = .25;
+    Pix2Cm = 0.15;              %Conversion to centimeters. 
+    cmperbin = .25;             %Scaling factor. 
 
 %% Align tracking to imaging then rotate. 
     %Align. 
@@ -18,6 +18,7 @@ function [loc_index,bins,allbins,FT,NumXBins,NumYBins] = SpatBin(FT,ind)
         [bounds,rot_x,rot_y] = sections(x,y,1);     
     end
 
+    %Use rotated X and Y coordinates. 
     x = rot_x; y = rot_y; 
     
     %Only look at the data points indicated by ind. 
