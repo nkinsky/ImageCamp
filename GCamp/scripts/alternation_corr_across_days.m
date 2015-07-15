@@ -60,7 +60,50 @@ trans_test = cellfun(@(a,b) ~((~isempty(a) && isempty(b)) || (isempty(a) && ~ise
     (~isempty(a) && ~isnan(a) && ~isempty(b) && ~isnan(b) && (a == b))), ...
     all_session_map(1).map(1:limits,3:end), all_session_map(2).map(1:limits,3:end));
 
-pass_test = find(sum(trans_test,2) == size(trans_test,2)); % neurons that are the same across all sessions
+pass_test1 = find(sum(trans_test,2) == size(trans_test,2)); % neurons that are the same across all sessions
+
+%% Alternative Transitive test - less strict = go through each neuron...find 
+% it in the 2nd all_neuron_map and look for matches to the neurons from the
+% 1st all_neuron_map
+
+% First, the all_neuron_map to an array rather than a cell so that you can
+% do comparisons easier
+for m = 1:2
+    for j = 1:size(all_session_map(m).map,1)
+        for k = 1:size(all_session_map(m).map,2)
+            if ~isempty(all_session_map(m).map{j,k}) && ~isnan(all_session_map(m).map{j,k})
+                test(m).map(j,k) = all_session_map(m).map{j,k};
+            else
+                test(m).map(j,k) = 0;
+            end
+        end
+    end
+end
+
+max_neuron_num = max(test(1).map,[],1);
+
+row_use_track = [];
+for i = 2:length(max_neuron_num)
+    % Need to add something in here to start using only the new neurons
+    % from each given session!
+   for j = 1:max_neuron_num(i)
+       % find the appropriate row that matches the neuron from both methods
+       % of getting the all_neuron_map neuron
+       row_ind_use(1) = test(1).map(:,i) == j;
+       row_ind_use(2) = test(2).map(:,i) == j;
+       
+       if sum(row_ind_use(1)) > 0 && sum(row_ind_use(2)) > 0
+           for mm = 1:2
+               row_use(m,:) = test(m).map(row_ind_use(m),i:end);
+           end
+           temp = row_use(1,:) == row_use(2,:);
+           trans_test2(
+           row_use_track = [row_use_track row_ind_use(1)]; % Keep track of indicies of rows you have already used and don't re-use them
+       end  
+       
+   end
+    
+end
 
 %% 4) Get correlations between the TMaps for all cells across each day.  
 
