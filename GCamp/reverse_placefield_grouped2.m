@@ -1,17 +1,24 @@
 %% Reverse placefield wrapper function
 
 %%% TO-DO
-% 1) Adjust rvp4 to spit out only AvgFrame, F0, and var - AvgFrame can be
-% either z_smooth or DF_smooth based on a flag.
-% 2) Add in re-mapping control - compare 1st to 2nd half correlations to
-% interleaved (every alternate 2 minutes, or maybe 1st and 3rd quartile to
-% 2nd and 4th quartile).
-% 2.5) Write smoothing function!!! too much code right now in rvp4!!!
-% 3) (done?)Adjust shuffle function to reduce RAM usage - only load sessions right
-% before you need to use them1
-% 4)(low) Make it so I can look at 1st half only of combined sessions - will
-% need to add in a time filter...want to compare square days to adjacent
-% square sessions only, ditto for octagons, etc.
+% 1) Make this able to use either D1movie OR FT from PlaceMaps to work, not
+% ChangeMovie.h5.  Can probably run for G31 with this change.
+% 1a) Change name to ensemble_analysis
+% 2) Add in functionality to draw mask to exclude cells from a certain part
+% of the image - for both FT and D1movie analysis
+% 3) Make this a function that takes in two sessions and compares them
+%  - eliminate all references to octagon/square, etc - all this info should
+%  be loaded as inputs in the function
+% 4) Change rvp_grouped_wrapper into a better function that lets you load a
+% given session and run them all
+% 5) Simplify arena alignment and add in fullfile to ALL places we load
+% files - talk to Dave and Will about the best way to incorporate this for
+% all sessions we want to look at...will require a lot of adjusting of code
+% to load something other than Pos.mat
+% 6) Clean up variable names - don't wtf are auto_restrict vs.
+% manual_enable?
+% 7) Get rid of _DF_no_smooth and _DF_smooth...use only _z_smooth.
+
 
 % Clear workspace if NOT running a batch script
 if ~exist('batch_run','var') || batch_run == 0
@@ -38,15 +45,6 @@ num_shuffles = 100;
 
 smooth_type = {'_DF_no_smooth' '_DF_smooth', '_z_smooth'};
 smooth_append = smooth_type{analysis_type + 1};
-
-%%% Pixels to exclude due to edge of cannula, traveling waves, etc. - this
-% will be mouse and session specific most likely! - may need to include
-% this in a function where you draw on the image to get the excluded
-% region(s)!
-% Note that this is ok only for G30 on day 1!!! Need to do either for each
-% session or correct each session back!
-% NOTE THAT THIS OCCURS BELOW IN STEP 4 TO BE APPROXIMATELY OK FOR ALL SESSIONS FOR
-% G30 BUT IS A HACK AND WILL NEED TO BE MORE PRECISE IN THE FUTURE!
 
 if exist('rot_overwrite_batch','var') % Overwrite rot_overwrite if doing a batch run
     rot_overwrite = rot_overwrite_batch;
@@ -118,15 +116,8 @@ for j=1:2
     end
 end
 
-
 userprofile = getenv('USERPROFILE');
 calib_file = [userprofile '\Dropbox\Imaging Project\MATLAB\tracking\2env arena calibration\arena_distortion_hack.mat'];
-
-% sesh(1).folder = uigetdir('','Select Session 1 Working Directory:');
-% sesh(2).folder = uigetdir(sesh(1).folder,'Select Session 2 Working Directory:');
-% sesh(1).movie_folder = uigetdir('','Select Session 1 Movie Directory:');
-% sesh(2).movie_folder = uigetdir(sesh(1).folder,'Select Session 2 Movie Directory:');
-% calib_file = uigetfile('*.mat','Select calibration file:');
 
 for j = 1:2
     if ~isfield(sesh,'movie_folder') || isempty(sesh(j).movie_folder)
@@ -202,8 +193,7 @@ end
 disp('Here is your chance to compare occupancy grids')
 % keyboard
 
-%% 3) run reverse_placefield4
-
+%% 3) run reverse_placefield
 
 for j = 1:2
     disp(['Running reverse_placefield for session ' num2str(j)]);

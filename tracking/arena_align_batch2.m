@@ -12,6 +12,9 @@ function [cmperbin] = arena_align_batch2(working_dirs, calib_file, cmperbin, rot
 % configuration and thus should be run to check if they are using distal
 % cues
 
+%% To-do
+% 1) Clarify use of xrestrict and yrestrict. 
+
 %% Initial Variables
 n = 1;
 done = 0;
@@ -76,6 +79,7 @@ cmperbin = session(1).grid_info.cmperbin; % Update cmperbin if changed
 grid_info = session(1).grid_info;
 save(save_file, 'grid_info');
 
+% Assign the same grid to ALL sessions...
 for j = 2:size(session,2)
     cd(session(j).folder);
     session(j).grid_info = session(1).grid_info;

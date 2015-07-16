@@ -19,6 +19,7 @@
 % *** Compare center to edges ... do we see global remapping everywhere?
 % Or just at different parts of the environment?
 
+% Test edit
 
 
 clear all

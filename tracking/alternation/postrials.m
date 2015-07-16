@@ -1,5 +1,5 @@
-function data = postrials(x,y,plot_each_trial,numtrials,plot_flag)
-%function data = postrials(x,y,plot_each_trial,numtrials,plot_flag)
+function Alt = postrials(x,y,plot_each_trial,varargin)
+%function data = postrials(x,y,plot_each_trial,...)
 %   
 %   This function takes mouse position data and sorts them into trial
 %   numbers, left/right, and correct/incorrect.
@@ -11,9 +11,14 @@ function data = postrials(x,y,plot_each_trial,numtrials,plot_flag)
 %       plot_each_trial: Logical to determine whether or not you want the
 %       function to plot the XY position of the mouse for each trial. 
 %
-%       numtrials: Number of trials ran this session. Default is 40. 
+%       'skip_rot_check': 0(default if left blank) = perform check of
+%       rotation of position data, 1 = skip it.  Enter as
+%       postrials(....,'skip_rot_check',0).
 %
-%       plot_flag: 1 - plot sections (default), 0 = suppress plotting
+%       'suppress_output': 1 - suppresses any warning outputs, 0 (default)
+%       - provide outputs for number of trials and any warnings about
+%       epochs with multiple trials
+%       
 %
 %   OUTPUTS:
 %       DATA: a struct with these fields:
@@ -23,19 +28,30 @@ function data = postrials(x,y,plot_each_trial,numtrials,plot_flag)
 %           alt = Correct (1) vs. incorrect (0). 
 %           x = X position.
 %           y = Y position.
+%           section = section number. Refer to getsection.m. 
 %           summary = Summary of trials. The first column is trial number
 %           followed by left/right and correct/incorrect in the same format
 %           as above. 
 %
 %   TIP: To find frames for a particular trial of interest, you can do:
 %       data.frames(data.trial == TRIAL_OF_INTEREST).
+%
 
-%% Check for plot_flag
-if ~exist('plot_flag','var')
-    plot_flag = 1; % Set to one if not specified
+%% Assign varargin
+for j = 1:2:length(varargin)-1
+    if strcmpi(varargin{j},'skip_rot_check')
+        skip_rot_check = varargin{j+1};
+    elseif strcmpi(varargin{j},'suppress_output')
+        suppress_output = varargin{j+1};  
+    end
 end
+
+if ~exist('skip_rot_check','var')
+    skip_rot_check = 0;
+end
+
 %% Label position data with section numbers. 
-    [sect, goal] = getsection(x,y,plot_flag);
+    [sect,goal,rot_x,rot_y] = getsection(x,y,'skip_rot_check',skip_rot_check);
     
 %% Define important section numbers. 
     %Define sequences of section numbers that correspond to left or right
@@ -57,26 +73,22 @@ end
     %Define first trial. When does the mouse first enter the starting
     %location? 
     start = min(find(sect(:,2)==1)); 
-    
-    %Define number of trials if not defined as argument. 
-    if nargin == 3
-        numtrials = 40;
-    end
 
     %Preallocate.
-    epochs = nan(1,numtrials+1); 
-    epochs(1) = start; 
-    trialtype = nan(1,numtrials-1); 
+    epochs = start; 
+    mouse_running = 1;
     
     %For each lap. 
-    for this_trial = 1:numtrials+1    
+    for this_trial = 1:200
+        
+        try     %Try sorting a trial. 
         
         %Index for next trial. 
         next = this_trial+1;    
         epochs(next) = epochs(this_trial)+1;    %First glance: trials are at least 1 frame long. 
 
         %As long as the criteria are not satisfied (see below)...
-        while true
+        while mouse_running
             
             epochs(next) = epochs(next) + 1;    %...keep adding frames.
 
@@ -113,14 +125,32 @@ end
         %Notify user of possible errors in the trial sorting script. This
         %catches when the mouse appears on both maze arms in what the
         %script believed to be a single trial. 
-        if (ismember(left, sect(epochs(this_trial):epochs(next),2)) && trialtype(this_trial) == 2) || ...
-                (ismember(right, sect(epochs(this_trial):epochs(next),2)) && trialtype(this_trial) == 1)
-            disp(['Warning: This epoch may contain more than one trial: Trial ', num2str(this_trial)]); 
+        if ~exist('suppress_output','var') || suppress_output ~= 1
+            if (ismember(left, sect(epochs(this_trial):epochs(next),2)) && trialtype(this_trial) == 2) || ...
+                    (ismember(right, sect(epochs(this_trial):epochs(next),2)) && trialtype(this_trial) == 1)
+                disp(['Warning: This epoch may contain more than one trial: Trial ', num2str(this_trial)]);
+            end
         end
+        
+        %When postrials can no longer successfully sort a trial, stop the
+        %loop. 
+        catch
+            numtrials = this_trial-1;           %this_trial produced an error, so roll back a trial
+            if length(trialtype) > numtrials    %Sometimes, the mouse leaves the maze on a left/right arm so trialtype gets an extra entry.
+                trialtype(this_trial) = [];     %In that case, remove it. 
+            end
+            break; 
+        end
+        
+    end
+    
+    %Display number of trials sorted. 
+    if ~exist('suppress_output','var') || suppress_output ~= 1
+        disp(['Successfully sorted ', num2str(numtrials), ' trials.']); 
     end
     
 %% Build up the struct. 
-    data.frames = 1:length(x);    %Frames.
+    Alt.frames = 1:length(x);          %Frames.
     
     %Vector containing correct vs. error using a trick: take the difference
     %between consecutive trial types (left (1) vs. right (2)) such that
@@ -131,26 +161,30 @@ end
     alt = [1 abs(diff(trialtype))]; 
     
     %Trial numbers, trial type (left vs. right), and correct vs. incorrect. 
-    for this_trial = 1:length(epochs)-1
+    for this_trial = 1:numtrials
         next = this_trial+1; 
 
-        data.trial(epochs(this_trial):epochs(next)) = this_trial; 
-        data.choice(epochs(this_trial):epochs(next)) = trialtype(this_trial); 
-        data.alt(epochs(this_trial):epochs(next)) = alt(this_trial); 
+        Alt.trial(epochs(this_trial):epochs(next)) = this_trial; 
+        Alt.choice(epochs(this_trial):epochs(next)) = trialtype(this_trial); 
+        Alt.alt(epochs(this_trial):epochs(next)) = alt(this_trial); 
     end
     
     %This script may not cover the entire session. If that's the case, pad
     %the rest of it with 0s or NaNs.
-    if length(data.trial) < length(x)
-        data.trial(end:length(x)) = 0; 
-        data.choice(end:length(x)) = 0;
-        data.alt(end:length(x)) = NaN;      %NaNs so that the last uncaptured trials don't register as errors. 
+    if length(Alt.trial) < length(x)
+        Alt.trial(end:length(x)) = 0; 
+        Alt.choice(end:length(x)) = 0;
+        Alt.alt(end:length(x)) = NaN;      %NaNs so that the last uncaptured trials don't register as errors. 
     end
     
     %Mouse position. 
-    data.x = x;              %X position.
-    data.y = y;              %Y position. 
+    Alt.x = rot_x;                 %X position.
+    Alt.y = rot_y;                 %Y position. 
+    Alt.section = sect(:,2)';      %Section number. Refer to getsection.m.
     
     %Summary. 
-    data.summary = [(1:numtrials+1)', trialtype', alt']; 
+    Alt.summary = [(1:numtrials)', trialtype', alt']; 
+    
+    %Save. 
+    save Alternation Alt;
 end
