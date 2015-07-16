@@ -6,6 +6,7 @@ close all
 mic_per_pix = 1.16; % To match previously used values
 spatial_ds = 2; % Factor to downsample
 spatial_filt = 20; % Number of pixels to use when applying the spatial mean and subtracting it later on.
+save_ds = 1; % enter if you want to save the down-sample movie before moving on (recommended for large movies)
 
 curr_dir = cd;
 
@@ -54,6 +55,10 @@ cd(pathname)
 
 movie_use = mosaic.resampleMovie(movie_use, 'spatialReduction', spatial_ds,...
     'temporalReduction', 1, 'useParallelization', 1);
+
+if save_ds == 1
+    mosaic.saveOneObject(movie_use,'CatMovie_ds.mat');
+end
 
 % movie_ds = mosaic.resampleMovie(movie_use, 'spatialReduction', spatial_ds,...
 %     'useParallelization', 1);
@@ -165,8 +170,9 @@ h = mos_tiff_to_fig(min_proj_int, save_name, title_label );
 disp('Saving MotCorrMovie for final editing')
 mosaic.saveOneObject(mot_corr_movie,'MotCorrMovie.mat');
 disp('Check for MotCorrMovie.mat.  If saved correctly, type "return" to enter Mosaic standalone and do your final editing');
-keyboard
+% keyboard
 mosaic.terminate()
+clear all
 mosaicOpenGui
 
 % %% Step 8: Create min projection and display
