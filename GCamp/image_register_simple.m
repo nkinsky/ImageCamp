@@ -21,7 +21,10 @@ function [ neuron_map] = image_register_simple( mouse_name, base_date, base_sess
 %       'multi_reg': (optional) specify as ...,'multi_reg', 1. 0 (default) - 
 %       use base_file NeuronImage variable from ProcOut.mat for registration 
 %       of neurons.  1 - used only in conjunction with multi_image_reg -
-%       uses AllMasks from Reg_NeuronID for future registrations
+%       uses AllMasks from Reg_NeuronID for future registrations, with update_masks = 0. 
+%       2 - same as 1 but update_masks = 1. 
+%
+%
 %
 %       'check_multiple_mapping': (optional) scroll through multiple
 %       mapping neurons - 2nd session neuron is in a red outline, 1st
@@ -94,7 +97,10 @@ if multi_reg == 0
         num2str(reg_session) '.mat']);
 elseif multi_reg == 1
     map_unique_filename = fullfile(sesh(1).folder,['neuron_map-' mouse_name '-' reg_date '-session' ...
-    num2str(reg_session) '_multi.mat']);
+    num2str(reg_session) '_updatemasks0.mat']);
+elseif multi_reg == 2
+    map_unique_filename = fullfile(sesh(1).folder,['neuron_map-' mouse_name '-' reg_date '-session' ...
+    num2str(reg_session) '_updatemasks1.mat']);
 end
 
 %% Check to see if this has already been run - if so,
@@ -121,8 +127,8 @@ for k = 1:2
     
     % overwrite NeuronImage to include ALLmasks for base folder if doing multiple
     % sessions
-    if k == 1 && multi_reg == 1
-        load(fullfile(sesh(1).folder,'Reg_NeuronIDs.mat'));
+    if k == 1 && multi_reg >= 1
+        load(fullfile(sesh(1).folder,['Reg_NeuronIDs_updatemasks' num2str(multi_reg-1) '.mat']));
         NeuronImage = Reg_NeuronIDs(1).AllMasks;
         BinBlobs = Reg_NeuronIDs(1).AllMasksMean;
     end
@@ -145,15 +151,38 @@ for k = 1:2
 %         sesh(k).cms(j).x = mean(jt);
 %         sesh(k).cms(j).y = mean(it);  
         % Dump centers-of-mass of neurons into day structure
-        if size(temp3,1) == 1
+        if size(temp3,1) == 0 % If registered neuron disappears, dump it to 0,0
+            disp([' Size zero neuron detected.  See neuron # ' num2str(j)])
+            sesh(k).cms(j).x = 0;
+            sesh(k).cms(j).y = 0;
+        elseif size(temp3,1) == 1 % Normal case
             sesh(k).cms(j).x = temp3.Centroid(1);
             sesh(k).cms(j).y = temp3.Centroid(2);
         else % If multiple blobs are present for a neuron, only use the largest one
             temp4 = regionprops(neuron_image_use,'ConvexArea');
             sizes = arrayfun(@(a) a.ConvexArea,temp4);
             blob_use = max(sizes) == sizes;
-            sesh(k).cms(j).x = temp3(blob_use).Centroid(1);
-            sesh(k).cms(j).y = temp3(blob_use).Centroid(2);
+            % Put in size limitation here - must be bigger than say, 20
+            % pixels!
+            try
+                if length(blob_use) > 1 || max(sizes) < 20
+                    disp(['MULTIPLE BLOBS AND/OR SMALL SIZE OF NEURON ' num2str(j) ...
+                        ' DETECTED.'])
+                    % Aribtrarily set the 1st valid valud in blob_use to 1
+                    temp = find(blob_use);
+                    blob_use = temp(1);
+                end
+                try % Debugging clause
+                    sesh(k).cms(j).x = temp3(blob_use).Centroid(1);
+                    sesh(k).cms(j).y = temp3(blob_use).Centroid(2);
+                catch
+                    disp('Error - sent to keyboard to check!')
+                    keyboard
+                end
+            catch
+                disp('Error in first try/catch statement')
+                keyboard
+            end
         end
         
         sesh(k).NeuronImage_reg{j} = neuron_image_use;
@@ -206,7 +235,10 @@ cm_dist_min = min(cm_dist,[],2); % Get minimum distance to nearest neighbor for 
 % set
 n = 0;
 for j = 1:length(cm_dist_min)
-    if cm_dist_min(j) > min_thresh
+    % Exclude any neurons whose cms are outside the distance threshold or
+    % whose cms reside at 0,0 (meaning that they have disappeared due to
+    % registtration)
+    if cm_dist_min(j) > min_thresh || (sesh(1).cms(j).x == 0 && sesh(1).cms(j).y == 0)
         neuron_id{j,1} = [];
         n = n+1;
     else
@@ -225,7 +257,12 @@ neuron_id_nan = neuron_id;
 for j = 1:size(sesh(2).NeuronImage_reg,2);
     % Find cases where more than one neuron in the 1st session maps to
     % the same neuron in the second session
-    same_ind = find(cellfun(@(a) ~isempty(a) && a == j,neuron_id));
+    try % Debugging!
+        same_ind = find(cellfun(@(a) ~isempty(a) && a == j,neuron_id));
+    catch
+        disp('error')
+        keyboard
+    end
     if length(same_ind) > 1
 %         keyboard
         overlap_ratio = zeros(1,length(same_ind)); % Pre-allocate
@@ -401,7 +438,7 @@ neuron_map.same_neuron = same_neuron;
  
 neuron_map.num_bad_cells = num_bad_cells;
 
-if multi_reg == 1
+if multi_reg >= 1
     neuron_map.base_date = 'Multiple - all prior sessions in Reg_NeuronIDs in base directory';
     neuron_map.base_session = 'Multiple - all prior sessions in Reg_NeuronIDs in base directory';
 end
