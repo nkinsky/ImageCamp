@@ -2,8 +2,11 @@
 % test
 
 %% 1) Load both Reg_NeuronID files (updatemasks = 0 and updatemasks = 1).
-reg_file_updatemask{1} = 'j:\GCamp Mice\Working\G30\alternation\10_16_2014\Working\Reg_NeuronIDs_updatemasks0.mat';
-reg_file_updatemask{2} = 'j:\GCamp Mice\Working\G30\alternation\10_16_2014\Working\Reg_NeuronIDs_updatemasks1.mat';
+% reg_file_updatemask{1} = 'j:\GCamp Mice\Working\G30\alternation\10_16_2014\Working\Reg_NeuronIDs_updatemasks0.mat';
+% reg_file_updatemask{2} = 'j:\GCamp Mice\Working\G30\alternation\10_16_2014\Working\Reg_NeuronIDs_updatemasks1.mat';
+
+reg_file_updatemask{1} = 'j:\GCamp Mice\Working\G30\alternation\11_04_2014\Working\Reg_NeuronIDs_updatemasks0.mat';
+reg_file_updatemask{2} = 'j:\GCamp Mice\Working\G30\alternation\11_04_2014\Working\Reg_NeuronIDs_updatemasks1.mat';
 
 for j = 1:2
     load(reg_file_updatemask{j})
@@ -53,7 +56,8 @@ end
 
 % Get limits to compare across - look only at the neurons from the first
 % day plus the new neurons from the second day (hack)
-limits = length(sesh(1).TMap) + length(Reg_NeuronID_trans(j).Reg_NeuronIDs(1).new_neurons);
+limits = size(Reg_NeuronID_trans(1).Reg_NeuronIDs(1).same_neuron,1) + ...
+    length(Reg_NeuronID_trans(1).Reg_NeuronIDs(1).new_neurons);
 % look for all neurons that match between each all_neuron_map
 trans_test = cellfun(@(a,b) ~((~isempty(a) && isempty(b)) || (isempty(a) && ~isempty(b))) ...
     && ((isempty(a) && isempty(b)) || (isnan(a) && isnan(b)) || ...
@@ -66,7 +70,7 @@ pass_test1 = find(sum(trans_test,2) == size(trans_test,2)); % neurons that are t
 % it in the 2nd all_neuron_map and look for matches to the neurons from the
 % 1st all_neuron_map
 
-% First, the all_neuron_map to an array rather than a cell so that you can
+% First, send all_neuron_map to an array rather than a cell so that you can
 % do comparisons easier
 for m = 1:2
     for j = 1:size(all_session_map(m).map,1)
@@ -82,28 +86,59 @@ end
 
 max_neuron_num = max(test(1).map,[],1);
 
-row_use_track = [];
+% march through each neuron and do the transitive test. 1 = very stringent,
+% 2 = stringent.
+trans_test1 = zeros(size(test(1).map,1));
+trans_test2 = ones(size(test(1).map));
+row_end = 0;
 for i = 2:length(max_neuron_num)
-    % Need to add something in here to start using only the new neurons
-    % from each given session!
-   for j = 1:max_neuron_num(i)
-       % find the appropriate row that matches the neuron from both methods
-       % of getting the all_neuron_map neuron
-       row_ind_use(1) = test(1).map(:,i) == j;
-       row_ind_use(2) = test(2).map(:,i) == j;
-       
-       if sum(row_ind_use(1)) > 0 && sum(row_ind_use(2)) > 0
-           for mm = 1:2
-               row_use(m,:) = test(m).map(row_ind_use(m),i:end);
-           end
-           temp = row_use(1,:) == row_use(2,:);
-           trans_test2(
-           row_use_track = [row_use_track row_ind_use(1)]; % Keep track of indicies of rows you have already used and don't re-use them
-       end  
-       
-   end
+    row_start = row_end + 1; % Row/neuron number to start with
+    row_end = find(test(1).map(:,i),1,'last'); % Row/neuron number to end with
+    
+    for j = row_start:row_end
+        % find matching neuron row in test(2)
+        row_ind_use = test(2).map(:,i) == test(1).map(j,i);
+        if ~isempty(row_ind_use) &&  sum(row_ind_use) == 1 % put ones everywhere the two neuron mappings match
+            % effectively identifying each neuron that maps the same
+            trans_test2(j,:) = test(1).map(j,:) == test(2).map(row_ind_use,:);
+            % see if all mappings for that neuron pass the transitive test
+            trans_test1(j) = sum(trans_test2(j,:)) == length(trans_test2(j,:));
+        else % Send everything to zeros if it doesn't match anywhere!
+            trans_test2(j,:) = zeros(size(test(1).map(j,:)));
+        end
+        
+    end
     
 end
+
+ok_orig2 = test(1).map > 0; % Get all valid neuron mappings to other neurons
+ok_after2 = trans_test2.*ok_orig;
+
+trans1_ratio_pass = sum(trans_test1)/length(trans_test1);
+trans2_ratio_pass = sum(ok_after(:))/sum(ok_orig(:));
+
+% Old start
+% row_use_track = [];
+% for i = 2:length(max_neuron_num)
+%     % Need to add something in here to start using only the new neurons
+%     % from each given session!
+%    for j = 1:max_neuron_num(i)
+%        % find the appropriate row that matches the neuron from both methods
+%        % of getting the all_neuron_map neuron
+%        row_ind_use(1) = test(1).map(:,i) == j;
+%        row_ind_use(2) = test(2).map(:,i) == j;
+%        
+%        if sum(row_ind_use(1)) > 0 && sum(row_ind_use(2)) > 0
+%            for mm = 1:2
+%                row_use(m,:) = test(m).map(row_ind_use(m),i:end);
+%            end
+%            temp = row_use(1,:) == row_use(2,:);
+%            row_use_track = [row_use_track row_ind_use(1)]; % Keep track of indicies of rows you have already used and don't re-use them
+%        end  
+%        
+%    end
+%     
+% end
 
 %% 4) Get correlations between the TMaps for all cells across each day.  
 
@@ -111,11 +146,11 @@ end
 % bar graphs for day 1 to day 2, day 2 to day 3, and day 1 to day 3?
 
 
-for j = 1:length(pass_test)
+for j = 1:length(pass_test1)
     for k = 1:3
         for ll = k+1:3
-            sesh1_neuron = all_session_map(1).map{pass_test(j),k+1};
-            sesh2_neuron = all_session_map(1).map{pass_test(j),ll+1};
+            sesh1_neuron = all_session_map(1).map{pass_test1(j),k+1};
+            sesh2_neuron = all_session_map(1).map{pass_test1(j),ll+1};
             if ~isempty(sesh1_neuron) && ~isempty(sesh2_neuron) && ...
                     ~isnan(sesh1_neuron) && ~isnan(sesh2_neuron)
                 temp = corrcoef(sesh(k).TMap{sesh1_neuron}(:),...
