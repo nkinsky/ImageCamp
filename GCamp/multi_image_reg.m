@@ -298,11 +298,11 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
     
 %     keyboard
     %% Bulid cell_map from Reg_NeuronIDs and save it
-   all_session_map = build_multisesh_mapping(Reg_NeuronIDs);
-   Reg_NeuronIDs(1).all_session_map = all_session_map;
-   
-   %Save.
-   save (fullfile(base_path,'Reg_NeuronIDs.mat'), 'Reg_NeuronIDs','-v7.3');
+    all_session_map = build_multisesh_mapping(Reg_NeuronIDs);
+    Reg_NeuronIDs(1).all_session_map = all_session_map;
+    
+    %Save.
+    save (reg_filename, 'Reg_NeuronIDs','-v7.3');
    
     
 end
