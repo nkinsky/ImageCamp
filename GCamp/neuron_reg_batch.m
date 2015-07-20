@@ -21,17 +21,36 @@ function [ batch_session_map ] = neuron_reg_batch(base_struct, reg_struct)
 % OUTPUTS:
 %       
 
-%% Step 1: Run multi_image_reg twice
+%% Step 1: Run multi_image_reg twice, once with update_masks = 0 and once with update_masks = 1
 
-disp('Running registration with update masks = 0')
-multi_image_reg(base_struct, reg_struct, 'update_masks', 0);
-disp('Running registration with update masks = 1')
-multi_image_reg(base_struct, reg_struct, 'update_masks', 1);
+reg_filename{1} = fullfile(base_struct.Location,'Reg_NeuronIDs_updatemasks0.mat');
+reg_filename{2} = fullfile(base_struct.Location,'Reg_NeuronIDs_updatemasks1.mat');
+
+disp('Checking for pre-existing registration files')
+for j = 1:2
+    if (exist(reg_filename{j},'file') == 2)
+        load(reg_filename{j})
+        intact = RegNeuron_intact(Reg_NeuronIDs, base_struct, reg_struct);
+    else 
+        intact = 0;
+    end
+    
+    if intact == 1
+        disp([ 'Reg_NeuronIDs with update_masks = ' num2str(j-1) ' found in the working directory, skipping neuron registration.'])
+    elseif intact == 0
+        disp(['Running registration with update masks = ' num2str(j-1)])
+        multi_image_reg(base_struct, reg_struct, 'update_masks', j-1);
+    end
+end
+
+% if (exist(reg_filename{2},'file') == 2)
+%     disp('Reg_NeuronIDs with update_masks = 1 found in the working directory, skipping neuron registration.')
+% else
+%     disp('Running registration with update masks = 1')
+%     multi_image_reg(base_struct, reg_struct, 'update_masks', 1);
+% end
 
 %% Step 2: Load files
-
-reg_filename{1} = fullfile(base_path,'Reg_NeuronIDs_updatemasks0.mat');
-reg_filename{2} = fullfile(base_path,'Reg_NeuronIDs_updatemasks1.mat');
 
 disp('Loading registration mapping files')
 for j = 1:2
@@ -40,6 +59,7 @@ for j = 1:2
     all_session_map(j).map = Reg_NeuronIDs(1).all_session_map;
 end
 
+keyboard
 %% Step 3: Transitive test -  go through each neuron...find 
 % it in the 2nd all_neuron_map and look for matches to the neurons from the
 % 1st all_neuron_map. Most Strict (1) = toss all neurons that don't match for ALL
@@ -90,17 +110,34 @@ for i = 2:length(max_neuron_num)
 end
 
 ok_orig2 = test(1).map > 0; % Get all valid neuron mappings to other neurons
-ok_after2 = trans_test2.*ok_orig; % Get all valid mappings post-test, excluding neurons that were empty or nan to begin with
+ok_after2 = trans_test2.*ok_orig2; % Get all valid mappings post-test, excluding neurons that were empty or nan to begin with
 
-trans1_ratio_pass = sum(trans_test1)/length(trans_test1);
-trans2_ratio_pass = sum(ok_after(:))/sum(ok_orig(:));
+trans1_ratio_pass = sum(trans_test1(:))/length(trans_test1);
+trans2_ratio_pass = sum(ok_after2(:))/sum(ok_orig2(:));
 
 %% Step 4: Parse out/keep only the mappings that pass the transitive test 
 % and spit those out / save them
 
-batch_session_map = trans_test2.*test(1).map;
+batch_session_map(1).map = trans_test2.*test(1).map;
+batch_session_map(1).map(:,1) = [1:size(batch_session_map(1).map,1)]';
+% Send all session info to stay with the map
+[batch_session_map(1).session(1).mouse] = ...
+    Reg_NeuronID_trans(1).Reg_NeuronIDs(1).mouse;
+[batch_session_map(1).session(1).date] = ...
+    Reg_NeuronID_trans(1).Reg_NeuronIDs(1).base_date;
+[batch_session_map(1).session(1).session] = ...
+    Reg_NeuronID_trans(1).Reg_NeuronIDs(1).base_session;
 
-save('batch_session_map.mat',batch_session_map)
+[batch_session_map(1).session(2:length(Reg_NeuronID_trans(1).Reg_NeuronIDs)+1).mouse] = ...
+    Reg_NeuronID_trans(1).Reg_NeuronIDs(:).mouse;
+[batch_session_map(1).session(2:length(Reg_NeuronID_trans(1).Reg_NeuronIDs)+1).date] = ...
+    Reg_NeuronID_trans(1).Reg_NeuronIDs(:).reg_date;
+[batch_session_map(1).session(2:length(Reg_NeuronID_trans(1).Reg_NeuronIDs)+1).session] = ...
+    Reg_NeuronID_trans(1).Reg_NeuronIDs(:).reg_session;
+
+batch_session_map(1).AllMasksMean = 'Located in RegNeuronIDs_updatemasks0.mat';
+
+base_dir = ChangeDirectory(base_struct(1).Animal, base_struct(1).Date, base_struct(1).Session);
+save(fullfile(base_dir,'batch_session_map.mat'),'batch_session_map')
 
 end
-
