@@ -56,7 +56,7 @@ close all;
 
 %% MAGIC VARIABLES
 configname = 'multimodal'; % For images taken with similar contrasts, e.g. from the same device, same gain, etc.
-regtype = 'similarity'; % Similarity = Translation, Rotation, Scale
+regtype = 'rigid'; % rigid = Translation, Rotation % Similarity = Translation, Rotation, Scale
 
 % Adjust registration algorithm values:
 % MONOMODAL
