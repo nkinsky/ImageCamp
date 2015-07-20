@@ -24,8 +24,6 @@ function [ neuron_map] = image_register_simple( mouse_name, base_date, base_sess
 %       uses AllMasks from Reg_NeuronID for future registrations, with update_masks = 0. 
 %       2 - same as 1 but update_masks = 1. 
 %
-%
-%
 %       'check_multiple_mapping': (optional) scroll through multiple
 %       mapping neurons - 2nd session neuron is in a red outline, 1st
 %       session neurons will be in yellow
@@ -83,11 +81,21 @@ end
 RegistrationInfoX = image_registerX(mouse_name, base_date, base_session, ...
     reg_date, reg_session, manual_reg_enable);
 
-%% Get working folders for each session
+%% Get working folders for each session, and run MakeMeanBlobs if not already done
 
 currdir = cd;
 sesh(1).folder = ChangeDirectory(mouse_name, base_date, base_session);
+if ~(exist('MeanBlobs.mat','file') == 2)
+    disp('MeanBlobs.mat not detected in working directory.  Running MakeMeanBlobs (This may take awhile)')
+    load('ProcOut.mat','c','cTon','GoodTrs')
+    MakeMeanBlobs(c, cTon, GoodTrs)
+end
 sesh(2).folder = ChangeDirectory(mouse_name, reg_date, reg_session);
+if ~(exist('MeanBlobs.mat','file') == 2)
+    disp('MeanBlobs.mat not detected in working directory.  Running MakeMeanBlobs (This may take awhile)')
+    load('ProcOut.mat','c','cTon','GoodTrs')
+    MakeMeanBlobs(c, cTon, GoodTrs)
+end
 cd(currdir)
 
 % Define unique filename for file you are registering to that you will
