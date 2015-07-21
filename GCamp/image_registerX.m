@@ -220,7 +220,7 @@ title('Base Image - Registered Image');
 disp('Registration Stats:')
 disp(['X translation = ' num2str(tform.T(3,1)) ' pixels.'])
 disp(['Y translation = ' num2str(tform.T(3,2)) ' pixels.'])
-disp(['Rotation = ' num2str(mean([asind(tform.T(1,2)) acosd(tform.T(1,1))])) ' degrees.'])
+disp(['Rotation = ' num2str(mean([asind(tform.T(2,1)) acosd(tform.T(1,1))])) ' degrees.'])
 
 if ~exist('manual_reg_enable','var') || manual_reg_enable == 1
     manual_flag = input('Do you wish to manually adjust this registration? (y/n): ','s');
