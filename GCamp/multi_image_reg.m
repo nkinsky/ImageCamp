@@ -164,9 +164,9 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, check_neuron
     base_masks_mean = BinBlobs;
     for this_session = 1:num_sessions
         %Display.
-        disp(['Registering ', mouse '_' base_date, '_session' num2str(base_session) ...
-            ' to ', mouse '_' reg_struct(this_session).Date, '_session' ...
-            num2str(reg_struct(this_session).Session) '...']); 
+        disp(['Registering ', mouse '_' reg_struct(this_session).Date, '_session' ...
+            num2str(reg_struct(this_session).Session) ' to ', mouse '_' base_date, ...
+            '_session' num2str(base_session) '...']); 
 
         %Perform image registration. 
         % Add in something here to indicate if this is a simple
@@ -255,7 +255,7 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, check_neuron
         Reg_NeuronIDs(this_session).num_bad_cells = neuron_map.num_bad_cells;
         
         %Save. 
-        save (fullfile(base_path,'Reg_NeuronIDs.mat'), 'Reg_NeuronIDs'); 
+        save (fullfile(base_path,'Reg_NeuronIDs.mat'), 'Reg_NeuronIDs','-v7.3'); 
     end
     
 %     keyboard
