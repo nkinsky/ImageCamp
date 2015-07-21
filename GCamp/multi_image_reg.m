@@ -264,7 +264,7 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, check_neuron
    Reg_NeuronIDs(1).all_session_map = all_session_map;
    
    %Save.
-   save (fullfile(base_path,'Reg_NeuronIDs.mat'), 'Reg_NeuronIDs');
+   save (fullfile(base_path,'Reg_NeuronIDs.mat'), 'Reg_NeuronIDs','-v7.3');
    
     
 end
