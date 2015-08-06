@@ -128,7 +128,11 @@ while skewed
         hold off;
         
         %Sanity check for trajectory rotation.
-        satisfied = input('Are you satisfied with the rotation? Enter y or n-->','s');
+        if manual_rot_overwrite == 1
+            satisfied = input('Are you satisfied with the rotation? Enter y or n-->','s');
+        elseif manual_rot_overwrite == 0
+            satisfied = 'y';
+        end
         if strcmp(satisfied,'y')       %Break.
             skewed = 0;
             save rotated rotang rot_x rot_y;

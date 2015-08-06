@@ -59,7 +59,7 @@ for j = 1:2
     all_session_map(j).map = Reg_NeuronIDs(1).all_session_map;
 end
 
-keyboard
+% keyboard
 %% Step 3: Transitive test -  go through each neuron...find 
 % it in the 2nd all_neuron_map and look for matches to the neurons from the
 % 1st all_neuron_map. Most Strict (1) = toss all neurons that don't match for ALL
@@ -136,6 +136,8 @@ batch_session_map(1).map(:,1) = [1:size(batch_session_map(1).map,1)]';
     Reg_NeuronID_trans(1).Reg_NeuronIDs(:).reg_session;
 
 batch_session_map(1).AllMasksMean = 'Located in RegNeuronIDs_updatemasks0.mat';
+batch_session_map(1).trans_test1_ratio = trans1_ratio_pass;
+batch_session_map(1).trans_test2_ratio = trans2_ratio_pass;
 
 base_dir = ChangeDirectory(base_struct(1).Animal, base_struct(1).Date, base_struct(1).Session);
 save(fullfile(base_dir,'batch_session_map.mat'),'batch_session_map')
