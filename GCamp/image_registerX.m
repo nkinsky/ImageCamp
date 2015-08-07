@@ -1,12 +1,10 @@
 function [RegistrationInfoX] = image_registerX(mouse_name, base_date, base_session, reg_date, reg_session, manual_reg_enable, varargin)
 % RegistrationInfoX = image_registerX(mouse_name, base_date, base_session, reg_date, reg_session, manual_reg_enable)
 % Image Registration Function - THIS FUNCTION ONLY REGISTERS ONE IMAGE TO ANOTHER
-% AND DOES NOT DEAL WITH ANY INDIVIDUAL CELLS.
+% AND DOES NOT DEAL WITH ANY INDIVIDUAL NEURONS.
 % this fuction allows you to register a given
 % recording session (the registered session) to a previous sesison ( the
-% base session) to track neuronal activity from session to session.  It
-% also outputs a combined set of ICs so that you can register a given
-% session to multiple previous sessions.  
+% base session) to track neuronal activity from session to session.
 %
 % INPUT VARIABLES (if none are entered, you will be prompted to enter in
 % the files to register manually)
@@ -43,20 +41,11 @@ function [RegistrationInfoX] = image_registerX(mouse_name, base_date, base_sessi
 %                file, the transform applied, and statistics about the
 %                transform
 
-% To do:
-
-% - Try this out for images that are significantly different, e.g. rotated
-% 180 degrees...
-% - Automatically fill in expected neuron for base mapping
-
 close all;
-
-%% User inputs - if set the same the function should run without any user input during the mapping portion
-
 
 %% MAGIC VARIABLES
 configname = 'multimodal'; % For images taken with similar contrasts, e.g. from the same device, same gain, etc.
-regtype = 'similarity'; % Similarity = Translation, Rotation, Scale
+regtype = 'rigid'; % Rigid = Translation, Rotation Similarity = Translation, Rotation, Scale
 
 % Adjust registration algorithm values:
 % MONOMODAL
@@ -116,7 +105,7 @@ unique_filename = fullfile(base_path,['RegistrationInfo-' mouse_name '-' reg_dat
 %% Step 1a: Skip out on everything if registration is already done!
 try
     load(unique_filename);
-    disp('REGISTRATION ALREADY RAN!! Skipping this step');
+    disp('REFERENCE IMAGE REGISTRATION ALREADY RAN!! Skipping this step');
 catch
 
 %% Step 2a: Get Images and pre-process - Note that this step is vital as it helps
@@ -220,7 +209,7 @@ title('Base Image - Registered Image');
 disp('Registration Stats:')
 disp(['X translation = ' num2str(tform.T(3,1)) ' pixels.'])
 disp(['Y translation = ' num2str(tform.T(3,2)) ' pixels.'])
-disp(['Rotation = ' num2str(mean([asind(tform.T(1,2)) acosd(tform.T(1,1))])) ' degrees.'])
+disp(['Rotation = ' num2str(mean([asind(tform.T(2,1)) acosd(tform.T(1,1))])) ' degrees.'])
 
 if ~exist('manual_reg_enable','var') || manual_reg_enable == 1
     manual_flag = input('Do you wish to manually adjust this registration? (y/n): ','s');

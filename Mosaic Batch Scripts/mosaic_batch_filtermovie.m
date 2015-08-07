@@ -23,6 +23,8 @@ for j = 1:num_files
         'filterSize',filter_pixel_radius*2);
     cd(file(j).folder);
     mosaic.saveOneObject(filterMovie,['ICmovie_smooth_' filter_type '_' num2str(filter_pixel_radius)]);
+    
+    clear inputMovie filterMovie
 end
 
 %% Terminate

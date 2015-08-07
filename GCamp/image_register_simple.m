@@ -21,7 +21,8 @@ function [ neuron_map] = image_register_simple( mouse_name, base_date, base_sess
 %       'multi_reg': (optional) specify as ...,'multi_reg', 1. 0 (default) - 
 %       use base_file NeuronImage variable from ProcOut.mat for registration 
 %       of neurons.  1 - used only in conjunction with multi_image_reg -
-%       uses AllMasks from Reg_NeuronID for future registrations
+%       uses AllMasks from Reg_NeuronID for future registrations, with update_masks = 0. 
+%       2 - same as 1 but update_masks = 1. 
 %
 %       'check_multiple_mapping': (optional) scroll through multiple
 %       mapping neurons - 2nd session neuron is in a red outline, 1st
@@ -80,11 +81,21 @@ end
 RegistrationInfoX = image_registerX(mouse_name, base_date, base_session, ...
     reg_date, reg_session, manual_reg_enable);
 
-%% Get working folders for each session
+%% Get working folders for each session, and run MakeMeanBlobs if not already done
 
 currdir = cd;
 sesh(1).folder = ChangeDirectory(mouse_name, base_date, base_session);
+if ~(exist('MeanBlobs.mat','file') == 2)
+    disp('MeanBlobs.mat not detected in working directory.  Running MakeMeanBlobs (This may take awhile)')
+    load('ProcOut.mat','c','cTon','GoodTrs')
+    MakeMeanBlobs(c, cTon, GoodTrs)
+end
 sesh(2).folder = ChangeDirectory(mouse_name, reg_date, reg_session);
+if ~(exist('MeanBlobs.mat','file') == 2)
+    disp('MeanBlobs.mat not detected in working directory.  Running MakeMeanBlobs (This may take awhile)')
+    load('ProcOut.mat','c','cTon','GoodTrs')
+    MakeMeanBlobs(c, cTon, GoodTrs)
+end
 cd(currdir)
 
 % Define unique filename for file you are registering to that you will
@@ -94,20 +105,29 @@ if multi_reg == 0
         num2str(reg_session) '.mat']);
 elseif multi_reg == 1
     map_unique_filename = fullfile(sesh(1).folder,['neuron_map-' mouse_name '-' reg_date '-session' ...
-    num2str(reg_session) '_multi.mat']);
+    num2str(reg_session) '_updatemasks0.mat']);
+elseif multi_reg == 2
+    map_unique_filename = fullfile(sesh(1).folder,['neuron_map-' mouse_name '-' reg_date '-session' ...
+    num2str(reg_session) '_updatemasks1.mat']);
 end
 
 %% Check to see if this has already been run - if so,
 
 try
     load(map_unique_filename)
-    disp('Registration Already ran! (neuron_map file detected in base directory). Delete file to re-run');
+    disp('Neuron Registration Already ran! (neuron_map file detected in base directory). Delete file to re-run');
 catch
 %% Get centers-of-mass of all cells after registering 2nd image to 1st image
 for k = 1:2
     % Load Neuron Masks and average activation
     load(fullfile(sesh(k).folder, 'ProcOut.mat'),'NeuronImage');
-    load(fullfile(sesh(k).folder, 'MeanBlobs.mat'),'BinBlobs');
+    try
+        load(fullfile(sesh(k).folder, 'MeanBlobs.mat'),'BinBlobs');
+    catch
+        disp(['Running MakeMeanBlobs for session ' num2str(k) ' - this may take awhile'])
+        load(fullfile(sesh(k).folder,'ProcOut.mat'),'c','cTon','GoodTrs');
+        MakeMeanBlobs(c,cTon,GoodTrs)
+    end
     if k == 2 % Don't get registration info if base session
         
         [tform_struct ] = get_reginfo(sesh(1).folder, sesh(2).folder, RegistrationInfoX );
@@ -115,8 +135,8 @@ for k = 1:2
     
     % overwrite NeuronImage to include ALLmasks for base folder if doing multiple
     % sessions
-    if k == 1 && multi_reg == 1
-        load(fullfile(sesh(1).folder,'Reg_NeuronIDs.mat'));
+    if k == 1 && multi_reg >= 1
+        load(fullfile(sesh(1).folder,['Reg_NeuronIDs_updatemasks' num2str(multi_reg-1) '.mat']));
         NeuronImage = Reg_NeuronIDs(1).AllMasks;
         BinBlobs = Reg_NeuronIDs(1).AllMasksMean;
     end
@@ -139,21 +159,52 @@ for k = 1:2
 %         sesh(k).cms(j).x = mean(jt);
 %         sesh(k).cms(j).y = mean(it);  
         % Dump centers-of-mass of neurons into day structure
-        if size(temp3,1) == 1
+        if size(temp3,1) == 0 % If registered neuron disappears, dump it to 0,0
+            disp([' Size zero neuron detected.  See neuron # ' num2str(j)])
+            sesh(k).cms(j).x = 0;
+            sesh(k).cms(j).y = 0;
+        elseif size(temp3,1) == 1 % Normal case
             sesh(k).cms(j).x = temp3.Centroid(1);
             sesh(k).cms(j).y = temp3.Centroid(2);
         else % If multiple blobs are present for a neuron, only use the largest one
             temp4 = regionprops(neuron_image_use,'ConvexArea');
             sizes = arrayfun(@(a) a.ConvexArea,temp4);
             blob_use = max(sizes) == sizes;
-            sesh(k).cms(j).x = temp3(blob_use).Centroid(1);
-            sesh(k).cms(j).x = temp3(blob_use).Centroid(2);
+            % Put in size limitation here - must be bigger than say, 20
+            % pixels!
+            try
+                if length(blob_use) > 1 || max(sizes) < 20
+                    disp(['MULTIPLE BLOBS AND/OR SMALL SIZE OF NEURON ' num2str(j) ...
+                        ' DETECTED.'])
+                    % Aribtrarily set the 1st valid valud in blob_use to 1
+                    temp = find(blob_use);
+                    blob_use = temp(1);
+                end
+                try % Debugging clause
+                    sesh(k).cms(j).x = temp3(blob_use).Centroid(1);
+                    sesh(k).cms(j).y = temp3(blob_use).Centroid(2);
+                catch
+                    disp('Error - sent to keyboard to check!')
+                    keyboard
+                end
+            catch
+                disp('Error in first try/catch statement')
+                keyboard
+            end
         end
         
         sesh(k).NeuronImage_reg{j} = neuron_image_use;
         sesh(k).NeuronMean_reg{j} = neuron_mean_use;
+        % Dump center of mass info into one array for each session for
+        % later use
+        sesh(k).cms_all(j,:) = [sesh(k).cms(j).x sesh(k).cms(j).y];
     end
+    
+    % Dump cms into arrays
+
 end
+
+
 
 % keyboard
 %% Get distance to all other neurons
@@ -192,7 +243,10 @@ cm_dist_min = min(cm_dist,[],2); % Get minimum distance to nearest neighbor for 
 % set
 n = 0;
 for j = 1:length(cm_dist_min)
-    if cm_dist_min(j) > min_thresh
+    % Exclude any neurons whose cms are outside the distance threshold or
+    % whose cms reside at 0,0 (meaning that they have disappeared due to
+    % registtration)
+    if cm_dist_min(j) > min_thresh || (sesh(1).cms(j).x == 0 && sesh(1).cms(j).y == 0)
         neuron_id{j,1} = [];
         n = n+1;
     else
@@ -211,7 +265,12 @@ neuron_id_nan = neuron_id;
 for j = 1:size(sesh(2).NeuronImage_reg,2);
     % Find cases where more than one neuron in the 1st session maps to
     % the same neuron in the second session
-    same_ind = find(cellfun(@(a) ~isempty(a) && a == j,neuron_id));
+    try % Debugging!
+        same_ind = find(cellfun(@(a) ~isempty(a) && a == j,neuron_id));
+    catch
+        disp('error')
+        keyboard
+    end
     if length(same_ind) > 1
 %         keyboard
         overlap_ratio = zeros(1,length(same_ind)); % Pre-allocate
@@ -221,6 +280,7 @@ for j = 1:size(sesh(2).NeuronImage_reg,2);
             % neuron_id variable
             same_neuron(same_ind(k),j) = 1;
             neuron_id_nan{same_ind(k)} = nan;
+            % Calculate overlapping pixels 
             overlap_pixels = sum(sesh(1).NeuronMean_reg{same_ind(k)}(:) & ...
                 sesh(2).NeuronMean_reg{j}(:));
             total_pixels = sum(sesh(1).NeuronMean_reg{same_ind(k)}(:) | ...
@@ -231,11 +291,11 @@ for j = 1:size(sesh(2).NeuronImage_reg,2);
             overlap_ratio(k) = overlap_pixels/total_pixels;
         end
         % Get neuron whose mask has the most overlap with the cell in the registration session
-        most_overlap = max(overlap_ratio) == overlap_ratio; 
+        most_overlap = find(max(overlap_ratio) == overlap_ratio);
         least_overlap = find(~most_overlap);
-        if sum(most_overlap) == 1 % Only choose the cell with the most overlap if it is truly the most
+        if length(most_overlap) == 1 % Only choose the cell with the most overlap if it is truly the most
             neuron_id{same_ind(most_overlap)} = j;   
-        elseif sum(most_overlap) > 1 % send all to nans if more than one neuron is completely inside the other
+        elseif length(most_overlap) > 1 % send all to nans if more than one neuron is completely inside the other
             for m = 1: length(most_overlap)
                 neuron_id{same_ind(most_overlap(m))} = nan;
             end
@@ -376,14 +436,17 @@ neuron_map.mouse = mouse_name;
 neuron_map.base_date = base_date;
 neuron_map.base_session = base_session;
 neuron_map.base_file = RegistrationInfoX.base_file;
+neuron_map.base_cms = sesh(1).cms_all;
 neuron_map.reg_date = reg_date;
 neuron_map.reg_session = reg_session;
 neuron_map.register_file = RegistrationInfoX.register_file;
+neuron_map.reg_cms = sesh(2).cms_all;
 neuron_map.neuron_id = neuron_id;
 neuron_map.same_neuron = same_neuron;
+ 
 neuron_map.num_bad_cells = num_bad_cells;
 
-if multi_reg == 1
+if multi_reg >= 1
     neuron_map.base_date = 'Multiple - all prior sessions in Reg_NeuronIDs in base directory';
     neuron_map.base_session = 'Multiple - all prior sessions in Reg_NeuronIDs in base directory';
 end
@@ -395,225 +458,4 @@ end % End try/catch statement
 
 
 end
-
-%% Old code we may be able to harvest to get cell overlaps and include for
-% registering cells in some fashion
-
-% new_cell_add = 3;
-% num_reg_ICs = size(reg_data.GoodICf,2);
-%
-% figure(FigNum)
-%
-% if use_manual_adjust == 1
-%     tform = tform_manual;
-% end
-%
-% reg_GoodICf = cellfun(@(a) imwarp(a,tform,'OutputView',imref2d(size(base_image)),'InterpolationMethod','nearest'), ...
-%     reg_data.GoodICf,'UniformOutput',0); % Register each IC to the base image
-%
-% % Create cell map cell variable if one doesn't already exist
-% if base_map == 1
-%     cell_map = cell(size(base_IC,2),2);
-%     cell_overlap = cell(size(base_IC,2),2);
-%     COM_weighted = cell(size(base_IC,2),2);
-%     for j = 1:size(cell_map,1)
-%         cell_map{j,1} = j;
-%         cell_overlap{j,1} = 1;
-%     end
-%     reg_col = 2;
-% elseif base_map == 0
-%     cell_map = base_data.cell_map;
-%     cell_overlap = base_data.cell_overlap;
-%     COM_weighted = base_data.COM_weighted;
-%     cell_map_header = base_data.cell_map_header;
-%     reg_col = size(cell_map,2) + 1;
-% end
-%
-%
-% % Step through each cell in registered image and match to base image cells.
-% % Note that if this is the base mapping, you are registering the GoodICfs
-% % to all the ICs from the base session.
-% overlap = cell(1,size(reg_data.GoodICf,2));
-% overlap_ratio = cell(1,size(reg_data.GoodICf,2));
-%
-%  % Get registered COMs
-%
-%  for j = 1:num_reg_ICs
-%      [reg_COM_weighted{j}(2) reg_COM_weighted{j}(1)] = transformPointsForward(tform,...
-%          reg_data.COM_weighted{j}(2),reg_data.COM_weighted{j}(1));
-%  end
-%
-% % NK Note - need to automate this for base mapping now? All ICs are good,
-% % apparently...
-% base_map_error_cells = [];
-% if base_map == 1
-%     runthrough = input('Do you want to step through and check each cell for the base mapping (y/n)?','s');
-% else
-%     runthrough = 'y';
-% end
-%
-%
-% CLIM_upper = max(max(base_data.AllIC,[],1),[],2) + new_cell_add;
-% h1 = figure(FigNum);
-% if strcmpi(runthrough,'y')
-%     for j = 1:num_reg_ICs
-%         num_cells_total = size(cell_map,1); % Get total number of cells
-%
-%         % Get union of each IC from the base image with the given registered IC
-%         temp = cellfun(@(a) a & reg_GoodICf{j},base_IC, ...
-%             'UniformOutput',0);
-%         overlap{j} = find(cellfun(@(a) sum(sum(a)) > 0,temp));
-%
-%         if ~isempty(overlap{j})
-% %             keyboard
-%             for k = 1:size(overlap{j},2)
-%                 overlap_ratio{j}(k) = sum(sum(temp{overlap{j}(k)}))/...
-%                     sum(sum(base_IC{overlap{j}(k)})); % Get ratio of mask that overlaps with each cell in base image
-%                 if overlap_ratio{j}(k) == 1 % Make overlap ratio > 100% if base IC is completely enveloped by reg IC
-%                    overlap_ratio{j}(k) = sum(sum(reg_GoodICf{j}))...
-%                        /sum(sum(base_IC{overlap{j}(k)}));
-%                 end
-%
-%             end
-%
-%             % Sort from most to least overlap
-%             if size(overlap{j},2) > 1
-%                 ii = [];
-%                 [overlap_ratio{j} ii] = sort(overlap_ratio{j},'descend');
-%                 overlap{j} = overlap{j}(ii);
-%             end
-%
-%             % Auto-assign cells that meet criteria
-%             override = [];
-%             if overlap_ratio{j}(1) >= overlap_auto_same && ...
-%                     sum(overlap_ratio{j} >= overlap_auto_same) == 1 % Auto-assign as same cell (unless more than 1 cell meets the criteria)
-%                 temp2 = overlap{j}(1);
-%                 disp([num2str(j) '/' num2str(num_reg_ICs) ') Automatically assigned to base image cell #' num2str(overlap{j}(1)) ]);
-% %                 override = input('Hit enter to proceed.  Hit "o" to override: ','s');
-%
-%             elseif overlap_ratio{j} < overlap_auto_new % Auto-assign as a new cell
-%                 temp2 = [];
-%                 disp([num2str(j) '/' num2str(num_reg_ICs) ')Automatically assigned as a new cell']);
-% %                 override = input('Hit enter to proceed.  Hit "o" to override: ','s');
-%             else  % Display overlap ratios on the screen if not auto-sorted
-%
-%                 % Calculate limits for plotting
-%                 zoom_pix = 25; % +/- pixels to zoom in
-%                 comb_level = max(max(base_data.AllIC + (base_data.AllIC + new_cell_add*reg_GoodICf{j}),[],1),[],2);
-%                 if comb_level == new_cell_add % catch if entirely new cell
-%                     comb_level = new_cell_add + 1;
-%                 end
-%                 xlim_zoom = [reg_COM_weighted{j}(2) - zoom_pix reg_COM_weighted{j}(2) + zoom_pix];
-%                 ylim_zoom = [reg_COM_weighted{j}(1) - zoom_pix reg_COM_weighted{j}(1) + zoom_pix];
-%
-%                 figure(FigNum)
-%                 subplot(3,3,[1 2 4 5]) % Overall View
-%                 imagesc(base_data.AllIC + new_cell_add*reg_GoodICf{j},[0 CLIM_upper]);
-%                 colorbar('YTick',[0 1 new_cell_add comb_level],'YTickLabel',...
-%                     {'','Base Image Cells','Reg Image Cells','Overlapping Cells'});
-%                 subplot(3,3,9) % Zoom-in View
-%                 imagesc(base_data.AllIC + new_cell_add*reg_GoodICf{j},[0 CLIM_upper]);
-%                 xlim(xlim_zoom); ylim(ylim_zoom);
-%
-%
-%                 for k = 1:size(overlap{j},2)
-%                     disp([num2str(j) '/' num2str(num_reg_ICs) ') This cell overlaps with base image cell #' ...
-%                         num2str(overlap{j}(k)) ' by ' num2str(100*overlap_ratio{j}(k),'%10.f') '%.'])
-%                 end
-%
-%
-%
-%
-%                 figure(FigNum); % For some reason figure 3 gets hidden occassionally when I get to this point, manually overriding. Doesn't work!
-%
-%                 % For cells with multiple overlap, plot out one cell at a time
-%                 % only!
-%                 if size(overlap{j},2) >= 1
-%
-%
-%                     subplot(3,3,3)
-%                     imagesc(base_data.GoodICf_comb{overlap{j}(1)} + new_cell_add*reg_GoodICf{j},[0 CLIM_upper]);
-%                     xlim(xlim_zoom); ylim(ylim_zoom); title(['Overlap with cell ' num2str(overlap{j}(1)) ' only']);
-%
-%                     if size(overlap{j},2) > 1
-%                         subplot(3,3,6)
-%                         imagesc(base_data.GoodICf_comb{overlap{j}(2)} + new_cell_add*reg_GoodICf{j},[0 CLIM_upper]);
-%                         xlim(xlim_zoom); ylim(ylim_zoom); title(['Overlap with cell ' num2str(overlap{j}(2)) ' only']);
-%                     else
-%                         subplot(3,3,6)
-%                         imagesc(zeros(size(base_data.GoodICf_comb{1})),[0 CLIM_upper]);
-%                     end
-%                 else
-%                     subplot(3,3,3)
-%                     imagesc(zeros(size(base_data.GoodICf_comb{1})),[0 CLIM_upper]);
-%                     subplot(3,3,6)
-%                     imagesc(zeros(size(base_data.GoodICf_comb{1})),[0 CLIM_upper]);
-%                 end
-%
-%             end
-%
-%             if base_map == 1
-%                 temp2 = overlap{j}(k); % THIS ISN'T IN A FOR LOOP, NEEDS TO BE CORRECTED/CHECKED
-%                 temp3 = input('Hit enter to confirm.  Enter cell number to log error in mapping this cell: ');
-%                 base_map_error_cells = [base_map_error_cells temp3];
-%             elseif strcmpi(override,'o') && base_map ~= 1 % NRK - make this simpler.  Automatically fill in cell with most overlap, and have user overwrite if not ok...?
-%                 temp2 = input('Enter base image cell number to register with this neuron (enter nothing for new neuron):');
-%                 % Check to make sure you didn't make an obvious error
-%                 if isempty(temp2) || sum(overlap{j} == temp2) == 0 && sum(overlap_ratio{j} >= 0.5) == 1
-%                     % Check if you entered a cell number that doesn't overlap, or
-%                     % new neuron was entered even though there is more than 80%
-%                     % overlap with a cell
-%                     temp2 = input('Possible error detected.  Confirm previous cell number entry: ');
-%                 elseif sum(overlap{j} == temp2) == 1 && overlap_ratio{j}(overlap{j} == temp2) < 0.5
-%                     % Check if you entered the neuron with lesser overlap by
-%                     % accident
-%                     temp2 = input('Possible error detected.  Confirm previous cell number entry: ');
-%                 end
-%
-%             end
-%
-%             if ~isempty(temp2)
-%                 cell_map{temp2,reg_col} = j; % Assign registered image good IC number to appropriate base image IC
-%                 cell_overlap{temp2,reg_col} = overlap_ratio{j}(overlap{j} == temp2); % Track overlap percentage
-%                 COM_weighted{temp2,reg_col} = reg_COM_weighted{j};
-%             elseif isempty(temp2)
-%                 cell_map{num_cells_total+1,reg_col} = j;
-%                 cell_overlap{num_cells_total+1,reg_col} = 1;
-%                 COM_weighted{num_cells_total+1,reg_col} = reg_COM_weighted{j};
-%             end
-%
-%
-%         elseif isempty(overlap{j})
-%
-%             % clear out the zoomed in single cell overlap subplots
-%             subplot(3,3,3)
-%             imagesc(zeros(size(base_data.GoodICf_comb{1})),[0 CLIM_upper]);
-%             subplot(3,3,6)
-%             imagesc(zeros(size(base_data.GoodICf_comb{1})),[0 CLIM_upper]);
-%
-%             disp([num2str(j) '/' num2str(num_reg_ICs) ...
-%                 ') No overlap with previous cells.  Automatically assigned as a new cell'])
-% %
-% %             temp4 = input([num2str(j) '/' num2str(num_reg_ICs) ...
-% %                 ')This cell does not overlap with any cells from base image. Hit any key to proceed.']);
-%             cell_map{num_cells_total+1,reg_col} = j;
-%             cell_overlap{num_cells_total+1,reg_col} = 1;
-%             COM_weighted{num_cells_total+1,reg_col} = reg_COM_weighted{j};
-%         end
-%
-%
-%     end
-% elseif strcmpi(runthrough,'n')
-%     cell_map(:,2) = cell_map(:,1);
-%     [cell_overlap{:,2}] = deal(1);
-%     COM_weighted(:,2) = reg_COM_weighted;
-% end
-%
-% FigNum = FigNum + 1;
-%
-% figure(FigNum) % Plot out combined cells after registration
-% subplot(2,1,1)
-% imagesc(base_data.AllIC+ AllIC_reg*new_cell_add,[0 CLIM_upper]); title('Combined Image Cells'); colormap(jet)
-% h = colorbar('YTick',[0 1 new_cell_add new_cell_add+1],'YTickLabel', {'','Base Image Cells','Reg Image Cells','Overlapping Cells'});
-
 
