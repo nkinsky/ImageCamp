@@ -22,7 +22,7 @@ h5create(outfile,'/Object',info.Dataspace.Size,'ChunkSize',[XDim YDim 1 1],'Data
 for i = 1:NumFrames
     
     if sum(i == bad_frames) > 0
-        replace_ind = i == bad_frames; % get index of bad frame to replace
+        replace_ind = (i == bad_frames); % get index of bad frame to replace
         F{i} = h5read(infile,'/Object',[1 1 replace_frames(replace_ind) 1],[XDim YDim 1 1]);
         h5write(outfile,'/Object',uint16(F{i}),[1 1 i 1],[XDim YDim 1 1]);
     else
