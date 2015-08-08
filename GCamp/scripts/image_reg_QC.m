@@ -288,6 +288,7 @@ end
 
 %% Scroll through cells mapped to the same neuron after multi session registration
 all_map = Reg_NeuronIDs(1).all_session_map;
+use_mean_blobs = 1;
 
 currdir = cd;
 ChangeDirectory(Reg_NeuronIDs(1).mouse,Reg_NeuronIDs(1).base_date,...
@@ -305,12 +306,20 @@ for j = 1:length(Reg_NeuronIDs)
         num2str(Reg_NeuronIDs(j).reg_session) '.mat']);
     load(load_filename);
     sesh(j+1).reginfo = RegistrationInfoX;
-    load(fullfile(Reg_NeuronIDs(j).reg_path,'\ProcOut.mat'),'NeuronImage');
+    
     % Register each mask in that session to the base
     disp(['Registering session ' num2str(j+1) ' neuron masks'])
+    if use_mean_blobs == 0
+        load(fullfile(Reg_NeuronIDs(j).reg_path,'\ProcOut.mat'),'NeuronImage');
+    elseif use_mean_blobs == 1
+        load(fullfile(Reg_NeuronIDs(j).reg_path,'\MeanBlobs.mat'),'BinBlobs');
+        NeuronImage = BinBlobs;
+    end
+    
     for k = 1:length(NeuronImage)
         sesh(j+1).NeuronImage_reg{k} = imwarp_NK(NeuronImage{k},RegistrationInfoX);
     end
+
     sesh(j+1).Date = Reg_NeuronIDs(j).reg_date;
     sesh(j+1).Session = Reg_NeuronIDs(j).reg_session;
 end
@@ -342,10 +351,11 @@ for j = 1:num_neurons
                bounds_use(2,:) = [min(bounds_image{1}(:,1)) - 5, max(bounds_image{1}(:,1)) + 5];
            end
        end
-       imagesc(neuron_plot)
+       imagesc_nan(neuron_plot)
        xlim(bounds_use(1,:)); ylim(bounds_use(2,:)); 
        title(['Neuron # ' num2str(neuron_ind) ' from ' sesh(k).Date ' Session ' ...
            num2str(sesh(k).Session)])
+       set(gca,'CLim',[0 1])
        % Put in title of each neuron and session date here
        % Scale each neuron the same!
    end

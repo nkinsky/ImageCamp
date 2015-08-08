@@ -5,7 +5,7 @@ function [ ] = MakeMeanBlobs_batch( session_struct, suppress_output )
 for j = 1:length(session_struct)
     ChangeDirectory_NK(session_struct(j));
     load('ProcOut.mat','c','cTon','GoodTrs')
-    MakeMeanBlobs(c, cTon, GoodTrs, 'suppress_output', suppress_output)
+    MakeMeanBlobs(c, cTon, GoodTrs, 'suppress_output', suppress_output);
 end
 
 
