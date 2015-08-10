@@ -6,6 +6,7 @@ close all
 mic_per_pix = 1.16; % To match previously used values
 spatial_ds = 2; % Factor to downsample
 spatial_filt = 20; % Number of pixels to use when applying the spatial mean and subtracting it later on.
+save_ds = 1; % enter if you want to save the down-sample movie before moving on (recommended for large movies)
 
 curr_dir = cd;
 
@@ -26,20 +27,22 @@ else
 end
 
 %% Step 1.32: Fix bad frames
-for i=1:num_files
-    if num_files > 1
-        thisfile = filename{i}(1:end-4); 
-    elseif num_files == 1
-        thisfile = filename(1:end-4); 
-    end
-    chunks = dir([thisfile, '*.tif']); 
-    numchunks = length(chunks);
-    
-    for j=1:numchunks
-        filetofix = chunks(j).name;
-        if ~exist([filetofix(1:end-4),'fixed.mat'],'file');
-            disp(['Checking ', filetofix, ' for bad frames...']);
-            FixFrames(filetofix); 
+if ~exist('skip_fix','var') || skip_fix ~= 1
+    for i=1:num_files
+        if num_files > 1
+            thisfile = filename{i}(1:end-4);
+        elseif num_files == 1
+            thisfile = filename(1:end-4);
+        end
+        chunks = dir([thisfile, '*.tif']);
+        numchunks = length(chunks);
+        
+        for j=1:numchunks
+            filetofix = chunks(j).name;
+            if ~exist([filetofix(1:end-4),'fixed.mat'],'file');
+                disp(['Checking ', filetofix, ' for bad frames...']);
+                FixFrames(filetofix);
+            end
         end
     end
 end
@@ -56,7 +59,18 @@ for j = 1:num_files
     'pixelWidth', mic_per_pix, 'pixelHeight', mic_per_pix);
 end
 
-%% Step 1.67: Concatenate Files if multiple are selected
+%% Step 1.67: Downsample Files - note that this MUST happen before anything else
+% since downsampling will fix any dropped frames!!!
+
+for j = 1:num_files
+    % Downsample
+    disp(['Downsampling Movie file ' num2str(j) ' spatially.'])
+    sesh(j).movie = mosaic.resampleMovie(sesh(j).movie, 'spatialReduction', spatial_ds,...
+    'temporalReduction', 1, 'useParallelization', 1);
+end
+
+%% Step  1.75: Concatenate files - note that this MUST happen after 
+
 if num_files == 1
     movie_use = sesh(j).movie;
 elseif num_files >= 1
@@ -71,12 +85,14 @@ disp('Check if concatenation has happened properly!: view each movie independent
 %% Step 2: Downsample spatially by a factor of 2
 cd(pathname)
 
-movie_use = mosaic.resampleMovie(movie_use, 'spatialReduction', spatial_ds,...
-    'temporalReduction', 1, 'useParallelization', 1);
-
+if save_ds == 1
+    mosaic.saveOneObject(movie_use,'CatMovie_ds.mat');
+end
 % movie_ds = mosaic.resampleMovie(movie_use, 'spatialReduction', spatial_ds,...
 %     'useParallelization', 1);
 
+% % Save in case of a crash
+% mosaic.saveOneObject(movie_use,'CatMovie_ds.mat');
 %% Step 3 (USER INPUT): Crop movie - don't do this for now - screws up later cropping and isn't really worth it!!!
 % [ rect_crop_mos, rect_crop ] = mos_cropmovie_gui( movie_use);
 % 
@@ -183,10 +199,10 @@ h = mos_tiff_to_fig(min_proj_int, save_name, title_label );
 
 disp('Saving MotCorrMovie for final editing')
 mosaic.saveOneObject(mot_corr_movie,'MotCorrMovie.mat');
-disp('Check for MotCorrMovie.mat.  If saved correctly, type "return" to enter Mosaic standalone and do your final editing');
-keyboard
+
+disp('Check for MotCorrMovie.mat.  If saved correctly, type "return" and then open Mosaic standalone to do your final editing');
 mosaic.terminate()
-mosaicOpenGui
+clear all
 
 % %% Step 8: Create min projection and display
 % 
@@ -207,4 +223,4 @@ mosaicOpenGui
 % 
 % cd(curr_dir)
 
-mosaic.terminate()
+% mosaic.terminate()
