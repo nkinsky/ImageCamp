@@ -121,9 +121,9 @@ for k = 1:end_frame
        h5write(outfile,'/Object',uint16(Fuse),[1 1 k 1],[XDim YDim 1 1]); % write good frame to the appropriate spot
        
        % interpolate if it is a single, isolated dropped frame!
-       if 
-           
-       end
+%        if 
+%            
+%        end
    end
 end
 
