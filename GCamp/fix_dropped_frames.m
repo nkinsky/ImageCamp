@@ -4,7 +4,7 @@ function [] = fix_dropped_frames(infile,varargin)
 % if Mosaic did not account for them
 %
 % INPUTS
-%   infile: full pathname to the file you want to check/fix
+%   infile: full pathname to the h5 file you want to check/fix
 %   
 %   YOU MUST ENTER ONE OF THE FOLLOWING:
 %   'frames': enter as fix_dropped_frames(...'frames', 1 x n array,...)  where each entry is the
@@ -44,6 +44,14 @@ for j = 1:length(varargin)
    end
 end
 
+%% 0.25) Get Dropped Frame info from the text file
+
+if exist('txt_files','var')
+    for j = 1:num_files
+        [frames(1,j), ~, dropped_frames{j}] = get_droppedframe_info(txt_files{j});
+    end
+end
+
 %% 0.5) Check for edge case where the 1st frame is bad - haven't figure this out yet!
 
 for j = 1:num_files
@@ -62,6 +70,8 @@ end
 %   - will require writing subfunction(s) that grab these values out of the
 %   text file of xml file - this might be hard for xml files
 
+
+
 end_frame = 0;
 frames_total = zeros(size(frames));
 real_frame_ind_all = [];
@@ -78,7 +88,7 @@ for j = 1:num_files
     %   into the new .h5 file, and continue on.
     n = 1; % Set start frame
     n_good = 1;
-    for k = 1:frames(j)
+    for k = 1:frames_total(j)
         if sum(n == dropped_frames{j}) == 0
             real_frame_ind{j}(n_good) = n;  % %Tells you where each frame in the existing movie should go in the fixed movie
             n_good = n_good + 1; % update frame number in existing h5 file
@@ -94,7 +104,7 @@ for j = 1:num_files
     end_frame = end_frame + frames_total(j); % Update the true number frames there should be after each session is concatenated
 end
 
-
+keyboard
 %% 2) Set up the h5 movie
 
 info = h5info(infile,'/Object');
@@ -105,6 +115,8 @@ YDim = info.Dataspace.Size(2);
 ext_ind = regexpi(infile,'.h5');
 outfile = [infile(1:ext_ind-1) '_fixed.h5'];
 h5create(outfile,'/Object',info.Dataspace.Size,'ChunkSize',[XDim YDim 1 1],'Datatype','uint16');
+
+keyboard
 
 %% 3) Scroll through successive dropped frames and add them in
 %   - if the # of dropped frames is 1, interpolate, otherwise replace with

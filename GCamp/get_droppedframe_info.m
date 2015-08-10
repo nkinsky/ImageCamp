@@ -16,18 +16,17 @@ function [ frames, dropped_count, dropped_ind] = get_droppedframe_info(varargin)
 %
 %   dropped_ind: the frames numbers of the dropped frames
 
-keyboard
 
 %% Step 1: Import text files
 
-if length(varargin) > 0
-file = file_select_batch('*.txt');
-num_files = length(file);
+if isempty(varargin)
+    file = file_select_batch('*.txt');
 else
     for j = 1:length(varargin)
         file(j).path = varargin{j};
     end
 end
+num_files = length(file);
 
 for j = 1:num_files
     fid = fopen(file(j).path);
@@ -39,8 +38,8 @@ for j = 1:num_files
     dropped_ind_row = cellfun(@(a) strcmp(a,'DROPPED'),sesh(j).data{1});
     
     % Get frame information
-    frames = sesh(j).data{2}{frame_row};
-    dropped_count = sesh(j).data{2}{dropped_count_row};
+    frames = str2num(sesh(j).data{2}{frame_row});
+    dropped_count = str2num(sesh(j).data{2}{dropped_count_row});
     
     % Get dropped frames numbers
     temp = sesh(j).data{2}{dropped_ind_row};
