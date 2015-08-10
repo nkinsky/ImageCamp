@@ -16,7 +16,7 @@ disp('Select file(s) you wish to analyze.  Hit Cancel after you have selected yo
 f = 1; p = 1; n = 1;
 while f ~= 0
    [f p] = uigetfile(filterspec,['Select Session ' num2str(n) 'File: ']);
-   temp(n).path = [p f];
+   temp(n).path = fullfile(p, f);
    temp(n).folder = p;
    if f ~= 0
        n = n + 1;
