@@ -172,8 +172,6 @@ ref_roi = mosaic.PolygonRoi(pointList);
 
 hmc = mot_corr_movie.view();
 mosaic.saveOneObject(mc_parameters, 'MotCorrData.mat'); % Save Motion correction Data
-disp('Here is your chance to check the motion correction');
-keyboard
 close(hmc)
 
 % NEED TO ADD STEP HERE TO PLOT OUT MOTCORRDATA!!!
@@ -201,6 +199,7 @@ disp('Saving MotCorrMovie for final editing')
 mosaic.saveOneObject(mot_corr_movie,'MotCorrMovie.mat');
 
 disp('Check for MotCorrMovie.mat.  If saved correctly, type "return" and then open Mosaic standalone to do your final editing');
+keyboard
 mosaic.terminate()
 clear all
 
