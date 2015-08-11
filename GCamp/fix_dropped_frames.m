@@ -102,6 +102,7 @@ for j = 1:num_files
     end_frame = end_frame + frames_total(j); % Update the true number frames there should be after each session is concatenated
 end
 
+
 %% 2) Set up the h5 movie - put this in a directory parallel to the original movie
 
 info = h5info(infile,'/Object');
@@ -122,8 +123,9 @@ new_dir = [inpath(1:cut_off-1) '_fixed-Objects'];
 if exist(new_dir,'dir') ~=7
     mkdir(new_dir)
 else % Error clause to make sure you don't overwrite anything accidentally
-    disp(['New directory: ' new_dir ' already exists'])
-    error(['Please clear it out, delete the folder, and start the function over again'])
+    disp(['New directory: ' new_dir ' already exists.  Proceeding may overwrite anything in it!'])
+    disp('Type ''return'' to continue, or quit and check/clear out the directory if you are unsure')
+    keyboard
 end
 
 % Make new .h5 filename and file
@@ -156,7 +158,7 @@ parent_end = max(regexpi(inpath,ff));
 new_matfilename2 = fullfile(inpath(1:parent_end-1),[inpath(dir_start+1:cut_off-1) '_fixed.mat']);
 clear Index
 Index{1} = Index_temp;
-save(new_matfilename1,'Index');
+save(new_matfilename2,'Index');
 
 % keyboard
 
