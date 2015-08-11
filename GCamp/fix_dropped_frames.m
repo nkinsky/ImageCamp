@@ -102,7 +102,6 @@ for j = 1:num_files
     end_frame = end_frame + frames_total(j); % Update the true number frames there should be after each session is concatenated
 end
 
-% keyboard
 %% 2) Set up the h5 movie - put this in a directory parallel to the original movie
 
 info = h5info(infile,'/Object');
@@ -112,9 +111,52 @@ YDim = info.Dataspace.Size(2);
 size_metadata_use = info.Dataspace.Size;
 size_metadata_use(3) = end_frame;
 
-ext_ind = regexpi(infile,'.h5');
-outfile = [infile(1:ext_ind-1) '_fixed.h5'];
+% Set-up new directory and accompanying files for fixed file - this will
+% make the new files compatible with Mosaic
+[inpath, in_filename, ext] = fileparts(infile); % Get fileparts
+% Set up new directory
+ff = filesep;
+dir_start = max(regexpi(inpath,ff));
+cut_off = max(regexpi(inpath,'-Objects'));
+new_dir = [inpath(1:cut_off-1) '_fixed-Objects'];
+if exist(new_dir,'dir') ~=7
+    mkdir(new_dir)
+else % Error clause to make sure you don't overwrite anything accidentally
+    disp(['New directory: ' new_dir ' already exists'])
+    error(['Please clear it out, delete the folder, and start the function over again'])
+end
+
+% Make new .h5 filename and file
+ext_ind = regexpi(in_filename,'.h5');
+new_h5filename = [in_filename '_fixed.h5'];
+outfile = fullfile(new_dir,new_h5filename);
 h5create(outfile,'/Object',size_metadata_use,'ChunkSize',[XDim YDim 1 1],'Datatype','uint16');
+
+% Now, load original .mat reference file in the ICmovie directory
+new_matfilename1 = [in_filename '_fixed.mat'];
+new_mat1file = fullfile(new_dir, new_matfilename1); % New matlab filename
+load(fullfile(inpath,[in_filename '.mat']));  % Load original .mat file with Object and Index variables
+% Fix Index file
+Index.ObjFile = new_matfilename1;
+Index.H5File = new_h5filename;
+Index.DataSize = size_metadata_use;
+Index_temp = Index; % Send to temp file for later...
+% Fix Object file
+Object.DataSize = size_metadata_use;
+max_time = Object.TimeFrame(end);
+orig_numframes = length(Object.TimeFrame);
+SR_use = 1/round(Object.FrameRate,0);
+Object.TimeFrame(orig_numframes+1:end_frame) = max_time+SR_use:SR_use:max_time+SR_use*(end_frame-orig_numframes);
+% Save everything in the appropriate file
+save(new_mat1file,'Index','Object');
+
+% Finally, copy over Index file and save .mat reference file that lives in
+% directory above
+parent_end = max(regexpi(inpath,ff));
+new_matfilename2 = fullfile(inpath(1:parent_end-1),[inpath(dir_start+1:cut_off-1) '_fixed.mat']);
+clear Index
+Index{1} = Index_temp;
+save(new_matfilename1,'Index');
 
 % keyboard
 
@@ -122,13 +164,13 @@ h5create(outfile,'/Object',size_metadata_use,'ChunkSize',[XDim YDim 1 1],'Dataty
 %   - if the # of dropped frames is 1, interpolate, otherwise replace with
 %   the previous good frame
 
-n_good_use = 1;
+n_good_use = 0;
 for k = 1:end_frame
     try
         if sum(k == real_frame_ind_all) == 1 % Good (non-dropped) frame
+            n_good_use = n_good_use + 1; % update current good frame to use
             Fuse = h5read(infile,'/Object',[1 1 n_good_use 1],[XDim YDim 1 1]); % Grab good frame
             h5write(outfile,'/Object',uint16(Fuse),[1 1 k 1],[XDim YDim 1 1]); % write good frame to the appropriate spot
-            n_good_use = n_good_use + 1; % update current good frame to use
         elseif sum(k == dropped_frames_all) == 1 % Dropped frame
             Fuse = h5read(infile,'/Object',[1 1 n_good_use 1],[XDim YDim 1 1]); % Grab good frame
             h5write(outfile,'/Object',uint16(Fuse),[1 1 k 1],[XDim YDim 1 1]); % write good frame to the appropriate spot
