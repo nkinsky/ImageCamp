@@ -4,7 +4,7 @@ function [] = fix_dropped_frames(infile,varargin)
 % if Mosaic did not account for them
 %
 % INPUTS
-%   infile: full pathname to the file you want to check/fix
+%   infile: full pathname to the h5 file you want to check/fix
 %   
 %   YOU MUST ENTER ONE OF THE FOLLOWING:
 %   'frames': enter as fix_dropped_frames(...'frames', 1 x n array,...)  where each entry is the
@@ -44,10 +44,18 @@ for j = 1:length(varargin)
    end
 end
 
+%% 0.25) Get Dropped Frame info from the text file
+
+if exist('txt_files','var')
+    for j = 1:num_files
+        [frames(1,j), ~, dropped_frames{j}] = get_droppedframe_info(txt_files{j});
+    end
+end
+
 %% 0.5) Check for edge case where the 1st frame is bad - haven't figure this out yet!
 
 for j = 1:num_files
-   if dropped_frames{j}(1) == 1
+   if ~isempty(dropped_frames{j}) && dropped_frames{j}(1) == 1
        error('1st frame is bad - haven''t implemented this edge case fix yet.  Sorry!  At least I acknowledged it')
    end
 end
@@ -78,7 +86,7 @@ for j = 1:num_files
     %   into the new .h5 file, and continue on.
     n = 1; % Set start frame
     n_good = 1;
-    for k = 1:frames(j)
+    for k = 1:frames_total(j)
         if sum(n == dropped_frames{j}) == 0
             real_frame_ind{j}(n_good) = n;  % %Tells you where each frame in the existing movie should go in the fixed movie
             n_good = n_good + 1; % update frame number in existing h5 file
@@ -95,42 +103,95 @@ for j = 1:num_files
 end
 
 
-%% 2) Set up the h5 movie
+%% 2) Set up the h5 movie - put this in a directory parallel to the original movie
 
 info = h5info(infile,'/Object');
-NumFrames = info.Dataspace.Size(3);
 XDim = info.Dataspace.Size(1);
 YDim = info.Dataspace.Size(2);
 
-ext_ind = regexpi(infile,'.h5');
-outfile = [infile(1:ext_ind-1) '_fixed.h5'];
-h5create(outfile,'/Object',info.Dataspace.Size,'ChunkSize',[XDim YDim 1 1],'Datatype','uint16');
+size_metadata_use = info.Dataspace.Size;
+size_metadata_use(3) = end_frame;
+
+% Set-up new directory and accompanying files for fixed file - this will
+% make the new files compatible with Mosaic
+[inpath, in_filename, ext] = fileparts(infile); % Get fileparts
+% Set up new directory
+ff = filesep;
+dir_start = max(regexpi(inpath,ff));
+cut_off = max(regexpi(inpath,'-Objects'));
+new_dir = [inpath(1:cut_off-1) '_fixed-Objects'];
+if exist(new_dir,'dir') ~=7
+    mkdir(new_dir)
+else % Error clause to make sure you don't overwrite anything accidentally
+    disp(['New directory: ' new_dir ' already exists.  Proceeding may overwrite anything in it!'])
+    disp('Type ''return'' to continue, or quit and check/clear out the directory if you are unsure')
+    keyboard
+end
+
+% Make new .h5 filename and file
+ext_ind = regexpi(in_filename,'.h5');
+new_h5filename = [in_filename '_fixed.h5'];
+outfile = fullfile(new_dir,new_h5filename);
+h5create(outfile,'/Object',size_metadata_use,'ChunkSize',[XDim YDim 1 1],'Datatype','uint16');
+
+% Now, load original .mat reference file in the ICmovie directory
+new_matfilename1 = [in_filename '_fixed.mat'];
+new_mat1file = fullfile(new_dir, new_matfilename1); % New matlab filename
+load(fullfile(inpath,[in_filename '.mat']));  % Load original .mat file with Object and Index variables
+% Fix Index file
+Index.ObjFile = new_matfilename1;
+Index.H5File = new_h5filename;
+Index.DataSize = size_metadata_use;
+Index_temp = Index; % Send to temp file for later...
+% Fix Object file
+Object.DataSize = size_metadata_use;
+max_time = Object.TimeFrame(end);
+orig_numframes = length(Object.TimeFrame);
+SR_use = 1/round(Object.FrameRate,0);
+Object.TimeFrame(orig_numframes+1:end_frame) = max_time+SR_use:SR_use:max_time+SR_use*(end_frame-orig_numframes);
+% Save everything in the appropriate file
+save(new_mat1file,'Index','Object');
+
+% Finally, copy over Index file and save .mat reference file that lives in
+% directory above
+parent_end = max(regexpi(inpath,ff));
+new_matfilename2 = fullfile(inpath(1:parent_end-1),[inpath(dir_start+1:cut_off-1) '_fixed.mat']);
+clear Index
+Index{1} = Index_temp;
+save(new_matfilename2,'Index');
+
+% keyboard
 
 %% 3) Scroll through successive dropped frames and add them in
 %   - if the # of dropped frames is 1, interpolate, otherwise replace with
 %   the previous good frame
 
-n_good_use = 1;
+n_good_use = 0;
 for k = 1:end_frame
-   if sum(k == real_frame_ind_all) == 1 % Good (non-dropped) frame
-       Fuse = h5read(infile,'/Object',[1 1 n_good_use 1],[XDim YDim 1 1]); % Grab good frame
-       h5write(outfile,'/Object',uint16(Fuse),[1 1 k 1],[XDim YDim 1 1]); % write good frame to the appropriate spot
-       n_good_use = n_good_use + 1; % update current good frame to use
-   elseif sum(k == dropped_frames_all) == 1 % Dropped frame
-       Fuse = h5read(infile,'/Object',[1 1 n_good_use 1],[XDim YDim 1 1]); % Grab good frame
-       h5write(outfile,'/Object',uint16(Fuse),[1 1 k 1],[XDim YDim 1 1]); % write good frame to the appropriate spot
-       
-       % interpolate if it is a single, isolated dropped frame!
-       if 
-           
-       end
-   end
+    try
+        if sum(k == real_frame_ind_all) == 1 % Good (non-dropped) frame
+            n_good_use = n_good_use + 1; % update current good frame to use
+            Fuse = h5read(infile,'/Object',[1 1 n_good_use 1],[XDim YDim 1 1]); % Grab good frame
+            h5write(outfile,'/Object',uint16(Fuse),[1 1 k 1],[XDim YDim 1 1]); % write good frame to the appropriate spot
+        elseif sum(k == dropped_frames_all) == 1 % Dropped frame
+            Fuse = h5read(infile,'/Object',[1 1 n_good_use 1],[XDim YDim 1 1]); % Grab good frame
+            h5write(outfile,'/Object',uint16(Fuse),[1 1 k 1],[XDim YDim 1 1]); % write good frame to the appropriate spot
+            % interpolate if it is a single, isolated dropped frame!
+            %        if
+            %
+            %        end
+        end
+    catch
+        disp('Error in the above - check it!')
+        keyboard
+    end
 end
 
 % Check to make sure everything worked
 if n_good_use ~= sum(frames)
-    disp('Did not use all the original frames.  Something is screwed up!')
+    disp('Did not use all the original frames.  Something might be screwed up!')
 end
 
+%%
 
 end
