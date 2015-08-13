@@ -196,7 +196,6 @@ h = mos_tiff_to_fig(min_proj_int, save_name, title_label );
 %% Step 7.5: Save MotCorrMovie to be adjusted in Mosaic standalone until I
 % figure out why the crop isn't working...
 
-
 disp('Saving MotCorrMovie for final editing')
 mosaic.saveOneObject(mot_corr_movie,'MotCorrMovie.mat');
 
