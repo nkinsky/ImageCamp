@@ -178,12 +178,16 @@ close(hmc)
 
 % NEED TO ADD STEP HERE TO PLOT OUT MOTCORRDATA!!!
 
-%% Step 7; Automagically crop the movie to eliminate the border...or do this manually?
-% Annoying intermediate step - save and reload min_proj
+%% Step 7; Save
+% Annoying intermediate step - get maximum and minimum projections and save
+% for easy cropping later in Mosaic
 cd(pathname)
 save_name = 'MotCorrMovie.tif';
 title_label = 'Motion Correction Movie Minimum Projection';
 min_proj_int = mosaic.projectMovie(mot_corr_movie,'projectionType','Minimum');
+mosaic.saveOneObject(min_proj_int,'MotCorrMovie_min_proj.mat');
+max_proj_int = mosaic.projectMovie(mot_corr_movie,'projectionType','Maximum');
+mosaic.saveOneObject(max_proj_int,'MotCorrMovie_max_proj.mat');
 h = mos_tiff_to_fig(min_proj_int, save_name, title_label );
 
 % % Manually for now - get min rectangle
