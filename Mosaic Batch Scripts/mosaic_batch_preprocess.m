@@ -184,7 +184,10 @@ cd(pathname)
 save_name = 'MotCorrMovie.tif';
 title_label = 'Motion Correction Movie Minimum Projection';
 min_proj_int = mosaic.projectMovie(mot_corr_movie,'projectionType','Minimum');
-h = mos_tiff_to_fig(min_proj_int, save_name, title_label );
+mosaic.saveOneObject(min_proj_int,'MotCorrMovie_min_proj.mat');
+max_proj_int = mosaic.projectMovie(mot_corr_movie,'projectionType','Maximum');
+mosaic.saveOneObject(max_proj_int,'MotCorrMovie_max_proj.mat');
+% h = mos_tiff_to_fig(min_proj_int, save_name, title_label );
 
 % % Manually for now - get min rectangle
 % [ rect_crop_mos, rect_crop ] = mos_cropmovie_gui( mot_corr_movie);
