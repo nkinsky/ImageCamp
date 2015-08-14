@@ -1,6 +1,7 @@
 % Script to get correlations between all sessions that pass the transitive
 % test
 
+rotate_to_std = 0;
 working_dir = uigetdir('Pick your working directory:');
 %% 1) Load both Reg_NeuronID files (updatemasks = 0 and updatemasks = 1).
 disp('Loading Reg_NeuronIDs and batch_session_map')
@@ -21,7 +22,11 @@ disp('Loading TMaps for each session')
 for j = 1:num_sessions
    ChangeDirectory(Animal, sesh(j).date,...
        sesh(j).session);
-   load('PlaceMaps.mat','TMap');
+   if rotate_to_std == 0
+       load('PlaceMaps.mat','TMap');
+   elseif rotate_to_std == 1
+       load('PlaceMaps_rot_to_std.mat','TMap');
+   end
    sesh(j).TMap = TMap;
        
 end
