@@ -22,17 +22,21 @@ mosaic.initialize();
 
 if iscell(filename)
     num_files = size(filename,2);
+    for j = 1:num_files
+       fullpath{j} = fullfile(pathname,filename{j}); 
+    end
 else
     num_files = 1;
+    fullpath = fullfile(pathname,filename); 
 end
 
 %% Step 1.32: Fix bad frames
 if ~exist('skip_fix','var') || skip_fix ~= 1
     for i=1:num_files
         if num_files > 1
-            thisfile = filename{i}(1:end-4);
+            thisfile = fullpath{i}(1:end-4);
         elseif num_files == 1
-            thisfile = filename(1:end-4);
+            thisfile = fullpath(1:end-4);
         end
         chunks = dir([thisfile, '*.tif']);
         numchunks = length(chunks);
@@ -50,17 +54,24 @@ end
 %% Step 1.33: Load files
 
 for j = 1:num_files
-    if num_files == 1
-        fullpath = [pathname filename];
-    elseif num_files > 1
-        fullpath = [pathname filename{j}] ;
-    end
-    sesh(j).movie = mosaic.loadMiniscope(fullpath,'loadingOption','stream',...
+    sesh(j).movie = mosaic.loadMiniscope(fullpath{j},'loadingOption','stream',...
     'pixelWidth', mic_per_pix, 'pixelHeight', mic_per_pix);
 end
 
 %% Step 1.67: Downsample Files - note that this MUST happen before anything else
 % since downsampling will fix any dropped frames!!!
+
+% Check if TIFF filesize is less than or equal to 720 x 540 and spit out a
+% warning that one must check MANUALLY for bad frames - do this here and at
+% the end!
+
+temp2 = imread(filetofix,'TIFF','Index',1); % Get sample file
+if size(temp2,1) <= 540 && size(temp2,2) <= 720
+    dropped_frame_warn = 1;
+    disp('DATA HAS ALREADY BEEN DOWN-SAMPLED.  IF YOU HAVE DROPPED FRAMES YOU MAY NEED TO FIX MANUALLY WITH fix_dropped_frames FUNCTION!')
+else
+    dropped_frame_warn = 0;
+end
 
 for j = 1:num_files
     % Downsample
@@ -173,7 +184,7 @@ ref_roi = mosaic.PolygonRoi(pointList);
 hmc = mot_corr_movie.view();
 mosaic.saveOneObject(mc_parameters, 'MotCorrData.mat'); % Save Motion correction Data
 disp('Here is your chance to check the motion correction');
-keyboard
+% keyboard
 close(hmc)
 
 % NEED TO ADD STEP HERE TO PLOT OUT MOTCORRDATA!!!
@@ -198,13 +209,17 @@ h = mos_tiff_to_fig(min_proj_int, save_name, title_label );
 %  % This isn't working for some reason - do in mosaic standalone?
 
 %% Step 7.5: Save MotCorrMovie to be adjusted in Mosaic standalone until I
-% figure out why the crop isn't working...
-
+% 
 
 disp('Saving MotCorrMovie for final editing')
 mosaic.saveOneObject(mot_corr_movie,'MotCorrMovie.mat');
 
 disp('Check for MotCorrMovie.mat.  If saved correctly, type "return" and then open Mosaic standalone to do your final editing');
+
+% Display dropped-frame warning if applicable!
+if dropped_frame_warn == 1
+    disp('DATA HAS ALREADY BEEN DOWN-SAMPLED.  IF YOU HAVE DROPPED FRAMES YOU MAY NEED TO FIX MANUALLY WITH fix_dropped_frames FUNCTION!')
+end
 mosaic.terminate()
 clear all
 
