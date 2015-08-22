@@ -30,7 +30,6 @@ runlengths = goodepochs(:,2)-goodepochs(:,1)+1;
 runused = zeros(size(runlengths));
 
 for i = 1:NumShuffles
-    i;
     shufftrace = zeros(size(Trace));
     for j = 1:NumAct
         % randomly pick a running epoch to assign to
@@ -60,7 +59,6 @@ for i = 1:NumShuffles
     shuffmax(i) = max(tempplacemap(:));
     %figure(999);plot(Trace);hold on;plot(shufftrace,'-r');hold off;pause;
 end
-
 pval = length(find(shuffmax > maxplace))/NumShuffles;
 
 

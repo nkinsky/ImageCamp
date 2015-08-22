@@ -33,31 +33,38 @@ function [bounds, rot_x, rot_y, rotang] = sections(x, y, skip_rot_check, varargi
 %
 
 %% Get varargins
+manual_rot_overwrite = 0; 
+
 for j = 1:length(varargin)
    if strcmpi(varargin{j},'manual_rot_overwrite') 
       manual_rot_overwrite = varargin{j+1}; 
    end
 end
 %% Assign skip_rot_check if not specified
-if ~exist('skip_rot_check','var') || ~exist(fullfile(pwd,'rotated.mat'),'file')
+if ~exist('skip_rot_check','var') || ~exist(fullfile(pwd,'rotated.mat'),'file') || ~exist(fullfile(pwd,'Pos_align.mat'),'file')
     skip_rot_check = 0;
 end
+
+%% Try loading previous rotation angle.
+    try 
+        load(fullfile(pwd,'Pos_align.mat'),'x_adj_cm','y_adj_cm');
+        rot_x = x_adj_cm;
+        rot_y = y_adj_cm; 
+    catch
+        try
+            load(fullfile(pwd,'rotated.mat'));
+            % Run the rotation anyway if manual override is specified
+            if manual_rot_overwrite == 1
+               [rot_x,rot_y,rotang] = rotate_traj(x,y);
+            end
+        catch
+        	[rot_x,rot_y,rotang] = rotate_traj(x,y);
+        end
+    end
+    
 %% Correct for rotated maze. 
 skewed = 1;
 while skewed
-    
-    %Try loading previous rotation angle.
-    try 
-        load(fullfile(pwd,'rotated.mat'));
-        % Run the rotation anyway if manual override is specified
-        if manual_rot_overwrite == 1
-           [rot_x,rot_y,rotang] = rotate_traj(x,y);
-        end
-    catch
-        [rot_x,rot_y,rotang] = rotate_traj(x,y);
-    end
-    
-    
     %% Get xy coordinate bounds for maze sections.
     xmax = max(rot_x); xmin = min(rot_x);
     ymax = max(rot_y); ymin = min(rot_y);
@@ -135,7 +142,7 @@ while skewed
         end
         if strcmp(satisfied,'y')       %Break.
             skewed = 0;
-            save rotated rotang rot_x rot_y;
+            save rotated rot_x rot_y;
         elseif strcmp(satisfied,'n');  %Delete last rotation and try again.
             if exist(fullfile(pwd, 'rotated.mat'), 'file') == 2
                 delete rotated.mat;
