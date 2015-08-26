@@ -1,6 +1,7 @@
 % Mosaic Batch Pre-processing
 
 close all
+clear all
 
 %% Variables to tweak?
 mic_per_pix = 1.16; % To match previously used values
@@ -32,6 +33,7 @@ end
 
 %% Step 1.32: Fix bad frames
 if ~exist('skip_fix','var') || skip_fix ~= 1
+    disp('Checking and fixing bad frames if necessary')
     for i=1:num_files
         if num_files > 1
             thisfile = fullpath{i}(1:end-4);
@@ -42,11 +44,15 @@ if ~exist('skip_fix','var') || skip_fix ~= 1
         numchunks = length(chunks);
         
         for j=1:numchunks
-            filetofix = chunks(j).name;
+            tic
+            filetofix = fullfile(pathname,chunks(j).name);
             if ~exist([filetofix(1:end-4),'fixed.mat'],'file');
                 disp(['Checking ', filetofix, ' for bad frames...']);
                 FixFrames(filetofix);
+            else
+                disp('Using previously fixed files')
             end
+            toc
         end
     end
 end
@@ -54,8 +60,14 @@ end
 %% Step 1.33: Load files
 
 for j = 1:num_files
-    sesh(j).movie = mosaic.loadMiniscope(fullpath{j},'loadingOption','stream',...
-    'pixelWidth', mic_per_pix, 'pixelHeight', mic_per_pix);
+    if num_files > 1
+        sesh(j).movie = mosaic.loadMiniscope(fullpath{j},'loadingOption','stream',...
+            'pixelWidth', mic_per_pix, 'pixelHeight', mic_per_pix);
+    else
+      sesh(j).movie = mosaic.loadMiniscope(fullpath,'loadingOption','stream',...
+            'pixelWidth', mic_per_pix, 'pixelHeight', mic_per_pix);
+    end
+
 end
 
 %% Step 1.67: Downsample Files - note that this MUST happen before anything else
@@ -68,17 +80,19 @@ end
 temp2 = imread(filetofix,'TIFF','Index',1); % Get sample file
 if size(temp2,1) <= 540 && size(temp2,2) <= 720
     dropped_frame_warn = 1;
+    save_ds = 0;
     disp('DATA HAS ALREADY BEEN DOWN-SAMPLED.  IF YOU HAVE DROPPED FRAMES YOU MAY NEED TO FIX MANUALLY WITH fix_dropped_frames FUNCTION!')
 else
     dropped_frame_warn = 0;
-end
-
-for j = 1:num_files
+    for j = 1:num_files
     % Downsample
     disp(['Downsampling Movie file ' num2str(j) ' spatially.'])
     sesh(j).movie = mosaic.resampleMovie(sesh(j).movie, 'spatialReduction', spatial_ds,...
     'temporalReduction', 1, 'useParallelization', 1);
+    end
 end
+
+
 
 %% Step  1.75: Concatenate files - note that this MUST happen after 
 
@@ -93,7 +107,7 @@ elseif num_files >= 1
 end
 
 disp('Check if concatenation has happened properly!: view each movie independently, then check #frames total')
-%% Step 2: Downsample spatially by a factor of 2
+%% Step 2: Save
 cd(pathname)
 
 if save_ds == 1
@@ -176,7 +190,7 @@ ref_roi = mosaic.PolygonRoi(pointList);
 %% Step 6: Run Motion Correction
 
 [mot_corr_movie, mc_parameters] = mosaic.motionCorrectMovie(movie_use,'referenceImage',ref_frame,...
-    'motionType', 'Translation', 'roi', ref_roi, 'speedWeight', 0, ...
+    'motionType', 'Rigid', 'roi', ref_roi, 'speedWeight', 0, ...
     'parallelProcess', 1, 'warnThreshold', 20, 'invertImage', 1, ...
     'subtractSpatialMean', 1, 'subtractSpatialMeanPixels', spatial_filt, ...
     'applySpatialMean', 1, 'applySpatialMeanPixels', spatial_filt);
