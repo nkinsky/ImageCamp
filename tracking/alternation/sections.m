@@ -145,7 +145,7 @@ while skewed
             save rotated rot_x rot_y;
         elseif strcmp(satisfied,'n');  %Delete last rotation and try again.
             if exist(fullfile(pwd, 'rotated.mat'), 'file') == 2
-                delete rotated.mat;
+                delete(fullfile(pwd,'rotated.mat'));
             end
             close all;
         end
