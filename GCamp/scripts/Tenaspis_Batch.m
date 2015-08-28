@@ -1,5 +1,5 @@
-function [  ] = Tenaspis_Batch( infile,session_struct,no_movie_process )
-% Tenaspis_Batch(infile, session_struct, no_movie_process)
+function [  ] = Tenaspis_Batch( infile,session_struct,no_movie_process,varargin )
+% Tenaspis_Batch(infile, session_struct, no_movie_process,varargin)
 % Runs Tenaspis in batch mode
 % 
 % INPUTS
@@ -10,8 +10,16 @@ function [  ] = Tenaspis_Batch( infile,session_struct,no_movie_process )
 %   no_movie_process: 0 if you are processing the ICmovie that has been
 %   spatially smoothed only, 1 if you already have the temporal 1st
 %   derivative movie in the directory
+%   varargins: see MakeTransients
 
 % keyboard
+
+%% Get varargins
+for j = 1:length(varargin)
+   if strcmpi(varargin{j},'min_trans_length')
+       min_trans_length = varargin{j+1};
+   end
+end
 
 %% First, check to make sure all the appropriate files are there so that 
 % you don't get an error halfway through the run
@@ -45,9 +53,15 @@ else
 end
 %% Do the batch run
 for j = 1: length(session_struct)
-   Tenaspis(infile, 'animal_id',session_struct(j).Animal,'sess_date',...
-       session_struct(j).Date,'sess_num',session_struct(j).Session,...
-       'no_movie_process', no_movie_process);
+    if ~exist('min_trans_length','var')
+        Tenaspis(infile, 'animal_id',session_struct(j).Animal,'sess_date',...
+            session_struct(j).Date,'sess_num',session_struct(j).Session,...
+            'no_movie_process', no_movie_process);
+    else
+        Tenaspis(infile, 'animal_id',session_struct(j).Animal,'sess_date',...
+            session_struct(j).Date,'sess_num',session_struct(j).Session,...
+            'no_movie_process', no_movie_process,'min_trans_length',min_trans_length);
+    end
 end
 
 end

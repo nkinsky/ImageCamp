@@ -6,7 +6,7 @@ close all
 mic_per_pix = 1.16; % To match previously used values
 spatial_ds = 2; % Factor to downsample
 spatial_filt = 20; % Number of pixels to use when applying the spatial mean and subtracting it later on.
-save_ds = 1; % enter if you want to save the down-sample movie before moving on (recommended for large movies)
+save_ds = 1; % enter if you want to save the down-sampled movie before moving on (recommended for large movies)
 
 curr_dir = cd;
 
@@ -27,25 +27,25 @@ else
 end
 
 %% Step 1.32: Fix bad frames
-if ~exist('skip_fix','var') || skip_fix ~= 1
-    for i=1:num_files
-        if num_files > 1
-            thisfile = filename{i}(1:end-4);
-        elseif num_files == 1
-            thisfile = filename(1:end-4);
-        end
-        chunks = dir([thisfile, '*.tif']);
-        numchunks = length(chunks);
-        
-        for j=1:numchunks
-            filetofix = chunks(j).name;
-            if ~exist([filetofix(1:end-4),'fixed.mat'],'file');
-                disp(['Checking ', filetofix, ' for bad frames...']);
-                FixFrames(filetofix);
-            end
-        end
-    end
-end
+% if ~exist('skip_fix','var') || skip_fix ~= 1
+%     for i=1:num_files
+%         if num_files > 1
+%             thisfile = filename{i}(1:end-4);
+%         elseif num_files == 1
+%             thisfile = filename(1:end-4);
+%         end
+%         chunks = dir([thisfile, '*.tif']);
+%         numchunks = length(chunks);
+%         
+%         for j=1:numchunks
+%             filetofix = chunks(j).name;
+%             if ~exist([filetofix(1:end-4),'fixed.mat'],'file');
+%                 disp(['Checking ', filetofix, ' for bad frames...']);
+%                 FixFrames(filetofix);
+%             end
+%         end
+%     end
+% end
 
 %% Step 1.33: Load files
 
@@ -69,7 +69,7 @@ for j = 1:num_files
     'temporalReduction', 1, 'useParallelization', 1);
 end
 
-%% Step  1.75: Concatenate files - note that this MUST happen after 
+%% Step  1.75: Concatenate files
 
 if num_files == 1
     movie_use = sesh(j).movie;

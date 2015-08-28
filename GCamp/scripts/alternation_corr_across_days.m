@@ -2,6 +2,7 @@
 % test
 
 rotate_to_std = 0;
+orig_dir = cd;
 working_dir = uigetdir('Pick your working directory:');
 %% 1) Load both Reg_NeuronID files (updatemasks = 0 and updatemasks = 1).
 disp('Loading Reg_NeuronIDs and batch_session_map')
@@ -57,3 +58,17 @@ for j = 1:num_neurons
     end
     corr_numbers(k,ll,j) = n;
 end
+
+%% Plot
+
+for j = 1:size(corr_matrix,1);
+    for k = 1:size(corr_matrix,2);
+        corr_mat_plot(j,k) = nanmean(squeeze(corr_matrix(j,k,:)));
+    end
+end
+
+figure
+imagesc(corr_mat_plot)
+
+%% Return to original directory
+cd(orig_dir);
