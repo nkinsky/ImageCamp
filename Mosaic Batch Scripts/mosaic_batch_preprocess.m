@@ -92,8 +92,6 @@ else
     end
 end
 
-
-
 %% Step  1.75: Concatenate files - note that this MUST happen after 
 
 if num_files == 1
@@ -228,8 +226,6 @@ h = mos_tiff_to_fig(min_proj_int, save_name, title_label );
 disp('Saving MotCorrMovie for final editing')
 mosaic.saveOneObject(mot_corr_movie,'MotCorrMovie.mat');
 
-disp('Check for MotCorrMovie.mat.  If saved correctly, type "return" and then open Mosaic standalone to do your final editing');
-
 % Display dropped-frame warning if applicable!
 if dropped_frame_warn == 1
     disp('DATA HAS ALREADY BEEN DOWN-SAMPLED.  IF YOU HAVE DROPPED FRAMES YOU MAY NEED TO FIX MANUALLY WITH fix_dropped_frames FUNCTION!')
@@ -257,3 +253,4 @@ clear all
 % cd(curr_dir)
 
 % mosaic.terminate()
+
