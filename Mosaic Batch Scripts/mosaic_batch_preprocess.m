@@ -1,7 +1,7 @@
 % Mosaic Batch Pre-processing
 
 close all
-clear all
+% clear all
 
 %% Variables to tweak?
 mic_per_pix = 1.16; % To match previously used values
@@ -77,7 +77,13 @@ end
 % warning that one must check MANUALLY for bad frames - do this here and at
 % the end!
 
-temp2 = imread(filetofix,'TIFF','Index',1); % Get sample file
+if num_files > 1
+    samplefile = [fullpath{1}(1:end-4) '.tif'];
+elseif num_files == 1
+    samplefile = [fullpath(1:end-4) '.tif'];
+end
+
+temp2 = imread(samplefile,'TIFF','Index',1); % Get sample file
 if size(temp2,1) <= 540 && size(temp2,2) <= 720
     dropped_frame_warn = 1;
     save_ds = 0;
@@ -104,6 +110,7 @@ elseif num_files >= 1
         list.add(sesh(j).movie);
     end
     movie_use = mosaic.concatenateMovies(list);
+    save_ds = 1;
 end
 
 disp('Check if concatenation has happened properly!: view each movie independently, then check #frames total')
