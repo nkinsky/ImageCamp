@@ -1,8 +1,11 @@
-function [lin_pos] = linearize_trajectory(x, y, varargin)
+function [lin_pos] = linearize_trajectory_eng(x, y, varargin)
 %[lin_pos] = linearize_trajectory(x, y, ...)
 %   Goal is to linearize trajectories, such that each trial begins at zero
 %   and finishes at the end, with the length of each trajectory being equal
-%   to 2*l_arms + 2*l_return, specified below
+%   to 2*l_arms + 2*l_return, specified below.  This is the "engineering"
+%   version by NK and differs from the more elegant JR/WM version
+%   "linearize_trajectory".
+%
 %   INPUTS
 %   x,y: mouse position
 %   'ArmLength','ReturnLength': available if you want to specify something

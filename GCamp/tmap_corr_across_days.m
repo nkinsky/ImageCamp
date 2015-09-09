@@ -1,9 +1,43 @@
-% Script to get correlations between all sessions that pass the transitive
-% test
+function [corr_matrix] = tmap_corr_across_days(working_dir,varargin)
+% [corr_matrix] = tmap_corr_across_days(working_dir,varargin)
+%
+% Gets correlations between calcium transient heat maps (TMaps) across
+% days.  Requires all TMaps to have the same grid size/spacing (done by
+% running batch_align_pos), then running PFA.
+%
+%   INPUTS:
+%
+%       working_dir: the base working directory for the sessions you wish
+%           to analyze.  Must contain batch_session_map (obtained from
+%           neuron_reg_batch) pointing to all the analyzed sessions.  If
+%           left empty you will be prompted to choose the working
+%           directory.
+%
+%       varargins (enter as ...,'rotate_to_std',1):
+%           'rotate_to_std': default = 0.  1 = analyze placemaps that have
+%           been rotated such that all local cues align.  See
+%           CalculatePlaceFields and PFA.
+%
+%   OUTPUTS:
+%
+%       corr_matrix: an n x n x num_neurons matrix where n = the total number of
+%       sessions, where entry corr_matrix(i,j,k) is the correlation of TMaps
+%       for neuron k between the ith and jth sessions.
+%
 
+%% Get varargins
 rotate_to_std = 0;
-orig_dir = cd;
-working_dir = uigetdir('Pick your working directory:');
+for j = 1:length(varargin)
+   if strcmpi(varargin{j},'rotate_to_std')
+       rotate_to_std = varargin{j+1};
+   end
+end
+
+%% Get working directory
+orig_dir = cd; % Get original directory
+if ~exist('working_dir','var') || isempty(working_dir)
+    working_dir = uigetdir('Pick your working directory:');
+end
 %% 1) Load both Reg_NeuronID files (updatemasks = 0 and updatemasks = 1).
 disp('Loading Reg_NeuronIDs and batch_session_map')
 
