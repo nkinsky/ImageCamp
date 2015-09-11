@@ -183,7 +183,7 @@ end
     Alt.x = rot_x;                  %X position.
     Alt.y = rot_y;                  %Y position. 
     Alt.section = sect(:,2)';       %Section number. Refer to getsection.m.
-    Alt.goal = goal;                %Goal location. 
+    Alt.goal = goal(:,2)';          %Goal location. 
     
     %Summary. 
     Alt.summary = [(1:numtrials)', trialtype', alt']; 

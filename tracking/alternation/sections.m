@@ -134,9 +134,12 @@ while skewed
         elseif manual_rot_overwrite == 0
             satisfied = 'y';
         end
+        
         if strcmp(satisfied,'y')       %Break.
             skewed = 0;
-            save rotated rotang rot_x rot_y;
+            if manual_rot_overwrite == 1
+                save rotated rotang rot_x rot_y;
+            end
         elseif strcmp(satisfied,'n');  %Delete last rotation and try again.
             if exist(fullfile(pwd, 'rotated.mat'), 'file') == 2
                 delete rotated.mat;
