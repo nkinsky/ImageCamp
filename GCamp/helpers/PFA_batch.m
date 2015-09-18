@@ -62,14 +62,14 @@ for j = 1:length(session_struct)
     % Step 1: Calculate Placefields
     disp(['Calculating Placefields for ' session_struct(j).Date ' session ' ...
         num2str(session_struct(j).Session) ])
-    if  isempty(session_struct(j).exclude_frames)
+    %if  isempty(session_struct(j).exclude_frames)
         CalculatePlacefields(roomstr,'progress_bar',progress_bar,...
             'rotate_to_std',rotate_to_std);
-    elseif ~isempty(session_struct(j).exclude_frames)
+    %elseif ~isempty(session_struct(j).exclude_frames)
         disp('Excluding frames - see session_struct for exact frames')
         CalculatePlacefields(roomstr,'progress_bar',progress_bar,'exclude_frames',...
             session_struct(j).exclude_frames,'rotate_to_std',rotate_to_std);
-    end
+    %end
         
     % Step 2: Calculate Placefield stats
     disp(['Calculating Placefield Stats for ' session_struct(j).Date ' session ' ...

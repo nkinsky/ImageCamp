@@ -34,9 +34,12 @@ function [bounds, rot_x, rot_y, rotang] = sections(x, y, skip_rot_check, varargi
 
 %% Get varargins
 manual_rot_overwrite = 0; % default value
+satcheck = 0;
 for j = 1:length(varargin)
    if strcmpi(varargin{j},'manual_rot_overwrite') 
       manual_rot_overwrite = varargin{j+1}; 
+   elseif strcmpi(varargin{j}, 'satcheck')
+       satcheck = varargin{j+1}; 
    end
 end
 %% Assign skip_rot_check if not specified
@@ -129,17 +132,15 @@ while skewed
         hold off;
         
         %Sanity check for trajectory rotation.
-        if manual_rot_overwrite == 1
+        if satcheck == 1
             satisfied = input('Are you satisfied with the rotation? Enter y or n-->','s');
-        elseif manual_rot_overwrite == 0
+        elseif satcheck == 0
             satisfied = 'y';
         end
         
         if strcmp(satisfied,'y')       %Break.
             skewed = 0;
-            if manual_rot_overwrite == 1
-                save rotated rotang rot_x rot_y;
-            end
+            save rotated rotang rot_x rot_y;
         elseif strcmp(satisfied,'n');  %Delete last rotation and try again.
             if exist(fullfile(pwd, 'rotated.mat'), 'file') == 2
                 delete rotated.mat;

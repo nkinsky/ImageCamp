@@ -29,7 +29,7 @@ maxplace = max(placemap(:));
 runlengths = goodepochs(:,2)-goodepochs(:,1)+1;
 runused = zeros(size(runlengths));
 
-for i = 1:NumShuffles
+parfor i = 1:NumShuffles
     i;
     shufftrace = zeros(size(Trace));
     for j = 1:NumAct
