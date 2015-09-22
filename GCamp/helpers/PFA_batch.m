@@ -17,6 +17,13 @@ function [] = PFA_batch(session_struct,roomstr,progress_bar,varargin)
 %   been rotated in any way through the function batch_align_pos, 1 will work 
 %   with position data that has been rotated such that local cues align
 %   across all sessions. Specify as (...,'rotate_to_std', 1)
+%
+%   -'cmperbin': cm/bin for calculating occupancy and transient heat maps.
+%   1 is default if left blank
+%
+%   -'calc_half': 0 = default. 1 = calculate TMap and pvalues for 1st
+%   and 2nd half of session along with whole session maps
+
 
 if nargin < 3
     progress_bar = 1;
@@ -25,9 +32,17 @@ end
 %% Get varargins
 
 rotate_to_std = 0; % default
+cmperbin = 1; % default
+calc_half = 0; % default
 for j = 1:length(varargin)
    if strcmpi(varargin{j},'rotate_to_std')
        rotate_to_std = varargin{j+1};
+   end
+   if strcmpi(varargin{j},'cmperbin')
+       cmperbin = varargin{j+1};
+   end
+   if strcmpi(varargin{j},'calc_half')
+       calc_half = varargin{j+1};
    end
 end
 
@@ -64,11 +79,12 @@ for j = 1:length(session_struct)
         num2str(session_struct(j).Session) ])
     if  isempty(session_struct(j).exclude_frames)
         CalculatePlacefields(roomstr,'progress_bar',progress_bar,...
-            'rotate_to_std',rotate_to_std);
+            'rotate_to_std',rotate_to_std,'cmperbin',cmperbin,'calc_half',calc_half);
     elseif ~isempty(session_struct(j).exclude_frames)
         disp('Excluding frames - see session_struct for exact frames')
         CalculatePlacefields(roomstr,'progress_bar',progress_bar,'exclude_frames',...
-            session_struct(j).exclude_frames,'rotate_to_std',rotate_to_std);
+            session_struct(j).exclude_frames,'rotate_to_std',rotate_to_std,...
+            'cmperbin',cmperbin,'calc_half',calc_half);
     end
         
     % Step 2: Calculate Placefield stats

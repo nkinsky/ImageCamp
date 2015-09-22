@@ -12,23 +12,23 @@ hgsave(reg_image_axes,'reg_mask_temp');
 % base_image_axes = subplot(2,2,1);
 % reg_image_axes = subplot(2,2,2);
 
-if strcmpi(reg_type,'mask') && nargin ~= 5
-   error('You did not enter enought input arguments.  Please enter a SignalTrace.mat file for both the base and registered files')
-else
-end
+% if strcmpi(reg_type,'mask') && nargin ~= 5
+%    error('You did not enter enought input arguments.  Please enter a SignalTrace.mat file for both the base and registered files')
+% else
+% end
 
 % Create COM variable
-for j = 1:size(SigTrace_base.GoodICf_comb,2)
-    base_GoodCom{j} = centerOfMass(SigTrace_base.GoodICf_comb{j}*1);
-end
-SigTrace_base.GoodCom = base_GoodCom;
-for j = 1:size(SigTrace_reg.GoodICf,2)
-    reg_GoodCom{j} = centerOfMass(SigTrace_reg.GoodICf{j}*1);
-end
-SigTrace_reg.GoodCom = reg_GoodCom;
+% for j = 1:size(SigTrace_base.GoodICf_comb,2)
+%     base_GoodCom{j} = centerOfMass(SigTrace_base.GoodICf_comb{j}*1);
+% end
+% SigTrace_base.GoodCom = base_GoodCom;
+% for j = 1:size(SigTrace_reg.GoodICf,2)
+%     reg_GoodCom{j} = centerOfMass(SigTrace_reg.GoodICf{j}*1);
+% end
+% SigTrace_reg.GoodCom = reg_GoodCom;
 
 xbase = []; ybase = [];
-disp('Select Center of Base Image Cells to use as reference')
+disp('Select Center of Base Image Cells or landmarks to use as reference')
 [xbase, ybase] = getpts(base_image_axes);
 base_vec = [xbase ybase];
 axes(base_image_axes); hold on;

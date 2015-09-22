@@ -17,7 +17,7 @@ function [RegistrationInfoX] = image_registerX(mouse_name, base_date, base_sessi
 % base_session: session number for base session
 %
 % reg_date: date of session to register to base.  List as 'mask' if you are
-% using in conjuction with mask_multi_image_reg.
+% using in conjuction with mas1k_multi_image_reg.
 %
 % reg_session: session number for session to register to base. List as 'mask' if you are
 % using in conjuction with mask_multi_image_reg.
@@ -239,8 +239,13 @@ while strcmpi(manual_flag,'y')
     while isempty(T_manual)
         if strcmpi(manual_type,'l')
             reg_type = 'landmark';
-            figure(1)
-            T_manual = manual_reg(h_base_landmark, h_reg_landmark, reg_type);
+            figure(20)
+            hbase = subplot(1,2,1); 
+            imagesc_gray(base_image_untouch);
+            hreg = subplot(1,2,2); 
+            imagesc_gray(reg_image_untouch);
+            
+            T_manual = manual_reg(hbase, hreg, reg_type);
         elseif strcmpi(manual_type,'n')
             T_manual = eye(3);
         end
