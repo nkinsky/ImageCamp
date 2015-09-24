@@ -29,6 +29,8 @@ function Alt = postrials(x,y,plot_each_trial,varargin)
 %           x = X position.
 %           y = Y position.
 %           section = section number. Refer to getsection.m. 
+%           goal = goal location. 1 = left. 2 = right. 0 = not goal
+%           location. 
 %           summary = Summary of trials. The first column is trial number
 %           followed by left/right and correct/incorrect in the same format
 %           as above. 
@@ -178,9 +180,10 @@ end
     end
     
     %Mouse position. 
-    Alt.x = rot_x;                 %X position.
-    Alt.y = rot_y;                 %Y position. 
-    Alt.section = sect(:,2)';      %Section number. Refer to getsection.m.
+    Alt.x = rot_x;                  %X position.
+    Alt.y = rot_y;                  %Y position. 
+    Alt.section = sect(:,2)';       %Section number. Refer to getsection.m.
+    Alt.goal = goal(:,2)';          %Goal location. 
     
     %Summary. 
     Alt.summary = [(1:numtrials)', trialtype', alt']; 
