@@ -1,4 +1,4 @@
-function [corr_matrix, pop_corr_struct, pass_thresh, corr_win] = tmap_corr_across_days(working_dir,varargin)
+function [corr_matrix, pop_corr_struct, pass_thresh, corr_win, shuffle_matrix] = tmap_corr_across_days(working_dir,varargin)
 % [corr_matrix] = tmap_corr_across_days(working_dir,varargin)
 %
 % Gets correlations between calcium transient heat maps (TMaps) across
@@ -40,6 +40,10 @@ function [corr_matrix, pop_corr_struct, pass_thresh, corr_win] = tmap_corr_acros
 %           'within_session': default = 0.  1 will only look at within session
 %           correlations using TMap(1).Tmap_half vs. TMap(2).Tmap_half
 %
+%           'num_shuffles': default = 0.  Any integer greater than 0 specifies
+%           the number of times you wish to calculate correlations between
+%           sessions with the 2nd session shuffled.
+%
 %   OUTPUTS:
 %
 %       corr_matrix: an n x n x num_neurons matrix where n = the total number of
@@ -65,6 +69,7 @@ plot_confusion_matrix = 0; % default
 pval_thresh = 0; % default
 archive_name_append = [];
 within_session = 0; % default
+shuffle = 0; % default
 for j = 1:length(varargin)
    if strcmpi(varargin{j},'rotate_to_std')
        rotate_to_std = varargin{j+1};
@@ -86,6 +91,9 @@ for j = 1:length(varargin)
    end
    if strcmpi(varargin{j},'within_session')
        within_session = varargin{j+1};
+   end
+   if strcmpi(varargin{j},'num_shuffles')
+       num_shuffles = varargin{j+1};
    end
 end
 
@@ -119,7 +127,14 @@ for j = 1:num_sessions
        load(['PlaceMaps_rot_to_std' archive_name_append '.mat'],'TMap','pval');
    end
    sesh(j).TMap = TMap;
-   sesh(j).TMap_half = TMap_half;
+   if within_session == 1
+       if rotate_to_std == 0
+           load(['PlaceMaps' archive_name_append '.mat'],'TMap_half');
+       elseif rotate_to_std == 1
+           load(['PlaceMaps_rot_to_std' archive_name_append '.mat'],'TMap_half');
+       end
+       sesh(j).TMap_half = TMap_half;
+   end
    sesh(j).pval_use = 1-pval;
    sesh(j).pval_pass = sesh(j).pval_use <= pval_thresh;
    % Get transient rates and those that pass the threshold
@@ -136,7 +151,7 @@ end
 % bar graphs for day 1 to day 2, day 2 to day 3, and day 1 to day 3?
 
 disp('Getting inter-session correlations (individual neurons)')
-pass_count = zeros(num_sessions, num_sessions, num_neurons);
+pass_thresh = zeros(num_sessions, num_sessions, num_neurons);
 for j = 1:num_neurons
     n = 0;
     for k = 1:num_sessions
@@ -161,7 +176,7 @@ for j = 1:num_neurons
                     else
                         corr_matrix(k,ll,j) = nan;
                         pass_thresh(k,ll,j) = 0;
-                end
+                    end
                 catch
                     disp('error in tmap_across_days')
                     keyboard
@@ -176,15 +191,18 @@ for j = 1:num_neurons
     corr_numbers(j) = n;
 end
 
+% ticker = 1;
 if population_corr == 1
     disp('Getting inter-session population correlations')
+%     p = ProgressBar(num_sessions);
     for k = 1:num_sessions
         for ll = k:num_sessions
             sesh1_pop = [];
             sesh2_pop = [];
-            for j = 1:num_neurons
-                sesh1_neuron = batch_session_map(1).map(j,k+1);
-                sesh2_neuron = batch_session_map(1).map(j,ll+1);
+            neuron_use = find(squeeze(pass_thresh(k,ll,:))); % Get neurons that pass all criteria for both sessions
+            for j = 1:length(neuron_use)
+                sesh1_neuron = batch_session_map(1).map(neuron_use(j),k+1);
+                sesh2_neuron = batch_session_map(1).map(neuron_use(j),ll+1);
                 % Insert additional check here with a varargin to filter
                 % out neurons that don't meet certain criteria? e.g.
                 % transient rate and/or information criteria?
@@ -193,34 +211,63 @@ if population_corr == 1
                     sesh1_pop = [sesh1_pop; sesh(k).TMap{sesh1_neuron}(:)];
                     sesh2_pop = [sesh2_pop; sesh(ll).TMap{sesh2_neuron}(:)];
                 end
-                
+%                 disp(ticker);
+%                 ticker = ticker + 1;
             end
             [r_temp, p_temp] = corrcoef(sesh1_pop,sesh2_pop);
             pop_corr(k,ll) = r_temp(1,2);
             p_pop_corr(k,ll) = p_temp(1,2);
         end
+%         p.progress;
     end
-    
+%     p.stop;
     pop_corr_struct.r = pop_corr;
     pop_corr_struct.p = p_pop_corr;
 end
 
 %% 4) Within session controls...
 if within_session == 1
-    disp('Calculating Within session correlations')
+    disp('Calculating within session correlations')
     for j = 1:num_sessions
         % Get neurons that have non-NaN placefields in both halves
-        ok = cellfun(@(a,b) sum(isnan(a(:))) == 0 & sum(isnan(b(:))) == 0, sesh(j).TMap_half(1).Tmap, sesh(j).TMap_half(2).Tmap);
-        ok_ind = find(ok);
+        win_ok = cellfun(@(a,b) sum(isnan(a(:))) == 0 & sum(isnan(b(:))) == 0, sesh(j).TMap_half(1).Tmap, sesh(j).TMap_half(2).Tmap);
+        win_ok_ind = find(win_ok);
         % Get within session correlations
-        for k = 1:length(ok_ind)
-            temp = corrcoef(sesh(j).TMap_half(1).Tmap(:), sesh(j).TMap_half(2).Tmap(:));
-            corr_win(j) = temp(1,2);
+        for k = 1:length(win_ok_ind)
+            temp = corrcoef(sesh(j).TMap_half(1).Tmap{win_ok_ind(k)}(:), sesh(j).TMap_half(2).Tmap{win_ok_ind(k)}(:));
+            corr_win(j,k) = temp(1,2);
         end
     end
+else
+    corr_win = [];
 end
 
 %% 5) Now do above for shuffled neuron identity if desired...
+
+% Shuffles for individual neurons
+if num_shuffles >= 1
+    disp(['Shuffling sessions ' num2str(num_shuffles) ' times'])
+    shuffle_matrix = nan*ones(num_shuffles, num_sessions,num_sessions,num_neurons); % Initialize Shuffled Matrix
+    for n = 1:num_shuffles
+        disp(['Shuffle # ' num2str(n) ' in progress'])
+        for k = 1:num_sessions
+            for ll = k:num_sessions
+                ok = squeeze(pass_thresh(k,ll,:)); % Get neurons that pass all criteria for both sessions
+                ok_ind{1} = find(ok); % Keep all indices the same for the 1st session
+                ok_ind{2} = ok_ind{1}(randperm(length(ok_ind{1}))); % randomize 2nd session indices
+                for j = 1:length(ok_ind{1})
+                    sesh1_neuron = batch_session_map(1).map(ok_ind{1}(j),k+1);
+                    sesh2_neuron = batch_session_map(1).map(ok_ind{2}(j),ll+1);
+                    temp = corrcoef(sesh(k).TMap{sesh1_neuron}(:),...
+                        sesh(ll).TMap{sesh2_neuron}(:));
+                    shuffle_matrix(n,k,ll,ok_ind{1}(j)) = temp(1,2);
+                end
+            end
+        end
+    end
+else
+    shuffle_matrix = [];
+end
 %% Plot
 
 if plot_confusion_matrix == 1
