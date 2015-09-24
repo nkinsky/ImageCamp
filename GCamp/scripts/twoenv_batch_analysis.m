@@ -1,9 +1,13 @@
 % Batch script for two-env experiment
+close all
+start_ticker = tic;
 
 %% Filtering variables
 trans_rate_thresh = 0.005; % Hz
-pval_thresh = 0.05; % don't include ANY TMaps with p-values above this
-file_append = '_0_25cmperbin'; % If using archived PlaceMaps, this will be appended to the end of the Placemaps files
+pval_thresh = 0.1; % don't include ANY TMaps with p-values above this
+within_session = 1;
+num_shuffles = 10; 
+file_append = ''; % If using archived PlaceMaps, this will be appended to the end of the Placemaps files
 
 %% Set up mega-variable - note that working_dir 1 = square sessions and 2 = octagon sessions (REQUIRED)
 
@@ -24,17 +28,20 @@ end
 %% Run tmap_corr_across_days for all conditions
 
 for j = 1:num_animals
+    disp(['>>>>>>>>> MOUSE ' num2str(j) ' <<<<<<<<<<<'])
     for k = 1:length(Mouse(j).working_dirs)
         tt = tic;
         for m = 0:1
             [Mouse(j).corr_matrix{m+1,k}, pop_struct_temp, Mouse(j).pass_count{m+1,k},...
-                Mouse(j).within_corr] = tmap_corr_across_days(Mouse(j).working_dirs{k},...
+                Mouse(j).within_corr{m+1,k}, Mouse(j).shuffle_matrix] = tmap_corr_across_days(Mouse(j).working_dirs{k},...
                 'rotate_to_std',m,'population_corr',1,'trans_rate_thresh', ...
                 trans_rate_thresh, 'pval_thresh',pval_thresh,...
-                'archive_name_append',file_append,'within_session',1);
+                'archive_name_append',file_append,'within_session',within_session,...
+                'num_shuffles',num_shuffles);
             Mouse(j).pop_corr_matrix{m+1,k} = pop_struct_temp.r;
+            disp(['tmap_corr_across_days took ' num2str(toc(tt)) ' seconds to run'])
         end
-        disp(['tmap_corr_across_days took ' num2str(toc(tt)) ' seconds to run'])
+
     end
     Mouse(j).trans_rate_thresh = trans_rate_thresh;
 end
@@ -81,6 +88,12 @@ for ll = 1:num_sessions
     end
 end
 
+% Get shuffled distributions
+shuffle_comb = Mouse(1).shuffle_matrix;
+for j = 2:num_animals
+   shuffle_comb = cat(4,shuffle_comb,Mouse(j).shuffle_matrix); 
+end
+
 %% Get basic stats - not done for population correlations yet
 
 % Better way to do things in the future is to get values for ALL neuron correlations in
@@ -94,56 +107,73 @@ if isnan(sum(mean_simple_rot(:))) || isnan(sum(mean_simple_norot(:)))
     mean_simple_rot = nanmean(mega_mean(2).matrix,3);
 end
 
+% Population Simple Means
 mean_simple_pop_norot = mean(mega_mean(1).pop_matrix,3);
 mean_simple_pop_rot = mean(mega_mean(2).pop_matrix,3);
 
+% Shuffled Simple means
+mean_shuffle_simple = nanmean(squeeze(nanmean(shuffle_comb,1)),3);
+shuffle_mean = nanmean(shuffle_comb(:));
+
 % Indices for various comparisons - wow, that's a lot of work
-before_win = [1 2 ; 1 3; 1 4; 2 3; 2 4; 3 4]; before_win_ind = sub2ind([8 8 4],before_win(:,1), before_win(:,2));
-before_win_norot = [1 2; 1 4; 2 4; 3 4]; before_win_norot_ind = sub2ind([8 8 4],before_win(:,1), before_win(:,2));
-after_win = [7 8]; after_win_ind = sub2ind([8 8 4],after_win(:,1), after_win(:,2));
-after_win_norot = [7 8]; after_win_norot_ind = sub2ind([8 8 4],after_win_norot(:,1), after_win_norot(:,2));
-before_after = [1 7; 2 7; 3 7; 4 7; 1 8; 2 8 ;3 8; 4 8]; before_after_ind = sub2ind([8 8 4],before_after(:,1), before_after(:,2));
-before_after_norot = [2 7; 4 7; 1 8; 2 8 ; 3 8]; before_after_norot_ind = sub2ind([8 8 4],before_after_norot(:,1), before_after_norot(:,2));
-before_5 = [1 5; 2 5; 3 5; 4 5]; before_5_ind = sub2ind([8 8 4],before_5(:,1), before_5(:,2));
-before_5_norot = [2 5; 4 5]; before_5_norot_ind = sub2ind([8 8 4],before_5_norot(:,1), before_5_norot(:,2));
-before_6 = [1 6; 2 6 ; 3 6; 4 6]; before_6_ind = sub2ind([8 8 4],before_6(:,1), before_6(:,2));
-before_6_norot = [1 6; 2 6; 3 6; 4 6]; before_6_norot_ind = sub2ind([8 8 4],before_6_norot(:,1), before_6_norot(:,2));
-after_5 = [5 7; 5 8]; after_5_ind = sub2ind([8 8 4],after_5(:,1), after_5(:,2));
-after_5_norot = [5 8]; after_5_norot_ind = sub2ind([8 8 4],after_5_norot(:,1), after_5_norot(:,2));
-after_6 = [6 7; 6 8]; after_6_ind = sub2ind([8 8 4],after_6(:,1), after_6(:,2));
-after_6_norot = [6 7; 6 8]; after_6_norot_ind = sub2ind([8 8 4],after_6_norot(:,1), after_6_norot(:,2));
+before_win = [1 2 ; 1 3; 1 4; 2 3; 2 4; 3 4]; before_win_ind = sub2ind([8 8],before_win(:,1), before_win(:,2));
+before_win_norot = [1 2; 1 4; 2 4; 3 4]; before_win_norot_ind = sub2ind([8 8],before_win(:,1), before_win(:,2));
+after_win = [7 8]; after_win_ind = sub2ind([8 8],after_win(:,1), after_win(:,2));
+after_win_norot = [7 8]; after_win_norot_ind = sub2ind([8 8],after_win_norot(:,1), after_win_norot(:,2));
+before_after = [1 7; 2 7; 3 7; 4 7; 1 8; 2 8 ;3 8; 4 8]; before_after_ind = sub2ind([8 8],before_after(:,1), before_after(:,2));
+before_after_norot = [2 7; 4 7; 1 8; 2 8 ; 3 8]; before_after_norot_ind = sub2ind([8 8],before_after_norot(:,1), before_after_norot(:,2));
+before_5 = [1 5; 2 5; 3 5; 4 5]; before_5_ind = sub2ind([8 8],before_5(:,1), before_5(:,2));
+before_5_norot = [2 5; 4 5]; before_5_norot_ind = sub2ind([8 8],before_5_norot(:,1), before_5_norot(:,2));
+before_6 = [1 6; 2 6 ; 3 6; 4 6]; before_6_ind = sub2ind([8 8],before_6(:,1), before_6(:,2));
+before_6_norot = [1 6; 2 6; 3 6; 4 6]; before_6_norot_ind = sub2ind([8 8],before_6_norot(:,1), before_6_norot(:,2));
+after_5 = [5 7; 5 8]; after_5_ind = sub2ind([8 8],after_5(:,1), after_5(:,2));
+after_5_norot = [5 8]; after_5_norot_ind = sub2ind([8 8],after_5_norot(:,1), after_5_norot(:,2));
+after_6 = [6 7; 6 8]; after_6_ind = sub2ind([8 8],after_6(:,1), after_6(:,2));
+after_6_norot = [6 7; 6 8]; after_6_norot_ind = sub2ind([8 8],after_6_norot(:,1), after_6_norot(:,2));
 
 % Mean of individual correlations
 before_win_mean = mean(mean_simple_rot(before_win_ind));
 before_win_sem = std(mean_simple_rot(before_win_ind))/sqrt(length(before_win_ind));
 before_win_norot_mean = mean(mean_simple_norot(before_win_norot_ind));
 before_win_norot_sem = std(mean_simple_norot(before_win_norot_ind))/sqrt(length(before_win_norot_ind));
+before_win_shuffle_mean = mean(mean_shuffle_simple(before_win_ind));
+before_win_shuffle_sem = std(mean_shuffle_simple(before_win_ind))/sqrt(length(before_win_ind));
 
 before_after_mean = mean(mean_simple_rot(before_after_ind));
 before_after_sem = std(mean_simple_rot(before_after_ind))/sqrt(length(before_after_ind));
 before_after_norot_mean = mean(mean_simple_norot(before_after_norot_ind));
 before_after_norot_sem = std(mean_simple_norot(before_after_norot_ind))/sqrt(length(before_after_norot_ind));
+before_after_shuffle_mean = mean(mean_shuffle_simple(before_after_ind));
+before_after_shuffle_sem = std(mean_shuffle_simple(before_after_ind))/sqrt(length(before_after_ind));
 
 before_5_mean = mean(mean_simple_rot(before_5_ind));
 before_5_sem = std(mean_simple_rot(before_5_ind))/sqrt(length(before_5_ind));
 before_5_norot_mean = mean(mean_simple_norot(before_5_norot_ind));
 before_5_norot_sem = std(mean_simple_norot(before_5_norot_ind))/sqrt(length(before_5_norot_ind));
+before_5_shuffle_mean = mean(mean_shuffle_simple(before_5_ind));
+before_5_shuffle_sem = std(mean_shuffle_simple(before_5_ind))/sqrt(length(before_5_ind));
 
 before_6_mean = mean(mean_simple_rot(before_6_ind));
 before_6_sem = std(mean_simple_rot(before_6_ind))/sqrt(length(before_6_ind));
 before_6_norot_mean = mean(mean_simple_norot(before_6_norot_ind));
 before_6_norot_sem = std(mean_simple_norot(before_6_norot_ind))/sqrt(length(before_6_norot_ind));
+before_6_shuffle_mean = mean(mean_shuffle_simple(before_6_ind));
+before_6_shuffle_sem = std(mean_shuffle_simple(before_6_ind))/sqrt(length(before_6_ind));
 
 after_5_mean = mean(mean_simple_rot(after_5_ind));
 after_5_sem = std(mean_simple_rot(after_5_ind))/sqrt(length(after_5_ind));
 after_5_norot_mean = mean(mean_simple_norot(after_5_norot_ind));
 after_5_norot_sem = std(mean_simple_norot(after_5_norot_ind))/sqrt(length(after_5_norot_ind));
 after_5_norot_sem = after_5_sem; % Fake it for now...only have one sample currently
+after_5_shuffle_mean = mean(mean_shuffle_simple(after_5_ind));
+after_5_shuffle_sem = std(mean_shuffle_simple(after_5_ind))/sqrt(length(after_5_ind));
 
 after_6_mean = mean(mean_simple_rot(after_6_ind));
 after_6_sem = std(mean_simple_rot(after_6_ind))/sqrt(length(after_6_ind));
 after_6_norot_mean = mean(mean_simple_norot(after_6_norot_ind));
 after_6_norot_sem = std(mean_simple_norot(after_6_norot_ind))/sqrt(length(after_6_norot_ind));
+after_6_shuffle_mean = mean(mean_shuffle_simple(after_6_ind));
+after_6_shuffle_sem = std(mean_shuffle_simple(after_6_ind))/sqrt(length(after_6_ind));
 
 % Mean of population correlations
 pop_before_win_mean = mean(mean_simple_pop_rot(before_win_ind));
@@ -177,7 +207,27 @@ pop_after_6_sem = std(mean_simple_pop_rot(after_6_ind))/sqrt(length(after_6_ind)
 pop_after_6_norot_mean = mean(mean_simple_pop_norot(after_6_norot_ind));
 pop_after_6_norot_sem = std(mean_simple_pop_norot(after_6_norot_ind))/sqrt(length(after_6_norot_ind));
 
-% Plot individual neuron means
+%% First attempt to get real stats
+
+% Should probably write below into a simple function and then call it
+% repeatedly
+
+after_5_comb = [];
+after_5_comb_no_rot = [];
+for j = 1:num_animals
+    for ll = 1:2
+        for mm = 1:size(after_5,1)
+                after_5_comb = [ after_5_comb ; squeeze(Mouse(j).corr_matrix{1,ll}(after_5(mm,1),after_5(mm,2),...
+                    logical(squeeze(Mouse(j).pass_count{1,ll}(after_5(mm,1),after_5(mm,2),:)))))];
+                after_5_comb_no_rot = [ after_5_comb_no_rot ; squeeze(Mouse(j).corr_matrix{2,ll}(after_5(mm,1),after_5(mm,2),...
+                    logical(squeeze(Mouse(j).pass_count{2,ll}(after_5(mm,1),after_5(mm,2),:)))))];
+        end
+    end
+end
+nanmean(after_5_comb);
+nanstd(after_5_comb);
+
+%% Plot individual neuron means
 figure(10)
 h = bar([before_win_mean, before_win_norot_mean; before_after_mean, before_after_norot_mean; ...
     before_5_mean, before_5_norot_mean; after_5_mean, after_5_norot_mean; ...
@@ -191,13 +241,14 @@ errorbar(h(2).XData + h(2).XOffset, [before_win_norot_mean, before_after_norot_m
     before_5_norot_mean, after_5_norot_mean, before_6_norot_mean, after_6_norot_mean], [before_win_norot_sem, ...
     before_after_norot_sem, before_5_norot_sem, after_5_norot_sem, before_6_norot_sem, after_6_norot_sem],...
     '.')
+h2 = plot(get(gca,'XLim'),[shuffle_mean shuffle_mean],'r--');
 set(gca,'XTickLabel',{'Before within','Before-After','Before-Day5','After-Day5',...
     'Before-Day6','After-Day6'})
 ylabel('Transient Map Mean Correlations - Individual Neurons')
-legend('Rotated (local cues align)','Not-rotated (distal cues align)')
+h_legend = legend([h(1) h(2) h2],'Rotated (local cues align)','Not-rotated (distal cues align)','Shuffled');
 hold off
 
-% Plot population correlation summary
+%% Plot population correlation summary
 figure(11)
 h = bar([pop_before_win_mean, pop_before_win_norot_mean; pop_before_after_mean, pop_before_after_norot_mean; ...
     pop_before_5_mean, pop_before_5_norot_mean; pop_after_5_mean, pop_after_5_norot_mean; ...
@@ -217,7 +268,7 @@ ylabel('Transient Map Mean Population Correlations')
 legend('Rotated (local cues align)','Not-rotated (distal cues align)')
 hold off
 
-
+disp(['Script done running in ' num2str(start_ticker) ' seconds total'])
 
 
 %% Get example plots of rotated versus non-rotated correlation histograms and hopefully example neurons
@@ -233,13 +284,15 @@ subplot(2,2,2)
 hist(squeeze(Mouse(1).corr_matrix{2,2}(3,4,:)),centers);
 title('Histogram between sessions rotated such that local cues align')
 xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
+ylim([0 60])
 
 subplot(2,2,3)
 ecdf(squeeze(Mouse(1).corr_matrix{1,2}(3,4,:))); 
 hold on; 
-ecdf(squeeze(Mouse(1).corr_matrix{2,2}(3,4,:)))
-legend('NOT-rotated data (distal cues align)','Rotated data (local cues align)',...
-    'Location','SouthEast')
+ecdf(squeeze(Mouse(1).corr_matrix{2,2}(3,4,:)));
+ecdf(shuffle_comb(:))
+legend('NON-rotated data (distal cues align)','Rotated data (local cues align)',...
+    'Shuffled Data','Location','SouthEast')
 title('Empirical CDF of correlation values between sessions')
 xlabel('Calcium Transient Heat Map Correlation (x)');
 
