@@ -18,14 +18,19 @@ function [] = image_reg_QC(base_dir)
 offset = 20; % number of pixels to offset from centroid in each direction when looking at the mappings
 
 % base_dir = 'J:\GCamp Mice\Working\G31\alternation\11_24_2014\Working';
-load(fullfile(base_dir,'Reg_NeuronIDs_updatemasks0.mat'));
-for j = 1:length(Reg_NeuronIDs)
-   reg_updatemasks0(j).neuron_id = Reg_NeuronIDs(j).neuron_id;
-end
+load(fullfile(base_dir,'batch_session_map.mat'));
+
+%  for j = 1:length(batch_session_map.session)
+%    reg_updatemasks0(j).neuron_id = Reg_NeuronIDs(j).neuron_id;
+% end
+% for j = 1:length(Reg_NeuronIDs)
+%    reg_updatemasks0(j).neuron_id = Reg_NeuronIDs(j).neuron_id;
+% end
 
 load(fullfile(base_dir,'Reg_NeuronIDs_updatemasks1.mat'));
-
-ChangeDirectory(Reg_NeuronIDs(1).mouse,Reg_NeuronIDs(1).base_date,Reg_NeuronIDs(1).base_session);
+% 
+ChangeDirectory(batch_session_map.session(1).mouse,batch_session_map.session(1).date, ...
+    batch_session_map.session(1).session);
 load('ProcOut.mat','NeuronImage')
 load('MeanBlobs.mat','BinBlobs')
 sesh(1).MeanImage = BinBlobs;
@@ -33,23 +38,25 @@ sesh(1).NeuronImage = NeuronImage;
 % sesh(1).MeanImage = BinBlobs;
 % sesh(1).NeuronImage = NeuronImage;
 
-for k = 1:length(Reg_NeuronIDs)
-    ChangeDirectory(Reg_NeuronIDs(k).mouse,Reg_NeuronIDs(k).base_date,Reg_NeuronIDs(k).base_session);
-    load(['RegistrationInfo-' Reg_NeuronIDs(k).mouse '-' Reg_NeuronIDs(k).reg_date ...
-        '-session' num2str(Reg_NeuronIDs(k).reg_session) '.mat'])
-    sesh(k+1).reginfo = RegistrationInfoX;
+for k = 2:length(batch_session_map.session)
+    ChangeDirectory(batch_session_map.session(1).mouse,...
+        batch_session_map.session(1).date,batch_session_map.session(1).session);
+    load(['RegistrationInfo-' batch_session_map.session(k).mouse '-' batch_session_map.session(k).date ...
+        '-session' num2str(batch_session_map.session(k).session) '.mat'])
+    sesh(k).reginfo = RegistrationInfoX;
     
-    ChangeDirectory(Reg_NeuronIDs(k).mouse,Reg_NeuronIDs(k).reg_date,Reg_NeuronIDs(k).reg_session);
+    ChangeDirectory(batch_session_map.session(k).mouse,batch_session_map.session(k).date, ...
+        batch_session_map.session(k).session);
 
     load('MeanBlobs.mat','BinBlobs')
     
-    sesh(k+1).MeanImage = BinBlobs;
+    sesh(k).MeanImage = BinBlobs;
     
 end
 
 %%
-num_sessions = length(Reg_NeuronIDs);
-num_neurons = length(Reg_NeuronIDs(1).AllMasks);
+num_sessions = length(batch_session_map.session);
+num_neurons = size(batch_session_map.map,1);
 for j = 1:num_neurons
     % Get limits to zoom into
     tempz1 = regionprops(Reg_NeuronIDs(1).AllMasks{j},'Centroid');
@@ -65,33 +72,37 @@ for j = 1:num_neurons
     
     tempz0 = regionprops(sesh(1).MeanImage{j},'Centroid');
     
-    %plot base mask updatemasks = 1
-    figure(1001)
-    subplot_auto(num_sessions,1)
-    imagesc(Reg_NeuronIDs(1).AllMasksMean{j})
-    title(['Neuron ' num2str(j)])
-    xlim(xlim_use); ylim(ylim_use)
+%     %plot base mask updatemasks = 1
+%     figure(1001)
+%     subplot_auto(num_sessions,1)
+%     imagesc(Reg_NeuronIDs(1).AllMasksMean{j})
+%     title(['Neuron ' num2str(j)])
+%     xlim(xlim_use); ylim(ylim_use)
     
     % Cycle through and plot all subsequent sessions
-    for k = 1:num_sessions
-        neuron_id_use0 = reg_updatemasks0(k).neuron_id{j};
-        neuron_id_use1 = Reg_NeuronIDs(k).neuron_id{j}; % get neuron number in registered session
-        
+    for k = 2:num_sessions
+        neuron_id_use = batch_session_map.map(j,k+1); %reg_updatemasks0(k).neuron_id{j};
+
         % UpdateMasks = 0
-        if ~isempty(neuron_id_use0) && ~isnan(neuron_id_use0) % register valid neuron masks to base session
-            temp0 = imwarp(sesh(k+1).MeanImage{neuron_id_use0},sesh(k+1).reginfo.tform,'OutputView',...
-                sesh(k+1).reginfo.base_ref,'InterpolationMethod','nearest');
+        if neuron_id_use ~= 0 % register valid neuron masks to base session
+            try
+            temp0 = imwarp(sesh(k).MeanImage{neuron_id_use},sesh(k).reginfo.tform,'OutputView',...
+                sesh(k).reginfo.base_ref,'InterpolationMethod','nearest');
+            catch
+                disp('Error catching')
+                keyboard
+            end
         else % If empty or nan, make it all zeros
             temp0 = zeros(size(Reg_NeuronIDs(1).AllMasks{j}));
         end
         
-        % UpdateMasks = 1
-        if ~isempty(neuron_id_use1) && ~isnan(neuron_id_use1) % register valid neuron masks to base session
-            temp1 = imwarp(sesh(k+1).MeanImage{neuron_id_use1},sesh(k+1).reginfo.tform,'OutputView',...
-                sesh(k+1).reginfo.base_ref,'InterpolationMethod','nearest');
-        else % If empty or nan, make it all zeros
-            temp1 = zeros(size(Reg_NeuronIDs(1).AllMasks{j}));
-        end
+%         % UpdateMasks = 1
+%         if ~isempty(neuron_id_use1) && ~isnan(neuron_id_use1) % register valid neuron masks to base session
+%             temp1 = imwarp(sesh(k+1).MeanImage{neuron_id_use1},sesh(k+1).reginfo.tform,'OutputView',...
+%                 sesh(k+1).reginfo.base_ref,'InterpolationMethod','nearest');
+%         else % If empty or nan, make it all zeros
+%             temp1 = zeros(size(Reg_NeuronIDs(1).AllMasks{j}));
+%         end
         
         figure(1000)
         subplot_auto(num_sessions,k+1)
@@ -99,17 +110,18 @@ for j = 1:num_neurons
         hold on
         plot(tempz0.Centroid(1), tempz0.Centroid(2),'r*')
         hold off
-        title([Reg_NeuronIDs(k).reg_date ' Neuron # ' num2str(neuron_id_use0) ' Mask'])
+        title([batch_session_map.session(k).date ' Session ' num2str(batch_session_map.session(k).date) ...
+            ' Neuron # ' num2str(neuron_id_use) ' Mask'])
         xlim(xlim_use); ylim(ylim_use)
         
-        figure(1001)
-        subplot_auto(num_sessions,k+1)
-        imagesc(temp1)
-        hold on
-        plot(tempz1.Centroid(1), tempz1.Centroid(2),'r*')
-        hold off
-        title([Reg_NeuronIDs(k).reg_date ' Neuron # ' num2str(neuron_id_use1) ' Mean Mask'])
-        xlim(xlim_use); ylim(ylim_use)
+%         figure(1001)
+%         subplot_auto(num_sessions,k+1)
+%         imagesc(temp1)
+%         hold on
+%         plot(tempz1.Centroid(1), tempz1.Centroid(2),'r*')
+%         hold off
+%         title([Reg_NeuronIDs(k).reg_date ' Neuron # ' num2str(neuron_id_use1) ' Mean Mask'])
+%         xlim(xlim_use); ylim(ylim_use)
         
     end
     

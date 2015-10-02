@@ -23,6 +23,12 @@ function [] = PFA_batch(session_struct,roomstr,progress_bar,varargin)
 %
 %   -'calc_half': 0 = default. 1 = calculate TMap and pvalues for 1st
 %   and 2nd half of session along with whole session maps
+%
+%   -'use_mut_info': use mutual information along with entropy to calculate
+%   pvals...
+%
+%   -'mispeed': threshold for calculating placemaps.  Any values below
+%           are not used. 1 cm/s = default.  
 
 
 if nargin < 3
@@ -34,6 +40,8 @@ end
 rotate_to_std = 0; % default
 cmperbin = 1; % default
 calc_half = 0; % default
+use_mut_info = 0; % default
+minspeed = 1; % default
 for j = 1:length(varargin)
    if strcmpi(varargin{j},'rotate_to_std')
        rotate_to_std = varargin{j+1};
@@ -43,6 +51,12 @@ for j = 1:length(varargin)
    end
    if strcmpi(varargin{j},'calc_half')
        calc_half = varargin{j+1};
+   end
+   if strcmpi(varargin{j},'use_mut_info')
+       use_mut_info = varargin{j+1};
+   end
+   if strcmpi(varargin{j},'minspeed')
+       minspeed = varargin{j+1};
    end
 end
 
@@ -79,12 +93,14 @@ for j = 1:length(session_struct)
         num2str(session_struct(j).Session) ])
     if  isempty(session_struct(j).exclude_frames)
         CalculatePlacefields(roomstr,'progress_bar',progress_bar,...
-            'rotate_to_std',rotate_to_std,'cmperbin',cmperbin,'calc_half',calc_half);
+            'rotate_to_std',rotate_to_std,'cmperbin',cmperbin,'calc_half',calc_half,...
+            'use_mut_info', use_mut_info,'minspeed',minspeed);
     elseif ~isempty(session_struct(j).exclude_frames)
         disp('Excluding frames - see session_struct for exact frames')
         CalculatePlacefields(roomstr,'progress_bar',progress_bar,'exclude_frames',...
             session_struct(j).exclude_frames,'rotate_to_std',rotate_to_std,...
-            'cmperbin',cmperbin,'calc_half',calc_half);
+            'cmperbin',cmperbin,'calc_half',calc_half,'use_mut_info',use_mut_info,...
+            'minspeed',minspeed);
     end
         
     % Step 2: Calculate Placefield stats

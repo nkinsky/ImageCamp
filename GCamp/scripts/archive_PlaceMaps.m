@@ -2,8 +2,8 @@
 % simply change the filename in the 2nd entry in copyfile.
 n = 1;
 
-sessions = [ref.G30.two_env(1):ref.G30.two_env(2), ref.G31.two_env(1):ref.G31.two_env(2)];
-name_append = '_1cmperbin_7minspeed';
+sessions = ref.G45.twoenv(1); % [ref.G30.two_env(1):ref.G30.two_env(2), ref.G31.two_env(1):ref.G31.two_env(2)];
+name_append = '_1cmperbin_1minspeed';
 for j = sessions
     ChangeDirectory_NK(MD(j))
     success(n,1) = copyfile(fullfile(pwd,'PlaceMaps.mat'),...
@@ -16,3 +16,4 @@ end
 %% Run PFA_batch multiple times
 PFA_batch(MD(sessions),'201b',1,'rotate_to_std',0,'cmperbin',1,'calc_half',1);
 PFA_batch(MD(sessions),'201b',1,'rotate_to_std',1,'cmperbin',1,'calc_half',1);
+PFA_batch(MD(43),'201b',1,'rotate_to_std',0,'cmperbin',0.25,'calc_half',0);

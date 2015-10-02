@@ -47,7 +47,7 @@ for i = 1:length(s)
         
         if isnan(temp) || ~isreal(temp) % Error catching
             disp('Calculated mutual information value is Nan or complex! Error-catching started!')
-            keyboard
+%             keyboard
         end
         mut_info = mut_info + temp;
     end

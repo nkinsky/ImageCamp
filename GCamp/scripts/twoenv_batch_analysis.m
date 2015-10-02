@@ -4,7 +4,7 @@ start_ticker = tic;
 
 %% Filtering variables
 trans_rate_thresh = 0.005; % Hz
-pval_thresh = 0.1; % don't include ANY TMaps with p-values above this
+pval_thresh = 0.05; % don't include ANY TMaps with p-values above this
 within_session = 1;
 num_shuffles = 10; 
 file_append = ''; % If using archived PlaceMaps, this will be appended to the end of the Placemaps files
@@ -268,7 +268,7 @@ ylabel('Transient Map Mean Population Correlations')
 legend('Rotated (local cues align)','Not-rotated (distal cues align)')
 hold off
 
-disp(['Script done running in ' num2str(start_ticker) ' seconds total'])
+disp(['Script done running in ' num2str(toc(start_ticker)) ' seconds total'])
 
 
 %% Get example plots of rotated versus non-rotated correlation histograms and hopefully example neurons
@@ -338,8 +338,58 @@ waitforbuttonpress
 
 end
 
-%% Attempt to get population correlations...
+%% Plot out placemaps across days...
 
+% Specify base directory here
+base_sesh = ref.G31.two_env(1)+2;
+rot_to_std = 1; % 0 = no, 1 = yes rotate such that local cues align
+start_neuron = 53; % Start here when cycling through neurons
+
+if rot_to_std == 0
+    place_file = ['PlaceMaps' file_append '.mat'];
+elseif rot_to_std == 1
+    place_file = ['PlaceMaps_rot_to_std' file_append '.mat'];
+end
+
+% Load neuron mapping file
+base_map = fullfile(MD(base_sesh).Location,'batch_session_map.mat');
+load(base_map)
+
+curr_dir = cd;
+% Load TMaps for all relevant sessions
+num_sessions = length(batch_session_map.session);
+num_neurons = size(batch_session_map.map,1);
+disp('Loading TMaps')
+for j = 1:num_sessions
+    ChangeDirectory(batch_session_map.session(j).mouse, batch_session_map.session(j).date,...
+        batch_session_map.session(j).session);
+    load(place_file,'TMap_gauss')
+    sesh(j).TMap_gauss = TMap_gauss;
+end
+
+figure(200)
+set(gcf,'Position',[27 724 1823 230])
+blank = nan(size(sesh(1).TMap_gauss{1}));
+disp('Plotting out TMaps across sessions')
+for k = start_neuron:num_neurons
+    for j = 1:num_sessions
+        neuron_use = batch_session_map.map(k,j+1);
+        if neuron_use ~= 0
+            TMap_plot = sesh(j).TMap_gauss{neuron_use};
+            title_use = ['Session ' num2str(j) ' neuron ' num2str(neuron_use)];
+        else
+            TMap_plot = blank;
+            title_use = ['Session ' num2str(j) ' - no valid map'];
+        end
+    
+    subplot(1,num_sessions,j)
+    imagesc_nan(TMap_plot)
+    title(title_use,'FontSize',8)
+    end
+    waitforbuttonpress
+    
+end
+    
 
 
 
