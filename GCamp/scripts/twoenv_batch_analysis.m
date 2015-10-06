@@ -7,6 +7,7 @@ trans_rate_thresh = 0.005; % Hz
 pval_thresh = 0.05; % don't include ANY TMaps with p-values above this
 within_session = 1;
 num_shuffles = 10; 
+days_active_use = 2; % Do same plots using only neurons that are active this number of days
 file_append = ''; % If using archived PlaceMaps, this will be appended to the end of the Placemaps files
 
 %% Set up mega-variable - note that working_dir 1 = square sessions and 2 = octagon sessions (REQUIRED)
@@ -26,10 +27,14 @@ for j = 1:num_animals
 end
 
 %% Run tmap_corr_across_days for all conditions
-
+curr_dir = cd;
 for j = 1:num_animals
     disp(['>>>>>>>>> MOUSE ' num2str(j) ' <<<<<<<<<<<'])
     for k = 1:length(Mouse(j).working_dirs)
+        cd(Mouse(j).working_dirs{k});
+        load batch_session_map.mat
+        Mouse(j).batch_session_map(k) = batch_session_map;
+        Mouse(j).days_active{k} = sum(batch_session_map.map(:,2:end) > 0,2); % Get #days active for each neuron
         tt = tic;
         for m = 0:1
             [Mouse(j).corr_matrix{m+1,k}, pop_struct_temp, Mouse(j).pass_count{m+1,k},...
@@ -45,6 +50,7 @@ for j = 1:num_animals
     end
     Mouse(j).trans_rate_thresh = trans_rate_thresh;
 end
+cd(curr_dir)
 
 %% Dump means into a mega-matrix (combine ALL correlation values here also to get a mega cdf for each session?)
 
@@ -53,21 +59,32 @@ num_sessions = size(Mouse(1).corr_matrix{1},1);
 % mega_mean(2).matrix = cell(num_sessions,num_sessions); % rotate
 
 % Get individual neuron mean correlation matrices
-for ll = 1:num_sessions
-    for mm = 1:num_sessions
-        count = 1; % Start counter
-        for j = 1:num_animals
-            for k = 1:2
-                mega_mean_rot_temp = nanmean(squeeze(Mouse(j).corr_matrix{2,k}(ll,mm,:)));
-                mega_mean_no_rot_temp = nanmean(squeeze(Mouse(j).corr_matrix{1,k}(ll,mm,:)));
-                
-                mega_mean(1).matrix(ll,mm,count) = mega_mean_no_rot_temp; % [mega_mean(1).matrix(ll,mm) mega_mean_no_rot_temp];
-                mega_mean(2).matrix(ll,mm,count) = mega_mean_rot_temp; % [mega_mean(2).matrix(ll,mm) mega_mean_rot_temp];
-                count = count + 1;
-            end
+
+count = 1; % Start counter
+for j = 1:num_animals
+    for k = 1:2
+        mega_mean_rot_temp = nanmean(Mouse(j).corr_matrix{2,k},3);
+        mega_mean_no_rot_temp = nanmean(Mouse(j).corr_matrix{1,k},3);
+        
+        mega_mean(1).matrix(:,:,count) = mega_mean_no_rot_temp; % [mega_mean(1).matrix(ll,mm) mega_mean_no_rot_temp];
+        mega_mean(2).matrix(:,:,count) = mega_mean_rot_temp; % [mega_mean(2).matrix(ll,mm) mega_mean_rot_temp];
+        count = count + 1;
+    end
+end
+
+% Do this with criteria for # days active
+for ll = 2:8
+    count = 1; % Start counter
+    for j = 1:num_animals
+        for k = 1:2
+            mega_mean_rot_temp = nanmean(Mouse(j).corr_matrix{2,k}(:,:,Mouse(j).days_active{k} == ll),3);
+            mega_mean_no_rot_temp = nanmean(Mouse(j).corr_matrix{1,k}(:,:,Mouse(j).days_active{k} == ll),3);
+            
+            mega_mean_byday(ll).mega_mean(1).matrix(:,:,count) = mega_mean_no_rot_temp; % [mega_mean(1).matrix(ll,mm) mega_mean_no_rot_temp];
+            mega_mean_byday(ll).mega_mean(2).matrix(:,:,count) = mega_mean_rot_temp; % [mega_mean(2).matrix(ll,mm) mega_mean_rot_temp];
+            count = count + 1;
         end
     end
-    
 end
 
 % Get population correlation matrices
@@ -207,6 +224,11 @@ pop_after_6_sem = std(mean_simple_pop_rot(after_6_ind))/sqrt(length(after_6_ind)
 pop_after_6_norot_mean = mean(mean_simple_pop_norot(after_6_norot_ind));
 pop_after_6_norot_sem = std(mean_simple_pop_norot(after_6_norot_ind))/sqrt(length(after_6_norot_ind));
 
+%% Attempt to do above for day restricted data
+for ll = 2:8
+   twoenv_bars( mega_mean_byday(ll).mega_mean, shuffle_comb, ll) 
+end
+
 %% First attempt to get real stats
 
 % Should probably write below into a simple function and then call it
@@ -218,35 +240,40 @@ for j = 1:num_animals
     for ll = 1:2
         for mm = 1:size(after_5,1)
                 after_5_comb = [ after_5_comb ; squeeze(Mouse(j).corr_matrix{1,ll}(after_5(mm,1),after_5(mm,2),...
-                    logical(squeeze(Mouse(j).pass_count{1,ll}(after_5(mm,1),after_5(mm,2),:)))))];
+                    logical(squeeze(Mouse(j).pass_count{ll,1}(after_5(mm,1),after_5(mm,2),:)))))];
                 after_5_comb_no_rot = [ after_5_comb_no_rot ; squeeze(Mouse(j).corr_matrix{2,ll}(after_5(mm,1),after_5(mm,2),...
-                    logical(squeeze(Mouse(j).pass_count{2,ll}(after_5(mm,1),after_5(mm,2),:)))))];
+                    logical(squeeze(Mouse(j).pass_count{ll,2}(after_5(mm,1),after_5(mm,2),:)))))];
         end
     end
 end
 nanmean(after_5_comb);
 nanstd(after_5_comb);
 
-%% Plot individual neuron means
+%% Plot individual neuron 
+error_on = 0;
 figure(10)
 h = bar([before_win_mean, before_win_norot_mean; before_after_mean, before_after_norot_mean; ...
     before_5_mean, before_5_norot_mean; after_5_mean, after_5_norot_mean; ...
     before_6_mean, before_6_norot_mean; after_6_mean, after_6_norot_mean]);
 hold on
-errorbar(h(1).XData + h(1).XOffset, [before_win_mean, before_after_mean, ...
-    before_5_mean, after_5_mean, before_6_mean, after_6_mean], [before_win_sem, ...
-    before_after_sem, before_5_sem, after_5_sem, before_6_sem, after_6_sem],...
-    '.')
-errorbar(h(2).XData + h(2).XOffset, [before_win_norot_mean, before_after_norot_mean, ...
-    before_5_norot_mean, after_5_norot_mean, before_6_norot_mean, after_6_norot_mean], [before_win_norot_sem, ...
-    before_after_norot_sem, before_5_norot_sem, after_5_norot_sem, before_6_norot_sem, after_6_norot_sem],...
-    '.')
+if error_on == 1
+    errorbar(h(1).XData + h(1).XOffset, [before_win_mean, before_after_mean, ...
+        before_5_mean, after_5_mean, before_6_mean, after_6_mean], [before_win_sem, ...
+        before_after_sem, before_5_sem, after_5_sem, before_6_sem, after_6_sem],...
+        '.')
+    errorbar(h(2).XData + h(2).XOffset, [before_win_norot_mean, before_after_norot_mean, ...
+        before_5_norot_mean, after_5_norot_mean, before_6_norot_mean, after_6_norot_mean], [before_win_norot_sem, ...
+        before_after_norot_sem, before_5_norot_sem, after_5_norot_sem, before_6_norot_sem, after_6_norot_sem],...
+        '.')
+end
 h2 = plot(get(gca,'XLim'),[shuffle_mean shuffle_mean],'r--');
 set(gca,'XTickLabel',{'Before within','Before-After','Before-Day5','After-Day5',...
     'Before-Day6','After-Day6'})
 ylabel('Transient Map Mean Correlations - Individual Neurons')
-h_legend = legend([h(1) h(2) h2],'Rotated (local cues align)','Not-rotated (distal cues align)','Shuffled');
+h_legend = legend([h(1) h(2) h2],'Rotated (local cues align)','Not-rotated (distal cues align)','Chance (Shuffled Data)');
 hold off
+ylims_given = get(gca,'YLim');
+ylim([ylims_given(1)-0.1, ylims_given(2)+0.1]);
 
 %% Plot population correlation summary
 figure(11)
@@ -254,19 +281,23 @@ h = bar([pop_before_win_mean, pop_before_win_norot_mean; pop_before_after_mean, 
     pop_before_5_mean, pop_before_5_norot_mean; pop_after_5_mean, pop_after_5_norot_mean; ...
     pop_before_6_mean, pop_before_6_norot_mean; pop_after_6_mean, pop_after_6_norot_mean]);
 hold on
-errorbar(h(1).XData + h(1).XOffset, [pop_before_win_mean, pop_before_after_mean, ...
-    pop_before_5_mean, pop_after_5_mean, pop_before_6_mean, pop_after_6_mean], [pop_before_win_sem, ...
-    pop_before_after_sem, pop_before_5_sem, pop_after_5_sem, pop_before_6_sem, pop_after_6_sem],...
-    '.')
-errorbar(h(2).XData + h(2).XOffset, [pop_before_win_norot_mean, pop_before_after_norot_mean, ...
-    pop_before_5_norot_mean, pop_after_5_norot_mean, pop_before_6_norot_mean, pop_after_6_norot_mean], [pop_before_win_norot_sem, ...
-    pop_before_after_norot_sem, pop_before_5_norot_sem, pop_after_5_norot_sem, pop_before_6_norot_sem, pop_after_6_norot_sem],...
-    '.')
+if error_on == 1
+    errorbar(h(1).XData + h(1).XOffset, [pop_before_win_mean, pop_before_after_mean, ...
+        pop_before_5_mean, pop_after_5_mean, pop_before_6_mean, pop_after_6_mean], [pop_before_win_sem, ...
+        pop_before_after_sem, pop_before_5_sem, pop_after_5_sem, pop_before_6_sem, pop_after_6_sem],...
+        '.')
+    errorbar(h(2).XData + h(2).XOffset, [pop_before_win_norot_mean, pop_before_after_norot_mean, ...
+        pop_before_5_norot_mean, pop_after_5_norot_mean, pop_before_6_norot_mean, pop_after_6_norot_mean], [pop_before_win_norot_sem, ...
+        pop_before_after_norot_sem, pop_before_5_norot_sem, pop_after_5_norot_sem, pop_before_6_norot_sem, pop_after_6_norot_sem],...
+        '.')
+end
 set(gca,'XTickLabel',{'Before within','Before-After','Before-Day5','After-Day5',...
     'Before-Day6','After-Day6'})
 ylabel('Transient Map Mean Population Correlations')
 legend('Rotated (local cues align)','Not-rotated (distal cues align)')
 hold off
+ylims_given = get(gca,'YLim');
+ylim([ylims_given(1)-0.1, ylims_given(2)+0.1]);
 
 disp(['Script done running in ' num2str(toc(start_ticker)) ' seconds total'])
 
@@ -275,26 +306,53 @@ disp(['Script done running in ' num2str(toc(start_ticker)) ' seconds total'])
 
 centers = -0.2:0.05:0.9;
 figure
-subplot(2,2,1)
+subplot(1,3,1)
 hist(squeeze(Mouse(1).corr_matrix{1,2}(3,4,:)),centers);
-title('Histogram between sessions that are NOT rotated (distal cues align)')
+title(char('               Histogram','Transient Maps NOT rotated (distal cues align)'))
 xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
 
-subplot(2,2,2)
+subplot(1,3,2)
 hist(squeeze(Mouse(1).corr_matrix{2,2}(3,4,:)),centers);
-title('Histogram between sessions rotated such that local cues align')
+title(char('               Histogram','Transient Maps rotated (local cues align)'))
 xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
 ylim([0 60])
 
-subplot(2,2,3)
+subplot(1,3,3)
 ecdf(squeeze(Mouse(1).corr_matrix{1,2}(3,4,:))); 
 hold on; 
 ecdf(squeeze(Mouse(1).corr_matrix{2,2}(3,4,:)));
 ecdf(shuffle_comb(:))
 legend('NON-rotated data (distal cues align)','Rotated data (local cues align)',...
     'Shuffled Data','Location','SouthEast')
-title('Empirical CDF of correlation values between sessions')
+title('Empirical CDF')
 xlabel('Calcium Transient Heat Map Correlation (x)');
+
+%% Get and plot numbers of cells that pass criteria for each session
+
+num_pass_comb = [];
+for j = 1:num_animals
+    for k = 1:2
+        num_neurons = size(Mouse(j).pass_count{2,k},3);
+        num_pass = zeros(1,num_neurons);
+        for ll = 1:num_neurons
+            % Sum up number of sessions each neuron passed the criteria for
+            % spatial information as well as transient rate
+            num_pass(ll) = nansum(Mouse(j).pass_count{2,k}(...
+                sub2ind([num_sessions,num_sessions,num_neurons],...
+                1:num_sessions,1:num_sessions,ll*ones(1,num_sessions))));
+        end
+        Mouse(j).num_pass{k} = num_pass;
+        num_pass_comb = [num_pass_comb num_pass];
+    end
+end
+    
+nn = histc(num_pass_comb,0.5:8.5);
+figure(25)
+bar(0.5:8.5,nn,'histc')
+xlim([0.5 8.5])
+xlabel('Number of Sessions Passing Criteria')
+ylabel('Neuron Count')
+title('Histogram - neurons passing inclusion criteria')
 
 %% Example plots of correlations < 0, and high ones
 
@@ -341,9 +399,9 @@ end
 %% Plot out placemaps across days...
 
 % Specify base directory here
-base_sesh = ref.G31.two_env(1)+2;
+base_sesh = ref.G31.two_env(1);
 rot_to_std = 1; % 0 = no, 1 = yes rotate such that local cues align
-start_neuron = 53; % Start here when cycling through neurons
+start_neuron = 57; % Start here when cycling through neurons
 
 if rot_to_std == 0
     place_file = ['PlaceMaps' file_append '.mat'];
@@ -389,6 +447,22 @@ for k = start_neuron:num_neurons
     waitforbuttonpress
     
 end
+
+%% Plot of activity versus within day correlations
+
+% Get sessions to look at correlations for...
+within_day = [1 2; 3 4; 7 8]; within_day_ind = sub2ind([8 8],within_day(:,1), within_day(:,2));
+before_win = [1 2 ; 1 3; 1 4; 2 3; 2 4; 3 4]; before_win_ind = sub2ind([8 8],before_win(:,1), before_win(:,2));
+
+days_active = sum(Mouse(1).batch_session_map(1).map(:,2:9) ~= 0,2); %# days each neuron is active
+for j = 1:length(days_active)
+    temp = [];
+    for k = 1:size(within_day,1)
+        temp = [temp, Mouse(1).corr_matrix{2,1}(within_day(k,1),within_day(k,2),j)];
+    end
+    within_day_corrs(j,:) = temp;
+end
+
     
 
 
