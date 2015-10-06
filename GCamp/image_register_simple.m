@@ -310,8 +310,6 @@ end
 
 num_same = sum(same_neuron(:));
 num_notassigned = n;
-keyboard
-
 %% Plot out combined sessions
 for k = 1:2
     sesh(k).AllNeuronMask = create_AllICmask(sesh(k).NeuronImage_reg);
