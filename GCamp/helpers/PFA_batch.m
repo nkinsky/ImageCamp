@@ -87,6 +87,14 @@ end
 %% Run it for all sessions
 for j = 1:length(session_struct)
     ChangeDirectory_NK(session_struct(j));
+    % Exclude the appropriate frames if doing an alternation session
+    if strcmpi('correct left trials only',session_struct(j).Notes)
+        load Alternation.mat
+        session_struct(j).exclude_frames = find(~(Alt.choice == 1 & Alt.alt == 1));
+    elseif strcmpi('correct right trials only',session_struct(j).Notes)
+        load Alternation.mat
+        session_struct(j).exclude_frames = find(~(Alt.choice == 2 & Alt.alt == 1));
+    end
     
     % Step 1: Calculate Placefields
     disp(['Calculating Placefields for ' session_struct(j).Date ' session ' ...
