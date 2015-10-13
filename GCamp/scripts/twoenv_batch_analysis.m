@@ -147,6 +147,8 @@ after_5 = [5 7; 5 8]; after_5_ind = sub2ind([8 8],after_5(:,1), after_5(:,2));
 after_5_norot = [5 8]; after_5_norot_ind = sub2ind([8 8],after_5_norot(:,1), after_5_norot(:,2));
 after_6 = [6 7; 6 8]; after_6_ind = sub2ind([8 8],after_6(:,1), after_6(:,2));
 after_6_norot = [6 7; 6 8]; after_6_norot_ind = sub2ind([8 8],after_6_norot(:,1), after_6_norot(:,2));
+conn1_conn2 = [5 6]; conn1_conn2_ind = sub2ind([8 8],conn1_conn2(:,1), conn1_conn2(:,2));
+conn1_conn2_norot = [5 6]; conn1_conn2_norot_ind = sub2ind([8 8],conn1_conn2_norot(:,1), conn1_conn2_norot(:,2));
 
 % Mean of individual correlations
 before_win_mean = mean(mean_simple_rot(before_win_ind));
@@ -224,6 +226,49 @@ pop_after_6_sem = std(mean_simple_pop_rot(after_6_ind))/sqrt(length(after_6_ind)
 pop_after_6_norot_mean = mean(mean_simple_pop_norot(after_6_norot_ind));
 pop_after_6_norot_sem = std(mean_simple_pop_norot(after_6_norot_ind))/sqrt(length(after_6_norot_ind));
 
+% Attempt to get more legit statistics - get mean of ALL comparisons
+% across all mice, not mean of means...confusing, I know, but more legit
+mega_size = size(mega_mean(2).matrix);
+before_win_ind = make_mega_sub2ind(mega_size, before_win(:,1), before_win(:,2)); 
+before_win_norot_ind = make_mega_sub2ind(mega_size, before_win(:,1), before_win(:,2));
+before_5_ind = make_mega_sub2ind(mega_size, before_5(:,1), before_5(:,2)); 
+before_5_norot_ind = make_mega_sub2ind(mega_size, before_5(:,1), before_5(:,2));
+after_5_ind = make_mega_sub2ind(mega_size, after_5(:,1), after_5(:,2)); 
+after_5_norot_ind = make_mega_sub2ind(mega_size, after_5(:,1), after_5(:,2));
+before_6_ind = make_mega_sub2ind(mega_size, before_6(:,1), before_6(:,2)); 
+before_6_norot_ind = make_mega_sub2ind(mega_size, before_6(:,1), before_6(:,2));
+after_6_ind = make_mega_sub2ind(mega_size, after_6(:,1), after_6(:,2)); 
+after_6_norot_ind = make_mega_sub2ind(mega_size, after_6(:,1), after_6(:,2));
+conn1_conn2_ind = make_mega_sub2ind(mega_size, conn1_conn2(:,1), conn1_conn2(:,2)); 
+conn1_conn2_norot_ind = make_mega_sub2ind(mega_size, conn1_conn2(:,1), conn1_conn2(:,2));
+
+% Combined groupings (separate, connected day 1, connected day 2)
+separate_win_ind = [before_win_ind; before_after_ind];
+separate_win_mean = mean(mega_mean(2).matrix(separate_win_ind));
+separate_win_sem = std(mega_mean(2).matrix(separate_win_ind))/sqrt(length(separate_win_ind));
+separate_win_norot_ind = [before_win_norot_ind; before_after_norot_ind];
+separate_win_norot_mean = mean(mega_mean(1).matrix(separate_win_norot_ind));
+separate_win_norot_sem = std(mega_mean(1).matrix(separate_win_norot_ind))/sqrt(length(separate_win_norot_ind));
+
+sep_conn1_ind = [before_5_ind; after_5_ind];
+sep_conn1_mean = mean(mega_mean(2).matrix(sep_conn1_ind));
+sep_conn1_sem = std(mega_mean(2).matrix(sep_conn1_ind))/sqrt(length(sep_conn1_ind));
+sep_conn1_norot_ind = [before_5_norot_ind; after_5_norot_ind];
+sep_conn1_norot_mean = mean(mega_mean(1).matrix(sep_conn1_norot_ind));
+sep_conn1_norot_sem = std(mega_mean(1).matrix(sep_conn1_norot_ind))/sqrt(length(sep_conn1_norot_ind));
+
+sep_conn2_ind = [before_6_ind; after_6_ind];
+sep_conn2_mean = mean(mega_mean(2).matrix(sep_conn2_ind));
+sep_conn2_sem = std(mega_mean(2).matrix(sep_conn2_ind))/sqrt(length(sep_conn2_ind));
+sep_conn2_norot_ind = [before_6_norot_ind; after_6_norot_ind];
+sep_conn2_norot_mean = mean(mega_mean(1).matrix(sep_conn2_norot_ind));
+sep_conn2_norot_sem = std(mega_mean(1).matrix(sep_conn2_norot_ind))/sqrt(length(sep_conn2_norot_ind));
+
+conn1_conn2_mean = mean(mega_mean(2).matrix(conn1_conn2_ind));
+conn1_conn2_sem = std(mega_mean(2).matrix(conn1_conn2_ind))/sqrt(length(conn1_conn2_ind));
+conn1_conn2_norot_mean = mean(mega_mean(1).matrix(conn1_conn2_norot_ind));
+conn1_conn2_norot_sem = std(mega_mean(1).matrix(conn1_conn2_norot_ind))/sqrt(length(conn1_conn2_norot_ind));
+
 %% Attempt to do above for day restricted data
 for ll = 2:8
    twoenv_bars( mega_mean_byday(ll).mega_mean, shuffle_comb, ll) 
@@ -249,83 +294,119 @@ end
 nanmean(after_5_comb);
 nanstd(after_5_comb);
 
-%% Plot individual neuron 
-error_on = 0;
+%% Plot individual neuron summaries
+error_on = 1;
 figure(10)
-h = bar([before_win_mean, before_win_norot_mean; before_after_mean, before_after_norot_mean; ...
+h = bar([before_win_mean, before_win_norot_mean;  ...
     before_5_mean, before_5_norot_mean; after_5_mean, after_5_norot_mean; ...
-    before_6_mean, before_6_norot_mean; after_6_mean, after_6_norot_mean]);
+    before_6_mean, before_6_norot_mean; after_6_mean, after_6_norot_mean; ...
+    before_after_mean, before_after_norot_mean;]);
 hold on
 if error_on == 1
-    errorbar(h(1).XData + h(1).XOffset, [before_win_mean, before_after_mean, ...
-        before_5_mean, after_5_mean, before_6_mean, after_6_mean], [before_win_sem, ...
-        before_after_sem, before_5_sem, after_5_sem, before_6_sem, after_6_sem],...
+    errorbar(h(1).XData + h(1).XOffset, [before_win_mean, ...
+        before_5_mean, after_5_mean, before_6_mean, after_6_mean, before_after_mean], [before_win_sem, ...
+        before_5_sem, after_5_sem, before_6_sem, after_6_sem, before_after_sem],...
         '.')
-    errorbar(h(2).XData + h(2).XOffset, [before_win_norot_mean, before_after_norot_mean, ...
-        before_5_norot_mean, after_5_norot_mean, before_6_norot_mean, after_6_norot_mean], [before_win_norot_sem, ...
-        before_after_norot_sem, before_5_norot_sem, after_5_norot_sem, before_6_norot_sem, after_6_norot_sem],...
+    errorbar(h(2).XData + h(2).XOffset, [before_win_norot_mean, ...
+        before_5_norot_mean, after_5_norot_mean, before_6_norot_mean, after_6_norot_mean, before_after_norot_mean], [before_win_norot_sem, ...
+        before_5_norot_sem, after_5_norot_sem, before_6_norot_sem, after_6_norot_sem, before_after_norot_sem],...
         '.')
 end
 h2 = plot(get(gca,'XLim'),[shuffle_mean shuffle_mean],'r--');
-set(gca,'XTickLabel',{'Before within','Before-After','Before-Day5','After-Day5',...
-    'Before-Day6','After-Day6'})
+set(gca,'XTickLabel',{'Before within','Before-Day5','After-Day5',...
+    'Before-Day6','After-Day6', 'Before-After'})
 ylabel('Transient Map Mean Correlations - Individual Neurons')
 h_legend = legend([h(1) h(2) h2],'Rotated (local cues align)','Not-rotated (distal cues align)','Chance (Shuffled Data)');
 hold off
 ylims_given = get(gca,'YLim');
-ylim([ylims_given(1)-0.1, ylims_given(2)+0.1]);
+
+% Simplified
+figure(110)
+h = bar([separate_win_mean, separate_win_norot_mean;  ...
+    sep_conn1_mean, sep_conn1_norot_mean; sep_conn2_mean, sep_conn2_norot_mean;...
+    conn1_conn2_mean, conn1_conn2_norot_mean]);
+hold on
+if error_on == 1
+    errorbar(h(1).XData + h(1).XOffset, [separate_win_mean, ...
+        sep_conn1_mean, sep_conn2_mean, conn1_conn2_mean], [separate_win_sem, ...
+        sep_conn1_sem, sep_conn2_sem, conn1_conn2_sem],'.')
+    errorbar(h(2).XData + h(2).XOffset, [separate_win_norot_mean, ...
+        sep_conn1_norot_mean, sep_conn2_norot_mean, conn1_conn2_norot_mean], [separate_win_norot_sem, ...
+        sep_conn1_norot_sem, sep_conn2_norot_sem, conn1_conn2_norot_sem],'.')
+end
+h2 = plot(get(gca,'XLim'),[shuffle_mean shuffle_mean],'r--');
+set(gca,'XTickLabel',{'Separate','Separate - Connected Day 1',...
+    'Separate - Connected Day 2','Connected Day 1 - Connected Day 2'})
+ylabel('Transient Map Mean Correlations - Individual Neurons')
+h_legend = legend([h(1) h(2) h2],'Local cues aligned','Distal cues aligned','Chance (Shuffled Data)');
+hold off
+ylims_given = get(gca,'YLim');
+% ylim([ylims_given(1)-0.1, ylims_given(2)+0.1]);
 
 %% Plot population correlation summary
 figure(11)
-h = bar([pop_before_win_mean, pop_before_win_norot_mean; pop_before_after_mean, pop_before_after_norot_mean; ...
+h = bar([pop_before_win_mean, pop_before_win_norot_mean; ...
     pop_before_5_mean, pop_before_5_norot_mean; pop_after_5_mean, pop_after_5_norot_mean; ...
-    pop_before_6_mean, pop_before_6_norot_mean; pop_after_6_mean, pop_after_6_norot_mean]);
+    pop_before_6_mean, pop_before_6_norot_mean; pop_after_6_mean, pop_after_6_norot_mean; ...
+    pop_before_after_mean, pop_before_after_norot_mean]);
 hold on
 if error_on == 1
-    errorbar(h(1).XData + h(1).XOffset, [pop_before_win_mean, pop_before_after_mean, ...
-        pop_before_5_mean, pop_after_5_mean, pop_before_6_mean, pop_after_6_mean], [pop_before_win_sem, ...
-        pop_before_after_sem, pop_before_5_sem, pop_after_5_sem, pop_before_6_sem, pop_after_6_sem],...
+    errorbar(h(1).XData + h(1).XOffset, [pop_before_win_mean, ...
+        pop_before_5_mean, pop_after_5_mean, pop_before_6_mean, pop_after_6_mean, pop_before_after_mean],...
+        [pop_before_win_sem, pop_before_5_sem, pop_after_5_sem, pop_before_6_sem, pop_after_6_sem,pop_before_after_sem],...
         '.')
-    errorbar(h(2).XData + h(2).XOffset, [pop_before_win_norot_mean, pop_before_after_norot_mean, ...
-        pop_before_5_norot_mean, pop_after_5_norot_mean, pop_before_6_norot_mean, pop_after_6_norot_mean], [pop_before_win_norot_sem, ...
-        pop_before_after_norot_sem, pop_before_5_norot_sem, pop_after_5_norot_sem, pop_before_6_norot_sem, pop_after_6_norot_sem],...
+    errorbar(h(2).XData + h(2).XOffset, [pop_before_win_norot_mean, ...
+        pop_before_5_norot_mean, pop_after_5_norot_mean, pop_before_6_norot_mean, pop_after_6_norot_mean, pop_before_after_norot_mean], [pop_before_win_norot_sem, ...
+        pop_before_5_norot_sem, pop_after_5_norot_sem, pop_before_6_norot_sem, pop_after_6_norot_sem, pop_before_after_norot_sem],...
         '.')
 end
-set(gca,'XTickLabel',{'Before within','Before-After','Before-Day5','After-Day5',...
-    'Before-Day6','After-Day6'})
+set(gca,'XTickLabel',{'Before within','Before-Day5','After-Day5',...
+    'Before-Day6','After-Day6','Before-After'})
 ylabel('Transient Map Mean Population Correlations')
 legend('Rotated (local cues align)','Not-rotated (distal cues align)')
 hold off
 ylims_given = get(gca,'YLim');
-ylim([ylims_given(1)-0.1, ylims_given(2)+0.1]);
+% ylim([ylims_given(1)-0.1, ylims_given(2)+0.1]);
 
 disp(['Script done running in ' num2str(toc(start_ticker)) ' seconds total'])
 
 
 %% Get example plots of rotated versus non-rotated correlation histograms and hopefully example neurons
-
+session_distal = squeeze(Mouse(1).corr_matrix{1,2}(1,4,:));
+session_local = squeeze(Mouse(1).corr_matrix{2,2}(1,4,:));
 centers = -0.2:0.05:0.9;
 figure
-subplot(1,3,1)
-hist(squeeze(Mouse(1).corr_matrix{1,2}(3,4,:)),centers);
-title(char('               Histogram','Transient Maps NOT rotated (distal cues align)'))
+set(gcf,'Position', [2121, 482, 886, 370]);
+subplot(1,2,1)
+hist(session_distal,centers);
+mean_distal = nanmean(session_distal);
+ylim_use = get(gca,'YLim');
+hold on;
+plot([mean_distal, mean_distal],[ylim_use(1), ylim_use(2)],'r--')
+hold off;
+title(char('     Histogram','Distal cues aligned'))
 xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
 
-subplot(1,3,2)
-hist(squeeze(Mouse(1).corr_matrix{2,2}(3,4,:)),centers);
-title(char('               Histogram','Transient Maps rotated (local cues align)'))
+subplot(1,2,2)
+hist(session_local,centers);
+mean_local = nanmean(session_local);
+ylim_use = get(gca,'YLim');
+hold on;
+plot([mean_local, mean_local],[ylim_use(1), ylim_use(2)],'r--')
+hold off;
+title(char('     Histogram','Local cues aligned'))
 xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
-ylim([0 60])
+% ylim([0 80])
 
-subplot(1,3,3)
-ecdf(squeeze(Mouse(1).corr_matrix{1,2}(3,4,:))); 
-hold on; 
-ecdf(squeeze(Mouse(1).corr_matrix{2,2}(3,4,:)));
-ecdf(shuffle_comb(:))
-legend('NON-rotated data (distal cues align)','Rotated data (local cues align)',...
-    'Shuffled Data','Location','SouthEast')
-title('Empirical CDF')
-xlabel('Calcium Transient Heat Map Correlation (x)');
+% subplot(1,3,3)
+% ecdf(squeeze(Mouse(1).corr_matrix{1,2}(1,4,:))); 
+% hold on; 
+% ecdf(squeeze(Mouse(1).corr_matrix{2,2}(1,4,:)));
+% ecdf(shuffle_comb(:))
+% legend('Distal cues aligned','Local cues aligned',...
+%     'Shuffled Data','Location','SouthEast')
+% title('Empirical CDF')
+% xlabel('Calcium Transient Heat Map Correlation (x)');
 
 %% Get and plot numbers of cells that pass criteria for each session
 
@@ -463,7 +544,41 @@ for j = 1:length(days_active)
     within_day_corrs(j,:) = temp;
 end
 
-    
+%% Start to getting cell stability phenotypes
+remap_index = 0.4; % Wang/Muzzio uses 0.21 for e-phys
 
+for m = 1:num_animals
+    stable_seshs = [];
+    neuron_pass = [];
+    for ll = 1:2
+        for j = 1:size(Mouse(m).corr_matrix{2,ll},3);
+            stable_seshs(j) = nansum(nansum(Mouse(m).corr_matrix{2,ll}(:,:,j) > remap_index & ...
+                Mouse(m).corr_matrix{2,ll}(:,:,j) ~= 1 & Mouse(m).pass_count{2,ll}(:,:,j) == 1));
+            neuron_pass(j) = sum(sum(Mouse(m).pass_count{2,ll}(:,:,j))) > 0;
+        end
+        stable_2sesh = sum(stable_seshs == 1);
+        stable_longerterm = sum(stable_seshs > 1);
+        unstable = sum(neuron_pass) - stable_2sesh - stable_longerterm;
+       total = sum(neuron_pass);
+        
+        Mouse(m).cellphenos{ll}.stable_2sesh = stable_2sesh ;
+        Mouse(m).cellphenos{ll}.stable_longerterm = stable_longerterm;
+        Mouse(m).cellphenos{ll}.unstable = unstable;
+        Mouse(m).cellphenos{ll}.total = total;
+    end
+end
 
+% Sum up for ALL sessions and mice
+total_all = 0;
+stable_2sesh_all = 0;
+stable_longerterm_all = 0;
+unstable_all = 0;
+for m = 1:2
+    for ll = 1:2
+        stable_2sesh_all = stable_2sesh_all + Mouse(m).cellphenos{ll}.stable_2sesh;
+        stable_longerterm_all = stable_longerterm_all + Mouse(m).cellphenos{ll}.stable_longerterm;
+        unstable_all = unstable_all + Mouse(m).cellphenos{ll}.unstable;
+        total_all = total_all + Mouse(m).cellphenos{ll}.total;
+    end
+end
 
