@@ -167,7 +167,7 @@ for j = 1:num_neurons
                 sesh2_thresh_pass = sesh(ll).trans_rate_pass(sesh2_neuron) & ...
                     sesh(ll).pval_pass(sesh2_neuron);
                 try % error catching statement
-                    if sesh1_thresh_pass && sesh2_thresh_pass
+                    if sesh1_thresh_pass || sesh2_thresh_pass
                         temp = corrcoef(sesh(k).TMap{sesh1_neuron}(:),...
                             sesh(ll).TMap{sesh2_neuron}(:));
                         corr_matrix(k,ll,j) = temp(1,2);
