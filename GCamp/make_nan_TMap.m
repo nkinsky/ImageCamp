@@ -9,7 +9,7 @@ function [ OccMap_smooth, TMap_nan ] = make_nan_TMap( OccMap, TMap )
 % Get sum of original occupancy map
 Occsum = sum(OccMap(:));
 % Set up smoothing
-sm = fspecial('disk',6);
+sm = fspecial('disk',2);
 OccMap_smooth = imfilter(OccMap,sm); % apply smoothing
 
 OccMap_smooth = OccMap_smooth.*Occsum./sum(OccMap_smooth(:)); % keep sum the same (might not be necessary)
