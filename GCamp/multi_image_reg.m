@@ -128,9 +128,7 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
     %Preallocate.
     reg_filename = cell(1,num_sessions);
     reg_path = cell(1,num_sessions);
-    reg_date = cell(1,num_sessions); 
-    reg_session = cell(1,num_sessions);
-    mouse_name  = cell(1,num_sessions);
+    unique_filename = cell(1,num_sessions); 
     
     mouse = base_struct.Animal;
     base_date = base_struct.Date;
@@ -166,9 +164,6 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
         end
     end
     
-    %Get full file path to all registered files
-    reg_file = fullfile(reg_path, reg_filename); 
-        
 %     keyboard
     %% Do the registrations. 
     load(fullfile(base_path,'ProcOut.mat'),'NeuronImage');
@@ -183,15 +178,12 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
 
         %Perform image registration. 
         if this_session == 1
-            neuron_map = image_register_simple(mouse, base_struct.Date,...
-                base_struct.Session, reg_struct(this_session).Date, ...
-                reg_struct(this_session).Session, check_neuron_mapping(this_session),...
+            neuron_map = image_register_simple(base_struct,reg_struct(this_session), ...
+                check_neuron_mapping(this_session),...
                 'multi_reg',0);
         elseif this_session > 1
-            neuron_map = image_register_simple(mouse, base_struct.Date,...
-                base_struct.Session, reg_struct(this_session).Date, ...
-                reg_struct(this_session).Session, check_neuron_mapping(this_session),...
-                'multi_reg',update_masks + 1);
+            neuron_map = image_register_simple(base_struct,reg_struct(this_session),...
+                check_neuron_mapping(this_session),'multi_reg',update_masks + 1);
         end
         % First, get all neurons in registered session that have multiple
         % neurons from the base session map to it
@@ -199,13 +191,14 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
         same_ind = unique(temp); % Vector containing all the neurons in the second session that have multiple neurons in the first session mapping to them...
         % Create boolean to ID session 2 neurons with multiple neurons
         % in 1 mapping to them
-        multiple_maps = zeros(size(neuron_map.same_neuron,2),1); % Pre-allocate
+        nRegNeurons = size(neuron_map.same_neuron,2);
+        multiple_maps = zeros(nRegNeurons,1); % Pre-allocate
         multiple_maps(same_ind,1) = ones(length(same_ind),1);
         
         % Pre-allocate
-        is_registered = zeros(size(neuron_map.same_neuron,2),1);
+        is_registered = zeros(nRegNeurons,1);
         
-        for j = 1:size(neuron_map.same_neuron,2)
+        for j = 1:nRegNeurons
             % Get all neurons in session 2 that map to session 1, not including
             % any NaNs
             is_registered(j,1) = sum(cellfun(@(a) ~isempty(a) && a == j,neuron_map.neuron_id)) ~= 0;
@@ -239,12 +232,10 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
                    if ~isempty(id_temp{kk,1}) && ~isnan(id_temp{kk,1})
                        % Register mask and mean mask for each neuron to base
                        % session
-                       temp = imwarp(reg_masks{id_temp{kk,1}},RegistrationInfoX.tform,'OutputView',...
+                       AllMasks{1,kk} = imwarp(reg_masks{id_temp{kk,1}},RegistrationInfoX.tform,'OutputView',...
                            RegistrationInfoX.base_ref,'InterpolationMethod','nearest');
-                       temp2 = imwarp(reg_masks_mean{id_temp{kk,1}},RegistrationInfoX.tform,'OutputView',...
+                       AllMasksMean{1,kk} = imwarp(reg_masks_mean{id_temp{kk,1}},RegistrationInfoX.tform,'OutputView',...
                            RegistrationInfoX.base_ref,'InterpolationMethod','nearest');
-                       AllMasks{1,kk} = temp; % Update cells masks to include newest session masks
-                       AllMasksMean{1,kk} = temp2;
                    end
                catch
                    disp('error above')
@@ -298,8 +289,7 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
     
 %     keyboard
     %% Bulid cell_map from Reg_NeuronIDs and save it
-    all_session_map = build_multisesh_mapping(Reg_NeuronIDs);
-    Reg_NeuronIDs(1).all_session_map = all_session_map;
+    Reg_NeuronIDs(1).all_session_map = build_multisesh_mapping(Reg_NeuronIDs);    
     
     %Save.
     save (reg_filename, 'Reg_NeuronIDs','-v7.3');

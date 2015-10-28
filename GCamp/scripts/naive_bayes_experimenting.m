@@ -19,19 +19,19 @@ Yedges = (0:NumYBins)*cmperbin+min(y);
 [~,Xbin] = histc(x,Xedges);
 [~,Ybin] = histc(y,Yedges);
 
-Xbin(find(Xbin == (NumXBins+1))) = NumXBins;
-Ybin(find(Ybin == (NumYBins+1))) = NumYBins;
+Xbin(Xbin == (NumXBins+1)) = NumXBins;
+Ybin(Ybin == (NumYBins+1)) = NumYBins;
 
-Xbin(find(Xbin == 0)) = 1;
-Ybin(find(Ybin == 0)) = 1;
+Xbin(Xbin == 0) = 1;
+Ybin(Ybin == 0) = 1;
 
 %% Fit the data - is multivariate multinomial appropriate?
 
-nbx = fitNaiveBayes(FT(train_ind)',Xbin(train_ind)','dist','mvmn');
-nby = fitNaiveBayes(FT(train_ind)',Ybin(train_ind)','dist','mvmn');
+nbx = fitNaiveBayes(FT(:,train_ind)',Xbin(train_ind)','dist','mvmn');
+nby = fitNaiveBayes(FT(:,train_ind)',Ybin(train_ind)','dist','mvmn');
 
-predict_x = nbx.predict(FT');
-predict_y = nby.predict(FT');
+posteriorX = posterior(nbx,FT');
+posteriorY = posterior(nby,FT');
 
 %% Scroll through and look at true position data versus predicted position data
 

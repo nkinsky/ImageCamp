@@ -189,6 +189,7 @@ moving_gray_noreg = imwarp(reg_image_gray,tform_noreg,'OutputView',...
     base_ref,'InterpolationMethod','nearest');
 
 % Plot it out for comparison
+figure('Position',[520,123,961,675]);
 h_base_landmark = subplot(2,2,1);
 imagesc(base_image); colormap(gray); colorbar
 title('Base Image');
@@ -202,7 +203,7 @@ subplot(2,2,4)
 imagesc(abs(moving_reg - base_image)); colormap(gray); colorbar
 title('Registered Image - Base Image')
 
-figure
+figure('Position',[16,211,1564,527])
 subplot(1,2,1)
 imagesc_gray(base_image_gray - moving_gray_noreg);
 title('Base Image - Unregistered 2nd image');
@@ -255,8 +256,7 @@ while strcmpi(manual_flag,'y')
     tform_manual.T = T_manual;
     moving_reg_manual = imwarp(reg_image,tform_manual,'OutputView',imref2d(size(base_image)),'InterpolationMethod','nearest');
    
-    FigNum = FigNum + 1;
-    figure(FigNum)
+    FigNum = FigNum + 1;  
     imagesc(abs(moving_reg_manual - base_image)); colormap(gray); colorbar
     title('Registered Image - Base Image after manual adjust')
     
@@ -308,7 +308,7 @@ end
  
 save (unique_filename,'RegistrationInfoX');
 
-% keyboard;
+%keyboard;
 end % End try/catch statement
 
 end

@@ -1,4 +1,4 @@
-function [ neuron_map] = image_register_simple( mouse_name, base_date, base_session, reg_date, reg_session, check_neuron_mapping, varargin)
+function [ neuron_map] = image_register_simple(baseStruct,regStruct,check_neuron_mapping, varargin)
 %image_register_simple( mouse_name, base_date, base_session, reg_date, reg_session, check_neuron_mapping, ...)
 %   Registers the image ICmovie_min_proj.tif from one session to another so
 %   as to map neurons from one session to the next.  Note that you must set
@@ -18,26 +18,27 @@ function [ neuron_map] = image_register_simple( mouse_name, base_date, base_sess
 %       check_cell_mapping: 0 (default) = no check plots are generated.
 %       1 = go through cell-by-cell and check how well cells are mapped.
 %
-%       'multi_reg': (optional) specify as ...,'multi_reg', 1. 0 (default) - 
-%       use base_file NeuronImage variable from ProcOut.mat for registration 
-%       of neurons.  1 - used only in conjunction with multi_image_reg -
-%       uses AllMasks from Reg_NeuronID for future registrations, with update_masks = 0. 
-%       2 - same as 1 but update_masks = 1. 
+%       'multi_reg': (optional) specify as ...,'multi_reg', 1. 0 (default)
+%       - use base_file NeuronImage variable from ProcOut.mat for
+%       registration of neurons.  1 - used only in conjunction with
+%       multi_image_reg - uses AllMasks from Reg_NeuronID for future
+%       registrations, with update_masks = 0. 2 - same as 1 but
+%       update_masks = 1.
 %
 %       'check_multiple_mapping': (optional) scroll through multiple
 %       mapping neurons - 2nd session neuron is in a red outline, 1st
 %       session neurons will be in yellow
 %
-%   OUTPUTS 
+%   OUTPUTS
 %       neuron_map contains the following fields and is also saved in the
 %       base directory:
 %
 %       .neuron_id: 1xn cell where n is the number of neurons in the first
 %       session, and each value is the neuron number in the 2nd session
 %       that maps to the neurons in the 1st session.  An empty cell means
-%       that no neuron from the 2nd session maps to that neuron from the 1st
-%       session.  A value of NaN means that more than one neuron from the
-%       second session is within min_thresh of the 1st session neuron
+%       that no neuron from the 2nd session maps to that neuron from the
+%       1st session.  A value of NaN means that more than one neuron from
+%       the second session is within min_thresh of the 1st session neuron
 %
 %       .same_neuron: n x m logical, where the a value of 1 indicates that
 %       more than one neuron from the second session maps to a cell in the
@@ -60,8 +61,15 @@ function [ neuron_map] = image_register_simple( mouse_name, base_date, base_sess
 min_thresh = 3; % distance in pixels beyond which we consider a cell a different cell
 manual_reg_enable = 0; % 0 = do not allow manual adjustment of registration
 
-%% Determine if multiple sessions are happening, or if debug_escape is specified
+%% Get session details. 
+mouse_name = baseStruct.Animal;
+reg_date = regStruct.Date; 
+reg_session = regStruct.Session;
+base_session = baseStruct.Session; 
+base_path = baseStruct.Location; 
+base_date = baseStruct.Date;
 
+%% Determine if multiple sessions are happening, or if debug_escape is specified
 multi_reg = 0;
 debug_escape = 0;
 for j = 1:length(varargin)
@@ -78,19 +86,24 @@ end
 
 
 %% Perform Image Registration
-RegistrationInfoX = image_registerX(mouse_name, base_date, base_session, ...
-    reg_date, reg_session, manual_reg_enable);
+try 
+    load(fullfile(base_path,['RegistrationInfo-' mouse_name '-' reg_date '-session' ...
+        num2str(reg_session) '.mat']));
+catch
+    RegistrationInfoX = image_registerX(mouse_name, base_date, base_session, ...
+        reg_date, reg_session, manual_reg_enable);
+end
 
 %% Get working folders for each session, and run MakeMeanBlobs if not already done
 
 currdir = cd;
-sesh(1).folder = ChangeDirectory(mouse_name, base_date, base_session);
+sesh(1).folder = baseStruct.Location;
 if ~(exist('MeanBlobs.mat','file') == 2)
     disp('MeanBlobs.mat not detected in working directory.  Running MakeMeanBlobs (This may take awhile)')
     load('ProcOut.mat','c','cTon','GoodTrs')
     MakeMeanBlobs(c, cTon, GoodTrs)
 end
-sesh(2).folder = ChangeDirectory(mouse_name, reg_date, reg_session);
+sesh(2).folder = regStruct.Location;
 if ~(exist('MeanBlobs.mat','file') == 2)
     disp('MeanBlobs.mat not detected in working directory.  Running MakeMeanBlobs (This may take awhile)')
     load('ProcOut.mat','c','cTon','GoodTrs')
@@ -113,10 +126,10 @@ end
 
 %% Check to see if this has already been run - if so,
 
-try
-    load(map_unique_filename)
-    disp('Neuron Registration Already ran! (neuron_map file detected in base directory). Delete file to re-run');
-catch
+% try
+%     load(map_unique_filename)
+%     disp('Neuron Registration Already ran! (neuron_map file detected in base directory). Delete file to re-run');
+% catch
 %% Get centers-of-mass of all cells after registering 2nd image to 1st image
 for k = 1:2
     % Load Neuron Masks and average activation
@@ -176,7 +189,7 @@ for k = 1:2
                 if length(blob_use) > 1 || max(sizes) < 20
                     disp(['MULTIPLE BLOBS AND/OR SMALL SIZE OF NEURON ' num2str(j) ...
                         ' DETECTED.'])
-                    % Aribtrarily set the 1st valid valud in blob_use to 1
+                    % Aribtrarily set the 1st valid value in blob_use to 1
                     temp = find(blob_use);
                     blob_use = temp(1);
                 end
@@ -208,12 +221,14 @@ end
 
 % keyboard
 %% Get distance to all other neurons
-disp('Calculating Distances between cells')
-cm_dist = 100*ones(size(sesh(1).cms,2),size(sesh(2).cms,2)); % Set all values to arbitrarily large distances to start.
-for j = 1:size(sesh(1).cms,2); % Cycle through all base session neurons
+disp('Calculating distances between cells')
+nBaseNeurons = size(sesh(1).cms,2); 
+nRegNeurons = size(sesh(2).cms,2);
+cm_dist = 500*ones(nBaseNeurons,nRegNeurons); % Set all values to arbitrarily large distances to start.
+for j = 1:nBaseNeurons; % Cycle through all base session neurons
     if ~isempty(sesh(1).cms(j).x)
         pos_cm(:,1) = [sesh(1).cms(j).x ; sesh(1).cms(j).y];
-        for m = 1:size(sesh(2).cms,2) % get distances to all registration session neurons
+        for m = 1:nRegNeurons % get distances to all registration session neurons
             if ~isempty(sesh(2).cms(m).x) && ~isempty(sesh(2).cms(m).y)
                 try % Error catching try/catch statement
                     pos_cm(:,2) = [sesh(2).cms(m).x ; sesh(2).cms(m).y];
@@ -229,11 +244,11 @@ for j = 1:size(sesh(1).cms,2); % Cycle through all base session neurons
                 % screen - shouldn't happen if you are using the same base
                 % session for both Tenaspis and multi_image_reg, but can if you
                 % are doing independent registrations
-                cm_dist(j,m) = 100; % Set distance to very far for these neurons so they never get mapped to another neuron
+                cm_dist(j,m) = 500; % Set distance to very far for these neurons so they never get mapped to another neuron
             end
         end
     elseif isempty(sesh(1).cms(j).x)
-        cm_dist(j,:) = 100*ones(size(cm_dist(j,:)));
+        cm_dist(j,:) = 500*ones(size(cm_dist(j,:)));
     end
 end
 
@@ -245,7 +260,7 @@ n = 0;
 for j = 1:length(cm_dist_min)
     % Exclude any neurons whose cms are outside the distance threshold or
     % whose cms reside at 0,0 (meaning that they have disappeared due to
-    % registtration)
+    % registration)
     if cm_dist_min(j) > min_thresh || (sesh(1).cms(j).x == 0 && sesh(1).cms(j).y == 0)
         neuron_id{j,1} = [];
         n = n+1;
@@ -260,21 +275,22 @@ neuron_id_temp = neuron_id; % Save neuron_id for later debugging purposes
 % to a single cell in the 2nd session
 disp('Sorting out multiple base session cells mapping to the same cell in the second session')
 % Initialize same_neuron variable
-same_neuron = zeros(size(sesh(1).NeuronImage_reg,2),size(sesh(2).NeuronImage_reg,2));
+same_neuron = zeros(nBaseNeurons,nRegNeurons);
 neuron_id_nan = neuron_id;
-for j = 1:size(sesh(2).NeuronImage_reg,2);
+for j = 1:nRegNeurons;
     % Find cases where more than one neuron in the 1st session maps to
     % the same neuron in the second session
     try % Debugging!
         same_ind = find(cellfun(@(a) ~isempty(a) && a == j,neuron_id));
+        numMappedNeurons = length(same_ind);
     catch
         disp('error')
         keyboard
     end
-    if length(same_ind) > 1
+    if numMappedNeurons > 1
 %         keyboard
-        overlap_ratio = zeros(1,length(same_ind)); % Pre-allocate
-        for k = 1:length(same_ind)
+        overlap_ratio = zeros(1,numMappedNeurons); % Pre-allocate
+        for k = 1:numMappedNeurons
             % Note neurons in the 1st session that map to the same cell
             % in the 2nd session and set their values to NaN in the
             % neuron_id variable
@@ -453,7 +469,7 @@ end
 
 save(map_unique_filename, 'neuron_map');
 
-end % End try/catch statement
+%end % End try/catch statement
 
 
 
