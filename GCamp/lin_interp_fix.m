@@ -1,7 +1,7 @@
 function [  ] = lin_interp_fix()
 %fixes wrongly interpolated xpos and ypos data in Pos.mat and adds a
 %time_interp array and saves it.  Run in the working directory of a session
-%to fix it!
+%to fix it! Use on data from prior to ~ May 2015
 
 fps_brainimage = 20; % frames/sec for brain image timestamps
 
