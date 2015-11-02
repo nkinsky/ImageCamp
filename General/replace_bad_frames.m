@@ -1,5 +1,6 @@
 function [] = replace_bad_frames(infile,outfile,bad_frames,replace_frames)
 % replace_bad_frames(infile,outfile,bad_frames,replace_frames)
+%
 % Replaces bad_frames in infile with the frame(s) specified in
 % replace_frames. replace_frames is either one frame or an array of frame
 % indices that matches the length of bad_frames.  If it is just one frame,

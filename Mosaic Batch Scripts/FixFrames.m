@@ -25,8 +25,8 @@ function FixFrames(filename)
     
 %% Get bad frames. 
     SD = std(meanframes); 
-    toohigh = mean(meanframes) + 4*SD; 
-    toolow = mean(meanframes) - 4*SD;
+    toohigh = mean(meanframes) + 6*SD; 
+    toolow = mean(meanframes) - 6*SD;
     
     badframes = find(meanframes > toohigh | meanframes < toolow); 
     numbadframes = length(badframes); 
@@ -51,8 +51,13 @@ function FixFrames(filename)
     
     %Manual check. 
     if ~isempty(badframes)
-        goodframes = input('Are these all bad frames? If not, enter frame numbers. Otherwise, leave empty. ', 's');
-        goodframes = str2num(goodframes); 
+        disp('Are these all bad frames? If not, enter good frame numbers or type ''all'' if all frames are good')
+        goodframes = input('If all frames are bad, leave empty. ', 's');
+        if strcmpi(goodframes,'all')
+            goodframes = badframes;
+        else
+            goodframes = str2num(goodframes);
+        end
         if ~isempty(goodframes)
             badframes(ismember(badframes,goodframes)) = []; 
         end

@@ -20,7 +20,6 @@ plot(x,y)
 % Draw rectangle
 ok = 'n';
 
-
 while strcmpi(ok,'n')
     title('Draw rectangle around points you wish to consider for arena alignment!')
     disp('Draw rectangle around points you wish to consider for arena alignment!')
@@ -29,7 +28,7 @@ while strcmpi(ok,'n')
     hold on
     rectangle('Position',rect,'EdgeColor',[1 0 0],'LineStyle','-.')
     hold off
-    ok = input('Is this ok? (y/n): ');
+    ok = input('Is this ok? (y/n): ','s');
 end
 
 % Calculate bounds

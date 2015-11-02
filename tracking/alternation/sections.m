@@ -33,6 +33,7 @@ function [bounds, rot_x, rot_y, rotang] = sections(x, y, skip_rot_check, varargi
 %
 
 %% Get varargins
+manual_rot_overwrite = 0; % default value
 for j = 1:length(varargin)
    if strcmpi(varargin{j},'manual_rot_overwrite') 
       manual_rot_overwrite = varargin{j+1}; 
