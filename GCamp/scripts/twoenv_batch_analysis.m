@@ -231,6 +231,8 @@ pop_after_6_norot_sem = std(mean_simple_pop_norot(after_6_norot_ind))/sqrt(lengt
 mega_size = size(mega_mean(2).matrix);
 before_win_ind = make_mega_sub2ind(mega_size, before_win(:,1), before_win(:,2)); 
 before_win_norot_ind = make_mega_sub2ind(mega_size, before_win(:,1), before_win(:,2));
+before_after_ind = make_mega_sub2ind(mega_size, before_after(:,1), before_after(:,2)); 
+before_after_norot_ind = make_mega_sub2ind(mega_size, before_after_norot(:,1), before_after_norot(:,2)); 
 before_5_ind = make_mega_sub2ind(mega_size, before_5(:,1), before_5(:,2)); 
 before_5_norot_ind = make_mega_sub2ind(mega_size, before_5(:,1), before_5(:,2));
 after_5_ind = make_mega_sub2ind(mega_size, after_5(:,1), after_5(:,2)); 
@@ -243,23 +245,29 @@ conn1_conn2_ind = make_mega_sub2ind(mega_size, conn1_conn2(:,1), conn1_conn2(:,2
 conn1_conn2_norot_ind = make_mega_sub2ind(mega_size, conn1_conn2(:,1), conn1_conn2(:,2));
 
 % Combined groupings (separate, connected day 1, connected day 2)
+separate_win = [before_win; before_after];
 separate_win_ind = [before_win_ind; before_after_ind];
 separate_win_mean = mean(mega_mean(2).matrix(separate_win_ind));
 separate_win_sem = std(mega_mean(2).matrix(separate_win_ind))/sqrt(length(separate_win_ind));
+separate_win_norot = [before_win_norot; before_after_norot];
 separate_win_norot_ind = [before_win_norot_ind; before_after_norot_ind];
 separate_win_norot_mean = mean(mega_mean(1).matrix(separate_win_norot_ind));
 separate_win_norot_sem = std(mega_mean(1).matrix(separate_win_norot_ind))/sqrt(length(separate_win_norot_ind));
 
+sep_conn1 = [before_5; after_5];
 sep_conn1_ind = [before_5_ind; after_5_ind];
 sep_conn1_mean = mean(mega_mean(2).matrix(sep_conn1_ind));
 sep_conn1_sem = std(mega_mean(2).matrix(sep_conn1_ind))/sqrt(length(sep_conn1_ind));
+sep_conn1_norot = [before_5_norot; after_5_norot];
 sep_conn1_norot_ind = [before_5_norot_ind; after_5_norot_ind];
 sep_conn1_norot_mean = mean(mega_mean(1).matrix(sep_conn1_norot_ind));
 sep_conn1_norot_sem = std(mega_mean(1).matrix(sep_conn1_norot_ind))/sqrt(length(sep_conn1_norot_ind));
 
+sep_conn2 = [before_6; after_6];
 sep_conn2_ind = [before_6_ind; after_6_ind];
 sep_conn2_mean = mean(mega_mean(2).matrix(sep_conn2_ind));
 sep_conn2_sem = std(mega_mean(2).matrix(sep_conn2_ind))/sqrt(length(sep_conn2_ind));
+sep_conn2_norot = [before_6_norot; after_6_norot];
 sep_conn2_norot_ind = [before_6_norot_ind; after_6_norot_ind];
 sep_conn2_norot_mean = mean(mega_mean(1).matrix(sep_conn2_norot_ind));
 sep_conn2_norot_sem = std(mega_mean(1).matrix(sep_conn2_norot_ind))/sqrt(length(sep_conn2_norot_ind));
@@ -268,6 +276,11 @@ conn1_conn2_mean = mean(mega_mean(2).matrix(conn1_conn2_ind));
 conn1_conn2_sem = std(mega_mean(2).matrix(conn1_conn2_ind))/sqrt(length(conn1_conn2_ind));
 conn1_conn2_norot_mean = mean(mega_mean(1).matrix(conn1_conn2_norot_ind));
 conn1_conn2_norot_sem = std(mega_mean(1).matrix(conn1_conn2_norot_ind))/sqrt(length(conn1_conn2_norot_ind));
+
+before_after_mean2 = mean(mega_mean(2).matrix(before_after_ind));
+before_after_sem2 = std(mega_mean(2).matrix(before_after_ind))/sqrt(length(before_after_ind));
+before_after_norot_mean2 = mean(mega_mean(1).matrix(before_after_norot_ind));
+before_after_norot_sem2 = std(mega_mean(1).matrix(before_after_norot_ind))/sqrt(length(before_after_norot_ind));
 
 %% Attempt to do above for day restricted data
 for ll = 2:8
@@ -284,15 +297,27 @@ after_5_comb_no_rot = [];
 for j = 1:num_animals
     for ll = 1:2
         for mm = 1:size(after_5,1)
-                after_5_comb = [ after_5_comb ; squeeze(Mouse(j).corr_matrix{1,ll}(after_5(mm,1),after_5(mm,2),...
-                    logical(squeeze(Mouse(j).pass_count{ll,1}(after_5(mm,1),after_5(mm,2),:)))))];
-                after_5_comb_no_rot = [ after_5_comb_no_rot ; squeeze(Mouse(j).corr_matrix{2,ll}(after_5(mm,1),after_5(mm,2),...
-                    logical(squeeze(Mouse(j).pass_count{ll,2}(after_5(mm,1),after_5(mm,2),:)))))];
+            after_5_comb = [ after_5_comb ; squeeze(Mouse(j).corr_matrix{1,ll}(after_5(mm,1),after_5(mm,2),...
+                logical(squeeze(Mouse(j).pass_count{ll,1}(after_5(mm,1),after_5(mm,2),:)))))];
+        end
+        for mm = 1:size(after_5_norot,1)
+            after_5_comb_no_rot = [ after_5_comb_no_rot ; squeeze(Mouse(j).corr_matrix{2,ll}(after_5_norot(mm,1),after_5_norot(mm,2),...
+                logical(squeeze(Mouse(j).pass_count{ll,2}(after_5_norot(mm,1),after_5_norot(mm,2),:)))))];
         end
     end
 end
 nanmean(after_5_comb);
 nanstd(after_5_comb);
+
+[ statss.after_5.h, statss.after_5.p ] = twoenv_kstest( Mouse, shuffle_comb, after_5, after_5_norot);
+[ statss.sep_win.h, statss.sep_win.p, statss.sep_win.mean ] = twoenv_kstest( Mouse, shuffle_comb, ...
+    separate_win, separate_win_norot,'plot_ecdf','separate');
+[ statss.sep_conn1.h, statss.sep_conn1.p, statss.sep_conn1.mean ] = twoenv_kstest( Mouse, shuffle_comb, ...
+    sep_conn1, sep_conn1_norot,'plot_ecdf','sep_conn1');
+[ statss.sep_conn2.h, statss.sep_conn2.p , statss.sep_conn2.mean] = twoenv_kstest( Mouse, shuffle_comb, ...
+    sep_conn2, sep_conn2_norot,'plot_ecdf','sep_conn2');
+[ statss.before_after.h, statss.before_after.p, statss.before_after.mean] = twoenv_kstest( Mouse, shuffle_comb, ...
+    before_after, before_after_norot,'plot_ecdf','before_after');
 
 %% Plot individual neuron summaries
 error_on = 1;
@@ -322,21 +347,23 @@ ylims_given = get(gca,'YLim');
 
 % Simplified
 figure(110)
+set(gcf,'Position',[1988 286 1070 477])
 h = bar([separate_win_mean, separate_win_norot_mean;  ...
     sep_conn1_mean, sep_conn1_norot_mean; sep_conn2_mean, sep_conn2_norot_mean;...
-    conn1_conn2_mean, conn1_conn2_norot_mean]);
+    before_after_mean2, before_after_norot_mean2]);
 hold on
 if error_on == 1
     errorbar(h(1).XData + h(1).XOffset, [separate_win_mean, ...
-        sep_conn1_mean, sep_conn2_mean, conn1_conn2_mean], [separate_win_sem, ...
-        sep_conn1_sem, sep_conn2_sem, conn1_conn2_sem],'.')
+        sep_conn1_mean, sep_conn2_mean, before_after_mean2], [separate_win_sem, ...
+        sep_conn1_sem, sep_conn2_sem, before_after_sem2],'.')
     errorbar(h(2).XData + h(2).XOffset, [separate_win_norot_mean, ...
-        sep_conn1_norot_mean, sep_conn2_norot_mean, conn1_conn2_norot_mean], [separate_win_norot_sem, ...
-        sep_conn1_norot_sem, sep_conn2_norot_sem, conn1_conn2_norot_sem],'.')
+        sep_conn1_norot_mean, sep_conn2_norot_mean, before_after_norot_mean2], [separate_win_norot_sem, ...
+        sep_conn1_norot_sem, sep_conn2_norot_sem, before_after_norot_sem2],'.')
 end
+
 h2 = plot(get(gca,'XLim'),[shuffle_mean shuffle_mean],'r--');
 set(gca,'XTickLabel',{'Separate','Separate - Connected Day 1',...
-    'Separate - Connected Day 2','Connected Day 1 - Connected Day 2'})
+    'Separate - Connected Day 2','Before - After'})
 ylabel('Transient Map Mean Correlations - Individual Neurons')
 h_legend = legend([h(1) h(2) h2],'Local cues aligned','Distal cues aligned','Chance (Shuffled Data)');
 hold off
@@ -374,29 +401,63 @@ disp(['Script done running in ' num2str(toc(start_ticker)) ' seconds total'])
 %% Get example plots of rotated versus non-rotated correlation histograms and hopefully example neurons
 session_distal = squeeze(Mouse(1).corr_matrix{1,2}(1,4,:));
 session_local = squeeze(Mouse(1).corr_matrix{2,2}(1,4,:));
+session2_distal = squeeze(Mouse(1).corr_matrix{1,2}(6,8,:));
+session2_local = squeeze(Mouse(1).corr_matrix{2,2}(6,8,:));
 centers = -0.2:0.05:0.9;
-figure
-set(gcf,'Position', [2121, 482, 886, 370]);
+
+% Before - Separate
+figure(300)
+set(gcf,'Position', [2121, 482, 500, 370]);
 subplot(1,2,1)
 hist(session_distal,centers);
+h = findobj(gca,'Type','patch');
+h.FaceColor = 'y';
 mean_distal = nanmean(session_distal);
 ylim_use = get(gca,'YLim');
 hold on;
 plot([mean_distal, mean_distal],[ylim_use(1), ylim_use(2)],'r--')
 hold off;
-title(char('     Histogram','Distal cues aligned'))
+title(char('     Separate','Distal cues aligned'))
 xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
 
 subplot(1,2,2)
 hist(session_local,centers);
 mean_local = nanmean(session_local);
-ylim_use = get(gca,'YLim');
+% ylim_use = get(gca,'YLim');
 hold on;
 plot([mean_local, mean_local],[ylim_use(1), ylim_use(2)],'r--')
 hold off;
-title(char('     Histogram','Local cues aligned'))
+title(char('     Separate','Local cues aligned'))
 xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
+set(gca,'YLim',ylim_use);
 % ylim([0 80])
+
+% Separate-Connected
+figure(301)
+
+subplot(1,2,2)
+hist(session2_local,centers);
+mean_local2 = nanmean(session2_local);
+ylim_use = get(gca,'YLim');
+hold on;
+plot([mean_local2, mean_local2],[ylim_use(1), ylim_use(2)],'r--')
+hold off;
+title(char('Separate-Connected Day 2','Local cues aligned'))
+xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
+
+set(gcf,'Position', [2600, 482, 500, 370]);
+subplot(1,2,1)
+hist(session2_distal,centers);
+h = findobj(gca,'Type','patch');
+h.FaceColor = 'y';
+mean_distal2 = nanmean(session2_distal);
+% ylim_use = get(gca,'YLim');
+hold on;
+plot([mean_distal2, mean_distal2],[ylim_use(1), ylim_use(2)],'r--')
+hold off;
+title(char('Separate-Connected Day 2','Distal cues aligned'))
+xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
+set(gca,'YLim',ylim_use);
 
 % subplot(1,3,3)
 % ecdf(squeeze(Mouse(1).corr_matrix{1,2}(1,4,:))); 
@@ -480,9 +541,9 @@ end
 %% Plot out placemaps across days...
 
 % Specify base directory here
-base_sesh = ref.G31.two_env(1);
+base_sesh = ref.G31.two_env(1)+2;
 rot_to_std = 1; % 0 = no, 1 = yes rotate such that local cues align
-start_neuron = 57; % Start here when cycling through neurons
+start_neuron = 108; % Start here when cycling through neurons
 
 if rot_to_std == 0
     place_file = ['PlaceMaps' file_append '.mat'];
