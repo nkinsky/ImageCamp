@@ -168,6 +168,7 @@ save(new_matfilename2,'Index');
 %   the previous good frame
 
 n_good_use = 0;
+p = ProgressBar(end_frame);
 for k = 1:end_frame
     try
         if sum(k == real_frame_ind_all) == 1 % Good (non-dropped) frame
@@ -186,7 +187,9 @@ for k = 1:end_frame
         disp('Error in the above - check it!')
         keyboard
     end
+    p.progress;
 end
+p.stop; 
 
 % Check to make sure everything worked
 if n_good_use ~= sum(frames)
