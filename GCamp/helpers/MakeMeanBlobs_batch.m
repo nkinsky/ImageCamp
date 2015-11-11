@@ -29,7 +29,7 @@ else
     end
     
     for k = 1:length(cc_missing)
-       disp(['ICmovie_min_proj.tif missing for ' session_struct(cc_missing(k)).Date ...
+       disp(['CC.mat missing for ' session_struct(cc_missing(k)).Date ...
            ' session #' num2str(session_struct(cc_missing(k)).Session)]) 
     end
     
