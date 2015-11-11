@@ -149,6 +149,7 @@ max_time = Object.TimeFrame(end);
 orig_numframes = length(Object.TimeFrame);
 SR_use = 1/round(Object.FrameRate,0);
 Object.TimeFrame(orig_numframes+1:end_frame) = max_time+SR_use:SR_use:max_time+SR_use*(end_frame-orig_numframes);
+Object.DroppedFrames = 0; % Without this they will still appear empty in Mosaic
 % Save everything in the appropriate file
 save(new_mat1file,'Index','Object');
 
