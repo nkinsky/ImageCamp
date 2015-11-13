@@ -23,7 +23,7 @@ Mouse(2).working_dirs{2} = 'J:\GCamp Mice\Working\G31\2env\12_16_2014\1 - 2env o
 num_animals = length(Mouse);
 
 for j = 1:num_animals
-    Mouse(j).key = '1,1 = square no-rotate, 1,2 = octagon no-rotate, 2,1 = square rotate, 2,2 = octagon rotate';
+    Mouse(j).key = '1,1 = square distal cues aligned, 1,2 = octagon distal cues aligned, 2,1 = square local cues aligned, 2,2 = octagon local cues aligned';
 end
 
 %% Run tmap_corr_across_days for all conditions
@@ -63,11 +63,11 @@ num_sessions = size(Mouse(1).corr_matrix{1},1);
 count = 1; % Start counter
 for j = 1:num_animals
     for k = 1:2
-        mega_mean_rot_temp = nanmean(Mouse(j).corr_matrix{2,k},3);
-        mega_mean_no_rot_temp = nanmean(Mouse(j).corr_matrix{1,k},3);
+        mega_mean_local_align_temp = nanmean(Mouse(j).corr_matrix{2,k},3);
+        mega_mean_distal_align_temp = nanmean(Mouse(j).corr_matrix{1,k},3);
         
-        mega_mean(1).matrix(:,:,count) = mega_mean_no_rot_temp; % [mega_mean(1).matrix(ll,mm) mega_mean_no_rot_temp];
-        mega_mean(2).matrix(:,:,count) = mega_mean_rot_temp; % [mega_mean(2).matrix(ll,mm) mega_mean_rot_temp];
+        mega_mean(1).matrix(:,:,count) = mega_mean_distal_align_temp; % [mega_mean(1).matrix(ll,mm) mega_mean_no_rot_temp];
+        mega_mean(2).matrix(:,:,count) = mega_mean_local_align_temp; % [mega_mean(2).matrix(ll,mm) mega_mean_rot_temp];
         count = count + 1;
     end
 end
@@ -77,11 +77,11 @@ for ll = 2:8
     count = 1; % Start counter
     for j = 1:num_animals
         for k = 1:2
-            mega_mean_rot_temp = nanmean(Mouse(j).corr_matrix{2,k}(:,:,Mouse(j).days_active{k} == ll),3);
-            mega_mean_no_rot_temp = nanmean(Mouse(j).corr_matrix{1,k}(:,:,Mouse(j).days_active{k} == ll),3);
+            mega_mean_local_align_temp = nanmean(Mouse(j).corr_matrix{2,k}(:,:,Mouse(j).days_active{k} == ll),3);
+            mega_mean_distal_align_temp = nanmean(Mouse(j).corr_matrix{1,k}(:,:,Mouse(j).days_active{k} == ll),3);
             
-            mega_mean_byday(ll).mega_mean(1).matrix(:,:,count) = mega_mean_no_rot_temp; % [mega_mean(1).matrix(ll,mm) mega_mean_no_rot_temp];
-            mega_mean_byday(ll).mega_mean(2).matrix(:,:,count) = mega_mean_rot_temp; % [mega_mean(2).matrix(ll,mm) mega_mean_rot_temp];
+            mega_mean_byday(ll).mega_mean(1).matrix(:,:,count) = mega_mean_distal_align_temp; % [mega_mean(1).matrix(ll,mm) mega_mean_no_rot_temp];
+            mega_mean_byday(ll).mega_mean(2).matrix(:,:,count) = mega_mean_local_align_temp; % [mega_mean(2).matrix(ll,mm) mega_mean_rot_temp];
             count = count + 1;
         end
     end
@@ -94,11 +94,11 @@ for ll = 1:num_sessions
         count = 1; % Start counter
         for j = 1:num_animals
             for k = 1:2
-                mega_mean_pop_rot_temp = Mouse(j).pop_corr_matrix{2,k}(ll,mm,:);
-                mega_mean_pop_no_rot_temp = Mouse(j).pop_corr_matrix{1,k}(ll,mm,:);
+                mega_mean_pop_local_align_temp = Mouse(j).pop_corr_matrix{2,k}(ll,mm,:);
+                mega_mean_pop_distal_align_temp = Mouse(j).pop_corr_matrix{1,k}(ll,mm,:);
                 
-                mega_mean(1).pop_matrix(ll,mm,count) = mega_mean_pop_no_rot_temp; % [mega_mean(1).matrix(ll,mm) mega_mean_no_rot_temp];
-                mega_mean(2).pop_matrix(ll,mm,count) = mega_mean_pop_rot_temp; % [mega_mean(2).matrix(ll,mm) mega_mean_rot_temp];
+                mega_mean(1).pop_matrix(ll,mm,count) = mega_mean_pop_distal_align_temp; % [mega_mean(1).matrix(ll,mm) mega_mean_no_rot_temp];
+                mega_mean(2).pop_matrix(ll,mm,count) = mega_mean_pop_local_align_temp; % [mega_mean(2).matrix(ll,mm) mega_mean_rot_temp];
                 count = count + 1;
             end
         end
@@ -116,171 +116,171 @@ end
 % Better way to do things in the future is to get values for ALL neuron correlations in
 % each session and group them together somehow after classifying them due
 % to the various comparisons below
-mean_simple_norot = mean(mega_mean(1).matrix,3);
-mean_simple_rot = mean(mega_mean(2).matrix,3);
-if isnan(sum(mean_simple_rot(:))) || isnan(sum(mean_simple_norot(:)))
+mean_simple_distal_align = mean(mega_mean(1).matrix,3);
+mean_simple_local_align = mean(mega_mean(2).matrix,3);
+if isnan(sum(mean_simple_local_align(:))) || isnan(sum(mean_simple_distal_align(:)))
     disp('Note - some sessions have NO good correlations due to not meeting the threshold - be sure to check!')
-    mean_simple_norot = nanmean(mega_mean(1).matrix,3);
-    mean_simple_rot = nanmean(mega_mean(2).matrix,3);
+    mean_simple_distal_align = nanmean(mega_mean(1).matrix,3);
+    mean_simple_local_align = nanmean(mega_mean(2).matrix,3);
 end
 
 % Population Simple Means
-mean_simple_pop_norot = mean(mega_mean(1).pop_matrix,3);
-mean_simple_pop_rot = mean(mega_mean(2).pop_matrix,3);
+mean_simple_pop_distal_align = mean(mega_mean(1).pop_matrix,3);
+mean_simple_pop_local_align = mean(mega_mean(2).pop_matrix,3);
 
 % Shuffled Simple means
 mean_shuffle_simple = nanmean(squeeze(nanmean(shuffle_comb,1)),3);
 shuffle_mean = nanmean(shuffle_comb(:));
 
 % Indices for various comparisons - wow, that's a lot of work
-before_win = [1 2 ; 1 3; 1 4; 2 3; 2 4; 3 4]; before_win_ind = sub2ind([8 8],before_win(:,1), before_win(:,2));
-before_win_norot = [1 2; 1 4; 2 4; 3 4]; before_win_norot_ind = sub2ind([8 8],before_win(:,1), before_win(:,2));
-after_win = [7 8]; after_win_ind = sub2ind([8 8],after_win(:,1), after_win(:,2));
-after_win_norot = [7 8]; after_win_norot_ind = sub2ind([8 8],after_win_norot(:,1), after_win_norot(:,2));
-before_after = [1 7; 2 7; 3 7; 4 7; 1 8; 2 8 ;3 8; 4 8]; before_after_ind = sub2ind([8 8],before_after(:,1), before_after(:,2));
-before_after_norot = [2 7; 4 7; 1 8; 2 8 ; 3 8]; before_after_norot_ind = sub2ind([8 8],before_after_norot(:,1), before_after_norot(:,2));
-before_5 = [1 5; 2 5; 3 5; 4 5]; before_5_ind = sub2ind([8 8],before_5(:,1), before_5(:,2));
-before_5_norot = [2 5; 4 5]; before_5_norot_ind = sub2ind([8 8],before_5_norot(:,1), before_5_norot(:,2));
-before_6 = [1 6; 2 6 ; 3 6; 4 6]; before_6_ind = sub2ind([8 8],before_6(:,1), before_6(:,2));
-before_6_norot = [1 6; 2 6; 3 6; 4 6]; before_6_norot_ind = sub2ind([8 8],before_6_norot(:,1), before_6_norot(:,2));
-after_5 = [5 7; 5 8]; after_5_ind = sub2ind([8 8],after_5(:,1), after_5(:,2));
-after_5_norot = [5 8]; after_5_norot_ind = sub2ind([8 8],after_5_norot(:,1), after_5_norot(:,2));
-after_6 = [6 7; 6 8]; after_6_ind = sub2ind([8 8],after_6(:,1), after_6(:,2));
-after_6_norot = [6 7; 6 8]; after_6_norot_ind = sub2ind([8 8],after_6_norot(:,1), after_6_norot(:,2));
-conn1_conn2 = [5 6]; conn1_conn2_ind = sub2ind([8 8],conn1_conn2(:,1), conn1_conn2(:,2));
-conn1_conn2_norot = [5 6]; conn1_conn2_norot_ind = sub2ind([8 8],conn1_conn2_norot(:,1), conn1_conn2_norot(:,2));
+before_win_local = [1 2 ; 1 3; 1 4; 2 3; 2 4; 3 4]; before_win_local_ind = sub2ind([8 8],before_win_local(:,1), before_win_local(:,2));
+before_win_distal = [1 2; 1 4; 2 4; 3 4]; before_win_distal_ind = sub2ind([8 8],before_win_distal(:,1), before_win_distal(:,2));
+after_win_local = [7 8]; after_win_local_ind = sub2ind([8 8],after_win_local(:,1), after_win_local(:,2));
+after_win_distal = [7 8]; after_win_distal_ind = sub2ind([8 8],after_win_distal(:,1), after_win_distal(:,2));
+before_after_local = [1 7; 2 7; 3 7; 4 7; 1 8; 2 8 ;3 8; 4 8]; before_after_local_ind = sub2ind([8 8],before_after_local(:,1), before_after_local(:,2));
+before_after_distal = [2 7; 4 7; 1 8; 2 8 ; 3 8]; before_after_distal_ind = sub2ind([8 8],before_after_distal(:,1), before_after_distal(:,2));
+before_5_local = [1 5; 2 5; 3 5; 4 5]; before_5_local_ind = sub2ind([8 8],before_5_local(:,1), before_5_local(:,2));
+before_5_distal = [2 5; 4 5]; before_5_distal_ind = sub2ind([8 8],before_5_distal(:,1), before_5_distal(:,2));
+before_6_local = [1 6; 2 6 ; 3 6; 4 6]; before_6_local_ind = sub2ind([8 8],before_6_local(:,1), before_6_local(:,2));
+before_6_distal = [1 6; 2 6; 3 6; 4 6]; before_6_distal_ind = sub2ind([8 8],before_6_distal(:,1), before_6_distal(:,2));
+after_5_local = [5 7; 5 8]; after_5_local_ind = sub2ind([8 8],after_5_local(:,1), after_5_local(:,2));
+after_5_distal = [5 8]; after_5_distal_ind = sub2ind([8 8],after_5_distal(:,1), after_5_distal(:,2));
+after_6_local = [6 7; 6 8]; after_6_local_ind = sub2ind([8 8],after_6_local(:,1), after_6_local(:,2));
+after_6_distal = [6 7; 6 8]; after_6_distal_ind = sub2ind([8 8],after_6_distal(:,1), after_6_distal(:,2));
+conn1_conn2_local = [5 6]; conn1_conn2_local_ind = sub2ind([8 8],conn1_conn2_local(:,1), conn1_conn2_local(:,2));
+conn1_conn2_distal = [5 6]; conn1_conn2_distal_ind = sub2ind([8 8],conn1_conn2_distal(:,1), conn1_conn2_distal(:,2));
 
 % Mean of individual correlations
-before_win_mean = mean(mean_simple_rot(before_win_ind));
-before_win_sem = std(mean_simple_rot(before_win_ind))/sqrt(length(before_win_ind));
-before_win_norot_mean = mean(mean_simple_norot(before_win_norot_ind));
-before_win_norot_sem = std(mean_simple_norot(before_win_norot_ind))/sqrt(length(before_win_norot_ind));
-before_win_shuffle_mean = mean(mean_shuffle_simple(before_win_ind));
-before_win_shuffle_sem = std(mean_shuffle_simple(before_win_ind))/sqrt(length(before_win_ind));
+before_win_local_mean = mean(mean_simple_local_align(before_win_local_ind));
+before_win_local_sem = std(mean_simple_local_align(before_win_local_ind))/sqrt(length(before_win_local_ind));
+before_win_distal_mean = mean(mean_simple_distal_align(before_win_distal_ind));
+before_win_distal_sem = std(mean_simple_distal_align(before_win_distal_ind))/sqrt(length(before_win_distal_ind));
+before_win_shuffle_mean = mean(mean_shuffle_simple(before_win_local_ind));
+before_win_shuffle_sem = std(mean_shuffle_simple(before_win_local_ind))/sqrt(length(before_win_local_ind));
 
-before_after_mean = mean(mean_simple_rot(before_after_ind));
-before_after_sem = std(mean_simple_rot(before_after_ind))/sqrt(length(before_after_ind));
-before_after_norot_mean = mean(mean_simple_norot(before_after_norot_ind));
-before_after_norot_sem = std(mean_simple_norot(before_after_norot_ind))/sqrt(length(before_after_norot_ind));
-before_after_shuffle_mean = mean(mean_shuffle_simple(before_after_ind));
-before_after_shuffle_sem = std(mean_shuffle_simple(before_after_ind))/sqrt(length(before_after_ind));
+before_after_local_mean = mean(mean_simple_local_align(before_after_local_ind));
+before_after_local_sem = std(mean_simple_local_align(before_after_local_ind))/sqrt(length(before_after_local_ind));
+before_after_distal_mean = mean(mean_simple_distal_align(before_after_distal_ind));
+before_after_distal_sem = std(mean_simple_distal_align(before_after_distal_ind))/sqrt(length(before_after_distal_ind));
+before_after_shuffle_mean = mean(mean_shuffle_simple(before_after_local_ind));
+before_after_shuffle_sem = std(mean_shuffle_simple(before_after_local_ind))/sqrt(length(before_after_local_ind));
 
-before_5_mean = mean(mean_simple_rot(before_5_ind));
-before_5_sem = std(mean_simple_rot(before_5_ind))/sqrt(length(before_5_ind));
-before_5_norot_mean = mean(mean_simple_norot(before_5_norot_ind));
-before_5_norot_sem = std(mean_simple_norot(before_5_norot_ind))/sqrt(length(before_5_norot_ind));
-before_5_shuffle_mean = mean(mean_shuffle_simple(before_5_ind));
-before_5_shuffle_sem = std(mean_shuffle_simple(before_5_ind))/sqrt(length(before_5_ind));
+before_5_local_mean = mean(mean_simple_local_align(before_5_local_ind));
+before_5_local_sem = std(mean_simple_local_align(before_5_local_ind))/sqrt(length(before_5_local_ind));
+before_5_distal_mean = mean(mean_simple_distal_align(before_5_distal_ind));
+before_5_distal_sem = std(mean_simple_distal_align(before_5_distal_ind))/sqrt(length(before_5_distal_ind));
+before_5_shuffle_mean = mean(mean_shuffle_simple(before_5_local_ind));
+before_5_shuffle_sem = std(mean_shuffle_simple(before_5_local_ind))/sqrt(length(before_5_local_ind));
 
-before_6_mean = mean(mean_simple_rot(before_6_ind));
-before_6_sem = std(mean_simple_rot(before_6_ind))/sqrt(length(before_6_ind));
-before_6_norot_mean = mean(mean_simple_norot(before_6_norot_ind));
-before_6_norot_sem = std(mean_simple_norot(before_6_norot_ind))/sqrt(length(before_6_norot_ind));
-before_6_shuffle_mean = mean(mean_shuffle_simple(before_6_ind));
-before_6_shuffle_sem = std(mean_shuffle_simple(before_6_ind))/sqrt(length(before_6_ind));
+before_6_local_mean = mean(mean_simple_local_align(before_6_local_ind));
+before_6_local_sem = std(mean_simple_local_align(before_6_local_ind))/sqrt(length(before_6_local_ind));
+before_6_distal_mean = mean(mean_simple_distal_align(before_6_distal_ind));
+before_6_distal_sem = std(mean_simple_distal_align(before_6_distal_ind))/sqrt(length(before_6_distal_ind));
+before_6_shuffle_mean = mean(mean_shuffle_simple(before_6_local_ind));
+before_6_shuffle_sem = std(mean_shuffle_simple(before_6_local_ind))/sqrt(length(before_6_local_ind));
 
-after_5_mean = mean(mean_simple_rot(after_5_ind));
-after_5_sem = std(mean_simple_rot(after_5_ind))/sqrt(length(after_5_ind));
-after_5_norot_mean = mean(mean_simple_norot(after_5_norot_ind));
-after_5_norot_sem = std(mean_simple_norot(after_5_norot_ind))/sqrt(length(after_5_norot_ind));
-after_5_norot_sem = after_5_sem; % Fake it for now...only have one sample currently
-after_5_shuffle_mean = mean(mean_shuffle_simple(after_5_ind));
-after_5_shuffle_sem = std(mean_shuffle_simple(after_5_ind))/sqrt(length(after_5_ind));
+after_5_local_mean = mean(mean_simple_local_align(after_5_local_ind));
+after_5_local_sem = std(mean_simple_local_align(after_5_local_ind))/sqrt(length(after_5_local_ind));
+after_5_distal_mean = mean(mean_simple_distal_align(after_5_distal_ind));
+after_5_distal_sem = std(mean_simple_distal_align(after_5_distal_ind))/sqrt(length(after_5_distal_ind));
+after_5_distal_sem = after_5_local_sem; % Fake it for now...only have one sample currently
+after_5_shuffle_mean = mean(mean_shuffle_simple(after_5_local_ind));
+after_5_shuffle_sem = std(mean_shuffle_simple(after_5_local_ind))/sqrt(length(after_5_local_ind));
 
-after_6_mean = mean(mean_simple_rot(after_6_ind));
-after_6_sem = std(mean_simple_rot(after_6_ind))/sqrt(length(after_6_ind));
-after_6_norot_mean = mean(mean_simple_norot(after_6_norot_ind));
-after_6_norot_sem = std(mean_simple_norot(after_6_norot_ind))/sqrt(length(after_6_norot_ind));
-after_6_shuffle_mean = mean(mean_shuffle_simple(after_6_ind));
-after_6_shuffle_sem = std(mean_shuffle_simple(after_6_ind))/sqrt(length(after_6_ind));
+after_6_local_mean = mean(mean_simple_local_align(after_6_local_ind));
+after_6_local_sem = std(mean_simple_local_align(after_6_local_ind))/sqrt(length(after_6_local_ind));
+after_6_distal_mean = mean(mean_simple_distal_align(after_6_distal_ind));
+after_6_distal_sem = std(mean_simple_distal_align(after_6_distal_ind))/sqrt(length(after_6_distal_ind));
+after_6_shuffle_mean = mean(mean_shuffle_simple(after_6_local_ind));
+after_6_shuffle_sem = std(mean_shuffle_simple(after_6_local_ind))/sqrt(length(after_6_local_ind));
 
 % Mean of population correlations
-pop_before_win_mean = mean(mean_simple_pop_rot(before_win_ind));
-pop_before_win_sem = std(mean_simple_pop_rot(before_win_ind))/sqrt(length(before_win_ind));
-pop_before_win_norot_mean = mean(mean_simple_pop_norot(before_win_norot_ind));
-pop_before_win_norot_sem = std(mean_simple_pop_norot(before_win_norot_ind))/sqrt(length(before_win_norot_ind));
+pop_before_win_local_mean = mean(mean_simple_pop_local_align(before_win_local_ind));
+pop_before_win_local_sem = std(mean_simple_pop_local_align(before_win_local_ind))/sqrt(length(before_win_local_ind));
+pop_before_win_distal_mean = mean(mean_simple_pop_distal_align(before_win_distal_ind));
+pop_before_win_distal_sem = std(mean_simple_pop_distal_align(before_win_distal_ind))/sqrt(length(before_win_distal_ind));
 
-pop_before_after_mean = mean(mean_simple_pop_rot(before_after_ind));
-pop_before_after_sem = std(mean_simple_pop_rot(before_after_ind))/sqrt(length(before_after_ind));
-pop_before_after_norot_mean = mean(mean_simple_pop_norot(before_after_norot_ind));
-pop_before_after_norot_sem = std(mean_simple_pop_norot(before_after_norot_ind))/sqrt(length(before_after_norot_ind));
+pop_before_after_local_mean = mean(mean_simple_pop_local_align(before_after_local_ind));
+pop_before_after_local_sem = std(mean_simple_pop_local_align(before_after_local_ind))/sqrt(length(before_after_local_ind));
+pop_before_after_distal_mean = mean(mean_simple_pop_distal_align(before_after_distal_ind));
+pop_before_after_distal_sem = std(mean_simple_pop_distal_align(before_after_distal_ind))/sqrt(length(before_after_distal_ind));
 
-pop_before_5_mean = mean(mean_simple_pop_rot(before_5_ind));
-pop_before_5_sem = std(mean_simple_pop_rot(before_5_ind))/sqrt(length(before_5_ind));
-pop_before_5_norot_mean = mean(mean_simple_pop_norot(before_5_norot_ind));
-pop_before_5_norot_sem = std(mean_simple_pop_norot(before_5_norot_ind))/sqrt(length(before_5_norot_ind));
+pop_before_5_local_mean = mean(mean_simple_pop_local_align(before_5_local_ind));
+pop_before_5_local_sem = std(mean_simple_pop_local_align(before_5_local_ind))/sqrt(length(before_5_local_ind));
+pop_before_5_distal_mean = mean(mean_simple_pop_distal_align(before_5_distal_ind));
+pop_before_5_distal_sem = std(mean_simple_pop_distal_align(before_5_distal_ind))/sqrt(length(before_5_distal_ind));
 
-pop_before_6_mean = mean(mean_simple_pop_rot(before_6_ind));
-pop_before_6_sem = std(mean_simple_pop_rot(before_6_ind))/sqrt(length(before_6_ind));
-pop_before_6_norot_mean = mean(mean_simple_pop_norot(before_6_norot_ind));
-pop_before_6_norot_sem = std(mean_simple_pop_norot(before_6_norot_ind))/sqrt(length(before_6_norot_ind));
+pop_before_6_local_mean = mean(mean_simple_pop_local_align(before_6_local_ind));
+pop_before_6_local_sem = std(mean_simple_pop_local_align(before_6_local_ind))/sqrt(length(before_6_local_ind));
+pop_before_6_distal_mean = mean(mean_simple_pop_distal_align(before_6_distal_ind));
+pop_before_6_distal_sem = std(mean_simple_pop_distal_align(before_6_distal_ind))/sqrt(length(before_6_distal_ind));
 
-pop_after_5_mean = mean(mean_simple_pop_rot(after_5_ind));
-pop_after_5_sem = std(mean_simple_pop_rot(after_5_ind))/sqrt(length(after_5_ind));
-pop_after_5_norot_mean = mean(mean_simple_pop_norot(after_5_norot_ind));
-pop_after_5_norot_sem = std(mean_simple_pop_norot(after_5_norot_ind))/sqrt(length(after_5_norot_ind));
-pop_after_5_norot_sem = pop_after_5_sem; % Fake it for now...only have one sample currently
+pop_after_5_local_mean = mean(mean_simple_pop_local_align(after_5_local_ind));
+pop_after_5_local_sem = std(mean_simple_pop_local_align(after_5_local_ind))/sqrt(length(after_5_local_ind));
+pop_after_5_distal_mean = mean(mean_simple_pop_distal_align(after_5_distal_ind));
+pop_after_5_distal_sem = std(mean_simple_pop_distal_align(after_5_distal_ind))/sqrt(length(after_5_distal_ind));
+pop_after_5_distal_sem = pop_after_5_local_sem; % Fake it for now...only have one sample currently
 
-pop_after_6_mean = mean(mean_simple_pop_rot(after_6_ind));
-pop_after_6_sem = std(mean_simple_pop_rot(after_6_ind))/sqrt(length(after_6_ind));
-pop_after_6_norot_mean = mean(mean_simple_pop_norot(after_6_norot_ind));
-pop_after_6_norot_sem = std(mean_simple_pop_norot(after_6_norot_ind))/sqrt(length(after_6_norot_ind));
+pop_after_6_local_mean = mean(mean_simple_pop_local_align(after_6_local_ind));
+pop_after_6_local_sem = std(mean_simple_pop_local_align(after_6_local_ind))/sqrt(length(after_6_local_ind));
+pop_after_6_distal_mean = mean(mean_simple_pop_distal_align(after_6_distal_ind));
+pop_after_6_distal_sem = std(mean_simple_pop_distal_align(after_6_distal_ind))/sqrt(length(after_6_distal_ind));
 
 % Attempt to get more legit statistics - get mean of ALL comparisons
 % across all mice, not mean of means...confusing, I know, but more legit
 mega_size = size(mega_mean(2).matrix);
-before_win_ind = make_mega_sub2ind(mega_size, before_win(:,1), before_win(:,2)); 
-before_win_norot_ind = make_mega_sub2ind(mega_size, before_win(:,1), before_win(:,2));
-before_after_ind = make_mega_sub2ind(mega_size, before_after(:,1), before_after(:,2)); 
-before_after_norot_ind = make_mega_sub2ind(mega_size, before_after_norot(:,1), before_after_norot(:,2)); 
-before_5_ind = make_mega_sub2ind(mega_size, before_5(:,1), before_5(:,2)); 
-before_5_norot_ind = make_mega_sub2ind(mega_size, before_5(:,1), before_5(:,2));
-after_5_ind = make_mega_sub2ind(mega_size, after_5(:,1), after_5(:,2)); 
-after_5_norot_ind = make_mega_sub2ind(mega_size, after_5(:,1), after_5(:,2));
-before_6_ind = make_mega_sub2ind(mega_size, before_6(:,1), before_6(:,2)); 
-before_6_norot_ind = make_mega_sub2ind(mega_size, before_6(:,1), before_6(:,2));
-after_6_ind = make_mega_sub2ind(mega_size, after_6(:,1), after_6(:,2)); 
-after_6_norot_ind = make_mega_sub2ind(mega_size, after_6(:,1), after_6(:,2));
-conn1_conn2_ind = make_mega_sub2ind(mega_size, conn1_conn2(:,1), conn1_conn2(:,2)); 
-conn1_conn2_norot_ind = make_mega_sub2ind(mega_size, conn1_conn2(:,1), conn1_conn2(:,2));
+before_win_local_ind = make_mega_sub2ind(mega_size, before_win_local(:,1), before_win_local(:,2)); 
+before_win_distal_ind = make_mega_sub2ind(mega_size, before_win_local(:,1), before_win_local(:,2));
+before_after_local_ind = make_mega_sub2ind(mega_size, before_after_local(:,1), before_after_local(:,2)); 
+before_after_distal_ind = make_mega_sub2ind(mega_size, before_after_distal(:,1), before_after_distal(:,2)); 
+before_5_local_ind = make_mega_sub2ind(mega_size, before_5_local(:,1), before_5_local(:,2)); 
+before_5_distal_ind = make_mega_sub2ind(mega_size, before_5_local(:,1), before_5_local(:,2));
+after_5_local_ind = make_mega_sub2ind(mega_size, after_5_local(:,1), after_5_local(:,2)); 
+after_5_distal_ind = make_mega_sub2ind(mega_size, after_5_local(:,1), after_5_local(:,2));
+before_6_local_ind = make_mega_sub2ind(mega_size, before_6_local(:,1), before_6_local(:,2)); 
+before_6_distal_ind = make_mega_sub2ind(mega_size, before_6_local(:,1), before_6_local(:,2));
+after_6_local_ind = make_mega_sub2ind(mega_size, after_6_local(:,1), after_6_local(:,2)); 
+after_6_distal_ind = make_mega_sub2ind(mega_size, after_6_local(:,1), after_6_local(:,2));
+conn1_conn2_local_ind = make_mega_sub2ind(mega_size, conn1_conn2_local(:,1), conn1_conn2_local(:,2)); 
+conn1_conn2_distal_ind = make_mega_sub2ind(mega_size, conn1_conn2_local(:,1), conn1_conn2_local(:,2));
 
 % Combined groupings (separate, connected day 1, connected day 2)
-separate_win = [before_win; before_after];
-separate_win_ind = [before_win_ind; before_after_ind];
-separate_win_mean = mean(mega_mean(2).matrix(separate_win_ind));
-separate_win_sem = std(mega_mean(2).matrix(separate_win_ind))/sqrt(length(separate_win_ind));
-separate_win_norot = [before_win_norot; before_after_norot];
-separate_win_norot_ind = [before_win_norot_ind; before_after_norot_ind];
-separate_win_norot_mean = mean(mega_mean(1).matrix(separate_win_norot_ind));
-separate_win_norot_sem = std(mega_mean(1).matrix(separate_win_norot_ind))/sqrt(length(separate_win_norot_ind));
+separate_win_local = [before_win_local; before_after_local];
+separate_win_local_ind = [before_win_local_ind; before_after_local_ind];
+separate_win_local_mean = mean(mega_mean(2).matrix(separate_win_local_ind));
+separate_win_local_sem = std(mega_mean(2).matrix(separate_win_local_ind))/sqrt(length(separate_win_local_ind));
+separate_win_distal = [before_win_distal; before_after_distal];
+separate_win_distal_ind = [before_win_distal_ind; before_after_distal_ind];
+separate_win_distal_mean = mean(mega_mean(1).matrix(separate_win_distal_ind));
+separate_win_distal_sem = std(mega_mean(1).matrix(separate_win_distal_ind))/sqrt(length(separate_win_distal_ind));
 
-sep_conn1 = [before_5; after_5];
-sep_conn1_ind = [before_5_ind; after_5_ind];
-sep_conn1_mean = mean(mega_mean(2).matrix(sep_conn1_ind));
-sep_conn1_sem = std(mega_mean(2).matrix(sep_conn1_ind))/sqrt(length(sep_conn1_ind));
-sep_conn1_norot = [before_5_norot; after_5_norot];
-sep_conn1_norot_ind = [before_5_norot_ind; after_5_norot_ind];
-sep_conn1_norot_mean = mean(mega_mean(1).matrix(sep_conn1_norot_ind));
-sep_conn1_norot_sem = std(mega_mean(1).matrix(sep_conn1_norot_ind))/sqrt(length(sep_conn1_norot_ind));
+sep_conn1_local = [before_5_local; after_5_local];
+sep_conn1_local_ind = [before_5_local_ind; after_5_local_ind];
+sep_conn1_local_mean = mean(mega_mean(2).matrix(sep_conn1_local_ind));
+sep_conn1_local_sem = std(mega_mean(2).matrix(sep_conn1_local_ind))/sqrt(length(sep_conn1_local_ind));
+sep_conn1_distal = [before_5_distal; after_5_distal];
+sep_conn1_distal_ind = [before_5_distal_ind; after_5_distal_ind];
+sep_conn1_distal_mean = mean(mega_mean(1).matrix(sep_conn1_distal_ind));
+sep_conn1_distal_sem = std(mega_mean(1).matrix(sep_conn1_distal_ind))/sqrt(length(sep_conn1_distal_ind));
 
-sep_conn2 = [before_6; after_6];
-sep_conn2_ind = [before_6_ind; after_6_ind];
-sep_conn2_mean = mean(mega_mean(2).matrix(sep_conn2_ind));
-sep_conn2_sem = std(mega_mean(2).matrix(sep_conn2_ind))/sqrt(length(sep_conn2_ind));
-sep_conn2_norot = [before_6_norot; after_6_norot];
-sep_conn2_norot_ind = [before_6_norot_ind; after_6_norot_ind];
-sep_conn2_norot_mean = mean(mega_mean(1).matrix(sep_conn2_norot_ind));
-sep_conn2_norot_sem = std(mega_mean(1).matrix(sep_conn2_norot_ind))/sqrt(length(sep_conn2_norot_ind));
+sep_conn2_local = [before_6_local; after_6_local];
+sep_conn2_local_ind = [before_6_local_ind; after_6_local_ind];
+sep_conn2_local_mean = mean(mega_mean(2).matrix(sep_conn2_local_ind));
+sep_conn2_local_sem = std(mega_mean(2).matrix(sep_conn2_local_ind))/sqrt(length(sep_conn2_local_ind));
+sep_conn2_distal = [before_6_distal; after_6_distal];
+sep_conn2_distal_ind = [before_6_distal_ind; after_6_distal_ind];
+sep_conn2_distal_mean = mean(mega_mean(1).matrix(sep_conn2_distal_ind));
+sep_conn2_distal_sem = std(mega_mean(1).matrix(sep_conn2_distal_ind))/sqrt(length(sep_conn2_distal_ind));
 
-conn1_conn2_mean = mean(mega_mean(2).matrix(conn1_conn2_ind));
-conn1_conn2_sem = std(mega_mean(2).matrix(conn1_conn2_ind))/sqrt(length(conn1_conn2_ind));
-conn1_conn2_norot_mean = mean(mega_mean(1).matrix(conn1_conn2_norot_ind));
-conn1_conn2_norot_sem = std(mega_mean(1).matrix(conn1_conn2_norot_ind))/sqrt(length(conn1_conn2_norot_ind));
+conn1_conn2_local_mean = mean(mega_mean(2).matrix(conn1_conn2_local_ind));
+conn1_conn2_local_sem = std(mega_mean(2).matrix(conn1_conn2_local_ind))/sqrt(length(conn1_conn2_local_ind));
+conn1_conn2_distal_mean = mean(mega_mean(1).matrix(conn1_conn2_distal_ind));
+conn1_conn2_distal_sem = std(mega_mean(1).matrix(conn1_conn2_distal_ind))/sqrt(length(conn1_conn2_distal_ind));
 
-before_after_mean2 = mean(mega_mean(2).matrix(before_after_ind));
-before_after_sem2 = std(mega_mean(2).matrix(before_after_ind))/sqrt(length(before_after_ind));
-before_after_norot_mean2 = mean(mega_mean(1).matrix(before_after_norot_ind));
-before_after_norot_sem2 = std(mega_mean(1).matrix(before_after_norot_ind))/sqrt(length(before_after_norot_ind));
+before_after_local_mean2 = mean(mega_mean(2).matrix(before_after_local_ind));
+before_after_local_sem2 = std(mega_mean(2).matrix(before_after_local_ind))/sqrt(length(before_after_local_ind));
+before_after_distal_mean2 = mean(mega_mean(1).matrix(before_after_distal_ind));
+before_after_distal_sem2 = std(mega_mean(1).matrix(before_after_distal_ind))/sqrt(length(before_after_distal_ind));
 
 %% Attempt to do above for day restricted data
 for ll = 2:8
@@ -292,49 +292,49 @@ end
 % Should probably write below into a simple function and then call it
 % repeatedly
 
-after_5_comb = [];
-after_5_comb_no_rot = [];
+after_5_local_comb = [];
+after_5_distal_comb = [];
 for j = 1:num_animals
     for ll = 1:2
-        for mm = 1:size(after_5,1)
-            after_5_comb = [ after_5_comb ; squeeze(Mouse(j).corr_matrix{1,ll}(after_5(mm,1),after_5(mm,2),...
-                logical(squeeze(Mouse(j).pass_count{ll,1}(after_5(mm,1),after_5(mm,2),:)))))];
+        for mm = 1:size(after_5_local,1)
+            after_5_local_comb = [ after_5_local_comb ; squeeze(Mouse(j).corr_matrix{1,ll}(after_5_local(mm,1),after_5_local(mm,2),...
+                logical(squeeze(Mouse(j).pass_count{ll,1}(after_5_local(mm,1),after_5_local(mm,2),:)))))];
         end
-        for mm = 1:size(after_5_norot,1)
-            after_5_comb_no_rot = [ after_5_comb_no_rot ; squeeze(Mouse(j).corr_matrix{2,ll}(after_5_norot(mm,1),after_5_norot(mm,2),...
-                logical(squeeze(Mouse(j).pass_count{ll,2}(after_5_norot(mm,1),after_5_norot(mm,2),:)))))];
+        for mm = 1:size(after_5_distal,1)
+            after_5_distal_comb = [ after_5_distal_comb ; squeeze(Mouse(j).corr_matrix{2,ll}(after_5_distal(mm,1),after_5_distal(mm,2),...
+                logical(squeeze(Mouse(j).pass_count{ll,2}(after_5_distal(mm,1),after_5_distal(mm,2),:)))))];
         end
     end
 end
-nanmean(after_5_comb);
-nanstd(after_5_comb);
+nanmean(after_5_local_comb);
+nanstd(after_5_local_comb);
 
-[ statss.after_5.h, statss.after_5.p ] = twoenv_kstest( Mouse, shuffle_comb, after_5, after_5_norot);
+[ statss.after_5.h, statss.after_5.p ] = twoenv_kstest( Mouse, shuffle_comb, after_5_local, after_5_distal);
 [ statss.sep_win.h, statss.sep_win.p, statss.sep_win.mean ] = twoenv_kstest( Mouse, shuffle_comb, ...
-    separate_win, separate_win_norot,'plot_ecdf','separate');
+    separate_win_local, separate_win_distal,'plot_ecdf','separate');
 [ statss.sep_conn1.h, statss.sep_conn1.p, statss.sep_conn1.mean ] = twoenv_kstest( Mouse, shuffle_comb, ...
-    sep_conn1, sep_conn1_norot,'plot_ecdf','sep_conn1');
+    sep_conn1_local, sep_conn1_distal,'plot_ecdf','sep_conn1');
 [ statss.sep_conn2.h, statss.sep_conn2.p , statss.sep_conn2.mean] = twoenv_kstest( Mouse, shuffle_comb, ...
-    sep_conn2, sep_conn2_norot,'plot_ecdf','sep_conn2');
+    sep_conn2_local, sep_conn2_distal,'plot_ecdf','sep_conn2');
 [ statss.before_after.h, statss.before_after.p, statss.before_after.mean] = twoenv_kstest( Mouse, shuffle_comb, ...
-    before_after, before_after_norot,'plot_ecdf','before_after');
+    before_after_local, before_after_distal,'plot_ecdf','before_after');
 
 %% Plot individual neuron summaries
 error_on = 1;
 figure(10)
-h = bar([before_win_mean, before_win_norot_mean;  ...
-    before_5_mean, before_5_norot_mean; after_5_mean, after_5_norot_mean; ...
-    before_6_mean, before_6_norot_mean; after_6_mean, after_6_norot_mean; ...
-    before_after_mean, before_after_norot_mean;]);
+h = bar([before_win_local_mean, before_win_distal_mean;  ...
+    before_5_local_mean, before_5_distal_mean; after_5_local_mean, after_5_distal_mean; ...
+    before_6_local_mean, before_6_distal_mean; after_6_local_mean, after_6_distal_mean; ...
+    before_after_local_mean, before_after_distal_mean;]);
 hold on
 if error_on == 1
-    errorbar(h(1).XData + h(1).XOffset, [before_win_mean, ...
-        before_5_mean, after_5_mean, before_6_mean, after_6_mean, before_after_mean], [before_win_sem, ...
-        before_5_sem, after_5_sem, before_6_sem, after_6_sem, before_after_sem],...
+    errorbar(h(1).XData + h(1).XOffset, [before_win_local_mean, ...
+        before_5_local_mean, after_5_local_mean, before_6_local_mean, after_6_local_mean, before_after_local_mean], [before_win_local_sem, ...
+        before_5_local_sem, after_5_local_sem, before_6_local_sem, after_6_local_sem, before_after_local_sem],...
         '.')
-    errorbar(h(2).XData + h(2).XOffset, [before_win_norot_mean, ...
-        before_5_norot_mean, after_5_norot_mean, before_6_norot_mean, after_6_norot_mean, before_after_norot_mean], [before_win_norot_sem, ...
-        before_5_norot_sem, after_5_norot_sem, before_6_norot_sem, after_6_norot_sem, before_after_norot_sem],...
+    errorbar(h(2).XData + h(2).XOffset, [before_win_distal_mean, ...
+        before_5_distal_mean, after_5_distal_mean, before_6_distal_mean, after_6_distal_mean, before_after_distal_mean], [before_win_distal_sem, ...
+        before_5_distal_sem, after_5_distal_sem, before_6_distal_sem, after_6_distal_sem, before_after_distal_sem],...
         '.')
 end
 h2 = plot(get(gca,'XLim'),[shuffle_mean shuffle_mean],'r--');
@@ -348,17 +348,17 @@ ylims_given = get(gca,'YLim');
 % Simplified
 figure(110)
 set(gcf,'Position',[1988 286 1070 477])
-h = bar([separate_win_mean, separate_win_norot_mean;  ...
-    sep_conn1_mean, sep_conn1_norot_mean; sep_conn2_mean, sep_conn2_norot_mean;...
-    before_after_mean2, before_after_norot_mean2]);
+h = bar([separate_win_local_mean, separate_win_distal_mean;  ...
+    sep_conn1_local_mean, sep_conn1_distal_mean; sep_conn2_local_mean, sep_conn2_distal_mean;...
+    before_after_local_mean2, before_after_distal_mean2]);
 hold on
 if error_on == 1
-    errorbar(h(1).XData + h(1).XOffset, [separate_win_mean, ...
-        sep_conn1_mean, sep_conn2_mean, before_after_mean2], [separate_win_sem, ...
-        sep_conn1_sem, sep_conn2_sem, before_after_sem2],'.')
-    errorbar(h(2).XData + h(2).XOffset, [separate_win_norot_mean, ...
-        sep_conn1_norot_mean, sep_conn2_norot_mean, before_after_norot_mean2], [separate_win_norot_sem, ...
-        sep_conn1_norot_sem, sep_conn2_norot_sem, before_after_norot_sem2],'.')
+    errorbar(h(1).XData + h(1).XOffset, [separate_win_local_mean, ...
+        sep_conn1_local_mean, sep_conn2_local_mean, before_after_local_mean2], [separate_win_local_sem, ...
+        sep_conn1_local_sem, sep_conn2_local_sem, before_after_local_sem2],'.')
+    errorbar(h(2).XData + h(2).XOffset, [separate_win_distal_mean, ...
+        sep_conn1_distal_mean, sep_conn2_distal_mean, before_after_distal_mean2], [separate_win_distal_sem, ...
+        sep_conn1_distal_sem, sep_conn2_distal_sem, before_after_distal_sem2],'.')
 end
 
 h2 = plot(get(gca,'XLim'),[shuffle_mean shuffle_mean],'r--');
@@ -372,19 +372,19 @@ ylims_given = get(gca,'YLim');
 
 %% Plot population correlation summary
 figure(11)
-h = bar([pop_before_win_mean, pop_before_win_norot_mean; ...
-    pop_before_5_mean, pop_before_5_norot_mean; pop_after_5_mean, pop_after_5_norot_mean; ...
-    pop_before_6_mean, pop_before_6_norot_mean; pop_after_6_mean, pop_after_6_norot_mean; ...
-    pop_before_after_mean, pop_before_after_norot_mean]);
+h = bar([pop_before_win_local_mean, pop_before_win_distal_mean; ...
+    pop_before_5_local_mean, pop_before_5_distal_mean; pop_after_5_local_mean, pop_after_5_distal_mean; ...
+    pop_before_6_local_mean, pop_before_6_distal_mean; pop_after_6_local_mean, pop_after_6_distal_mean; ...
+    pop_before_after_local_mean, pop_before_after_distal_mean]);
 hold on
 if error_on == 1
-    errorbar(h(1).XData + h(1).XOffset, [pop_before_win_mean, ...
-        pop_before_5_mean, pop_after_5_mean, pop_before_6_mean, pop_after_6_mean, pop_before_after_mean],...
-        [pop_before_win_sem, pop_before_5_sem, pop_after_5_sem, pop_before_6_sem, pop_after_6_sem,pop_before_after_sem],...
+    errorbar(h(1).XData + h(1).XOffset, [pop_before_win_local_mean, ...
+        pop_before_5_local_mean, pop_after_5_local_mean, pop_before_6_local_mean, pop_after_6_local_mean, pop_before_after_local_mean],...
+        [pop_before_win_local_sem, pop_before_5_local_sem, pop_after_5_local_sem, pop_before_6_local_sem, pop_after_6_local_sem,pop_before_after_local_sem],...
         '.')
-    errorbar(h(2).XData + h(2).XOffset, [pop_before_win_norot_mean, ...
-        pop_before_5_norot_mean, pop_after_5_norot_mean, pop_before_6_norot_mean, pop_after_6_norot_mean, pop_before_after_norot_mean], [pop_before_win_norot_sem, ...
-        pop_before_5_norot_sem, pop_after_5_norot_sem, pop_before_6_norot_sem, pop_after_6_norot_sem, pop_before_after_norot_sem],...
+    errorbar(h(2).XData + h(2).XOffset, [pop_before_win_distal_mean, ...
+        pop_before_5_distal_mean, pop_after_5_distal_mean, pop_before_6_distal_mean, pop_after_6_distal_mean, pop_before_after_distal_mean], [pop_before_win_distal_sem, ...
+        pop_before_5_distal_sem, pop_after_5_distal_sem, pop_before_6_distal_sem, pop_after_6_distal_sem, pop_before_after_distal_sem],...
         '.')
 end
 set(gca,'XTickLabel',{'Before within','Before-Day5','After-Day5',...
@@ -499,9 +499,9 @@ title('Histogram - neurons passing inclusion criteria')
 %% Example plots of correlations < 0, and high ones
 
 load('j:\GCamp Mice\Working\G30\2env\11_21_2014\1 - 2env octagon mid 201B\Working\PlaceMaps.mat','TMap','TMap_gauss')
-TMaps_norot{3} = TMap_gauss;
+TMaps_distal{3} = TMap_gauss;
 load('j:\GCamp Mice\Working\G30\2env\11_21_2014\2 - 2env octagon left 90CW 201B\Working\PlaceMaps.mat','TMap','TMap_gauss')
-TMaps_norot{4} = TMap_gauss;
+TMaps_distal{4} = TMap_gauss;
 load('j:\GCamp Mice\Working\G30\2env\11_21_2014\1 - 2env octagon mid 201B\Working\PlaceMaps_rot_to_std.mat','TMap','TMap_gauss')
 TMaps_rot{3} = TMap_gauss;
 load('j:\GCamp Mice\Working\G30\2env\11_21_2014\2 - 2env octagon left 90CW 201B\Working\PlaceMaps_rot_to_std.mat','TMap','TMap_gauss')
@@ -528,10 +528,10 @@ end
 for j = 1:length(lowcorrs_ind)
 figure(50); 
 row = lowcorrs_ind(j); 
-subplot(1,2,1); imagesc(TMaps_norot{3}{batch_session_map.map(row,4)}); 
+subplot(1,2,1); imagesc(TMaps_distal{3}{batch_session_map.map(row,4)}); 
 title(['Neuron ' num2str(batch_session_map.map(row,4)) ...
     ' w/Correlation = ' num2str(Mouse(1).corr_matrix{1,2}(3,4,row))]);
-subplot(1,2,2); imagesc(TMaps_norot{4}{batch_session_map.map(row,5)});
+subplot(1,2,2); imagesc(TMaps_distal{4}{batch_session_map.map(row,5)});
 title(['Neuron ' num2str(batch_session_map.map(row,5))])
 
 waitforbuttonpress
@@ -594,7 +594,7 @@ end
 
 % Get sessions to look at correlations for...
 within_day = [1 2; 3 4; 7 8]; within_day_ind = sub2ind([8 8],within_day(:,1), within_day(:,2));
-before_win = [1 2 ; 1 3; 1 4; 2 3; 2 4; 3 4]; before_win_ind = sub2ind([8 8],before_win(:,1), before_win(:,2));
+before_win_local = [1 2 ; 1 3; 1 4; 2 3; 2 4; 3 4]; before_win_local_ind = sub2ind([8 8],before_win_local(:,1), before_win_local(:,2));
 
 days_active = sum(Mouse(1).batch_session_map(1).map(:,2:9) ~= 0,2); %# days each neuron is active
 for j = 1:length(days_active)
