@@ -16,3 +16,8 @@ G45_start = ref.G45.twoenv(1);
 G45_square_sesh = [0 1 6 7 9 13 14 15] + G45_start;
 G45_oct_sesh = [2 3 4 5 10 12 16 17] + G45_start;
 G45_manual_limits = [0 0 0 0 1 1 0 0];
+
+G48_start = ref.G48.twoenv(1);
+G48_square_sesh = [0 1 6 7 8 11 12 13] + G48_start;
+G48_oct_sesh = [2 3 4 5 9 10 14 15] + G48_start;
+G48_manual_limits = [0 0 0 0 1 1 0 0];
