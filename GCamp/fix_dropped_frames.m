@@ -35,7 +35,7 @@ for j = 1:length(varargin)
        dropped_frames = varargin{j+1};
    end
    if strcmpi(varargin{j},'xml_files')
-       xml_files = varargin{j+1};
+       xml_files = {varargin{j+1}};
        num_files = length(xml_files);
    end
    if strcmpi(varargin{j},'txt_files')
@@ -49,6 +49,10 @@ end
 if exist('txt_files','var')
     for j = 1:num_files
         [frames(1,j), ~, dropped_frames{j}] = get_droppedframe_info(txt_files{j});
+    end
+elseif exist('xml_files','var')
+    for j = 1:num_files
+        [frames(1,j), ~, dropped_frames{j}] = get_droppedframe_infoXML(xml_files{j});
     end
 end
 
@@ -147,7 +151,7 @@ Index_temp = Index; % Send to temp file for later...
 Object.DataSize = size_metadata_use;
 max_time = Object.TimeFrame(end);
 orig_numframes = length(Object.TimeFrame);
-SR_use = 1/round(Object.FrameRate,0);
+SR_use = 1/round(Object.FrameRate);
 Object.TimeFrame(orig_numframes+1:end_frame) = max_time+SR_use:SR_use:max_time+SR_use*(end_frame-orig_numframes);
 Object.DroppedFrames = 0; % Without this they will still appear empty in Mosaic
 % Save everything in the appropriate file
