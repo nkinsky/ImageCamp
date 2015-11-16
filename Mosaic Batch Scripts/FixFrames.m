@@ -25,8 +25,8 @@ function FixFrames(filename)
     
 %% Get bad frames. 
     SD = std(meanframes); 
-    toohigh = mean(meanframes) + 5*SD; 
-    toolow = mean(meanframes) - 5*SD;
+    toohigh = mean(meanframes) + 6*SD; 
+    toolow = mean(meanframes) - 6*SD;
     
     badframes = find(meanframes > toohigh | meanframes < toolow); 
     numbadframes = length(badframes); 

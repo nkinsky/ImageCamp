@@ -1,7 +1,7 @@
 % Mosaic Batch Pre-processing
 
 close all
-clear all
+% clear all
 
 %% Variables to tweak?
 mic_per_pix = 1.16; % To match previously used values
@@ -77,7 +77,13 @@ end
 % warning that one must check MANUALLY for bad frames - do this here and at
 % the end!
 
-temp2 = imread(filetofix,'TIFF','Index',1); % Get sample file
+if num_files > 1
+    samplefile = [fullpath{1}(1:end-4) '.tif'];
+elseif num_files == 1
+    samplefile = [fullpath(1:end-4) '.tif'];
+end
+
+temp2 = imread(samplefile,'TIFF','Index',1); % Get sample file
 if size(temp2,1) <= 540 && size(temp2,2) <= 720
     dropped_frame_warn = 1;
     save_ds = 0;
@@ -92,6 +98,8 @@ else
     end
 end
 
+
+
 %% Step  1.75: Concatenate files - note that this MUST happen after 
 
 if num_files == 1
@@ -102,6 +110,7 @@ elseif num_files >= 1
         list.add(sesh(j).movie);
     end
     movie_use = mosaic.concatenateMovies(list);
+    save_ds = 1;
 end
 
 disp('Check if concatenation has happened properly!: view each movie independently, then check #frames total')
@@ -226,6 +235,8 @@ h = mos_tiff_to_fig(min_proj_int, save_name, title_label );
 disp('Saving MotCorrMovie for final editing')
 mosaic.saveOneObject(mot_corr_movie,'MotCorrMovie.mat');
 
+disp('Check for MotCorrMovie.mat.  If saved correctly, type "return" and then open Mosaic standalone to do your final editing');
+
 % Display dropped-frame warning if applicable!
 if dropped_frame_warn == 1
     disp('DATA HAS ALREADY BEEN DOWN-SAMPLED.  IF YOU HAVE DROPPED FRAMES YOU MAY NEED TO FIX MANUALLY WITH fix_dropped_frames FUNCTION!')
@@ -253,4 +264,3 @@ clear all
 % cd(curr_dir)
 
 % mosaic.terminate()
-
