@@ -119,6 +119,12 @@ for j = 2:num_animals
    shuffle_comb = cat(4,shuffle_comb,Mouse(j).shuffle_matrix); 
 end
 
+%% Mega-matrix2 - dump ALL neuron correlations together into appropriate matrices
+% simple version = only look at mean values for each animal
+[ before_win2.distal_all, before_win2.local_all, before_win2.both_all, ...
+    before_win2.distal_simple, before_win2.local_simple, before_win2.both_simple] = ...
+    twoenv_make_megamean2(Mouse, before_win_conflict, before_win_aligned );
+
 %% Get basic stats - not done for population correlations yet
 
 % Better way to do things in the future is to get values for ALL neuron correlations in
