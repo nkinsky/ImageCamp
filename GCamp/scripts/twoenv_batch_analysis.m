@@ -20,6 +20,14 @@ Mouse(2).Name = 'G31';
 Mouse(2).working_dirs{1} = 'J:\GCamp Mice\Working\G31\2env\12_15_2014\1 - 2env square right\Working';
 Mouse(2).working_dirs{2} = 'J:\GCamp Mice\Working\G31\2env\12_16_2014\1 - 2env octagon left\Working';
 
+Mouse(3).Name = 'G45';
+Mouse(3).working_dirs{1} = 'J:\GCamp Mice\Working\G45\2env\08_28_2015\1 - square right\Working';
+Mouse(3).working_dirs{2} = 'J:\GCamp Mice\Working\G45\2env\08_29_2015\1 - oct right\Working';
+
+Mouse(4).Name = 'G48';
+Mouse(4).working_dirs{1} = 'I:\GCamp Mice\G48\2env\08_29_2015\1 - square right\Working';
+Mouse(4).working_dirs{2} = 'I:\GCamp Mice\G48\2env\08_30_2015\1 - oct mid\Working';
+
 num_animals = length(Mouse);
 
 for j = 1:num_animals
@@ -230,19 +238,19 @@ pop_after_6_distal_sem = std(mean_simple_pop_distal_align(after_6_distal_ind))/s
 % across all mice, not mean of means...confusing, I know, but more legit
 mega_size = size(mega_mean(2).matrix);
 before_win_local_ind = make_mega_sub2ind(mega_size, before_win_local(:,1), before_win_local(:,2)); 
-before_win_distal_ind = make_mega_sub2ind(mega_size, before_win_local(:,1), before_win_local(:,2));
+before_win_distal_ind = make_mega_sub2ind(mega_size, before_win_distal(:,1), before_win_distal(:,2));
 before_after_local_ind = make_mega_sub2ind(mega_size, before_after_local(:,1), before_after_local(:,2)); 
 before_after_distal_ind = make_mega_sub2ind(mega_size, before_after_distal(:,1), before_after_distal(:,2)); 
 before_5_local_ind = make_mega_sub2ind(mega_size, before_5_local(:,1), before_5_local(:,2)); 
-before_5_distal_ind = make_mega_sub2ind(mega_size, before_5_local(:,1), before_5_local(:,2));
+before_5_distal_ind = make_mega_sub2ind(mega_size, before_5_distal(:,1), before_5_distal(:,2));
 after_5_local_ind = make_mega_sub2ind(mega_size, after_5_local(:,1), after_5_local(:,2)); 
-after_5_distal_ind = make_mega_sub2ind(mega_size, after_5_local(:,1), after_5_local(:,2));
+after_5_distal_ind = make_mega_sub2ind(mega_size, after_5_distal(:,1), after_5_distal(:,2));
 before_6_local_ind = make_mega_sub2ind(mega_size, before_6_local(:,1), before_6_local(:,2)); 
-before_6_distal_ind = make_mega_sub2ind(mega_size, before_6_local(:,1), before_6_local(:,2));
+before_6_distal_ind = make_mega_sub2ind(mega_size, before_6_distal(:,1), before_6_distal(:,2));
 after_6_local_ind = make_mega_sub2ind(mega_size, after_6_local(:,1), after_6_local(:,2)); 
-after_6_distal_ind = make_mega_sub2ind(mega_size, after_6_local(:,1), after_6_local(:,2));
+after_6_distal_ind = make_mega_sub2ind(mega_size, after_6_distal(:,1), after_6_distal(:,2));
 conn1_conn2_local_ind = make_mega_sub2ind(mega_size, conn1_conn2_local(:,1), conn1_conn2_local(:,2)); 
-conn1_conn2_distal_ind = make_mega_sub2ind(mega_size, conn1_conn2_local(:,1), conn1_conn2_local(:,2));
+conn1_conn2_distal_ind = make_mega_sub2ind(mega_size, conn1_conn2_distal(:,1), conn1_conn2_distal(:,2));
 
 % Combined groupings (separate, connected day 1, connected day 2)
 separate_win_local = [before_win_local; before_after_local];
@@ -643,3 +651,15 @@ for m = 1:2
     end
 end
 
+%% Display All Mouse corr_matrix
+
+alignment = {'distal','local'};
+arena = {'square','octagon'};
+for j = 1:num_animals
+    for k = 1:2
+        for ll = 1:2
+            disp(['Mouse ' num2str(j) ' - ' alignment{k} ' - ' arena{ll}])
+            nanmean(Mouse(j).corr_matrix{k,ll},3)
+        end
+    end
+end
