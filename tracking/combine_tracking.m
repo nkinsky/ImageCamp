@@ -13,8 +13,7 @@ function [ ] = combine_tracking( varargin )
 %   FTframes: the number of frames in each fluorescence movie
 %
 %   Pos1,Pos2,...: all the variables from the Pos.mat file for each
-%   Cineplex file, dumped into a structure variable
-%   appropriate sessions.  
+%   Cineplex file, dumped into a structure variable for the appropriate sessions.  
 %
 %   OUTPUTS
 %
@@ -38,7 +37,7 @@ end
 for j = 1:length(varargin)
     if mod(j,2) == 1 % time values
         n_image_frames{ceil(j/2)} = varargin{j};
-    elseif mod(j,2) == 0 % time values
+    elseif mod(j,2) == 0 % Pos variables
         pos{ceil(j/2)} = varargin{j};
     end        
 end
@@ -71,16 +70,6 @@ for j = 1:num_sessions
     % number is the meaningful variable here)
     end_time = max(time_interp);
     
-    % Get gap between sessions and output the fill time
-    if j == 1
-        gap = 0;
-        fill_time = [];
-        end_time = 0;
-    else
-        gap = min(t_use{j}); % start time of next file...
-        fill_time = SR:SR:gap-SR;
-    end
-    
     % Align the end of the imaging and tracking data
     n_frames_tracking = t_use{j}(end)/SR; % Number of frames there would be if the frames started at 0+SR.
     if n_image_frames{j} > n_frames_tracking 
@@ -96,18 +85,34 @@ for j = 1:num_sessions
         y_chop{j} = y_use{j}(1:chop_ind);
     end
     
+    % Get gap between sessions and output the fill time
+    if j == 1
+        gap = 0;
+        fill_time = [];
+        end_time = 0;
+        MoM_fill_time = [];
+    else % fill in gap until start time of next file
+        gap = min(t_use{j}); % start time of next file...
+        fill_time = SR:SR:gap-SR;
+        % Identify gap between end of session n and the first time the
+        % mouse is on the maze in session n + 1.
+        MoMtime_gap = t_chop{j}(findclosest(pos{j}.MoMtime,t_chop{j}));
+        MoM_fill_time = SR:SR:MoMtime_gap+SR; % timestamps between sessions where the mouse is not on the maze
+    end
+    
     % Fill in the gaps due to the lag between when the imaging camera
     % starts recording and when Cineplex starts recording
     time_interp = [time_interp end_time+fill_time end_time+t_chop{j}];
     xpos_interp = [xpos_interp ones(size(fill_time)) x_chop{j}];
     ypos_interp = [ypos_interp ones(size(fill_time)) y_chop{j}];
+    exclude_time_interp = end_time + MoM_fill_time; % times in between sessions that should be exluded from analysis
 end
 
 % keyboard
 
 %% Save stuff
 
-save Pos_comb.mat time_interp xpos_interp ypos_interp MoMtime start_time n_image_frames t_use x_use y_use 
+save Pos_comb.mat time_interp xpos_interp ypos_interp MoMtime start_time n_image_frames t_use x_use y_use exclude_time_interp
 
 end
 

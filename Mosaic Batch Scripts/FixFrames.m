@@ -68,13 +68,20 @@ function FixFrames(filename)
 %% Replace bad frames. 
     %Replace bad frames with the previous and save. 
     outputname = [filename(1:end-4), 'fixed.tif']; 
+    
     if ~isempty(badframes)
         for i=1:numframes
             frame = imread(filename,i);
             if ismember(i,badframes);
                 frame = imread(filename,i-1); 
             end
-            imwrite(frame,outputname,'WriteMode','append','Compression','none'); 
+            try
+                imwrite(frame,outputname,'WriteMode','append','Compression','none'); 
+            catch
+                pause(1);
+                imwrite(frame,outputname,'WriteMode','append','Compression','none');
+                return;
+            end
         end
         
         %Replace old movie with fixed movie. 

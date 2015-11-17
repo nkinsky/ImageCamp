@@ -44,7 +44,7 @@ if ~exist('skip_fix','var') || skip_fix ~= 1
         numchunks = length(chunks);
         
         for j=1:numchunks
-            tic
+           
             filetofix = fullfile(pathname,chunks(j).name);
             if ~exist([filetofix(1:end-4),'fixed.mat'],'file');
                 disp(['Checking ', filetofix, ' for bad frames...']);
@@ -52,10 +52,11 @@ if ~exist('skip_fix','var') || skip_fix ~= 1
             else
                 disp('Using previously fixed files')
             end
-            toc
+            
         end
     end
 end
+
 
 %% Step 1.33: Load files
 
@@ -242,7 +243,7 @@ if dropped_frame_warn == 1
     disp('DATA HAS ALREADY BEEN DOWN-SAMPLED.  IF YOU HAVE DROPPED FRAMES YOU MAY NEED TO FIX MANUALLY WITH fix_dropped_frames FUNCTION!')
 end
 mosaic.terminate()
-clear all
+clear all;
 
 % %% Step 8: Create min projection and display
 % 
