@@ -1,5 +1,5 @@
-function [ batch_session_map ] = neuron_reg_batch(base_struct, reg_struct)
-% neuron_reg_batch(base_struct, reg_struct)
+function [ batch_session_map ] = neuron_reg_batch(base_struct, reg_struct, name_append)
+% neuron_reg_batch(base_struct, reg_struct, name_append)
 %   Registers the neurons in reg_struct to base_struct and also to each
 %   other.  It runs through this two ways: 1) by always registering each
 %   neuron to the base session, or for new neurons found after the first
@@ -18,8 +18,15 @@ function [ batch_session_map ] = neuron_reg_batch(base_struct, reg_struct)
 %       locations of the ICmovie_min_proj.tif files you wish to register
 %       manually!
 %
+%       name_append: a string that is appended onto batch_session_map. 
+%
 % OUTPUTS:
 %       
+%% Assign empty name_append if left blank
+
+if nargin < 3
+    name_append = '';
+end
 
 %% Step 1: Run multi_image_reg twice, once with update_masks = 0 and once with update_masks = 1
 
@@ -140,6 +147,13 @@ batch_session_map(1).trans_test1_ratio = trans1_ratio_pass;
 batch_session_map(1).trans_test2_ratio = trans2_ratio_pass;
 
 base_dir = ChangeDirectory(base_struct(1).Animal, base_struct(1).Date, base_struct(1).Session);
-save(fullfile(base_dir,'batch_session_map.mat'),'batch_session_map')
+
+% Append appropriate ending to batch_session_map
+if isempty(name_append)
+    save_name = 'batch_session_map.mat';
+else
+    save_name = ['batch_session_map_' name_append '.mat'];
+end
+save(fullfile(base_dir,save_name),'batch_session_map')
 
 end
