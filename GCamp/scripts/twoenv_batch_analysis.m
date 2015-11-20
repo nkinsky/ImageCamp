@@ -121,9 +121,11 @@ end
 
 %% Mega-matrix2 - dump ALL neuron correlations together into appropriate matrices
 % simple version = only look at mean values for each animal
-[ before_win2.distal_all, before_win2.local_all, before_win2.both_all, ...
-    before_win2.distal_simple, before_win2.local_simple, before_win2.both_simple] = ...
-    twoenv_make_megamean2(Mouse, before_win_conflict, before_win_aligned );
+% [ before_win2.distal_all, before_win2.local_all, before_win2.both_all, ...
+%     before_win2.distal_simple, before_win2.local_simple, before_win2.both_simple] = ...
+%     twoenv_make_megamean2(Mouse, before_win_conflict, before_win_aligned );
+
+
 
 %% Get basic stats - not done for population correlations yet
 
@@ -259,7 +261,7 @@ conn1_conn2_local_ind = make_mega_sub2ind(mega_size, conn1_conn2_local(:,1), con
 conn1_conn2_distal_ind = make_mega_sub2ind(mega_size, conn1_conn2_distal(:,1), conn1_conn2_distal(:,2));
 
 % Combined groupings (separate, connected day 1, connected day 2)
-separate_win_local = [before_win_local; before_after_local];
+separate_win_local = [before_win_local; before_after_local]; % Should include after_win also!!!
 separate_win_local_ind = [before_win_local_ind; before_after_local_ind];
 separate_win_local_mean = mean(mega_mean(2).matrix(separate_win_local_ind));
 separate_win_local_sem = std(mega_mean(2).matrix(separate_win_local_ind))/sqrt(length(separate_win_local_ind));
@@ -295,6 +297,52 @@ before_after_local_mean2 = mean(mega_mean(2).matrix(before_after_local_ind));
 before_after_local_sem2 = std(mega_mean(2).matrix(before_after_local_ind))/sqrt(length(before_after_local_ind));
 before_after_distal_mean2 = mean(mega_mean(1).matrix(before_after_distal_ind));
 before_after_distal_sem2 = std(mega_mean(1).matrix(before_after_distal_ind))/sqrt(length(before_after_distal_ind));
+
+%% Do Above for individual mice
+for j = 1:length(Mouse)
+    [ Mouse(j).local_stat.separate_win, Mouse(j).distal_stat.separate_win ] = ...
+        twoenv_get_ind_mean(Mouse(j), separate_win_local, separate_win_distal);
+    [ Mouse(j).local_stat.sep_conn1, Mouse(j).distal_stat.sep_conn1 ] = ...
+        twoenv_get_ind_mean(Mouse(j), sep_conn1_local, sep_conn1_distal);
+    [ Mouse(j).local_stat.sep_conn2, Mouse(j).distal_stat.sep_conn2 ] = ...
+        twoenv_get_ind_mean(Mouse(j), sep_conn2_local, sep_conn2_distal);
+    [ Mouse(j).local_stat.before_after, Mouse(j).distal_stat.before_after ] = ...
+        twoenv_get_ind_mean(Mouse(j), before_after_local, before_after_distal);
+end
+
+% For all mice combined
+[ local_stat_all.separate_win, distal_stat_all.separate_win ] = ...
+    twoenv_get_ind_mean(Mouse, separate_win_local, separate_win_distal);
+[ local_stat_all.sep_conn1, distal_stat_all.sep_conn1 ] = ...
+    twoenv_get_ind_mean(Mouse, sep_conn1_local, sep_conn1_distal);
+[ local_stat_all.sep_conn2, distal_stat_all.sep_conn2 ] = ...
+    twoenv_get_ind_mean(Mouse, sep_conn2_local, sep_conn2_distal);
+[ local_stat_all.before_after, distal_stat_all.before_after ] = ...
+    twoenv_get_ind_mean(Mouse, before_after_local, before_after_distal);
+
+%% Do above but with better indices
+
+twoenv_betterindices; % Run script to get better indices
+separate_conflict = cellfun(@(a,b) [a; b],before_win_conflict, before_after_conflict,'UniformOutput',0);
+separate_aligned = cellfun(@(a,b) [a; b],before_win_aligned, before_after_aligned,'UniformOutput',0);
+
+sep_conn1_conflict = cellfun(@(a,b) [a; b],before_5_conflict, after_5_conflict,'UniformOutput',0);
+sep_conn1_aligned = cellfun(@(a,b) [a; b],before_5_aligned, after_5_aligned,'UniformOutput',0);
+
+sep_conn2_conflict = cellfun(@(a,b) [a; b],before_6_conflict, after_6_conflict,'UniformOutput',0);
+sep_conn2_aligned = cellfun(@(a,b) [a; b],before_6_aligned, after_6_aligned,'UniformOutput',0);
+
+for j = 1:length(Mouse)
+    [ Mouse(j).local_stat2.separate_win, Mouse(j).distal_stat2.separate_win ] = ...
+        twoenv_get_ind_mean(Mouse(j), separate_win_local(separate_win_local{j}(:,1) == 1, separate_win_distal);
+    [ Mouse(j).local_stat2.sep_conn1, Mouse(j).distal_stat2.sep_conn1 ] = ...
+        twoenv_get_ind_mean(Mouse(j), sep_conn1_local, sep_conn1_distal);
+    [ Mouse(j).local_stat2.sep_conn2, Mouse(j).distal_stat2.sep_conn2 ] = ...
+        twoenv_get_ind_mean(Mouse(j), sep_conn2_local, sep_conn2_distal);
+    [ Mouse(j).local_stat2.before_after, Mouse(j).distal_stat2.before_after ] = ...
+        twoenv_get_ind_mean(Mouse(j), before_after_local, before_after_distal);
+end
+
 
 %% Attempt to do above for day restricted data
 for ll = 2:8
@@ -383,6 +431,15 @@ h_legend = legend([h(1) h(2) h2],'Local cues aligned','Distal cues aligned','Cha
 hold off
 ylims_given = get(gca,'YLim');
 % ylim([ylims_given(1)-0.1, ylims_given(2)+0.1]);
+
+%% Simplified for all Animals
+figure(115)
+for j = 1:length(Mouse)
+   subplot(4,1,j)
+   plot_simplified_summary(Mouse(j).local_stat,Mouse(j).distal_stat)
+   title(Mouse(j).Name)
+end
+
 
 %% Plot population correlation summary
 figure(11)
