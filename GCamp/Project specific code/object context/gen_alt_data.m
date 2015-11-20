@@ -37,13 +37,18 @@ num_trials = max(alt_matrix(:,2));
 good_trials = find(Alt.summary(:,3) == 1);
 prev_start_frame = 1;
 for j = 1:num_trials
-   event_start_frame = find(Alt.goal == Alt.summary(j,2) & ...
-       Alt.trial == Alt.summary(j,1),1);
-   choice_start(j,1) = find(Alt.section == 3 & Alt.frames > prev_start_frame & Alt.frames <= event_start_frame,1,'first');
-   design_mat(j,1) = event_start_frame; % 1st col = frame number of event start
-   design_mat(j,2) = event_start_frame*SR; % 2nd col = time-stamp of event start
-   design_mat(j,3) = Alt.summary(j,2); % goal location (left or right)
-   design_mat(j,4) = Alt.summary(j,3); % Correct = 1, Incorrect = 0
-   prev_start_frame = event_start_frame;
+    event_start_frame = find(Alt.goal == Alt.summary(j,2) & ...
+        Alt.trial == Alt.summary(j,1),1);
+    choice_start(j,1) = find(Alt.section == 3 & Alt.frames > prev_start_frame & Alt.frames <= event_start_frame,1,'first');
+    center_start = find(Alt.section == 2 & Alt.frames > prev_start_frame & Alt.frames <= event_start_frame,1,'first');
+    center_end = find(Alt.section == 2 & Alt.frames > prev_start_frame & Alt.frames <= event_start_frame,1,'last');
+    design_mat(j,1) = event_start_frame; % 1st col = frame number of event start
+    design_mat(j,2) = event_start_frame*SR; % 2nd col = time-stamp of event start
+    design_mat(j,3) = Alt.summary(j,2); % goal location (left or right)
+    design_mat(j,4) = Alt.summary(j,3); % Correct = 1, Incorrect = 0
+    design_mat(j,5) = center_start; % Center stem start frame
+    design_mat(j,6) = center_end; % Center stem end frame
+    design_mat(j,7) = design_mat(j,6) - design_mat(j,5) < 100; %
+    prev_start_frame = event_start_frame;
    
 end
