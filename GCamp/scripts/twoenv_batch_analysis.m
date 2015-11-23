@@ -333,15 +333,22 @@ sep_conn2_conflict = cellfun(@(a,b) [a; b],before_6_conflict, after_6_conflict,'
 sep_conn2_aligned = cellfun(@(a,b) [a; b],before_6_aligned, after_6_aligned,'UniformOutput',0);
 
 for j = 1:length(Mouse)
-    [ Mouse(j).local_stat2.separate_win, Mouse(j).distal_stat2.separate_win ] = ...
-        twoenv_get_ind_mean(Mouse(j), separate_win_local(separate_win_local{j}(:,1) == 1, separate_win_distal);
-    [ Mouse(j).local_stat2.sep_conn1, Mouse(j).distal_stat2.sep_conn1 ] = ...
-        twoenv_get_ind_mean(Mouse(j), sep_conn1_local, sep_conn1_distal);
-    [ Mouse(j).local_stat2.sep_conn2, Mouse(j).distal_stat2.sep_conn2 ] = ...
-        twoenv_get_ind_mean(Mouse(j), sep_conn2_local, sep_conn2_distal);
-    [ Mouse(j).local_stat2.before_after, Mouse(j).distal_stat2.before_after ] = ...
-        twoenv_get_ind_mean(Mouse(j), before_after_local, before_after_distal);
+    [ Mouse(j).local_stat2.separate_win, Mouse(j).distal_stat2.separate_win,  ...
+        Mouse(j).both_stat2.separate_win] = twoenv_get_ind_mean(Mouse(j), ...
+        separate_conflict{j}, separate_conflict{j}, 'both_sub_use',separate_aligned{j});
+    [ Mouse(j).local_stat2.sep_conn1, Mouse(j).distal_stat2.sep_conn1,  ...
+        Mouse(j).both_stat2.sep_conn1] = twoenv_get_ind_mean(Mouse(j), ...
+        sep_conn1_conflict{j}, sep_conn1_conflict{j}, 'both_sub_use',sep_conn1_aligned{j});
+    [ Mouse(j).local_stat2.sep_conn2, Mouse(j).distal_stat2.sep_conn2,  ...
+        Mouse(j).both_stat2.sep_conn2] = twoenv_get_ind_mean(Mouse(j), ...
+        sep_conn2_conflict{j}, sep_conn2_conflict{j}, 'both_sub_use',sep_conn2_aligned{j});
+    [ Mouse(j).local_stat2.before_after, Mouse(j).distal_stat2.before_after,  ...
+        Mouse(j).both_stat2.before_after] = twoenv_get_ind_mean(Mouse(j), ...
+        before_after_conflict{j}, before_after_conflict{j}, 'both_sub_use',before_after_aligned{j});
+    
 end
+
+
 
 
 %% Attempt to do above for day restricted data
@@ -440,6 +447,14 @@ for j = 1:length(Mouse)
    title(Mouse(j).Name)
 end
 
+% Divided into distal aligned, local aligned, and both aligned groups
+figure(116)
+for j = 1:length(Mouse)
+   subplot(4,1,j)
+   plot_simplified_summary(Mouse(j).local_stat2,Mouse(j).distal_stat2,...
+       'both_stat',Mouse(j).both_stat2)
+   title(Mouse(j).Name)
+end
 
 %% Plot population correlation summary
 figure(11)
