@@ -28,6 +28,9 @@ function [ neuron_map] = image_register_simple( mouse_name, base_date, base_sess
 %       mapping neurons - 2nd session neuron is in a red outline, 1st
 %       session neurons will be in yellow
 %
+%       'use_neuron_masks': (optional) 1 = use neuron masks to register,
+%       not minimum projection (0 = use min projection = default)
+%
 %   OUTPUTS 
 %       neuron_map contains the following fields and is also saved in the
 %       base directory:
@@ -62,8 +65,10 @@ manual_reg_enable = 0; % 0 = do not allow manual adjustment of registration
 
 %% Determine if multiple sessions are happening, or if debug_escape is specified
 
-multi_reg = 0;
-debug_escape = 0;
+multi_reg = 0; % default
+debug_escape = 0; % default
+use_neuron_masks = 0; % default
+name_append = []; % default
 for j = 1:length(varargin)
    if strcmpi('multi_reg',varargin{j})
        multi_reg = varargin{j+1};
@@ -74,12 +79,16 @@ for j = 1:length(varargin)
    if strcmpi('check_multiple_mapping',varargin{j})
        check_multiple_mapping = varargin{j+1};
    end
+   if strcmpi('use_neuron_masks',varargin{j})
+       use_neuron_masks = varargin{j+1};
+       name_append = '_regbyneurons';
+   end
 end
 
 
 %% Perform Image Registration
 RegistrationInfoX = image_registerX(mouse_name, base_date, base_session, ...
-    reg_date, reg_session, manual_reg_enable);
+    reg_date, reg_session, manual_reg_enable,'use_neuron_masks',use_neuron_masks);
 
 %% Get working folders for each session, and run MakeMeanBlobs if not already done
 
@@ -102,13 +111,13 @@ cd(currdir)
 % eventually save in the base path
 if multi_reg == 0
     map_unique_filename = fullfile(sesh(1).folder,['neuron_map-' mouse_name '-' reg_date '-session' ...
-        num2str(reg_session) '.mat']);
+        num2str(reg_session) name_append '.mat']);
 elseif multi_reg == 1
     map_unique_filename = fullfile(sesh(1).folder,['neuron_map-' mouse_name '-' reg_date '-session' ...
-    num2str(reg_session) '_updatemasks0.mat']);
+    num2str(reg_session) '_updatemasks0' name_append '.mat']);
 elseif multi_reg == 2
     map_unique_filename = fullfile(sesh(1).folder,['neuron_map-' mouse_name '-' reg_date '-session' ...
-    num2str(reg_session) '_updatemasks1.mat']);
+    num2str(reg_session) '_updatemasks1' name_append  '.mat']);
 end
 
 %% Check to see if this has already been run - if so,
@@ -128,7 +137,7 @@ for k = 1:2
         load(fullfile(sesh(k).folder,'ProcOut.mat'),'c','cTon','GoodTrs');
         MakeMeanBlobs(c,cTon,GoodTrs)
     end
-    if k == 2 % Don't get registration info if base session
+    if k == 2 % Get registration info only if register session
         
         [tform_struct ] = get_reginfo(sesh(1).folder, sesh(2).folder, RegistrationInfoX );
     end
@@ -136,7 +145,7 @@ for k = 1:2
     % overwrite NeuronImage to include ALLmasks for base folder if doing multiple
     % sessions
     if k == 1 && multi_reg >= 1
-        load(fullfile(sesh(1).folder,['Reg_NeuronIDs_updatemasks' num2str(multi_reg-1) '.mat']));
+        load(fullfile(sesh(1).folder,['Reg_NeuronIDs_updatemasks'  num2str(multi_reg-1) name_append '.mat']));
         NeuronImage = Reg_NeuronIDs(1).AllMasks;
         BinBlobs = Reg_NeuronIDs(1).AllMasksMean;
     end

@@ -1,4 +1,4 @@
-function [ batch_session_map ] = neuron_reg_batch(base_struct, reg_struct, name_append)
+function [ batch_session_map ] = neuron_reg_batch(base_struct, reg_struct, varargin)
 % neuron_reg_batch(base_struct, reg_struct, name_append)
 %   Registers the neurons in reg_struct to base_struct and also to each
 %   other.  It runs through this two ways: 1) by always registering each
@@ -18,20 +18,34 @@ function [ batch_session_map ] = neuron_reg_batch(base_struct, reg_struct, name_
 %       locations of the ICmovie_min_proj.tif files you wish to register
 %       manually!
 %
-%       name_append: a string that is appended onto batch_session_map. 
+%       varargins
+%       'name_append': a string that is appended onto batch_session_map. 
+%
+%       'use_neuron_masks': 1 = use neuron masks to register between
+%       sessions. 0 (default) = use minimum projection
 %
 % OUTPUTS:
 %       
 %% Assign empty name_append if left blank
-
-if nargin < 3
-    name_append = '';
+name_append = ''; % default
+use_neuron_masks = 0; % default
+neuron_mask_append = '';
+for j = 1:length(varargin)
+    if strcmpi('name_append',varargin{j})
+        name_append = varargin{j+1};
+    end
+    if strcmpi('use_neuron_masks',varargin{j})
+        use_neuron_masks = varargin{j+1};
+        if use_neuron_masks == 1
+            neuron_mask_append = '_regbyneurons';
+        end
+    end
 end
 
 %% Step 1: Run multi_image_reg twice, once with update_masks = 0 and once with update_masks = 1
 
-reg_filename{1} = fullfile(base_struct.Location,'Reg_NeuronIDs_updatemasks0.mat');
-reg_filename{2} = fullfile(base_struct.Location,'Reg_NeuronIDs_updatemasks1.mat');
+reg_filename{1} = fullfile(base_struct.Location,['Reg_NeuronIDs_updatemasks0' neuron_mask_append '.mat']);
+reg_filename{2} = fullfile(base_struct.Location,['Reg_NeuronIDs_updatemasks1' neuron_mask_append '.mat']);
 
 disp('Checking for pre-existing registration files')
 for j = 1:2
@@ -43,10 +57,13 @@ for j = 1:2
     end
     
     if intact == 1
-        disp([ 'Reg_NeuronIDs with update_masks = ' num2str(j-1) ' found in the working directory, skipping neuron registration.'])
+        disp([ 'Reg_NeuronIDs with update_masks = ' num2str(j-1) ...
+            ' & use_neuron_masks = ' num2str(use_neuron_masks) ...
+            ' found in the working directory, skipping neuron registration.'])
     elseif intact == 0
-        disp(['Running registration with update masks = ' num2str(j-1)])
-        multi_image_reg(base_struct, reg_struct, 'update_masks', j-1);
+        disp(['Running registration with update masks = ' num2str(j-1) ...
+            ' & use_neuron_masks = ' num2str(use_neuron_masks)])
+        multi_image_reg(base_struct, reg_struct, 'update_masks', j-1,'use_neuron_masks',use_neuron_masks);
     end
 end
 
@@ -150,9 +167,9 @@ base_dir = ChangeDirectory(base_struct(1).Animal, base_struct(1).Date, base_stru
 
 % Append appropriate ending to batch_session_map
 if isempty(name_append)
-    save_name = 'batch_session_map.mat';
+    save_name = ['batch_session_map' neuron_mask_append '.mat'];
 else
-    save_name = ['batch_session_map_' name_append '.mat'];
+    save_name = ['batch_session_map_' name_append neuron_mask_append '.mat'];
 end
 save(fullfile(base_dir,save_name),'batch_session_map')
 

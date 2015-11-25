@@ -111,6 +111,8 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
     %% Check for varargins
     check_neuron_mapping = zeros(1,num_sessions); % Default varlue
     update_masks = 0; % Default value
+    use_neuron_masks = 0; % default
+    name_append = '';
     
     for j = 1:length(varargin)
         if strcmpi('check_neuron_mapping',varargin{j})
@@ -119,6 +121,12 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
         if strcmpi('update_masks',varargin{j})
             update_masks = varargin{j+1};
         end   
+        if strcmpi('use_neuron_masks',varargin{j})
+            use_neuron_masks = varargin{j+1};
+            if use_neuron_masks == 1
+                name_append = '_regbyneurons';
+            end
+        end
     end
     
     if length(check_neuron_mapping) == 1 && length(check_neuron_mapping) < num_sessions
@@ -156,7 +164,7 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
         
         unique_filename{this_session} = fullfile(base_path,['RegistrationInfo-' ...
             reg_struct(this_session).Animal '-' reg_struct(this_session).Date ...
-            '-session' num2str(reg_struct(this_session).Session) '.mat']);
+            '-session' num2str(reg_struct(this_session).Session) name_append '.mat']);
         
        
         % Check to make sure you are looking at the same mouse for each
@@ -186,12 +194,12 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
             neuron_map = image_register_simple(mouse, base_struct.Date,...
                 base_struct.Session, reg_struct(this_session).Date, ...
                 reg_struct(this_session).Session, check_neuron_mapping(this_session),...
-                'multi_reg',0);
+                'multi_reg',0,'use_neuron_masks',use_neuron_masks);
         elseif this_session > 1
             neuron_map = image_register_simple(mouse, base_struct.Date,...
                 base_struct.Session, reg_struct(this_session).Date, ...
                 reg_struct(this_session).Session, check_neuron_mapping(this_session),...
-                'multi_reg',update_masks + 1);
+                'multi_reg',update_masks + 1,'use_neuron_masks', use_neuron_masks);
         end
         % First, get all neurons in registered session that have multiple
         % neurons from the base session map to it
@@ -290,9 +298,10 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
         Reg_NeuronIDs(this_session).same_neuron = neuron_map.same_neuron;
         Reg_NeuronIDs(this_session).num_bad_cells = neuron_map.num_bad_cells;
         Reg_NeuronIDs(this_session).update_masks = update_masks;
+        Reg_NeuronIDs(this_session).use_neuron_masks = use_neuron_masks;
         
         %Save. 
-        reg_filename = fullfile(base_path,['Reg_NeuronIDs_updatemasks' num2str(update_masks) '.mat']);
+        reg_filename = fullfile(base_path,['Reg_NeuronIDs_updatemasks' num2str(update_masks) name_append '.mat']);
         save (reg_filename, 'Reg_NeuronIDs','-v7.3'); 
     end
     
