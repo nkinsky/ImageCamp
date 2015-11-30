@@ -23,20 +23,27 @@ reg_landmarks = [str2double(c{1}{9}) str2double(c{2}{9}); ...
 translation = reg_landmarks(1,:) - base_landmarks(1,:);
 
 base_delta = base_landmarks(3,:) - base_landmarks(2,:);
-base_angle = atan2d(base_delta(1), base_delta(2));
+base_angle = atan2d(base_delta(2), base_delta(1));
 
 reg_delta = reg_landmarks(3,:) - reg_landmarks(2,:);
-reg_angle = atan2d(reg_delta(1), reg_delta(2));
+reg_angle = atan2d(reg_delta(2), reg_delta(1));
     
-rotation = reg_angle - base_angle;
+rotation = (reg_angle - base_angle);
 
-% keyboard
+
+%% Calculate new coordinates based on rotation only and get diff from base to get translation
+
+rot_mat = [cosd(rotation) -sind(rotation); sind(rotation) cosd(rotation)];
+reg_landmarks_rot = reg_landmarks*rot_mat;
+landmarks_diff = mean(reg_landmarks_rot - base_landmarks,1);
 
 tform_struct = affine2d(); % Initialize default tform matrix
-% Make tform
-tform_struct.T(3,1) = translation(1);
-tform_struct.T(3,2) = translation(2);
-tform_struct.T(1:2,1:2) = [cosd(rotation) -sind(rotation); sind(rotation) cosd(rotation)];
+%% Make tform
+tform_struct.T(3,1) = -landmarks_diff(1);
+tform_struct.T(3,2) = -landmarks_diff(2);
+tform_struct.T(1:2,1:2) = rot_mat;
+
+%% test proper output
 
 end
 
