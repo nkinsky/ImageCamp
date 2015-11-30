@@ -99,55 +99,78 @@ end
 
 %% Step through neuron by neuron and get overlap and cm delta for each method
 
-% Get cms for each neuron
-for j = 1:num_sessions
-   for k = 1: all_active_num
-      stats_temp = regionprops(BinBlobs_reg{j}{k},'Centroid','PixelIdxList');
-      neuron_cm{j}{k} = stats_temp.Centroid;
-   end
-   
+num_shuffles = 100;
+
+[ neuron_cm, cm_dist, neuron_axisratio, ratio_diff, neuron_orientation, ...
+    orientation_diff ] = dist_bw_reg_sessions( BinBlobs_reg );
+
+cm_dist_shuffle = [];
+ratio_diff_shuffle = [];
+orientation_diff_shuffle = [];
+for j = 1:num_shuffles
+    if round(j/10) == (j/10)
+        disp(['Performing Shuffle ' num2str(j) ' of ' num2str(num_shuffles)])
+    end
+    [ ~, cm_dist_temp, ~, ratio_diff_temp, ~, ...
+        orientation_diff_temp ] = dist_bw_reg_sessions( BinBlobs_reg,1 );
+    cm_dist_shuffle = cat(3,cm_dist_shuffle,cm_dist_temp);
+    ratio_diff_shuffle = cat(3,ratio_diff_shuffle,ratio_diff_temp);
+    orientation_diff_shuffle = cat(3,orientation_diff_shuffle,orientation_diff_temp);
 end
 
-% Calculating difference in centers-of-mass for these neurons
-cm_dist = nan(num_sessions-1, num_sessions, all_active_num);
-for k = 1:num_sessions-1
-    for ll = k+1:num_sessions
-        for j = 1:all_active_num
-            cm_dist(k,ll,j) = pdist([neuron_cm{k}{j}; neuron_cm{ll}{j}]);
-        end
-    end
-end
+% Need to get stats on the above and differences between null hypothesis
+% (random mappings of neurons).
+
+% ALSO - need to get stats against null distribution that neuron is mapped
+% to 2nd closest neuron (e.g. that image registration is off) and see what
+% happens!!!
 
 %% Plot out difference between 11/19/2014 sesh1 and 11/22/2014 sesh1 for each method
-% Key 1 = Nat method, 2 = Turboreg using ICmin, 3 = turboreg using neurons
+% Key 1 = base file, 2 = Nat method, 3 = Turboreg using ICmin, 4 = turboreg using neurons
 % Hard-code file locations for now
+tform_check = 1; % set to 1 if you want to scroll through neurons
+
 turbofile_regbyneurons = 'J:\GCamp Mice\Working\G30\2env\11_19_2014\1 - 2env square left 201B\Working\Neuron Registration QC\landmarks_after_byneurons.txt';
 turbofile_regbyICmin = 'J:\GCamp Mice\Working\G30\2env\11_19_2014\1 - 2env square left 201B\Working\Neuron Registration QC\landmarks_after_byICmin.txt';
 
 % Get transforms from turbo-reg files
-[ ~, ~, tform_compare{3} ] = import_treg_lmarks(...
+[ ~, ~, tform_compare{4} ] = import_treg_lmarks(...
     turbofile_regbyneurons);
-[~, ~, tform_compare{2} ] = import_treg_lmarks(...
+[~, ~, tform_compare{3} ] = import_treg_lmarks(...
     turbofile_regbyICmin);
 
-tform_compare{1} = tform_use(3).tform; % transform using Nat method
+tform_compare{2} = tform_use(3).tform; % transform using Nat method
 
-for j = 1:3
+BinBlobs_compare_reg{1} = BinBlobs_reg{1};
+for j = 2:4
     for k = 1:all_active_num
         BinBlobs_compare_reg{j}{k} = imwarp(BinBlobs_temp{3}{k},tform_compare{j},...
             'OutputView',tform_use(2).base_ref,'InterpolationMethod','nearest');
     end
 end
 
-%% Step 0: Identify ~10 neurons that are in both sessions for sure AND create
-% a) a binary matrix of all the cells (using create_AllICmask)
-% b) a matrix with each neuron alone
+[ compare_neuron_centroid, compare_centroid_dist ] = dist_bw_reg_sessions( BinBlobs_compare_reg );
 
-%% Step 1: Import BinBlobs masks of reliable cells for reg and base files
+%% Optional - scroll through and compare registrations from above
+if tform_check == 1
+    temp_plot = zeros(size(BinBlobs_compare_reg{1}{1}));
+    figure(10)
+    for neuron_plot = 1:all_active_num
+        temp_plot = temp_plot + BinBlobs_compare_reg{1}{neuron_plot} + 2*BinBlobs_compare_reg{3}{neuron_plot};
+        imagesc(temp_plot);
+        hold on;
+        colorbar;
+        waitforbuttonpress;
+    end
+end
 
-%% Step 2: Transform BinBlobs masks 3 ways and plot side-by-side, subtracting
-% the base session from each
-
-%% Step 3: Step through neuron by neuron and get overlap and cm delta for each method
+%% Follow-up 
+% 1) Compare all three methods using only neurons that we are SURE are the
+% same across all sessions and are well isolated from others...
+% 2) It would be a bear, but registering by neurons and then seeing if the
+% mapping is the same would be the best comparison
+% 3) Quantify with two things: 1) Minor Axis Length/ Major Axis Length,
+% and, 2) if the ration is less than 0.75 (e.g. if the neuron is obviously not round)
+% then look at Orientation and compare
 
 %% Step 4: Iterate through multiple sessions this way to quantify
