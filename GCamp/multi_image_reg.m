@@ -25,6 +25,8 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
 %       registration.  Default = 0 (Base session masks used for all future
 %       registrations, with the exception of new neurons that are added in
 %       a given session)
+%       
+%       see neuron_reg_batch and multi_image_reg for other varargins
 %
 %
 %   OUTPUTS: 
@@ -194,7 +196,7 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
             neuron_map = image_register_simple(mouse, base_struct.Date,...
                 base_struct.Session, reg_struct(this_session).Date, ...
                 reg_struct(this_session).Session, check_neuron_mapping(this_session),...
-                'multi_reg',0,'use_neuron_masks',use_neuron_masks);
+                 'multi_reg',0,'use_neuron_masks',use_neuron_masks); % NRK - add in use_alternate_reg here and below and in neuron_reg_batch!!
         elseif this_session > 1
             neuron_map = image_register_simple(mouse, base_struct.Date,...
                 base_struct.Session, reg_struct(this_session).Date, ...
