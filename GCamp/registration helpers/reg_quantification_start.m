@@ -9,6 +9,9 @@
 % Axis direction and hopefully using those that are isolated from other
 % neurons)
 
+% Next step: make compatible with neuron maps formed by jittering the
+% registered session intentionally
+
 
 %% Step -1: Identify neurons that are active across all sessions and plot them out
 % both as subplots AND cycle through to look for any that might not be the
