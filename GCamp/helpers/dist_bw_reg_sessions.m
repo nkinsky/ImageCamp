@@ -53,8 +53,10 @@ for k = 1:num_sessions-1
             neuron_index_use = 1:num_neurons;
         end
         for j = 1:num_neurons
-            centroid_dist(k,ll,j) = pdist([neuron_centroid{k}{j}; ...
-                neuron_centroid{ll}{neuron_index_use(j)}]);
+%             centroid_dist(k,ll,j) = pdist([neuron_centroid{k}{j}; ...
+%                 neuron_centroid{ll}{neuron_index_use(j)}]);
+            centroid_dist(k,ll,j) = sqrt((neuron_centroid{k}{j}(1) - neuron_centroid{ll}{neuron_index_use(j)}(1))^2 ...
+                + (neuron_centroid{k}{j}(2) - neuron_centroid{ll}{neuron_index_use(j)}(2))^2);
         end
         ratio_diff(k,ll,:) = neuron_axisratio{ll}(neuron_index_use) - neuron_axisratio{k};
         orientation_diff(k,ll,:) = neuron_orientation{ll}(neuron_index_use) - neuron_orientation{k};
