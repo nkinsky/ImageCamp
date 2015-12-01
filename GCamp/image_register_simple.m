@@ -18,6 +18,7 @@ function [ neuron_map] = image_register_simple( mouse_name, base_date, base_sess
 %       check_cell_mapping: 0 (default) = no check plots are generated.
 %       1 = go through cell-by-cell and check how well cells are mapped.
 %
+%   varargins
 %       'multi_reg': (optional) specify as ...,'multi_reg', 1. 0 (default) - 
 %       use base_file NeuronImage variable from ProcOut.mat for registration 
 %       of neurons.  1 - used only in conjunction with multi_image_reg -
@@ -30,6 +31,12 @@ function [ neuron_map] = image_register_simple( mouse_name, base_date, base_sess
 %
 %       'use_neuron_masks': (optional) 1 = use neuron masks to register,
 %       not minimum projection (0 = use min projection = default)
+%
+%       'use_alternate_reg': if specified, you can use an alternate
+%       image registration transform to do your image registration.  Must
+%       be followed by two arguments: 1) the affine transform matrix T, and
+%       2) the name you wish to append to the registration file, e.g.
+%       ...'use_alternate_reg', T_alternate, '_reg_with_jitter')
 %
 %   OUTPUTS 
 %       neuron_map contains the following fields and is also saved in the
@@ -69,6 +76,8 @@ multi_reg = 0; % default
 debug_escape = 0; % default
 use_neuron_masks = 0; % default
 name_append = []; % default
+alt_reg_flag = 0;
+use_alternate_reg = [];
 for j = 1:length(varargin)
    if strcmpi('multi_reg',varargin{j})
        multi_reg = varargin{j+1};
@@ -83,12 +92,24 @@ for j = 1:length(varargin)
        use_neuron_masks = varargin{j+1};
        name_append = '_regbyneurons';
    end
+   if strcmpi('use_alternate_reg',varargin{j})
+      use_alternate_reg = varargin{j+1};
+      alt_reg_flag = 1;
+      name_append = varargin{j+2};
+   end
 end
 
 
 %% Perform Image Registration
 RegistrationInfoX = image_registerX(mouse_name, base_date, base_session, ...
     reg_date, reg_session, manual_reg_enable,'use_neuron_masks',use_neuron_masks);
+
+if alt_reg_flag == 1
+    disp('Loading alternate registration info - NOTE that this is currently a hack');
+    % To improve I should simply calculate the imref2d object separately
+    % and not run image_registerX above.
+    RegistrationInfoX.tform.T = use_alternate_reg;
+end
 
 %% Get working folders for each session, and run MakeMeanBlobs if not already done
 
@@ -120,6 +141,7 @@ elseif multi_reg == 2
     num2str(reg_session) '_updatemasks1' name_append  '.mat']);
 end
 
+keyboard
 %% Check to see if this has already been run - if so,
 
 try
@@ -328,7 +350,7 @@ figure;
 imagesc(sesh(1).AllNeuronMask + 2*sesh(2).AllNeuronMask); colorbar
 title('1 = session 1, 2 = session 2, 3 = both sessions')
 
-%% Plot out each cell mapped to another to see how good the registraton is..
+%% Plot out each cell mapped to another to see how good the registration is..
 
     if exist('check_neuron_mapping','var') && check_neuron_mapping == 1
         % Dump all neuron images into a single variable

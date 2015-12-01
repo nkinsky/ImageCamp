@@ -30,6 +30,7 @@ function [ batch_session_map ] = neuron_reg_batch(base_struct, reg_struct, varar
 name_append = ''; % default
 use_neuron_masks = 0; % default
 neuron_mask_append = '';
+use_alternate_reg = 0; % default
 for j = 1:length(varargin)
     if strcmpi('name_append',varargin{j})
         name_append = varargin{j+1};
@@ -40,12 +41,16 @@ for j = 1:length(varargin)
             neuron_mask_append = '_regbyneurons';
         end
     end
+    if strcmpi('use_alternate_reg',varargin{j})
+       use_alternate_reg = varargin{j+1};
+       alt_reg_tform = varargin{j+2};
+    end
 end
 
 %% Step 1: Run multi_image_reg twice, once with update_masks = 0 and once with update_masks = 1
 
-reg_filename{1} = fullfile(base_struct.Location,['Reg_NeuronIDs_updatemasks0' neuron_mask_append '.mat']);
-reg_filename{2} = fullfile(base_struct.Location,['Reg_NeuronIDs_updatemasks1' neuron_mask_append '.mat']);
+reg_filename{1} = fullfile(base_struct.Location,['Reg_NeuronIDs_updatemasks0' neuron_mask_append name_append '.mat']);
+reg_filename{2} = fullfile(base_struct.Location,['Reg_NeuronIDs_updatemasks1' neuron_mask_append name_append '.mat']);
 
 disp('Checking for pre-existing registration files')
 for j = 1:2
@@ -169,7 +174,7 @@ base_dir = ChangeDirectory(base_struct(1).Animal, base_struct(1).Date, base_stru
 if isempty(name_append)
     save_name = ['batch_session_map' neuron_mask_append '.mat'];
 else
-    save_name = ['batch_session_map_' name_append neuron_mask_append '.mat'];
+    save_name = ['batch_session_map_' neuron_mask_append name_append '.mat'];
 end
 save(fullfile(base_dir,save_name),'batch_session_map')
 
