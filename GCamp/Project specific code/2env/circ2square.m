@@ -13,8 +13,8 @@ R_c = kc;
 % First center everything
 [fx, x] = ecdf(xpos_circ);
 [fy, y] = ecdf(ypos_circ);
-xmid = (x(find(fx > 0.95,1,'first')) - x(find(fx < 0.05,1,'last')))/2;
-ymid = (y(find(fy > 0.95,1,'first')) - y(find(fy < 0.05,1,'last')))/2;
+xmid = (x(find(fx > 0.95,1,'first')) + x(find(fx < 0.05,1,'last')))/2;
+ymid = (y(find(fy > 0.95,1,'first')) + y(find(fy < 0.05,1,'last')))/2;
 
 xcent = xpos_circ - xmid;
 ycent = ypos_circ - ymid;
