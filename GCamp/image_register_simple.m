@@ -38,6 +38,12 @@ function [ neuron_map] = image_register_simple( mouse_name, base_date, base_sess
 %       2) the name you wish to append to the registration file, e.g.
 %       ...'use_alternate_reg', T_alternate, '_reg_with_jitter')
 %
+%       'add_jitter': same as 'use_alternate_reg' except the affine
+%       transform matrix T is multiplied by the actual registration to
+%       induce the specified jitter (e.g. [1 0 0; 0 1 0; 3 4 1] results in
+%       an additional translation of 3 pixels in the x-direction and 4
+%       pixels in the y-direction)
+%
 %   OUTPUTS 
 %       neuron_map contains the following fields and is also saved in the
 %       base directory:
@@ -77,7 +83,8 @@ debug_escape = 0; % default
 use_neuron_masks = 0; % default
 name_append = []; % default
 alt_reg_flag = 0;
-use_alternate_reg = [];
+alt_reg_tform = []; % default
+add_jitter = []; % default
 for j = 1:length(varargin)
    if strcmpi('multi_reg',varargin{j})
        multi_reg = varargin{j+1};
@@ -93,22 +100,43 @@ for j = 1:length(varargin)
        name_append = '_regbyneurons';
    end
    if strcmpi('use_alternate_reg',varargin{j})
-      use_alternate_reg = varargin{j+1};
-      alt_reg_flag = 1;
+      alt_reg_tform = varargin{j+1};
+      if ~isempty(alt_reg_tform) % Don't do anything if left empty
+          alt_reg_flag = 1;
+          name_append = varargin{j+2};
+      end
+   end
+   if strcmpi('add_jitter',varargin{j})
+      jitter_mat = varargin{j+1};
+      add_jitter = 1;
       name_append = varargin{j+2};
    end
 end
 
 
 %% Perform Image Registration
-RegistrationInfoX = image_registerX(mouse_name, base_date, base_session, ...
+[RegistrationInfoX, imreg_unique_filename] = image_registerX(mouse_name, base_date, base_session, ...
     reg_date, reg_session, manual_reg_enable,'use_neuron_masks',use_neuron_masks);
 
-if alt_reg_flag == 1
+% Adjust Image Registration for alternate tform to to add jitter
+save_alt = 0;
+if alt_reg_flag == 1 && ~isempty(alt_reg_tform)
     disp('Loading alternate registration info - NOTE that this is currently a hack');
     % To improve I should simply calculate the imref2d object separately
     % and not run image_registerX above.
-    RegistrationInfoX.tform.T = use_alternate_reg;
+    RegistrationInfoX.tform.T = alt_reg_tform;
+    save_alt = 1;
+end
+
+if add_jitter == 1
+    RegistrationInfoX.tform.T = RegistrationInfoX.tform.T*jitter_mat;
+    save_alt = 1;
+end
+% keyboard
+% Save updated RegistrationInfoX if updated
+if save_alt == 1
+    alt_filename = [imreg_unique_filename(1:end-4) name_append '.mat'];
+    save(alt_filename,'RegistrationInfoX');
 end
 
 %% Get working folders for each session, and run MakeMeanBlobs if not already done
@@ -141,7 +169,6 @@ elseif multi_reg == 2
     num2str(reg_session) '_updatemasks1' name_append  '.mat']);
 end
 
-keyboard
 %% Check to see if this has already been run - if so,
 
 try
