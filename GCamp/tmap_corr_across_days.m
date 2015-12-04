@@ -57,9 +57,9 @@ function [corr_matrix, pop_corr_struct, pass_thresh, corr_win, shuffle_matrix] =
 %
 %       pass_thresh: a n x n x num neurons logical matrix indicating if
 %       that neuron passed the thresholds for inclusion.
-%% Sampling Rate
+%% Variable
 SR = 20; %fps
-
+PF_thresh = 0.9;
 
 %% Get varargins
 rotate_to_std = 0; % default
@@ -117,16 +117,16 @@ num_sessions = length(batch_session_map(1).session);
 Animal = batch_session_map(1).session(1).mouse;
 sesh = batch_session_map(1).session;
 
-disp('Loading TMaps for each session')
+disp('Loading TMaps for each session and calculating PF centroids')
 for j = 1:num_sessions
    ChangeDirectory(Animal, sesh(j).date,...
        sesh(j).session);
    if rotate_to_std == 0
-       load(['PlaceMaps' archive_name_append '.mat'],'TMap','pval');
+       load(['PlaceMaps' archive_name_append '.mat'],'TMap_gauss','pval');
    elseif rotate_to_std == 1
-       load(['PlaceMaps_rot_to_std' archive_name_append '.mat'],'TMap','pval');
+       load(['PlaceMaps_rot_to_std' archive_name_append '.mat'],'TMap_gauss','pval');
    end
-   sesh(j).TMap = TMap;
+   sesh(j).TMap = TMap_gauss;
    if within_session == 1
        if rotate_to_std == 0
            load(['PlaceMaps' archive_name_append '.mat'],'TMap_half');
@@ -137,11 +137,14 @@ for j = 1:num_sessions
    end
    sesh(j).pval_use = 1-pval;
    sesh(j).pval_pass = sesh(j).pval_use <= pval_thresh;
+   
    % Get transient rates and those that pass the threshold
    load('ProcOut.mat','NumTransients','NumFrames');
    sesh(j).trans_rate = NumTransients/(NumFrames/SR);
    sesh(j).trans_rate_pass = sesh(j).trans_rate >= trans_rate_thresh;
-       
+   
+   % Get Place Field centroid locations for each session
+   sesh(j).PF_centroid = get_PF_centroid(sesh(j).TMap,PF_thresh);
 end
 
 
@@ -185,6 +188,7 @@ for j = 1:num_neurons
                 corr_matrix(k,ll,j) = nan;
                 pass_thresh(k,ll,j) = 0;
             end
+            
         end
         
     end
@@ -225,16 +229,26 @@ if population_corr == 1
     pop_corr_struct.p = p_pop_corr;
 end
 
+%% Get Distances
+min_dist_matrix = nan(num_sessions, num_sessions, num_neurons);
+for k = 1:num_sessions
+    for ll = k:num_sessions
+        min_dist_matrix(k,ll,:) = get_PF_centroid_diff(sesh(k).TMap,...
+            sesh(ll).TMap,
+    end
+end
 %% 4) Within session controls...
 if within_session == 1
     disp('Calculating within session correlations')
     for j = 1:num_sessions
         % Get neurons that have non-NaN placefields in both halves
-        win_ok = cellfun(@(a,b) sum(isnan(a(:))) == 0 & sum(isnan(b(:))) == 0, sesh(j).TMap_half(1).Tmap, sesh(j).TMap_half(2).Tmap);
+        win_ok = cellfun(@(a,b) sum(isnan(a(:))) == 0 & sum(isnan(b(:))) == 0, ...
+            sesh(j).TMap_half(1).TMap_gauss, sesh(j).TMap_half(2).TMap_gauss);
         win_ok_ind = find(win_ok);
         % Get within session correlations
         for k = 1:length(win_ok_ind)
-            temp = corrcoef(sesh(j).TMap_half(1).Tmap{win_ok_ind(k)}(:), sesh(j).TMap_half(2).Tmap{win_ok_ind(k)}(:));
+            temp = corrcoef(sesh(j).TMap_half(1).TMap_gauss{win_ok_ind(k)}(:), ...
+                sesh(j).TMap_half(2).TMap_gauss{win_ok_ind(k)}(:));
             corr_win(j,k) = temp(1,2);
         end
     end
