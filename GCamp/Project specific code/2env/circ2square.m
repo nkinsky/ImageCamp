@@ -42,7 +42,5 @@ r_cprime = r_c.*R_s/R_c;
 xtrans = r_cprime.*cos(theta);
 ytrans = r_cprime.*sin(theta);
 
-keyboard
-
 end
 
