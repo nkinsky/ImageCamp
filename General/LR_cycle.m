@@ -13,6 +13,7 @@ right = 29; left = 28; spacebar = 32;
 [~,~,button] = ginput(1);
 
 %%
+disp('Hit spacebar to stop cycling')
 switch button
     case left
         n_out = n_in -1;
@@ -28,6 +29,7 @@ switch button
         n_out = escape_flag;
     otherwise
         disp('error')
+        n_out = n_in;
    
 end
 
