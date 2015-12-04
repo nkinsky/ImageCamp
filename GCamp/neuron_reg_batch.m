@@ -31,6 +31,8 @@ name_append = ''; % default
 use_neuron_masks = 0; % default
 neuron_mask_append = '';
 use_alternate_reg = 0; % default
+alt_reg_tform = [];
+name_append = '';
 for j = 1:length(varargin)
     if strcmpi('name_append',varargin{j})
         name_append = varargin{j+1};
@@ -42,8 +44,12 @@ for j = 1:length(varargin)
         end
     end
     if strcmpi('use_alternate_reg',varargin{j})
-       use_alternate_reg = varargin{j+1};
-       alt_reg_tform = varargin{j+2};
+       alt_reg_tform = varargin{j+1};
+       name_append = varargin{j+2};
+    end
+    if strcmpi('add_jitter',varargin{j})
+        jitter_mat = varargin{j+1};
+        name_append = varargin{j+2};
     end
 end
 
@@ -68,7 +74,9 @@ for j = 1:2
     elseif intact == 0
         disp(['Running registration with update masks = ' num2str(j-1) ...
             ' & use_neuron_masks = ' num2str(use_neuron_masks)])
-        multi_image_reg(base_struct, reg_struct, 'update_masks', j-1,'use_neuron_masks',use_neuron_masks);
+        multi_image_reg(base_struct, reg_struct, 'update_masks', j-1,'use_neuron_masks',...
+            use_neuron_masks, 'use_alternate_reg', alt_reg_tform, name_append,...
+            'add_jitter', jitter_mat, name_append);
     end
 end
 
@@ -174,7 +182,7 @@ base_dir = ChangeDirectory(base_struct(1).Animal, base_struct(1).Date, base_stru
 if isempty(name_append)
     save_name = ['batch_session_map' neuron_mask_append '.mat'];
 else
-    save_name = ['batch_session_map_' neuron_mask_append name_append '.mat'];
+    save_name = ['batch_session_map' neuron_mask_append name_append '.mat'];
 end
 save(fullfile(base_dir,save_name),'batch_session_map')
 

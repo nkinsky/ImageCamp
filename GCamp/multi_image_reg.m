@@ -115,7 +115,7 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
     update_masks = 0; % Default value
     use_neuron_masks = 0; % default
     name_append = '';
-    
+    alt_reg_tform = []; 
     for j = 1:length(varargin)
         if strcmpi('check_neuron_mapping',varargin{j})
             check_neuron_mapping = varargin{j+1};
@@ -128,6 +128,14 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
             if use_neuron_masks == 1
                 name_append = '_regbyneurons';
             end
+        end
+        if strcmpi('use_alternate_reg',varargin{j})
+            alt_reg_tform = varargin{j+1};
+            name_append = varargin{j+2};
+        end
+        if strcmpi('add_jitter',varargin{j})
+            jitter_mat = varargin{j+1};
+            name_append = varargin{j+2};
         end
     end
     
@@ -164,6 +172,8 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
             cd(currdir)
         end
         
+        % Construct a cell containing the filenames for each image
+        % registration
         unique_filename{this_session} = fullfile(base_path,['RegistrationInfo-' ...
             reg_struct(this_session).Animal '-' reg_struct(this_session).Date ...
             '-session' num2str(reg_struct(this_session).Session) name_append '.mat']);
@@ -196,12 +206,15 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
             neuron_map = image_register_simple(mouse, base_struct.Date,...
                 base_struct.Session, reg_struct(this_session).Date, ...
                 reg_struct(this_session).Session, check_neuron_mapping(this_session),...
-                 'multi_reg',0,'use_neuron_masks',use_neuron_masks); % NRK - add in use_alternate_reg here and below and in neuron_reg_batch!!
+                 'multi_reg',0,'use_neuron_masks',use_neuron_masks,'use_alternate_reg',...
+                 alt_reg_tform, name_append,'add_jitter',jitter_mat,name_append); % NRK - add in use_alternate_reg here and below and in neuron_reg_batch!!
         elseif this_session > 1
             neuron_map = image_register_simple(mouse, base_struct.Date,...
                 base_struct.Session, reg_struct(this_session).Date, ...
                 reg_struct(this_session).Session, check_neuron_mapping(this_session),...
-                'multi_reg',update_masks + 1,'use_neuron_masks', use_neuron_masks);
+                'multi_reg',update_masks + 1,'use_neuron_masks', use_neuron_masks, ...
+                'use_alternate_reg',alt_reg_tform, name_append,'add_jitter', ...
+                jitter_mat,name_append);
         end
         % First, get all neurons in registered session that have multiple
         % neurons from the base session map to it
