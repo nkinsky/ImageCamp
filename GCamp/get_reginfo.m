@@ -5,6 +5,7 @@ function [tform_struct ] = get_reginfo( base_folder, reg_folder, RegistrationInf
 %   specified as [], then it only searches for reg_folder.
 
 % Get
+try
 for k = 1:size(RegistrationInfoX,2);
     if ~isempty(base_folder)
         temp_base(k) = strcmpi(fullfile(base_folder, 'ICmovie_min_proj.tif'), ...
@@ -25,5 +26,9 @@ tform_struct.tform = tform_use;
 tform_struct.reg_pix_exclude = reg_pix_exclude;
 tform_struct.base_ref = imref2d(size(imread(RegistrationInfoX(temp).base_file)));
 
+catch
+    disp('error catching in get_reginfo')
+    keyboard
+end
 end
 
