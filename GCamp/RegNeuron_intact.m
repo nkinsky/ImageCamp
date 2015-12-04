@@ -1,6 +1,7 @@
 function [ intact ] = RegNeuron_intact( Reg_NeuronIDs, base_struct_check, reg_struct_check )
-%UNTITLED2 Summary of this function goes here
-%   Detailed explanation goes here
+% intact  = RegNeuron_intact( Reg_NeuronIDs, base_struct_check, reg_struct_check )
+%   Makes sure that all the sessions in base_struct_check and
+%   reg_struct_check are indeed in Reg_NeuronIDs.
 
 base_check = strcmpi(Reg_NeuronIDs(1).mouse,base_struct_check(1).Animal) & ...
     strcmpi(Reg_NeuronIDs(1).base_date,base_struct_check(1).Date) & ...
