@@ -33,6 +33,7 @@ neuron_mask_append = '';
 use_alternate_reg = 0; % default
 alt_reg_tform = [];
 name_append = '';
+jitter_mat = [];
 for j = 1:length(varargin)
     if strcmpi('name_append',varargin{j})
         name_append = varargin{j+1};

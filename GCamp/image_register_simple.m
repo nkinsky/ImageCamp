@@ -42,7 +42,8 @@ function [ neuron_map] = image_register_simple( mouse_name, base_date, base_sess
 %       transform matrix T is multiplied by the actual registration to
 %       induce the specified jitter (e.g. [1 0 0; 0 1 0; 3 4 1] results in
 %       an additional translation of 3 pixels in the x-direction and 4
-%       pixels in the y-direction)
+%       pixels in the y-direction).  If specified but left empty the
+%       original transform matrix will be used.
 %
 %   OUTPUTS 
 %       neuron_map contains the following fields and is also saved in the
@@ -97,7 +98,9 @@ for j = 1:length(varargin)
    end
    if strcmpi('use_neuron_masks',varargin{j})
        use_neuron_masks = varargin{j+1};
-       name_append = '_regbyneurons';
+       if use_neuron_masks == 1
+           name_append = '_regbyneurons';
+       end
    end
    if strcmpi('use_alternate_reg',varargin{j})
       alt_reg_tform = varargin{j+1};
@@ -107,9 +110,11 @@ for j = 1:length(varargin)
       end
    end
    if strcmpi('add_jitter',varargin{j})
-      jitter_mat = varargin{j+1};
-      add_jitter = 1;
-      name_append = varargin{j+2};
+       jitter_mat = varargin{j+1};
+       if ~isempty(jitter_mat)
+           add_jitter = 1;
+           name_append = varargin{j+2};
+       end
    end
 end
 
