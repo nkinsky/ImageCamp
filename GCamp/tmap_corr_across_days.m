@@ -1,5 +1,9 @@
-function [corr_matrix, pop_corr_struct, pass_thresh, corr_win, shuffle_matrix] = tmap_corr_across_days(working_dir,varargin)
-% [corr_matrix] = tmap_corr_across_days(working_dir,varargin)
+function [corr_matrix, pop_corr_struct, min_dist_matrix, pass_thresh, ...
+    corr_win, corr_shuffle_matrix, min_dist_shuffle_matrix] = ...
+    tmap_corr_across_days(working_dir,varargin)
+% [corr_matrix, pop_corr_struct, min_dist_matrix, pass_thresh, ...
+%    corr_win, corr_shuffle_matrix, min_dist_shuffle_matrix] = ...
+%    tmap_corr_across_days(working_dir,varargin)
 %
 % Gets correlations between calcium transient heat maps (TMaps) across
 % days.  Requires all TMaps to have the same grid size/spacing (done by
@@ -227,16 +231,34 @@ if population_corr == 1
 %     p.stop;
     pop_corr_struct.r = pop_corr;
     pop_corr_struct.p = p_pop_corr;
+else
+    pop_corr_struct = [];
 end
 
-%% Get Distances
+%% Get Distances 
+disp('Calculating place field distance between sessions');
 min_dist_matrix = nan(num_sessions, num_sessions, num_neurons);
 for k = 1:num_sessions
     for ll = k:num_sessions
-        min_dist_matrix(k,ll,:) = get_PF_centroid_diff(sesh(k).TMap,...
-            sesh(ll).TMap,
+        try
+            neuron_map_base = get_neuronmap_from_batchmap(batch_session_map.map,...
+                0,k); % Get map from 1st session to all neurons
+            neuron_map_use = get_neuronmap_from_batchmap(batch_session_map.map,...
+                k,ll); % Get map from 2nd session to 1st session
+            temp = get_PF_centroid_diff(sesh(k).PF_centroid,...
+                sesh(ll).PF_centroid, neuron_map_use,1); % get PF differences from 1st to second session
+            for j = 1:length(temp)
+                neuron_index = neuron_map_base(j);
+                if neuron_index ~= 0;
+                    min_dist_matrix(k,ll,neuron_index) = temp(j);
+                end
+            end
+        catch
+            keyboard
+        end
     end
 end
+% keyboard
 %% 4) Within session controls...
 if within_session == 1
     disp('Calculating within session correlations')
@@ -257,11 +279,12 @@ else
 end
 
 %% 5) Now do above for shuffled neuron identity if desired...
-
+tic
 % Shuffles for individual neurons
 if num_shuffles >= 1
     disp(['Shuffling sessions ' num2str(num_shuffles) ' times'])
-    shuffle_matrix = nan*ones(num_shuffles, num_sessions,num_sessions,num_neurons); % Initialize Shuffled Matrix
+    corr_shuffle_matrix = nan*ones(num_shuffles, num_sessions,num_sessions,num_neurons); % Initialize Shuffled Matrix
+    min_dist_shuffle_matrix = nan*ones(num_shuffles, num_sessions,num_sessions,num_neurons); % Initialize Shuffled Matrix
     for n = 1:num_shuffles
         disp(['Shuffle # ' num2str(n) ' in progress'])
         for k = 1:num_sessions
@@ -269,19 +292,36 @@ if num_shuffles >= 1
                 ok = squeeze(pass_thresh(k,ll,:)); % Get neurons that pass all criteria for both sessions
                 ok_ind{1} = find(ok); % Keep all indices the same for the 1st session
                 ok_ind{2} = ok_ind{1}(randperm(length(ok_ind{1}))); % randomize 2nd session indices
+                map1_2_shuffle = zeros(size(sesh(k).TMap));
+                map1_base = get_neuronmap_from_batchmap(batch_session_map.map,k,ll);
                 for j = 1:length(ok_ind{1})
                     sesh1_neuron = batch_session_map(1).map(ok_ind{1}(j),k+1);
                     sesh2_neuron = batch_session_map(1).map(ok_ind{2}(j),ll+1);
+                    map1_2_shuffle(sesh1_neuron) = sesh2_neuron;
                     temp = corrcoef(sesh(k).TMap{sesh1_neuron}(:),...
                         sesh(ll).TMap{sesh2_neuron}(:));
-                    shuffle_matrix(n,k,ll,ok_ind{1}(j)) = temp(1,2);
+                    corr_shuffle_matrix(n,k,ll,ok_ind{1}(j)) = temp(1,2);
                 end
+                % Calculate distances between place fields
+%                 neuron_map_use = get_neuronmap_from_batchmap(batch_session_map.map,...
+%                     k,ll);
+                temp = get_PF_centroid_diff(sesh(k).PF_centroid,...
+                    sesh(ll).PF_centroid, map1_2_shuffle,1);
+                for j = 1:length(temp)
+                    neuron_index = neuron_map_base(j);
+                    if neuron_index ~= 0;
+                        min_dist_shuffle_matrix(n,k,ll,j) = temp(j);
+                    end
+                end
+                
             end
         end
     end
 else
-    shuffle_matrix = [];
+    corr_shuffle_matrix = [];
 end
+
+toc
 %% Plot
 
 if plot_confusion_matrix == 1
@@ -299,3 +339,4 @@ end
 
 %% Return to original directory
 cd(orig_dir);
+end
