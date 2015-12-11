@@ -1,5 +1,5 @@
 function [ batch_session_map ] = neuron_reg_batch(base_struct, reg_struct, varargin)
-% neuron_reg_batch(base_struct, reg_struct, name_append)
+% batch_session_map = neuron_reg_batch(base_struct, reg_struct, varargin)
 %   Registers the neurons in reg_struct to base_struct and also to each
 %   other.  It runs through this two ways: 1) by always registering each
 %   neuron to the base session, or for new neurons found after the first
@@ -24,6 +24,19 @@ function [ batch_session_map ] = neuron_reg_batch(base_struct, reg_struct, varar
 %       'use_neuron_masks': 1 = use neuron masks to register between
 %       sessions. 0 (default) = use minimum projection
 %
+%       'use_alternate_reg': if specified, you can use an alternate
+%       image registration transform to do your image registration.  Must
+%       be followed by two arguments: 1) the affine transform matrix T, and
+%       2) the name you wish to append to the registration file, e.g.
+%       ...'use_alternate_reg', T_alternate, '_reg_with_jitter')
+%
+%       'add_jitter': same as 'use_alternate_reg' except the affine
+%       transform matrix T is multiplied by the actual registration to
+%       induce the specified jitter (e.g. [1 0 0; 0 1 0; 3 4 1] results in
+%       an additional translation of 3 pixels in the x-direction and 4
+%       pixels in the y-direction).  If specified but left empty the
+%       original transform matrix will be used.
+%
 % OUTPUTS:
 %       
 %% Assign empty name_append if left blank
@@ -33,6 +46,8 @@ neuron_mask_append = '';
 use_alternate_reg = 0; % default
 alt_reg_tform = [];
 name_append = '';
+name_append_j = '';
+name_append_alt = '';
 jitter_mat = [];
 for j = 1:length(varargin)
     if strcmpi('name_append',varargin{j})
@@ -46,18 +61,21 @@ for j = 1:length(varargin)
     end
     if strcmpi('use_alternate_reg',varargin{j})
        alt_reg_tform = varargin{j+1};
-       name_append = varargin{j+2};
+       name_append_alt = varargin{j+2};
     end
     if strcmpi('add_jitter',varargin{j})
         jitter_mat = varargin{j+1};
-        name_append = varargin{j+2};
+        name_append_j = varargin{j+2};
     end
 end
 
+full_append = [neuron_mask_append name_append_alt name_append_j name_append];
+
+
 %% Step 1: Run multi_image_reg twice, once with update_masks = 0 and once with update_masks = 1
 
-reg_filename{1} = fullfile(base_struct.Location,['Reg_NeuronIDs_updatemasks0' neuron_mask_append name_append '.mat']);
-reg_filename{2} = fullfile(base_struct.Location,['Reg_NeuronIDs_updatemasks1' neuron_mask_append name_append '.mat']);
+reg_filename{1} = fullfile(base_struct.Location,['Reg_NeuronIDs_updatemasks0' full_append '.mat']);
+reg_filename{2} = fullfile(base_struct.Location,['Reg_NeuronIDs_updatemasks1' full_append '.mat']);
 
 disp('Checking for pre-existing registration files')
 for j = 1:2
@@ -76,8 +94,8 @@ for j = 1:2
         disp(['Running registration with update masks = ' num2str(j-1) ...
             ' & use_neuron_masks = ' num2str(use_neuron_masks)])
         multi_image_reg(base_struct, reg_struct, 'update_masks', j-1,'use_neuron_masks',...
-            use_neuron_masks, 'use_alternate_reg', alt_reg_tform, name_append,...
-            'add_jitter', jitter_mat, name_append);
+            use_neuron_masks, 'use_alternate_reg', alt_reg_tform, name_append_alt,...
+            'add_jitter', jitter_mat, name_append_j,'name_append',name_append);
     end
 end
 
@@ -87,6 +105,7 @@ end
 %     disp('Running registration with update masks = 1')
 %     multi_image_reg(base_struct, reg_struct, 'update_masks', 1);
 % end
+
 
 %% Step 2: Load files
 
@@ -180,11 +199,14 @@ batch_session_map(1).trans_test2_ratio = trans2_ratio_pass;
 base_dir = ChangeDirectory(base_struct(1).Animal, base_struct(1).Date, base_struct(1).Session);
 
 % Append appropriate ending to batch_session_map
-if isempty(name_append)
-    save_name = ['batch_session_map' neuron_mask_append '.mat'];
-else
-    save_name = ['batch_session_map' neuron_mask_append name_append '.mat'];
-end
+% if isempty(name_append)
+%     save_name = ['batch_session_map' neuron_mask_append '.mat'];
+% else
+%     save_name = ['batch_session_map' neuron_mask_append name_append '.mat'];
+% end
+
+save_name = ['batch_session_map' full_append '.mat'];
+
 save(fullfile(base_dir,save_name),'batch_session_map')
 
 end

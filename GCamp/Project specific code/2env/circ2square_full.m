@@ -14,14 +14,10 @@ function [ xtrans, ytrans ] = circ2square_full( session_struct, Pix2Cm )
 circle_rad = 14.33;
 square_side = 25.4;
 %%
-
-keyboard
-
-num_sessions = length(sesh);
 sesh = session_struct;
+num_sessions = length(sesh);
 
 curr_dir = cd;
-
 %% Load all the appropriate data
 ChangeDirectory(sesh.Animal, sesh.Date ,sesh.Session);
 % if ~isempty(regexpi(sesh.Room,'201b'))

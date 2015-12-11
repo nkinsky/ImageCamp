@@ -83,6 +83,9 @@ multi_reg = 0; % default
 debug_escape = 0; % default
 use_neuron_masks = 0; % default
 name_append = []; % default
+name_append_j = '';
+name_append_alt = '';
+name_append_mask = '';
 alt_reg_flag = 0;
 alt_reg_tform = []; % default
 add_jitter = []; % default
@@ -99,25 +102,30 @@ for j = 1:length(varargin)
    if strcmpi('use_neuron_masks',varargin{j})
        use_neuron_masks = varargin{j+1};
        if use_neuron_masks == 1
-           name_append = '_regbyneurons';
+           name_append_mask = '_regbyneurons';
        end
    end
    if strcmpi('use_alternate_reg',varargin{j})
       alt_reg_tform = varargin{j+1};
       if ~isempty(alt_reg_tform) % Don't do anything if left empty
           alt_reg_flag = 1;
-          name_append = varargin{j+2};
+          name_append_alt = varargin{j+2};
       end
    end
    if strcmpi('add_jitter',varargin{j})
        jitter_mat = varargin{j+1};
        if ~isempty(jitter_mat)
            add_jitter = 1;
-           name_append = varargin{j+2};
+           name_append_j = varargin{j+2};
        end
+   end
+   if strcmpi('name_append',varargin{j})
+       name_append = varargin{j+1};
    end
 end
 
+name_append = [name_append_mask name_append_alt name_append_j name_append];
+name_append_reginfo = [name_append_mask name_append_alt name_append_j];
 
 %% Perform Image Registration
 [RegistrationInfoX, imreg_unique_filename] = image_registerX(mouse_name, base_date, base_session, ...
@@ -140,7 +148,7 @@ end
 % keyboard
 % Save updated RegistrationInfoX if updated
 if save_alt == 1
-    alt_filename = [imreg_unique_filename(1:end-4) name_append '.mat'];
+    alt_filename = [imreg_unique_filename(1:end-4) name_append_reginfo '.mat'];
     save(alt_filename,'RegistrationInfoX');
 end
 

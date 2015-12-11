@@ -12,7 +12,7 @@ function [ min_dist ] = get_PF_centroid_diff( PlaceMap1, PlaceMap2, neuron_map, 
 %       neuron_map: array the length of PlaceMap1 that designates which
 %       neuron in session2 maps to session1.  0 = no neuron maps.
 %
-%       centroid_inpu5t: 1 = indicates that centroids (obtained from get_PF_centroid) are
+%       centroid_input: 1 = indicates that centroids (obtained from get_PF_centroid) are
 %       entered in lieu of the PlacMap cell arrays for the first two
 %       inputs. Use if running a lot to save time.  0 = default
 %
@@ -34,8 +34,9 @@ end
 %%
 thresh = 0.9; % PF threshold
 
-num_neurons(1) = length(PlaceMap1);
-num_neurons(2) = length(PlaceMap2);
+% Get number of valid neurons in each session
+num_neurons(1) = min([length(PlaceMap1) length(neuron_map)]); % if a number of the last neurons have no valid map, this catches that
+num_neurons(2) = min([length(PlaceMap2) max(neuron_map)]);
 %%
 if centroid_input == 0
     session(1).PF_centroid = get_PF_centroid(PlaceMap1,thresh);
@@ -48,9 +49,8 @@ end
 %% Calculate distance to closest PF centroid
 min_dist = nan(num_neurons(1),1);
 for j = 1:num_neurons(1)
-    neuron2 = neuron_map(j); % Get second session neuron to use
     try % Error catching statement
-        
+        neuron2 = neuron_map(j); % Get second session neuron to use
         if neuron2 ~= 0 && neuron2 <= num_neurons(1)% proceed only if there is a valid neuron in the second session
             
             % Identify the number of PlaceMaps that are legitimate (i.e. are not NaN)
@@ -74,7 +74,7 @@ for j = 1:num_neurons(1)
         else
             min_dist(j) = nan;
         end
-    
+        
     catch
         disp('Error catching in get_PF_centroid_diff')
         keyboard

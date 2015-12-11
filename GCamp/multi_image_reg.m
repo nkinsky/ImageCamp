@@ -115,6 +115,9 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
     update_masks = 0; % Default value
     use_neuron_masks = 0; % default
     name_append = '';
+    name_append_j = '';
+    name_append_alt = '';
+    name_append_mask = '';
     alt_reg_tform = []; 
     for j = 1:length(varargin)
         if strcmpi('check_neuron_mapping',varargin{j})
@@ -126,19 +129,26 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
         if strcmpi('use_neuron_masks',varargin{j})
             use_neuron_masks = varargin{j+1};
             if use_neuron_masks == 1
-                name_append = '_regbyneurons';
+                name_append_mask = '_regbyneurons';
             end
         end
         if strcmpi('use_alternate_reg',varargin{j})
             alt_reg_tform = varargin{j+1};
-            name_append = varargin{j+2};
+            name_append_alt = varargin{j+2};
         end
         if strcmpi('add_jitter',varargin{j})
             jitter_mat = varargin{j+1};
-            name_append = varargin{j+2};
+            name_append_j = varargin{j+2};
+        end
+        if strcmpi('name_append',varargin{j})
+            name_append = varargin{j+1};
         end
     end
     
+    % Name to append to RegInfo file if the applied transform has been
+    % modified from normal
+    name_append_reginfo = [name_append_mask name_append_alt name_append_j]; 
+
     if length(check_neuron_mapping) == 1 && length(check_neuron_mapping) < num_sessions
         check_neuron_mapping = ones(1,num_sessions)*check_neuron_mapping;
     end
@@ -176,7 +186,7 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
         % registration
         unique_filename{this_session} = fullfile(base_path,['RegistrationInfo-' ...
             reg_struct(this_session).Animal '-' reg_struct(this_session).Date ...
-            '-session' num2str(reg_struct(this_session).Session) name_append '.mat']);
+            '-session' num2str(reg_struct(this_session).Session) name_append_reginfo '.mat']);
         
        
         % Check to make sure you are looking at the same mouse for each
@@ -207,14 +217,15 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
                 base_struct.Session, reg_struct(this_session).Date, ...
                 reg_struct(this_session).Session, check_neuron_mapping(this_session),...
                  'multi_reg',0,'use_neuron_masks',use_neuron_masks,'use_alternate_reg',...
-                 alt_reg_tform, name_append,'add_jitter',jitter_mat,name_append); % NRK - add in use_alternate_reg here and below and in neuron_reg_batch!!
+                 alt_reg_tform, name_append_alt,'add_jitter',jitter_mat,name_append_j,...
+                 'name_append',name_append); % NRK - add in use_alternate_reg here and below and in neuron_reg_batch!!
         elseif this_session > 1
             neuron_map = image_register_simple(mouse, base_struct.Date,...
                 base_struct.Session, reg_struct(this_session).Date, ...
                 reg_struct(this_session).Session, check_neuron_mapping(this_session),...
                 'multi_reg',update_masks + 1,'use_neuron_masks', use_neuron_masks, ...
-                'use_alternate_reg',alt_reg_tform, name_append,'add_jitter', ...
-                jitter_mat,name_append);
+                'use_alternate_reg',alt_reg_tform, name_append_alt,'add_jitter', ...
+                jitter_mat,name_append_j,'name_append',name_append);
         end
         % First, get all neurons in registered session that have multiple
         % neurons from the base session map to it
