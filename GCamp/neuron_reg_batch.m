@@ -127,10 +127,11 @@ end
 
 % First, send all_neuron_map to an array rather than a cell so that you can
 % do comparisons easier
+%%
 for m = 1:2
     for j = 1:size(all_session_map(m).map,1)
         for k = 1:size(all_session_map(m).map,2)
-            if ~isempty(all_session_map(m).map{j,k}) && ~isnan(all_session_map(m).map{j,k})
+            if ~isempty(all_session_map(m).map{j,k}) % && ~isnan(all_session_map(m).map{j,k})
                 test(m).map(j,k) = all_session_map(m).map{j,k};
             else
                 test(m).map(j,k) = 0;
@@ -139,6 +140,7 @@ for m = 1:2
     end
 end
 
+%%
 max_neuron_num = max(test(1).map,[],1);
 
 % march through each neuron and do the transitive test. 1 = very stringent,
@@ -147,18 +149,26 @@ trans_test1 = zeros(size(test(1).map,1));
 trans_test2 = ones(size(test(1).map));
 row_end = 0;
 for i = 2:length(max_neuron_num)
+    % Step through all the valid rows/neurons in session i, comparing the
+    % mapping with updatemasks = 1 to updatemasks = 2.  Then, step through
+    % only the newly added neurons for the next session, and so forth.
+    % Could probably just pull this info from Reg_NeuronIDs...
     row_start = row_end + 1; % Row/neuron number to start with
-    row_end = find(test(1).map(:,i),1,'last'); % Row/neuron number to end with
+    row_end = find(test(1).map(:,i) > 0 | isnan(test(1).map(:,i)),1,'last'); % Row/neuron number to end with (last row with a non-zero or nan entry)
+    
+    row_end_save(i) = row_end; % For debugging/internal information only
+    row_start_save(i) = row_start;
     
     for j = row_start:row_end
         % find matching neuron row in test(2)
         row_ind_use = test(2).map(:,i) == test(1).map(j,i);
         if ~isempty(row_ind_use) &&  sum(row_ind_use) == 1 % put ones every session where the two neuron mappings match
             % effectively identifying each neuron that maps the same
-            trans_test2(j,:) = test(1).map(j,:) == test(2).map(row_ind_use,:);
+            trans_test2(j,:) = test(1).map(j,:) == test(2).map(row_ind_use,:)...
+                | (isnan(test(1).map(j,:)) & isnan(test(2).map(row_ind_use,:))); % Put ones wherever both reg types map the same
             % see if all session mappings for that neuron pass the transitive test
             trans_test1(j) = sum(trans_test2(j,:)) == length(trans_test2(j,:));
-        else % Send everything to zeros if it doesn't match anywhere!
+        else % Send everything to zeros if it doesn't match anywhere! - edge case
             trans_test2(j,:) = zeros(size(test(1).map(j,:)));
         end
         
@@ -175,7 +185,10 @@ trans2_ratio_pass = sum(ok_after2(:))/sum(ok_orig2(:));
 %% Step 4: Parse out/keep only the mappings that pass the transitive test 
 % and spit those out / save them
 
-batch_session_map(1).map = trans_test2.*test(1).map;
+% multiple each element of the map by either a 1 or a 0 if it passes or if
+% it doesnt...(If I multiply trans_test2 by nan then I will get nans for
+% any neurons that don't properly map...)
+batch_session_map(1).map = trans_test2.*test(1).map; 
 batch_session_map(1).map(:,1) = [1:size(batch_session_map(1).map,1)]';
 % Send all session info to stay with the map
 [batch_session_map(1).session(1).mouse] = ...
