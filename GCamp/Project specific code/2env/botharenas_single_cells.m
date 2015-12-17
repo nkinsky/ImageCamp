@@ -7,8 +7,17 @@
 % 2) Distance between fields for each neuron
 % 3) Conditional probability for path equivalent coding GIVEN a neuron
 % exhibited path equivalence on days 5-6
+% 4) Number of cells that are active in each arena for mouse AFTER
+% separation
 
+close all
 
+%% Batch run parameters
+
+% Enter sessions to look at here
+sessions_use_cell = {G30_botharenas,G31_botharenas,G45_botharenas,G48_botharenas};
+
+for zz = 1:length(sessions_use_cell)
 %% Parameters
 PF_thresh = 0.9;
 SR = 20; % sampling rate - shouldn't change from 20 most likely
@@ -16,13 +25,14 @@ SR = 20; % sampling rate - shouldn't change from 20 most likely
 twoenv_reference; % Run this script to set everything up
 
 %%% Enter sessions to analyze here !!! %%%
-session_num_use = G45_botharenas;
+session_num_use = sessions_use_cell{zz}; %G31_botharenas;
 
 % Indicate if you want to rotate each arena back to the standard
 % configuration (1) or not (0) for all sessions
-rot_to_std = 0; % Rotate data back such that local cues align
+rot_to_std = 1; % Rotate data back such that local cues align
 use_trans = 1; % Use circle->square transformed data.
 
+corr_type = 'Spearman'; % type of correlation to use for PV correlations
 %% Set up script
 
 curr_dir = cd;
@@ -49,6 +59,7 @@ end
 session_struct = MD(session_num_use); % Pull appropriate data from database
 sesh = session_struct;
 
+disp(['<<<<<<< RUNNING ANALYSIS FOR MOUSE ' session_struct(1).Animal ' >>>>>>>'])
 % Load batch_session_map
 ChangeDirectory_NK(session_struct(1));
 load('batch_session_map_botharenas.mat');
@@ -220,6 +231,9 @@ for j = 1:6
 end
 
 %% Find neurons with similar position fields on each day
+% Follow through with this!!! Plot out for each day?
+
+
 dist_thresh = 5; % Arbitrary distance for PFs being the "same"
 homotopic = cell(1,8);
 master_neuron_id = cell(1,8);
@@ -239,19 +253,34 @@ same_5_6_indices = find(cellfun(@(a) ~isempty(a),temp));
 same_5_6_master = master_neuron_id{5}(same_5_6_indices);
 
 %% Get FR for each neuron in square and circle sessions
-FR_all_sessions = zeros(size(batch_map,1),size(batch_map,2)-1); %nan(size(batch_map,1),size(batch_map,2)-1);
+FR_all_sessions = zeros(size(batch_map,1),size(batch_map,2)-1); % set all neuron base firing rates to 0.  Is this legit? probably should send multi-mapping ones to nans!!!
 FR_all_sessions_orig{j} = cell(1,length(sesh));
 % FR_all_sessions_orig = nan(size(batch_map,1),size(batch_map,2)-1);
 for j = 1:length(sesh)
     temp_FR = sum(sesh(j).FT(:,sesh(j).frames_include),2)/...
         (length(sesh(j).FT(:,sesh(j).frames_include))/20); % Firing rate in Hz for each neuron - using only frames_include makes sure that you only get points for square or circle during connected times
     map_use = batch_map(:,j+1);
-    for k = 1:max(map_use)
-       neuron_id = find(map_use == k);
-       if neuron_id ~= 0
-           FR_all_sessions(neuron_id,j) = temp_FR(k); % Assign FR for that session to appropriate master neuron number
-       end
-    end
+    
+    FR_all_sessions(:,j) = assign_FR( temp_FR, map_use );
+%     nan_neurons = find(isnan(batch_map));
+%     
+%     temp = unique(map_use); % Get numbers of all neurons properly mapped in this session
+%     map_unique = temp(~isnan(temp) & temp ~= 0);
+%     
+%     for k = map_unique % 1:max(map_use)
+%         neuron_id = find(map_use == k);
+%         FR_all_sessions(neuron_id,j) = temp_FR(k); % Assign FR for that session to appropriate master neuron number
+%         
+%         %%%% Old code %%%%
+%         %        neuron_id = find(map_use == k);
+%         %        if ~isempty(neuron_id)
+%         %            FR_all_sessions(neuron_id,j) = temp_FR(k); % Assign FR for that session to appropriate master neuron number
+%         %        end
+%     end
+%     
+%     % Put nans wherever the neuron is not properly mapped
+%     temp_FR(nan_neurons) = nan(length(nan_neurons),1);
+%     
     FR_all_sessions_orig{j} = temp_FR;
 end
 
@@ -362,30 +391,34 @@ for m = 1:length(sesh)
     [~,Ybin] = histc(sesh(m).y,Yedges);
     
     % Fill in edge-cases
-    Xbin(find(Xbin == (NumXBins+1))) = NumXBins;
-    Ybin(find(Ybin == (NumYBins+1))) = NumYBins;
-    Xbin(find(Xbin == 0)) = 1;
-    Ybin(find(Ybin == 0)) = 1;
+%     Xbin(find(Xbin == (NumXBins+1))) = NumXBins;
+%     Ybin(find(Ybin == (NumYBins+1))) = NumYBins;
+%     Xbin(find(Xbin == 0)) = 1;
+%     Ybin(find(Ybin == 0)) = 1;
     
     for j = 1:NumXBins
         for k = 1:NumYBins
             temp_FR = sum(sesh(m).FT(:,Xbin == j & Ybin == k),2)/...
                 (length(sesh(m).FT(:,sesh(m).frames_include))/20); % Firing rate in Hz for each neuron - using only frames_include makes sure that you only get points for square or circle during connected times
             map_use = batch_map(:,m+1);
-            for ll = 1:max(map_use)
-                neuron_id = find(map_use == ll);
-                if neuron_id ~= 0
-                    PV(m,j,k,neuron_id) = temp_FR(ll); % Assign FR for that session to appropriate master neuron number
-                end
-            end
+            
+            PV(m,j,k,:) = assign_FR( temp_FR, map_use );
+%             for ll = 1:max(map_use)
+%                 neuron_id = find(map_use == ll);
+%                 if ~isempty(neuron_id)
+%                     PV(m,j,k,neuron_id) = temp_FR(ll); % Assign FR for that session to appropriate master neuron number
+%                 end
+%             end
             
         end
     end
 end
 
 %% Get PV correlations for all comparisons!
+
 disp('Calculating PV correlations across all arenas')
 PV_corr = nan(length(sesh),length(sesh),NumXBins,NumYBins);
+PV_corr_shuffle = nan(length(sesh),length(sesh),NumXBins,NumYBins);
 for m = 1:length(sesh)
     for ll = 1:length(sesh)
         for j = 1:NumXBins
@@ -414,13 +447,16 @@ for m = 1:length(sesh)
                 
                 % Create shuffled distribution - randomly switch neuron
                 % identity in second session
-                shuffle_ind = ind_use_both(randperm(length(PV2_use)));
+                PV2_shuffle = PV2_use(randperm(length(PV2_use)));
+%                 shuffle_ind = ind_use_both(randperm(length(PV2_use)));
                 
-                temp = corr(PV1_use,PV2_use);
-                temp_shuffle = corr(PV1_use,PV2_use(shuffle_ind));
+                % Get correlations
+                PV_corr(m,ll,j,k) = corr(PV1_use,PV2_use,'type',corr_type);
+                PV_corr_shuffle(m,ll,j,k) = corr(PV1_use,PV2_shuffle,...
+                    'type',corr_type);
                
-                PV_corr(m,ll,j,k) = temp(1,2);
-                PV_corr_shuffle(m,ll,j,k) = temp_shuffle(1,2);
+%                 PV_corr(m,ll,j,k) = temp(1,2);
+%                 PV_corr_shuffle(m,ll,j,k) = temp_shuffle(1,2);
             end
         end
     end
@@ -428,13 +464,147 @@ end
 
 % Aggregate
 PV_corr_mean = zeros(length(sesh),length(sesh));
+PV_corr_shuffle_mean = zeros(length(sesh),length(sesh));
 for ll = 1:length(sesh)
     for mm = 1:length(sesh)
         PV_corr_mean(ll,mm) = mean(squeeze(PV_corr(ll,mm,:)),1);
+        PV_corr_shuffle_mean(ll,mm) = mean(squeeze(PV_corr_shuffle(ll,mm,:)),1);
     end
 end
 figure(206)
 imagesc(PV_corr_mean); colorbar
 title(['PV correlations between all sessions rot_to_std = ' num2str(rot_to_std)])
 
+figure(207)
+imagesc(PV_corr_mean-PV_corr_shuffle_mean); colorbar
+title(['PV correlations - shuffled correlations between all sessions rot_to_std = ' num2str(rot_to_std)])
+
+%% Comparisons
+% Separate arenas only
+win_day{1} = [1 2; 3 4; 5 6; 7 8; 13 14; 15 16]; 
+day{1} = [3 5; 3 6; 4 5; 4 6];
+day{3} = [1 7; 1 8; 2 7; 2 8; 7 13; 7 14; 8 13; 8 14];
+day{5} = [5 15; 5 16; 6 15; 6 16];
+day{6} = [1 13; 1 14; 2 13; 2 14; 3 15; 3 16; 4 15; 4 16];
+
+% With connected - need to double check
+day_conn{1} = [7 9; 8 9; 12 13; 12 14; 9 12; 10 11];
+day_conn{2} = [5 10; 6 10; 7 12; 8 12; 10 13; 10 14; 11 15; 11 16];
+day_conn{3} = [3 10; 4 10; 5 11; 6 11; 9 15; 9 16];
+day_conn{4} = [3 11; 4 11; 1 9; 2 9];
+day_conn{5} = [1 12; 2 12];
+day_conn{6} = [];
+
+day_all = cell(1,6);
+for j = 1:length(day)
+   day_all{j} = [day{j}; day_conn{j}]; 
+end
+
+% day_sq{1} = [
+
+PV_across_days_sep = compare_PV_across_days( PV_corr_mean, PV_corr_shuffle_mean, ...
+    PV_corr, PV_corr_shuffle, day );
+PV_within_day = compare_PV_across_days( PV_corr_mean, PV_corr_shuffle_mean, ...
+    PV_corr, PV_corr_shuffle, win_day );
+PV_across_days_conn = compare_PV_across_days( PV_corr_mean, PV_corr_shuffle_mean, ...
+    PV_corr, PV_corr_shuffle, day_conn );
+PV_across_days_all = compare_PV_across_days( PV_corr_mean, PV_corr_shuffle_mean, ...
+    PV_corr, PV_corr_shuffle, day_all );
+
+% day_comp = [0 1 3 5 6]; % Time (in days) between sessions
+% 
+% PV_across_days = cell(1,length(day_comp));
+% PV_across_days_shuffle = cell(1,length(day_comp));
+% PV_across_days_mid = cell(1,length(day_comp));
+% PV_across_days_mid_shuffle = cell(1,length(day_comp));
+% for j = 1:length(day_comp)
+%     if day_comp(j) ~= 0
+%         compare_sesh = day{day_comp(j)};
+%     elseif day_comp(j) == 0
+%         compare_sesh = win_day;
+%     end
+%     
+%     temp = [];
+%     temp_shuf = [];
+%     temp_mid = [];
+%     temp_mid_shuf = [];
+%     for k = 1:size(compare_sesh,1)
+%        temp = [ temp; PV_corr_mean(compare_sesh(k,1), compare_sesh(k,2))];
+%        temp_shuf = [ temp_shuf; PV_corr_shuffle_mean(compare_sesh(k,1), compare_sesh(k,2))];
+%        temp_mid = [ temp_mid; PV_corr(compare_sesh(k,1), compare_sesh(k,2),3,3)];
+%        temp_mid_shuf = [ temp_mid_shuf; PV_corr_shuffle(compare_sesh(k,1), compare_sesh(k,2),3,3)];
+%     end
+%     PV_across_days{j} = temp;
+%     PV_across_days_shuffle{j} = temp_shuf;
+%     PV_across_days_mid{j} = temp_mid;
+%     PV_across_days_mid_shuffle{j} = temp_mid_shuf;
+%     
+% end
+
+%% Aggregate everything into Mouse variables
+num_sessions = length(sesh);
+Mouse(zz).Animal = sesh(1).Animal;
+[Mouse(zz).sesh(1:num_sessions).Date] = deal(sesh(1:num_sessions).Date);
+[Mouse(zz).sesh(1:num_sessions).Session] = deal(sesh(1:num_sessions).Session);
+Mouse(zz).min_dist = min_dist;
+Mouse(zz).min_dist_win = min_dist_win;
+Mouse(zz).min_dist_all = min_dist_all;
+Mouse(zz).min_dist_win_all = min_dist_win_all;
+Mouse(zz).min_dist_before = min_dist_before;
+Mouse(zz).min_dist_during = min_dist_during;
+Mouse(zz).min_dist_after = min_dist_after;
+Mouse(zz).FR_square = FR_square;
+Mouse(zz).FR_oct = FR_oct;
+Mouse(zz).discr_before = discr_before;
+Mouse(zz).discr_during = discr_during;
+Mouse(zz).discr_after = discr_after;
+Mouse(zz).PV = PV;
+Mouse(zz).PV_corr = PV_corr;
+Mouse(zz).PV_corr_shuffle = PV_corr_shuffle;
+Mouse(zz).PV_corr_mean = PV_corr_mean;
+Mouse(zz).PV_corr_shuffle_mean = PV_corr_shuffle_mean;
+Mouse(zz).PV_across_days_sep = PV_across_days_sep;
+Mouse(zz).PV_within_day = PV_within_day;
+Mouse(zz).PV_across_days_conn = PV_across_days_conn;
+Mouse(zz).PV_across_days_all = PV_across_days_all;
+
+if zz == 1
+    All.min_dist_before = min_dist_before;
+    All.min_dist_after = min_dist_after;
+    All.min_dist_during = min_dist_during;
+    All.discr_before = discr_before;
+    All.discr_during = discr_during;
+    All.discr_after = discr_after;
+    All.PV_across_days_sep = PV_across_days_sep;
+    All.PV_within_day = PV_within_day;
+    All.PV_across_days_conn = PV_across_days_conn;
+    All.PV_across_days_all = PV_across_days_all;
+elseif zz ~= 1
+    All.discr_before = [All.discr_before ; discr_before ];
+    All.discr_during = [All.discr_during ; discr_during ];
+    All.discr_after = [All.discr_after ; discr_after ];
+    for mmm = 1:length(PV_across_days_all.mean);
+        All.PV_across_days_all.mean{mmm} = [All.PV_across_days_all.mean{mmm} ;
+            PV_across_days_all.mean{mmm}];
+    end
+end
+
+end % End loop through each mouse
+
+%% Plot stuff for all mice and each mouse individually
+
+figure(345);
+subplot(2,3,1); ecdf(abs(All.discr_before)); hold on; 
+ecdf(abs(All.discr_during)); 
+ecdf(abs(All.discr_after)); 
+legend('Before', 'During', 'After'); 
+title('All Mice Combined');
+for j = 1:4; 
+    subplot(2,3,j+1); 
+    ecdf(abs(Mouse(j).discr_before)); hold on; 
+    ecdf(abs(Mouse(j).discr_during)); 
+    ecdf(abs(Mouse(j).discr_after)); 
+    legend('Before', 'During', 'After'); 
+    title(Mouse(j).Animal);
+end;
 
