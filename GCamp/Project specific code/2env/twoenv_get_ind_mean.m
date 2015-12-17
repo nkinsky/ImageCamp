@@ -105,7 +105,7 @@ for k = 1:length(animal_struct)
             indices_use = make_mega_sub2ind(size(animal_struct(k).corr_matrix{arena_use,j}),...
                 sub_use(sub_use_index,2),sub_use(sub_use_index,3)); % convert subs to indices
             
-            temp = animal_struct.corr_matrix{local_flag,j}(indices_use);
+            temp = animal_struct(k).corr_matrix{local_flag,j}(indices_use);
             all_out = [all_out; temp]; % Add appropriate comparisons into temp_out
             all_means = [all_means; nanmean(temp)];
         end
