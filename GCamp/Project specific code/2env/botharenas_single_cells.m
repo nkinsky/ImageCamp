@@ -543,7 +543,8 @@ PV_across_days_all = compare_PV_across_days( PV_corr_mean, PV_corr_shuffle_mean,
 
 %% Aggregate everything into Mouse variables
 num_sessions = length(sesh);
-Mouse(zz).Animal = sesh(1).Animal;
+Mouse(zz).Animal = sesh(1).Animal; %#ok<*SAGROW>
+Mouse(zz).batch_map = batch_map;
 [Mouse(zz).sesh(1:num_sessions).Date] = deal(sesh(1:num_sessions).Date);
 [Mouse(zz).sesh(1:num_sessions).Session] = deal(sesh(1:num_sessions).Session);
 Mouse(zz).min_dist = min_dist;
@@ -607,4 +608,49 @@ for j = 1:4;
     legend('Before', 'During', 'After'); 
     title(Mouse(j).Animal);
 end;
+
+%% QC discriminating neurons by plotting them on the appropriate all_ICmask
+plot_this = 0;
+
+mouse_num = 2;
+compare_sesh = [13 15];
+
+% Get neurons that fire in one arena but not the other between the two
+% sessions above
+discr_neurons1 = find(Mouse(mouse_num).discr_after == -1 & ...
+    Mouse(mouse_num).batch_map(:,compare_sesh(2)+1) ~= 0 &...
+    ~isnan(Mouse(mouse_num).batch_map(:,compare_sesh(2) + 1)));
+
+ChangeDirectory(Mouse(mouse_num).Animal,Mouse(mouse_num).sesh(1).Date,...
+    Mouse(mouse_num).sesh(1).Session);
+
+for j = 1:2
+    load(['RegistrationInfo-' Mouse(mouse_num).Animal '-' ...
+        Mouse(mouse_num).sesh(compare_sesh(j)).Date '-session' ...
+        num2str(Mouse(mouse_num).sesh(compare_sesh(j)).Session) '.mat']);
+    reginfo{j} = RegistrationInfoX;
+end
+
+ChangeDirectory(Mouse(mouse_num).Animal,Mouse(mouse_num).sesh(compare_sesh(1)).Date,...
+    Mouse(mouse_num).sesh(compare_sesh(1)).Session);
+load('ProcOut.mat', 'NeuronImage','InitPixelList','Xdim','Ydim','cTon');
+AllICmask = create_AllICmask(NeuronImage);
+AllICmask_reg = imwarp_quick(AllICmask,reginfo{1});
+
+% Steal code from PlotNeuronOutlines to only draw the neuron outlines, or
+% even the Transient outlines, but without using bwboundaries
+
+
+ChangeDirectory(Mouse(mouse_num).Animal,Mouse(mouse_num).sesh(compare_sesh(2)).Date,...
+    Mouse(mouse_num).sesh(compare_sesh(2)).Session);
+load('ProcOut.mat', 'NeuronImage');
+figure(100);
+for j = 1:length(discr_neurons1)
+    neuron_use = discr_neurons1(j);
+    neuron_reg = imwarp_quick(NeuronImage{Mouse(mouse_num).batch_map(neuron_use,...
+        compare_sesh(2)+1)}, reginfo{2});
+    imagesc(AllICmask_reg + 2*neuron_reg)
+    waitforbuttonpress
+end
+
 
