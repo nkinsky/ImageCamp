@@ -6,6 +6,8 @@
 % _aligned = no conflict between local and distal cues (sessions are NOT
 % rotated relative to one another)
 
+sameday_ind = [1 2; 3 4; 5 nan; 6 nan; 7 8]; % session indices that occur on the same day
+
 % G30
 before_win_conflict{1} = [ 1 1 4; 1 2 4; 1 3 4; 2 1 2; 2 1 4; 2 2 3; 2 2 4; 2 3 4];
 before_win_aligned{1} = [ 1 1 2; 1 1 3; 1 2 3; 2 1 3];
@@ -108,8 +110,6 @@ conn1_conn2_conflict{4} = [1 5 6; 2 5 6];
 conn1_conn2_aligned{4} = [];
 %% Combine all
 
-conflict_indices_all = [];
-aligned_indices_all = [];
 for j = 1:length(before_win_conflict)
    conflict_indices_all{j} = [before_win_conflict{j}; ...
        after_win_conflict{j}; before_after_conflict{j}; before_5_conflict{j}; ...
@@ -119,6 +119,10 @@ for j = 1:length(before_win_conflict)
        after_win_aligned{j}; before_after_aligned{j}; before_5_aligned{j}; ...
        before_6_aligned{j}; after_5_aligned{j}; after_6_aligned{j}; 
        conn1_conn2_aligned{j}];
+   % Combine all indices where the two environments are separate and both
+   % the local and distal cues are aligned
+   aligned_indices_separate_all{j} = [before_win_aligned{j}; ...
+       after_win_aligned{j}; before_after_aligned{j}];
 end
 
 %% Time indices
