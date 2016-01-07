@@ -129,11 +129,23 @@ end
 
 %% Get basic stats - not done for population correlations yet
 
+exclude_G48 = 2; % Use if you want to exclude G48 due to high remapping within session
+% and/or different behavior from other mice (very low velocity and poor
+% coverage of the arena). 2 = exclude G45 AND G48
+
 % Better way to do things in the future is to get values for ALL neuron correlations in
 % each session and group them together somehow after classifying them due
 % to the various comparisons below
-mean_simple_distal_align = mean(mega_mean(1).matrix,3);
-mean_simple_local_align = mean(mega_mean(2).matrix,3);
+if exclude_G48 == 0
+    mean_simple_distal_align = mean(mega_mean(1).matrix,3);
+    mean_simple_local_align = mean(mega_mean(2).matrix,3);
+elseif exclude_G48 == 1
+    mean_simple_distal_align = mean(mega_mean(1).matrix(:,:,1:6),3);
+    mean_simple_local_align = mean(mega_mean(2).matrix(:,:,1:6),3);
+elseif exclude_G48 == 2
+    mean_simple_distal_align = mean(mega_mean(1).matrix(:,:,1:4),3);
+    mean_simple_local_align = mean(mega_mean(2).matrix(:,:,1:4),3);
+end
 if isnan(sum(mean_simple_local_align(:))) || isnan(sum(mean_simple_distal_align(:)))
     disp('Note - some sessions have NO good correlations due to not meeting the threshold - be sure to check!')
     mean_simple_distal_align = nanmean(mega_mean(1).matrix,3);
@@ -244,7 +256,14 @@ pop_after_6_distal_sem = std(mean_simple_pop_distal_align(after_6_distal_ind))/s
 
 % Attempt to get more legit statistics - get mean of ALL comparisons
 % across all mice, not mean of means...confusing, I know, but more legit
-mega_size = size(mega_mean(2).matrix);
+if exclude_G48 == 0
+    mega_size = [8 8 8]; % mega_size = size(mega_mean(2).matrix);
+elseif exclude_G48 == 1
+    mega_size = [8 8 6];
+elseif exclude_G48 == 2
+    mega_size = [8 8 4];
+end
+
 before_win_local_ind = make_mega_sub2ind(mega_size, before_win_local(:,1), before_win_local(:,2)); 
 before_win_distal_ind = make_mega_sub2ind(mega_size, before_win_distal(:,1), before_win_distal(:,2));
 before_after_local_ind = make_mega_sub2ind(mega_size, before_after_local(:,1), before_after_local(:,2)); 
@@ -323,14 +342,17 @@ end
 %% Do above but with better indices
 
 twoenv_betterindices; % Run script to get better indices
-separate_conflict = cellfun(@(a,b) [a; b],before_win_conflict, before_after_conflict,'UniformOutput',0);
-separate_aligned = cellfun(@(a,b) [a; b],before_win_aligned, before_after_aligned,'UniformOutput',0);
+separate_conflict = cellfun(@(a,b,c) [a; b; c],before_win_conflict, after_win_conflict,...
+    before_after_conflict,'UniformOutput',0);
+separate_aligned = cellfun(@(a,b,c) [a; b; c],before_win_aligned, after_win_conflict, ...
+    before_after_aligned,'UniformOutput',0);
 
 sep_conn1_conflict = cellfun(@(a,b) [a; b],before_5_conflict, after_5_conflict,'UniformOutput',0);
 sep_conn1_aligned = cellfun(@(a,b) [a; b],before_5_aligned, after_5_aligned,'UniformOutput',0);
 
 sep_conn2_conflict = cellfun(@(a,b) [a; b],before_6_conflict, after_6_conflict,'UniformOutput',0);
 sep_conn2_aligned = cellfun(@(a,b) [a; b],before_6_aligned, after_6_aligned,'UniformOutput',0);
+
 
 for j = 1:length(Mouse)
     [ Mouse(j).local_stat2.separate_win, Mouse(j).distal_stat2.separate_win,  ...
@@ -346,15 +368,34 @@ for j = 1:length(Mouse)
         Mouse(j).both_stat2.before_after] = twoenv_get_ind_mean(Mouse(j), ...
         before_after_conflict{j}, before_after_conflict{j}, 'both_sub_use',before_after_aligned{j});
     
+    Mouse(j).both_stat2.separate_win_time = get_time_from_session(separate_aligned{j},...
+        time_index);
+    
 end
 
+%% Combine all stats
+local_stat2_all = twoenv_combine_stats('local_stat2',Mouse(1),Mouse(2),...
+    Mouse(3),Mouse(4));
+distal_stat2_all = twoenv_combine_stats('distal_stat2',Mouse(1),Mouse(2),...
+    Mouse(3),Mouse(4));
+both_stat2_all = twoenv_combine_stats('both_stat2',Mouse(1),Mouse(2),...
+    Mouse(3),Mouse(4));
 
+local_stat2_all_noG48 = twoenv_combine_stats('local_stat2',Mouse(1),Mouse(2),...
+    Mouse(3));
+distal_stat2_all_noG48 = twoenv_combine_stats('distal_stat2',Mouse(1),Mouse(2),...
+    Mouse(3));
+both_stat2_all_noG48 = twoenv_combine_stats('both_stat2',Mouse(1),Mouse(2),...
+    Mouse(3));
 
+local_stat2_all_noG45G48 = twoenv_combine_stats('local_stat2',Mouse(1),Mouse(2));
+distal_stat2_all_noG45G48 = twoenv_combine_stats('distal_stat2',Mouse(1),Mouse(2));
+both_stat2_all_noG45G48 = twoenv_combine_stats('both_stat2',Mouse(1),Mouse(2));
 
 %% Attempt to do above for day restricted data
-for ll = 2:8
-   twoenv_bars( mega_mean_byday(ll).mega_mean, shuffle_comb, ll) 
-end
+% for ll = 2:8
+%    twoenv_bars( mega_mean_byday(ll).mega_mean, shuffle_comb, ll) 
+% end
 
 %% First attempt to get real stats
 
@@ -378,6 +419,7 @@ end
 nanmean(after_5_local_comb);
 nanstd(after_5_local_comb);
 
+% First stab
 [ statss.after_5.h, statss.after_5.p ] = twoenv_kstest( Mouse, shuffle_comb, after_5_local, after_5_distal);
 [ statss.sep_win.h, statss.sep_win.p, statss.sep_win.mean ] = twoenv_kstest( Mouse, shuffle_comb, ...
     separate_win_local, separate_win_distal,'plot_ecdf','separate');
@@ -387,6 +429,33 @@ nanstd(after_5_local_comb);
     sep_conn2_local, sep_conn2_distal,'plot_ecdf','sep_conn2');
 [ statss.before_after.h, statss.before_after.p, statss.before_after.mean] = twoenv_kstest( Mouse, shuffle_comb, ...
     before_after_local, before_after_distal,'plot_ecdf','before_after');
+
+%% Second stab - includes both aligned data!
+
+compare_types = {'separate_win','sep_conn1','sep_conn2','before_after'};
+plot_title = {'Separate','Separate - Connected Day 1','Separate - Connected Day 2',...
+    'Before - After'};
+figure(400)
+for j = 1:4
+subplot(2,2,j)
+[f1, x1] = ecdf(local_stat2_all.(compare_types{j}).all);
+[f2, x2] = ecdf(distal_stat2_all.(compare_types{j}).all);
+if ~isempty(both_stat2_all.(compare_types{j}).all) % don't plot if empty
+    [f3, x3] = ecdf(both_stat2_all.(compare_types{j}).all);   
+end
+[fshuf, xshuf] = ecdf(shuffle_comb(:));
+
+if ~isempty(both_stat2_all.(compare_types{j}).all)
+    plot(x1,f1,'b',x2,f2,'y',x3,f3,'r',xshuf,fshuf,'k-.')
+    legend('Local Cues aligned','Distal Cues Aligned','Both Cues Aligned','Shuffled')
+else
+    plot(x1,f1,'b',x2,f2,'y',xshuf,fshuf,'k-.')
+    legend('Local Cues Aligned','Distal Cues Aligned','Shuffled')
+end
+title(plot_title{j});
+xlabel('TMap correlations')
+end
+
 
 %% Plot individual neuron summaries
 error_on = 1;
@@ -438,6 +507,31 @@ h_legend = legend([h(1) h(2) h2],'Local cues aligned','Distal cues aligned','Cha
 hold off
 ylims_given = get(gca,'YLim');
 % ylim([ylims_given(1)-0.1, ylims_given(2)+0.1]);
+
+%% Similar to above but with "both" alignment included
+figure(111)
+plot_simplified_summary(local_stat2_all, distal_stat2_all, 'both_stat',...
+    both_stat2_all)
+ylabel('Transient Map Mean Correlations - Individual Neurons')
+set(gca,'XTickLabel',{'Separate','Separate - Connected Day 1',...
+    'Separate - Connected Day 2','Before - After'})
+title('All Mice');
+
+figure(112)
+plot_simplified_summary(local_stat2_all_noG48, distal_stat2_all_noG48, 'both_stat',...
+    both_stat2_all_noG48)
+ylabel('Transient Map Mean Correlations - Individual Neurons')
+set(gca,'XTickLabel',{'Separate','Separate - Connected Day 1',...
+    'Separate - Connected Day 2','Before - After'})
+title('No G48');
+
+figure(113)
+plot_simplified_summary(local_stat2_all_noG45G48, distal_stat2_all_noG45G48, 'both_stat',...
+    both_stat2_all_noG45G48)
+ylabel('Transient Map Mean Correlations - Individual Neurons')
+set(gca,'XTickLabel',{'Separate','Separate - Connected Day 1',...
+    'Separate - Connected Day 2','Before - After'})
+title('G30 and G31 only');
 
 %% Simplified for all Animals
 figure(115)
