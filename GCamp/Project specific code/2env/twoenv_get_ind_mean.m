@@ -99,16 +99,15 @@ all_means = [];
 temp = [];
 num_comparisons = size(sub_use,1);
 for k = 1:length(animal_struct)
-    for j = 1:2
-        for arena_use = 1:2
-            sub_use_index = sub_use(arena_use == sub_use(:,1)); % Pull-out subs for appropriate arena
-            indices_use = make_mega_sub2ind(size(animal_struct(k).corr_matrix{arena_use,j}),...
-                sub_use(sub_use_index,2),sub_use(sub_use_index,3)); % convert subs to indices
-            
-            temp = animal_struct(k).corr_matrix{local_flag,j}(indices_use);
-            all_out = [all_out; temp]; % Add appropriate comparisons into temp_out
-            all_means = [all_means; nanmean(temp)];
-        end
+    for arena_use = 1:2
+        sub_use_index = sub_use(arena_use == sub_use(:,1)); % Pull-out subs for appropriate arena
+        %%% NOTE THAT 'arena_use' and 'j' appear to be mixed up here!!!
+        indices_use = make_mega_sub2ind(size(animal_struct(k).corr_matrix{local_flag,arena_use}),...
+            sub_use(sub_use_index,2),sub_use(sub_use_index,3)); % convert subs to indices
+        
+        temp = animal_struct(k).corr_matrix{local_flag,arena_use}(indices_use); % Get appropriate correlations
+        all_out = [all_out; temp]; % Add appropriate comparisons into temp_out
+        all_means = [all_means; nanmean(temp)];
     end
 end
 
