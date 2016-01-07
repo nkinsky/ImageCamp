@@ -5,6 +5,9 @@ function [ ] = plot_simplified_summary(local_stat, distal_stat, varargin )
 % figure(110)
 % set(gcf,'Position',[1988 286 1070 477])
 
+%% Colors for bars
+bar_colors = {'b','y','r'};
+
 %%
 error_on = 1; % default
 plot_shuffle = 0; % default
@@ -72,24 +75,29 @@ if plot_both_stat == 0
     h = bar([separate_win_local_mean, separate_win_distal_mean;  ...
         sep_conn1_local_mean, sep_conn1_distal_mean; sep_conn2_local_mean, sep_conn2_distal_mean;...
         before_after_local_mean, before_after_distal_mean]);
+    h(1).FaceColor = bar_colors{1};
+    h(2).FaceColor = bar_colors{2};
 elseif plot_both_stat == 1
     h = bar([separate_win_local_mean, separate_win_distal_mean, separate_win_both_mean;  ...
         sep_conn1_local_mean, sep_conn1_distal_mean sep_conn1_both_mean; ...
         sep_conn2_local_mean, sep_conn2_distal_mean, sep_conn2_both_mean;...
         before_after_local_mean, before_after_distal_mean, before_after_both_mean]);
+    h(1).FaceColor = bar_colors{1};
+    h(2).FaceColor = bar_colors{2};
+    h(3).FaceColor = bar_colors{3};
 end
 hold on
 if error_on == 1
     errorbar(h(1).XData + h(1).XOffset, [separate_win_local_mean, ...
         sep_conn1_local_mean, sep_conn2_local_mean, before_after_local_mean], [separate_win_local_sem, ...
-        sep_conn1_local_sem, sep_conn2_local_sem, before_after_local_sem],'.')
+        sep_conn1_local_sem, sep_conn2_local_sem, before_after_local_sem],'k.')
     errorbar(h(2).XData + h(2).XOffset, [separate_win_distal_mean, ...
         sep_conn1_distal_mean, sep_conn2_distal_mean, before_after_distal_mean], [separate_win_distal_sem, ...
-        sep_conn1_distal_sem, sep_conn2_distal_sem, before_after_distal_sem],'.')
+        sep_conn1_distal_sem, sep_conn2_distal_sem, before_after_distal_sem],'k.')
     if plot_both_stat == 1
        errorbar(h(3).XData + h(3).XOffset, [separate_win_both_mean, ...
         sep_conn1_both_mean, sep_conn2_both_mean, before_after_both_mean], [separate_win_both_sem, ...
-        sep_conn1_both_sem, sep_conn2_both_sem, before_after_both_sem],'.') 
+        sep_conn1_both_sem, sep_conn2_both_sem, before_after_both_sem],'k.') 
     end
 end
 
