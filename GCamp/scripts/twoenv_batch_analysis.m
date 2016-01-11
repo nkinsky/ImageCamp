@@ -46,7 +46,8 @@ for j = 1:num_animals
         tt = tic;
         for m = 0:1
             [Mouse(j).corr_matrix{m+1,k}, pop_struct_temp, Mouse(j).min_dist_matrix{m+1,k}, Mouse(j).pass_count{m+1,k},...
-                Mouse(j).within_corr{m+1,k}, Mouse(j).shuffle_matrix, Mouse(j).dist_shuffle_matrix] = tmap_corr_across_days(Mouse(j).working_dirs{k},...
+                Mouse(j).within_corr{m+1,k}, Mouse(j).shuffle_matrix{m+1,k}, Mouse(j).dist_shuffle_matrix{m+1,k}] = ...
+                tmap_corr_across_days(Mouse(j).working_dirs{k},...
                 'rotate_to_std',m,'population_corr',1,'trans_rate_thresh', ...
                 trans_rate_thresh, 'pval_thresh',pval_thresh,...
                 'archive_name_append',file_append,'within_session',within_session,...
@@ -114,9 +115,9 @@ for ll = 1:num_sessions
 end
 
 % Get shuffled distributions
-shuffle_comb = Mouse(1).shuffle_matrix;
+shuffle_comb = Mouse(1).shuffle_matrix{1,1}; % Hacked for now
 for j = 2:num_animals
-   shuffle_comb = cat(4,shuffle_comb,Mouse(j).shuffle_matrix); 
+   shuffle_comb = cat(4,shuffle_comb,Mouse(j).shuffle_matrix{1,1}); % Hacked for now
 end
 
 %% Mega-matrix2 - dump ALL neuron correlations together into appropriate matrices
@@ -342,10 +343,8 @@ end
 %% Do above but with better indices
 
 twoenv_betterindices; % Run script to get better indices
-separate_conflict = cellfun(@(a,b,c) [a; b; c],before_win_conflict, after_win_conflict,...
-    before_after_conflict,'UniformOutput',0);
-separate_aligned = cellfun(@(a,b,c) [a; b; c],before_win_aligned, after_win_conflict, ...
-    before_after_aligned,'UniformOutput',0);
+separate_conflict = cellfun(@(a,b) [a; b],before_win_conflict, after_win_conflict,'UniformOutput',0);
+separate_aligned = cellfun(@(a,b) [a; b],before_win_aligned, after_win_aligned,'UniformOutput',0);
 
 sep_conn1_conflict = cellfun(@(a,b) [a; b],before_5_conflict, after_5_conflict,'UniformOutput',0);
 sep_conn1_aligned = cellfun(@(a,b) [a; b],before_5_aligned, after_5_aligned,'UniformOutput',0);
@@ -368,10 +367,105 @@ for j = 1:length(Mouse)
         Mouse(j).both_stat2.before_after] = twoenv_get_ind_mean(Mouse(j), ...
         before_after_conflict{j}, before_after_conflict{j}, 'both_sub_use',before_after_aligned{j});
     
+    [ Mouse(j).local_stat2.before_5, Mouse(j).distal_stat2.before_5,  ...
+        Mouse(j).both_stat2.before_5] = twoenv_get_ind_mean(Mouse(j), ...
+        before_5_conflict{j}, before_5_conflict{j}, 'both_sub_use',before_5_aligned{j});
+    [ Mouse(j).local_stat2.before_6, Mouse(j).distal_stat2.before_6,  ...
+        Mouse(j).both_stat2.before_6] = twoenv_get_ind_mean(Mouse(j), ...
+        before_6_conflict{j}, before_6_conflict{j}, 'both_sub_use',before_6_aligned{j});
+    [ Mouse(j).local_stat2.after_5, Mouse(j).distal_stat2.after_5,  ...
+        Mouse(j).both_stat2.after_5] = twoenv_get_ind_mean(Mouse(j), ...
+        after_5_conflict{j}, after_5_conflict{j}, 'both_sub_use',after_5_aligned{j});
+    [ Mouse(j).local_stat2.after_6, Mouse(j).distal_stat2.after_6,  ...
+        Mouse(j).both_stat2.after_6] = twoenv_get_ind_mean(Mouse(j), ...
+        after_6_conflict{j}, after_6_conflict{j}, 'both_sub_use',after_6_aligned{j});
+    
+    
+
     Mouse(j).both_stat2.separate_win_time = get_time_from_session(separate_aligned{j},...
+        time_index);
+    Mouse(j).both_stat2.before_after_time = get_time_from_session(before_after_aligned{j},...
         time_index);
     
 end
+
+%% Plot stability over time
+corrs_all = [];
+corrs_all2 = [];
+shuffle_all = [];
+shuffle_all2 = [];
+time_all = [];
+figure(500)
+for j = 1:num_animals
+    subplot(4,1,j)
+    plot(Mouse(j).both_stat2.separate_win_time, Mouse(j).both_stat2.separate_win.all_means,...
+        'b*',Mouse(j).both_stat2.before_after_time, Mouse(j).both_stat2.before_after.all_means,'b*');
+    title(Mouse(j).Name)
+    xlabel('Days'); ylabel('Mean correlation')
+    xlim([0 7]); set(gca,'XTick',[1 2 3 4 5 6])
+    
+    corrs_all = [corrs_all; Mouse(j).both_stat2.separate_win.all_means; ...
+        Mouse(j).both_stat2.before_after.all_means]; 
+    corrs_all2 = [corrs_all2; Mouse(j).both_stat2.separate_win.all_out2; ...
+        Mouse(j).both_stat2.before_after.all_out2];
+    shuffle_all = [shuffle_all; Mouse(j).both_stat2.separate_win.shuffle_stat.all_means; ...
+        Mouse(j).both_stat2.before_after.shuffle_stat.all_means]; 
+    shuffle_all2 = [shuffle_all2; Mouse(j).both_stat2.separate_win.shuffle_stat.all_out2; ...
+        Mouse(j).both_stat2.before_after.shuffle_stat.all_out2];
+    time_all = [time_all; Mouse(j).both_stat2.separate_win_time; ...
+        Mouse(j).both_stat2.before_after_time]; 
+    
+end
+
+days_plot = [0 1 2 3 4 5 6]; % Days between sessions to plot
+
+corrs_mean_by_day = arrayfun(@(a) mean(corrs_all(time_all == a)),days_plot);
+corrs_sem_by_day = arrayfun(@(a) std(corrs_all(time_all == a))/...
+    sum(time_all == a),days_plot);
+shuffle_mean_by_day = arrayfun(@(a) mean(shuffle_all(time_all == a)),days_plot);
+
+to_plot = ~isnan(corrs_mean_by_day);
+figure(501)
+plot(days_plot(to_plot),corrs_mean_by_day(to_plot),'k.-',days_plot(to_plot),...
+shuffle_mean_by_day(to_plot),'r--') % time_all,corrs_all,'r*'
+hold on
+errorbar(days_plot(to_plot),corrs_mean_by_day(to_plot),corrs_sem_by_day(to_plot),'k')
+xlabel('Days between session'); ylabel('Mean correlation - individual TMaps')
+xlim([-0.5 6.5]); set(gca,'XTick',[0 1 2 3 4 5 6])
+legend('Actual','Shuffled')
+
+figure(499)
+plot(time_all,corrs_all,'r*')
+xlabel('Days between session'); ylabel('Mean correlation - individual TMaps')
+xlim([-0.5 6.5]); set(gca,'XTick',[0 1 2 3 4 5 6])
+
+% Do this but in ecdf format - that is, group ALL TMap individual
+% correlations for a given day together
+corrs_all_by_day = arrayfun(@(a) cat(1,corrs_all2{time_all == a}),...
+    days_plot,'UniformOutput',0);
+shuffle_all_comb = cat(1,shuffle_all2{:});
+
+figure(502)
+days_plot_ind = find(to_plot);
+days_plot2 = days_plot(days_plot_ind);
+for j = 1:length(days_plot2)
+    ecdf(corrs_all_by_day{days_plot_ind(j)});
+    hold on
+end
+ecdf(shuffle_all_comb)
+xlabel('Individual TMap Correlation Value');
+legend([cellfun(@(a) [num2str(a) ' Days'], num2cell(days_plot2),'UniformOutput',0), ...
+    'Shuffle']);
+
+% 3 Day correlations are very low for some reason (yet still higher than
+% chance).  Most likely reason is that they include sessions right
+% before/after connection, whereas there are more sessions for the 5/6 day
+% comparisons that occur after at least one session back in the single
+% arenas.  GLM could maybe pull this apart...
+% Could do the same for the local individual correlations after showing
+% that rotating typically does not induce a remapping relative to the local
+% cues - maybe this will pull more together...
+
 
 %% Combine all stats
 local_stat2_all = twoenv_combine_stats('local_stat2',Mouse(1),Mouse(2),...
