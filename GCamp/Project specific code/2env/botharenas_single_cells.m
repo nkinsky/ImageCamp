@@ -29,7 +29,7 @@ for zz = 1:length(sessions_use_cell)
     
     % Indicate if you want to rotate each arena back to the standard
     % configuration (1) or not (0) for all sessions
-    rot_to_std = 0; % Rotate data back such that local cues align
+    rot_to_std = 1; % Rotate data back such that local cues align
     use_trans = 1; % Use circle->square transformed data.
     
     corr_type = 'Spearman'; % type of correlation to use for PV correlations
@@ -548,6 +548,8 @@ for zz = 1:length(sessions_use_cell)
     cmap_use = hsv(7);
     figure(402)
     days_bw = [1 2 3 4 5 6];
+
+    subplot(2,2,zz)
     [f0, x0] = ecdf(PV_within_day.all{1});
     plot(x0,f0,'Color',cmap_use(1,:));
     hold on
@@ -656,6 +658,47 @@ for zz = 1:length(sessions_use_cell)
     end
     
 end
+
+%% Plot ecdfs of pop vector correlations by day for ALL mice
+cmap_use = hsv(7);
+figure(403)
+days_bw = [1 2 3 4 5 6];
+[f0, x0] = ecdf(All.PV_within_day.all{1});
+plot(x0,f0,'Color',cmap_use(1,:));
+hold on
+for j = 1:6
+    [ft, xt] = ecdf(All.PV_across_days_all.all{j});
+    plot(xt,ft,'Color',cmap_use(j+1,:));
+end
+xlabel('PV correlations');
+legend('0 days', '1 day', '2 days', '3 days', '4 days', '5 days', '6 days')
+title('PV correlations across days')
+
+%%% Need to reconcile this with single cell stuff to make apples-to-apples
+%%% comparisons - same sessions included, same inclusion criteria?, same
+%%% rotations, etc.
+
+%% Plot mean and sem of pop vector correlations by day for ALL mice
+
+%%% NOTE: this is very rough - within day correlations right now are not
+%%% separated out by those that don't have arenas rotated and include ALL
+%%% locally aligned correlations
+
+days_plot = [0 1 2 3 4 5 6];
+
+corrs_mean_by_day = [ mean(All.PV_within_day.all{1}) cellfun(@mean,All.PV_across_days_sep.all)];
+corrs_sem_by_day = [ std(All.PV_within_day.all{1})./sqrt(length(All.PV_within_day.all{1}))...
+    cellfun(@std,All.PV_across_days_sep.all)./sqrt(cellfun(@length,All.PV_across_days_sep.all))];
+
+to_plot = ~isnan(corrs_mean_by_day);
+figure(503)
+plot(days_plot(to_plot),corrs_mean_by_day(to_plot),'k.-') %,days_plot(to_plot),...
+% shuffle_mean_by_day(to_plot),'r--')
+hold on
+errorbar(days_plot(to_plot),corrs_mean_by_day(to_plot),corrs_sem_by_day(to_plot),'k')
+xlabel('Days between session'); ylabel('Mean PV correlation')
+xlim([-0.5 6.5]); set(gca,'XTick',[0 1 2 3 4 5 6])
+% legend('Actual','Shuffled')
 
 %% Plot stuff for all mice and each mouse individually
 
