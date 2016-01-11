@@ -163,6 +163,7 @@ for j = 1:num_neurons
     n = 0;
     for k = 1:num_sessions
         for ll = k:num_sessions
+            % Get neurons back to original mapping
             sesh1_neuron = batch_session_map(1).map(j,k+1);
             sesh2_neuron = batch_session_map(1).map(j,ll+1);
             % Get the correlations only if both neurons are validly mapped
