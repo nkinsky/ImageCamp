@@ -216,7 +216,8 @@ if population_corr == 1
                 % out neurons that don't meet certain criteria? e.g.
                 % transient rate and/or information criteria?
                 
-                if (sesh1_neuron ~= 0) && (sesh2_neuron ~= 0) && ~isnan(sum(sesh(k).TMap{sesh1_neuron}(:))) && ~isnan(sum(sesh(ll).TMap{sesh2_neuron}(:)))% ~isempty(sesh1_neuron) && ~isempty(sesh2_neuron) && ~isnan(sesh1_neuron) && ~isnan(sesh2_neuron)
+                if (sesh1_neuron ~= 0) && (sesh2_neuron ~= 0) && ...
+                        ~isnan(sum(sesh(k).TMap{sesh1_neuron}(:))) && ~isnan(sum(sesh(ll).TMap{sesh2_neuron}(:)))% ~isempty(sesh1_neuron) && ~isempty(sesh2_neuron) && ~isnan(sesh1_neuron) && ~isnan(sesh2_neuron)
                     sesh1_pop = [sesh1_pop; sesh(k).TMap{sesh1_neuron}(:)];
                     sesh2_pop = [sesh2_pop; sesh(ll).TMap{sesh2_neuron}(:)];
                 end
