@@ -126,10 +126,6 @@ for m = 1:length(sesh)
                 PV1_use = PV1(ind_use_both);
                 PV2_use = PV2(ind_use_both);
                 
-                % Create shuffled distribution - randomly switch neuron
-                % identity in second session
-                PV2_shuffle = PV2_use(randperm(length(PV2_use)));
-                
                 % Get correlations and distances
                 PV_corr(m,ll,j,k) = corr(PV1_use,PV2_use,'type',corr_type);
 %                 if isnan(PV_corr(m,ll,j,k))
@@ -141,6 +137,10 @@ for m = 1:length(sesh)
                 
                 % Get shuffled correlations and distances
                 for zzz = 1:num_shuffles
+                    % Create shuffled distribution - randomly switch neuron
+                    % identity in second session
+                    PV2_shuffle = PV2_use(randperm(length(PV2_use)));
+                    
                     PV_corr_shuffle(m,ll,j,k,zzz) = corr(PV1_use,PV2_shuffle,...
                         'type',corr_type);
                     temp = dist([PV1_use, PV2_shuffle]);
