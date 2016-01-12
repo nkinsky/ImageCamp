@@ -12,6 +12,8 @@
 
 close all
 
+twoenv_reference; % Run to get MD database info
+
 %% Batch run parameters
 
 % Enter sessions to look at here
@@ -215,35 +217,41 @@ for zz = 1:length(sessions_use_cell)
     min_dist_during = [min_dist{5}; min_dist{6}];
     min_dist_after = [min_dist{7}; min_dist{8}];
     
-    figure(199)
+    figure(350)
+    subplot(2,3,zz+1)
     ecdf(min_dist_before); hold on;
     ecdf(min_dist_during);
     ecdf(min_dist_after);
     legend('Before','During','After')
     xlabel('Distance between Place Field centroid location in opposite arena')
+    title(mouse_name_title(Mouse(zz).Animal))
     
-    % Plot between shapes
-    xlim_use(1) = 0; xlim_use(2) = round(max([min_dist_all; min_dist_win_all])) + 1;
-    edges = xlim_use(1):diff(xlim_use)/30:xlim_use(2);
-    figure(200);
-    for j = 1:8
-        subplot(2,4,j)
-        nn = histc(min_dist{j},edges);
-        bar(edges,nn,'histc')
-        title(['Session ' num2str(j) ' b/w arenas'])
-        xlabel('Min Dist b/w PF centroids')
+    plot_this2 = 0;
+    
+    if plot_this2 == 1
+        % Plot between shapes
+        xlim_use(1) = 0; xlim_use(2) = round(max([min_dist_all; min_dist_win_all])) + 1;
+        edges = xlim_use(1):diff(xlim_use)/30:xlim_use(2);
+        figure(200);
+        for j = 1:8
+            subplot(2,4,j)
+            nn = histc(min_dist{j},edges);
+            bar(edges,nn,'histc')
+            title(['Session ' num2str(j) ' b/w arenas'])
+            xlabel('Min Dist b/w PF centroids')
+            
+        end
         
-    end
-    
-    % Plot within shapes
-    edges = xlim_use(1):diff(xlim_use)/30:xlim_use(2);
-    figure(201);
-    for j = 1:6
-        subplot(2,3,j)
-        nn = histc(min_dist_win{j},edges);
-        bar(edges,nn,'histc')
-        title(['Session ' num2str(j) ' w/in arenas'])
-        xlabel('Min Dist b/w PF centroids')
+        % Plot within shapes
+        edges = xlim_use(1):diff(xlim_use)/30:xlim_use(2);
+        figure(201);
+        for j = 1:6
+            subplot(2,3,j)
+            nn = histc(min_dist_win{j},edges);
+            bar(edges,nn,'histc')
+            title(['Session ' num2str(j) ' w/in arenas'])
+            xlabel('Min Dist b/w PF centroids')
+        end
     end
     
     %% Find neurons with similar position fields on each day
@@ -312,20 +320,6 @@ for zz = 1:length(sessions_use_cell)
     FR_square.after = nanmean(FR_all_sessions(:,after_square),2);
     FR_oct.after = nanmean(FR_all_sessions(:,after_oct),2);
     
-    figure(202)
-    subplot(2,2,1);
-    plot(FR_square.all,FR_oct.all,'.');
-    xlabel('Square FR'); ylabel('Circle FR'); title('All Sessions')
-    subplot(2,2,2);
-    plot(FR_square.before,FR_oct.before,'.');
-    xlabel('Square FR'); ylabel('Circle FR'); title('Before Sessions')
-    subplot(2,2,3);
-    plot(FR_square.during,FR_oct.during,'.');
-    xlabel('Square FR'); ylabel('Circle FR'); title('During Sessions')
-    subplot(2,2,4);
-    plot(FR_square.after,FR_oct.after,'.');
-    xlabel('Square FR'); ylabel('Circle FR'); title('After Sessions')
-    
     diff_all = FR_square.all - FR_oct.all;
     diff_before = FR_square.before - FR_oct.before;
     diff_during = FR_square.during - FR_oct.during;
@@ -342,22 +336,44 @@ for zz = 1:length(sessions_use_cell)
             ./(FR_all_sessions(:,all_both(j,1)) + FR_all_sessions(:,all_both(j,2)));
     end
     
-    figure(203)
-    ecdf(diff_before); hold on;
-    ecdf(diff_during); hold on;
-    ecdf(diff_after);
-    legend('Before','During','After')
-    title('Diff in FR')
     
-    figure(204)
-    ecdf(discr_before); hold on;
-    ecdf(discr_during); hold on;
-    ecdf(discr_after);
-    legend('Before','During','After')
-    title('Discr index')
-    % plot(ones(size(diff_before)),diff_before,'.'); hold on;
-    % plot(2*ones(size(diff_during)),diff_during,'.'); hold on;
-    % plot(3*ones(size(diff_after)),diff_after,'.'); hold on;
+    plot_this3 = 0;
+    % Plot stuff
+    if plot_this3 == 1
+        figure(202)
+        subplot(2,2,1);
+        plot(FR_square.all,FR_oct.all,'.');
+        xlabel('Square FR'); ylabel('Circle FR'); title('All Sessions')
+        subplot(2,2,2);
+        plot(FR_square.before,FR_oct.before,'.');
+        xlabel('Square FR'); ylabel('Circle FR'); title('Before Sessions')
+        subplot(2,2,3);
+        plot(FR_square.during,FR_oct.during,'.');
+        xlabel('Square FR'); ylabel('Circle FR'); title('During Sessions')
+        subplot(2,2,4);
+        plot(FR_square.after,FR_oct.after,'.');
+        xlabel('Square FR'); ylabel('Circle FR'); title('After Sessions')
+        
+        
+        
+        figure(203)
+        ecdf(diff_before); hold on;
+        ecdf(diff_during); hold on;
+        ecdf(diff_after);
+        legend('Before','During','After')
+        title('Diff in FR')
+        
+        figure(204)
+        ecdf(discr_before); hold on;
+        ecdf(discr_during); hold on;
+        ecdf(discr_after);
+        legend('Before','During','After')
+        title('Discr index')
+        % plot(ones(size(diff_before)),diff_before,'.'); hold on;
+        % plot(2*ones(size(diff_during)),diff_during,'.'); hold on;
+        % plot(3*ones(size(diff_after)),diff_after,'.'); hold on;
+    
+    end
     
     %% Plot out and look at neurons who have discr_ratio = +/-1
     plot_this_section = 0;
@@ -495,9 +511,9 @@ for zz = 1:length(sessions_use_cell)
             PV_dist_shuffle_mean(ll,mm) = mean(squeeze(PV_dist_shuffle(ll,mm,:)),1);
         end
     end
-    figure(206)
-    imagesc(PV_corr_mean); colorbar
-    title(['PV correlations between all sessions rot_to_std = ' num2str(rot_to_std)])
+%     figure(206)
+%     imagesc(PV_corr_mean); colorbar
+%     title(['PV correlations between all sessions rot_to_std = ' num2str(rot_to_std)])
     
     figure(207)
     imagesc(PV_corr_mean-PV_corr_shuffle_mean); colorbar
@@ -710,7 +726,7 @@ figure(345);
 % legend('Before', 'During', 'After'); 
 % title('All Mice Combined');
 for j = 1:4; 
-    subplot(2,2,j); 
+    subplot(2,3,j+1); 
     ecdf(abs(Mouse(j).discr_before)); hold on; 
     ecdf(abs(Mouse(j).discr_during)); 
     ecdf(abs(Mouse(j).discr_after)); 
@@ -721,7 +737,8 @@ for j = 1:4;
 end;
 
 % Same but all mice only
-figure(346)
+figure(345)
+subplot(2,3,1)
 ecdf(abs(All.discr_before)); hold on; 
 ecdf(abs(All.discr_during)); 
 ecdf(abs(All.discr_after)); 
@@ -736,7 +753,7 @@ for j = 1:4;
     discr_ratio_proportion = [sum(abs(Mouse(j).discr_before) == 1)/sum(~isnan(abs(Mouse(j).discr_before))),...
         sum(abs(Mouse(j).discr_during) == 1)/sum(~isnan(abs(Mouse(j).discr_during))), ...
         sum(abs(Mouse(j).discr_after) == 1)/sum(~isnan(abs(Mouse(j).discr_after)))];
-    subplot(2,2,j); 
+    subplot(2,3,j+1); 
     plot([1 2 3],discr_ratio_proportion,'*-')
     xlim([0 4]); ylim([0.4 1])
     ylabel('Proportion of Cells with Discr Ratio = 1')
@@ -746,7 +763,8 @@ for j = 1:4;
 end
 
 % Discrimination Ratios for all mice
-figure(348)
+figure(347)
+subplot(2,3,1)
 discr_ratio_proportion = [sum(abs(All.discr_before) == 1)/sum(~isnan(abs(All.discr_before))),...
     sum(abs(All.discr_during) == 1)/sum(~isnan(abs(All.discr_during))), ...
     sum(abs(All.discr_after) == 1)/sum(~isnan(abs(All.discr_after)))];
@@ -760,6 +778,7 @@ title('All Mice');
 %% Between shape firing comparisons
 
 figure(350)
+subplot(2,3,1)
 ecdf(All.min_dist_before); hold on;
 ecdf(All.min_dist_during);
 ecdf(All.min_dist_after);
@@ -770,47 +789,50 @@ xlabel('Distance between Place Field centroid location in opposite arena')
 %% QC discriminating neurons by plotting them on the appropriate all_ICmask - this lets
 % you step through each neuron that appears only in the second session and
 % overlay it on all the first session neurons
-plot_this = 0;
+plot_this5 = 0;
 
 mouse_num = 2;
 compare_sesh = [13 15];
 
-% Get neurons that fire in one arena but not the other between the two
-% sessions above
-discr_neurons1 = find(Mouse(mouse_num).discr_after == -1 & ...
-    Mouse(mouse_num).batch_map(:,compare_sesh(2)+1) ~= 0 &...
-    ~isnan(Mouse(mouse_num).batch_map(:,compare_sesh(2) + 1)));
-
-ChangeDirectory(Mouse(mouse_num).Animal,Mouse(mouse_num).sesh(1).Date,...
-    Mouse(mouse_num).sesh(1).Session);
-
-for j = 1:2
-    load(['RegistrationInfo-' Mouse(mouse_num).Animal '-' ...
-        Mouse(mouse_num).sesh(compare_sesh(j)).Date '-session' ...
-        num2str(Mouse(mouse_num).sesh(compare_sesh(j)).Session) '.mat']);
-    reginfo{j} = RegistrationInfoX;
+if plot_this5 == 1
+    % Get neurons that fire in one arena but not the other between the two
+    % sessions above
+    discr_neurons1 = find(Mouse(mouse_num).discr_after == -1 & ...
+        Mouse(mouse_num).batch_map(:,compare_sesh(2)+1) ~= 0 &...
+        ~isnan(Mouse(mouse_num).batch_map(:,compare_sesh(2) + 1)));
+    
+    ChangeDirectory(Mouse(mouse_num).Animal,Mouse(mouse_num).sesh(1).Date,...
+        Mouse(mouse_num).sesh(1).Session);
+    
+    for j = 1:2
+        load(['RegistrationInfo-' Mouse(mouse_num).Animal '-' ...
+            Mouse(mouse_num).sesh(compare_sesh(j)).Date '-session' ...
+            num2str(Mouse(mouse_num).sesh(compare_sesh(j)).Session) '.mat']);
+        reginfo{j} = RegistrationInfoX;
+    end
+    
+    ChangeDirectory(Mouse(mouse_num).Animal,Mouse(mouse_num).sesh(compare_sesh(1)).Date,...
+        Mouse(mouse_num).sesh(compare_sesh(1)).Session);
+    load('ProcOut.mat', 'NeuronImage','InitPixelList','Xdim','Ydim','cTon');
+    AllICmask = create_AllICmask(NeuronImage);
+    AllICmask_reg = imwarp_quick(AllICmask,reginfo{1});
+    
+    % Steal code from PlotNeuronOutlines to only draw the neuron outlines, or
+    % even the Transient outlines, but without using bwboundaries
+    
+    
+    ChangeDirectory(Mouse(mouse_num).Animal,Mouse(mouse_num).sesh(compare_sesh(2)).Date,...
+        Mouse(mouse_num).sesh(compare_sesh(2)).Session);
+    load('ProcOut.mat', 'NeuronImage');
+    figure(100);
+    for j = 1:length(discr_neurons1)
+        neuron_use = discr_neurons1(j);
+        neuron_reg = imwarp_quick(NeuronImage{Mouse(mouse_num).batch_map(neuron_use,...
+            compare_sesh(2)+1)}, reginfo{2});
+        imagesc(AllICmask_reg + 2*neuron_reg)
+        waitforbuttonpress
 end
 
-ChangeDirectory(Mouse(mouse_num).Animal,Mouse(mouse_num).sesh(compare_sesh(1)).Date,...
-    Mouse(mouse_num).sesh(compare_sesh(1)).Session);
-load('ProcOut.mat', 'NeuronImage','InitPixelList','Xdim','Ydim','cTon');
-AllICmask = create_AllICmask(NeuronImage);
-AllICmask_reg = imwarp_quick(AllICmask,reginfo{1});
-
-% Steal code from PlotNeuronOutlines to only draw the neuron outlines, or
-% even the Transient outlines, but without using bwboundaries
-
-
-ChangeDirectory(Mouse(mouse_num).Animal,Mouse(mouse_num).sesh(compare_sesh(2)).Date,...
-    Mouse(mouse_num).sesh(compare_sesh(2)).Session);
-load('ProcOut.mat', 'NeuronImage');
-figure(100);
-for j = 1:length(discr_neurons1)
-    neuron_use = discr_neurons1(j);
-    neuron_reg = imwarp_quick(NeuronImage{Mouse(mouse_num).batch_map(neuron_use,...
-        compare_sesh(2)+1)}, reginfo{2});
-    imagesc(AllICmask_reg + 2*neuron_reg)
-    waitforbuttonpress
 end
 
 
