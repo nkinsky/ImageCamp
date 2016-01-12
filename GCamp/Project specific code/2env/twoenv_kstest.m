@@ -33,12 +33,12 @@ for j = 1:num_animals
         for mm = 1:size(comp_vec_local,1)
             comp_comb_local = [ comp_comb_local ; squeeze(Mouse(j).corr_matrix{2,ll}(comp_vec_local(mm,1),comp_vec_local(mm,2),...
                 logical(squeeze(Mouse(j).pass_count{2,ll}(comp_vec_local(mm,1),comp_vec_local(mm,2),:)))))];
-            shuffle_comb_local = [shuffle_comb_local ; squeeze(Mouse(j).shuffle_matrix(1,comp_vec_local(mm,1),comp_vec_local(mm,2),:))];
+            shuffle_comb_local = [shuffle_comb_local ; squeeze(Mouse(j).shuffle_matrix{2,ll}(1,comp_vec_local(mm,1),comp_vec_local(mm,2),:))];
         end
         for mm = 1:size(comp_vec_distal,1)
             comp_comb_distal = [ comp_comb_distal ; squeeze(Mouse(j).corr_matrix{1,ll}(comp_vec_distal(mm,1),comp_vec_distal(mm,2),...
                 logical(squeeze(Mouse(j).pass_count{1,ll}(comp_vec_distal(mm,1),comp_vec_distal(mm,2),:)))))];
-            shuffle_comb_distal = [shuffle_comb_distal ; squeeze(Mouse(j).shuffle_matrix(1,comp_vec_distal(mm,1),comp_vec_distal(mm,2),:))];
+            shuffle_comb_distal = [shuffle_comb_distal ; squeeze(Mouse(j).shuffle_matrix{1,ll}(1,comp_vec_distal(mm,1),comp_vec_distal(mm,2),:))];
         end
         
     end
