@@ -410,6 +410,12 @@ corrs_all = [];
 corrs_all2 = [];
 shuffle_all = [];
 shuffle_all2 = [];
+
+PV_corrs_all = [];
+PV_corrs_all2 = [];
+PV_shuffle_all = [];
+PV_shuffle_all2 = [];
+
 time_all = [];
 % figure(500)
 for j = 1:num_animals
@@ -431,6 +437,16 @@ for j = 1:num_animals
     time_all = [time_all; Mouse(j).both_stat2.separate_win_time; ...
         Mouse(j).both_stat2.before_after_time]; 
     
+    PV_corrs_all = [PV_corrs_all; Mouse(j).both_stat2.separate_win.PV_stat.all_means; ...
+        Mouse(j).both_stat2.before_after.PV_stat.all_means]; 
+    PV_corrs_all2 = [PV_corrs_all2; Mouse(j).both_stat2.separate_win.PV_stat.all_out2; ...
+        Mouse(j).both_stat2.before_after.PV_stat.all_out2];
+    PV_shuffle_all = [PV_shuffle_all; Mouse(j).both_stat2.separate_win.PV_stat.shuffle_stat.all_means; ...
+        Mouse(j).both_stat2.before_after.PV_stat.shuffle_stat.all_means]; 
+    PV_shuffle_all2 = [PV_shuffle_all2; Mouse(j).both_stat2.separate_win.PV_stat.shuffle_stat.all_out2; ...
+        Mouse(j).both_stat2.before_after.PV_stat.shuffle_stat.all_out2];
+
+    
 end
 
 days_plot = [0 1 2 3 4 5 6]; % Days between sessions to plot
@@ -440,13 +456,31 @@ corrs_sem_by_day = arrayfun(@(a) std(corrs_all(time_all == a))/...
     sum(time_all == a),days_plot);
 shuffle_mean_by_day = arrayfun(@(a) mean(shuffle_all(time_all == a)),days_plot);
 
+PV_corrs_mean_by_day = arrayfun(@(a) mean(PV_corrs_all(time_all == a)),days_plot);
+PV_corrs_sem_by_day = arrayfun(@(a) std(PV_corrs_all(time_all == a))/...
+    sum(time_all == a),days_plot);
+PV_shuffle_mean_by_day = arrayfun(@(a) mean(PV_shuffle_all(time_all == a)),days_plot);
+
 to_plot = ~isnan(corrs_mean_by_day);
 figure(501)
+% Individual TMap correlations
+subplot(2,1,1)
 plot(days_plot(to_plot),corrs_mean_by_day(to_plot),'k.-',days_plot(to_plot),...
 shuffle_mean_by_day(to_plot),'r--') % time_all,corrs_all,'r*'
 hold on
 errorbar(days_plot(to_plot),corrs_mean_by_day(to_plot),corrs_sem_by_day(to_plot),'k')
-xlabel('Days between session'); ylabel('Mean correlation - individual TMaps')
+xlabel('Days between session'); ylabel('Mean correlation')
+title('Stability - Individual Neurons Transient Map Correlations')
+xlim([-0.5 6.5]); set(gca,'XTick',[0 1 2 3 4 5 6])
+legend('Actual','Shuffled')
+% Population Correlations
+subplot(2,1,2)
+plot(days_plot(to_plot),PV_corrs_mean_by_day(to_plot),'k.-',days_plot(to_plot),...
+PV_shuffle_mean_by_day(to_plot),'r--') % time_all,corrs_all,'r*'
+hold on
+errorbar(days_plot(to_plot),PV_corrs_mean_by_day(to_plot),PV_corrs_sem_by_day(to_plot),'k')
+xlabel('Days between session'); ylabel('Mean correlation')
+title('Stability - Population Vector Correlations')
 xlim([-0.5 6.5]); set(gca,'XTick',[0 1 2 3 4 5 6])
 legend('Actual','Shuffled')
 
@@ -473,6 +507,26 @@ end
 [fshuf, xshuf] = ecdf(shuffle_all_comb);
 plot(xshuf,fshuf,'Color',cmap_use(7,:));
 xlabel('Individual TMap Correlation Value');
+legend([cellfun(@(a) [num2str(a) ' Days'], num2cell(days_plot2),'UniformOutput',0), ...
+    'Shuffle']);
+
+% Similar to above but for Population Vectors
+figure(503)
+PV_corrs_all_by_day = arrayfun(@(a) cat(1,PV_corrs_all2{time_all == a}),...
+    days_plot,'UniformOutput',0);
+PV_shuffle_all_comb = cat(1,PV_shuffle_all2{:});
+
+cmap_use = hsv(7);
+days_plot_ind = find(to_plot);
+days_plot2 = days_plot(days_plot_ind);
+for j = 1:length(days_plot2)
+    [ft, xt] = ecdf(PV_corrs_all_by_day{days_plot_ind(j)});
+    plot(xt,ft,'Color',cmap_use(j,:));
+    hold on
+end
+[fshuf, xshuf] = ecdf(PV_shuffle_all_comb);
+plot(xshuf,fshuf,'Color',cmap_use(7,:));
+xlabel('Population Vector Correlation Value');
 legend([cellfun(@(a) [num2str(a) ' Days'], num2cell(days_plot2),'UniformOutput',0), ...
     'Shuffle']);
 
