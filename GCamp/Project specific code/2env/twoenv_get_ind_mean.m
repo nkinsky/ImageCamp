@@ -31,49 +31,24 @@ both_sub_use = check_indices_type(both_sub_use);
 %% Create _stat variables
 
 local_stat = calc_group_stats(Mouse_struct, local_sub_use, 2);
+local_stat.PV_stat = calc_PV_group_stats(Mouse_struct, local_sub_use, 2);
+temp3 = calc_group_shuffled_stats(Mouse_struct, local_sub_use, 2);
+local_stat.shuffle_stat = temp3;
+
 distal_stat = calc_group_stats(Mouse_struct, distal_sub_use,1);
+distal_stat.PV_stat = calc_PV_group_stats(Mouse_struct, distal_sub_use,1);
 
 if ~isempty(both_sub_use)
     both_stat = calc_group_stats(Mouse_struct, both_sub_use,1);
     temp2 = calc_group_shuffled_stats(Mouse_struct, both_sub_use, 1);
     both_stat.shuffle_stat = temp2;
+    
+    both_stat.PV_stat = calc_PV_group_stats(Mouse_struct, both_sub_use,1);
+    temp4 = calc_PV_group_shuffled_stats(Mouse_struct, both_sub_use, 1);
+    both_stat.PV_stat.shuffle_stat = temp4;
 else
     both_stat = [];
 end
-
-% for k = 1:length(Mouse_struct)
-%     for j = 1:2
-%             local_indices_use = make_mega_sub2ind(size(Mouse_struct(k).corr_matrix{loca_indices,j}),...
-%                 local_sub_use(:,1),local_sub_use(:,2));
-%             distal_indices_use = make_mega_sub2ind(size(Mouse_struct(k).corr_matrix{1,j}),...
-%                 distal_sub_use(:,1),distal_sub_use(:,2));
-%             
-%             temp_distal = [temp_distal; Mouse_struct.corr_matrix{1,j}(distal_indices_use)];
-%             temp_local = [temp_local; Mouse_struct.corr_matrix{2,j}(local_indices_use)];
-%             
-%             if ~isempty(both_sub_use)
-%                both_indices_use = make_mega_sub2ind(size(Mouse_struct(k).corr_matrix{1,j}),...
-%                    both_sub_use(:,1),both_sub_use(:,2));
-%                temp_both = [temp_both; Mouse_struct.corr_matrix{2,j}(both_indices_use)];
-%             end
-%     end
-% end
-% 
-% local_stat.all = temp_local;
-% local_stat.mean = nanmean(temp_local);
-% local_stat.sem = nanstd(temp_local)/sqrt(length(local_indices_use));
-% 
-% distal_stat.all = temp_distal;
-% distal_stat.mean = nanmean(temp_distal);
-% distal_stat.sem = nanstd(temp_distal)/sqrt(length(distal_indices_use));
-% 
-% if isempty(both_sub_use)
-%     both_stat = [];
-% else
-%     both_stat.all = temp_both;
-%     both_stat.mean = nanmean(temp_both);
-%     both_stat.sem = nanstd(temp_both)/sqrt(length(both_indices_use));
-% end
     
 end
 
@@ -93,9 +68,15 @@ end
 end
 
 %% sub-fuction to get correlations out and calculate mean/sem
-function [stat_use] = calc_group_stats(animal_struct, sub_use, local_flag)
+function [stat_use] = calc_group_stats(animal_struct, sub_use, local_flag, metric_type)
 % local_flag: 1 = use distal aligned comparisons, 2 = use local aligned
-% comparisons
+% comparisons, metric_type = 'corr_matrix' (default) or 'min_dist_matrix'
+
+% If not specified, pull from corr_matrix
+if nargin < 4
+    metric_type = 'corr_matrix';
+end
+
 all_out = [];
 all_out2 = cell(size(sub_use,1),1);
 all_means = nan(size(sub_use,1),1);
@@ -105,10 +86,47 @@ for k = 1:length(animal_struct)
     for arena_use = 1:2
         sub_use_byarena = find(arena_use == sub_use(:,1)); % Pull-out subs for appropriate arena
         for m = 1:length(sub_use_byarena)
-            indices_use = make_mega_sub2ind(size(animal_struct(k).corr_matrix{local_flag,arena_use}),...
+            indices_use = make_mega_sub2ind(size(animal_struct(k).(metric_type){local_flag,arena_use}),...
                 sub_use(sub_use_byarena(m),2),sub_use(sub_use_byarena(m),3)); % convert subs to indices
             
-            temp = animal_struct(k).corr_matrix{local_flag,arena_use}(indices_use); % Get appropriate correlations
+            temp = animal_struct(k).(metric_type){local_flag,arena_use}(indices_use); % Get appropriate correlations
+            all_out = [all_out; temp]; % Add appropriate comparisons into temp_out
+            all_out2{sub_use_byarena(m)} = temp;
+            all_means(sub_use_byarena(m)) = nanmean(temp);
+        end
+    end
+end
+
+stat_use.all = all_out; % Aggregates all the correlations into one array
+stat_use.all_out2 = all_out2; % separates the correlations out to match sub_use
+stat_use.all_means = all_means; % Means of all the correlations - corresponds to sub_use
+stat_use.mean = nanmean(all_out);
+stat_use.sem = nanstd(all_out)/sqrt(num_comparisons); % Don't think this is valid stats...
+
+end
+
+%% sub-fuction to get correlations out and calculate mean/sem
+function [stat_use] = calc_PV_group_stats(animal_struct, sub_use, local_flag, metric_type)
+% local_flag: 1 = use distal aligned comparisons, 2 = use local aligned
+% comparisons, metric_type = 'PV_corr' (default) or PV_dist'
+
+% If not specified, pull from PV_corr
+if nargin < 4
+    metric_type = 'PV_corr';
+end
+
+all_out = [];
+all_out2 = cell(size(sub_use,1),1);
+all_means = nan(size(sub_use,1),1);
+temp = [];
+num_comparisons = size(sub_use,1);
+for k = 1:length(animal_struct)
+    for arena_use = 1:2
+        sub_use_byarena = find(arena_use == sub_use(:,1)); % Pull-out subs for appropriate arena
+        for m = 1:length(sub_use_byarena)
+
+            temp = squeeze(animal_struct(k).PV_corrs2{local_flag,arena_use}.(metric_type)(...
+                sub_use(sub_use_byarena(m),2),sub_use(sub_use_byarena(m),3),:)); % Get appropriate correlations indicate in sub_use
             all_out = [all_out; temp]; % Add appropriate comparisons into temp_out
             all_out2{sub_use_byarena(m)} = temp;
             all_means(sub_use_byarena(m)) = nanmean(temp);
@@ -126,9 +144,15 @@ end
 
 %% sub-function to get shuffled correlations out
 
-function [stat_use] = calc_group_shuffled_stats(animal_struct, sub_use, local_flag)
+function [stat_use] = calc_group_shuffled_stats(animal_struct, sub_use, local_flag, metric_type)
 % local_flag: 1 = use distal aligned comparisons, 2 = use local aligned
-% comparisons
+% comparisons, metric_type = 'shuffle_matrix' (default) or dist_shuffle_matrix'
+
+% If not specified, pull from corr_matrix
+if nargin < 4
+    metric_type = 'shuffle_matrix';
+end
+
 all_out = [];
 all_out2 = cell(size(sub_use,1),1);
 all_means = nan(size(sub_use,1),1);
@@ -138,8 +162,46 @@ for k = 1:length(animal_struct)
     for arena_use = 1:2
         sub_use_byarena = find(arena_use == sub_use(:,1)); % Pull-out subs for appropriate arena
         for m = 1:length(sub_use_byarena)
-            temp = animal_struct(k).shuffle_matrix{local_flag,arena_use}(:,...
+            temp = animal_struct(k).(metric_type){local_flag,arena_use}(:,...
                 sub_use(sub_use_byarena(m),2),sub_use(sub_use_byarena(m),3),:); % Get appropriate correlations
+            all_out = [all_out; temp(:)]; % Add appropriate comparisons into temp_out
+            all_out2{sub_use_byarena(m)} = temp(:);
+            all_means(sub_use_byarena(m)) = nanmean(temp(:));
+        end
+    end
+end
+
+stat_use.all = all_out; % Aggregates all the correlations into one array
+stat_use.all_out2 = all_out2; % separates the correlations out to match sub_use
+stat_use.all_means = all_means; % Means of all the correlations - corresponds to sub_use
+stat_use.mean = nanmean(all_out);
+stat_use.sem = nanstd(all_out)/sqrt(num_comparisons); % Don't think this is valid stats...
+
+end
+
+%% sub-function to get shuffled correlations out
+
+function [stat_use] = calc_PV_group_shuffled_stats(animal_struct, sub_use, local_flag, metric_type)
+% local_flag: 1 = use distal aligned comparisons, 2 = use local aligned
+% comparisons, metric_type = 'PV_corr_shuffle_mean' (default) or
+% 'PV_dist_shuffle_mean'
+
+% If not specified, pull from corr_matrix
+if nargin < 4
+    metric_type = 'PV_corr_shuffle_mean';
+end
+
+all_out = [];
+all_out2 = cell(size(sub_use,1),1);
+all_means = nan(size(sub_use,1),1);
+temp = [];
+num_comparisons = size(sub_use,1);
+for k = 1:length(animal_struct)
+    for arena_use = 1:2
+        sub_use_byarena = find(arena_use == sub_use(:,1)); % Pull-out subs for appropriate arena
+        for m = 1:length(sub_use_byarena)
+            temp = squeeze(animal_struct(k).PV_corrs2{local_flag,arena_use}.(metric_type)(...
+                sub_use(sub_use_byarena(m),2),sub_use(sub_use_byarena(m),3),:)); % Get appropriate correlations
             all_out = [all_out; temp(:)]; % Add appropriate comparisons into temp_out
             all_out2{sub_use_byarena(m)} = temp(:);
             all_means(sub_use_byarena(m)) = nanmean(temp(:));
