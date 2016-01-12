@@ -3,12 +3,15 @@ close all
 start_ticker = tic;
 
 %% Filtering variables
-trans_rate_thresh = 0.005; % Hz
-pval_thresh = 0.05; % don't include ANY TMaps with p-values above this
+trans_rate_thresh = 0; %0.005; % Hz
+pval_thresh = 1; %0.05; % don't include ANY TMaps with p-values above this
 within_session = 1;
 num_shuffles = 10; 
 days_active_use = 2; % Do same plots using only neurons that are active this number of days
 file_append = ''; % If using archived PlaceMaps, this will be appended to the end of the Placemaps files
+
+%% Other variables
+PV_corr_bins = 5; % Number of bins to use for arenas when calculating PV correlations
 
 %% Set up mega-variable - note that working_dir 1 = square sessions and 2 = octagon sessions (REQUIRED)
 
@@ -120,17 +123,30 @@ for j = 2:num_animals
    shuffle_comb = cat(4,shuffle_comb,Mouse(j).shuffle_matrix{1,1}); % Hacked for now
 end
 
+
+%% Run PV correlations
+
+for j = 1:num_animals
+    disp(['RUNNING SECOND PV ANALYSIS FOR MOUSE ' num2str(j)])
+    for arena_counter = 1:2
+        for rot_counter = 0:1
+            temp = fix_batch_session_map(Mouse(j).batch_session_map(arena_counter));
+            [PV2, PV_corrs2] = get_PV_and_corr(temp.session,...
+                Mouse(j).batch_session_map(arena_counter).map,'rot_to_std',rot_counter,...
+                'use_trans',0,'NumXBins',PV_corr_bins,'NumYBins',PV_corr_bins);
+            Mouse(j).PV_corrs2{rot_counter+1,arena_counter} = PV_corrs2;
+        end
+    end
+end
 %% Mega-matrix2 - dump ALL neuron correlations together into appropriate matrices
 % simple version = only look at mean values for each animal
 % [ before_win2.distal_all, before_win2.local_all, before_win2.both_all, ...
 %     before_win2.distal_simple, before_win2.local_simple, before_win2.both_simple] = ...
 %     twoenv_make_megamean2(Mouse, before_win_conflict, before_win_aligned );
 
-
-
 %% Get basic stats - not done for population correlations yet
 
-exclude_G48 = 2; % Use if you want to exclude G48 due to high remapping within session
+exclude_G48 = 0; % Use if you want to exclude G48 due to high remapping within session
 % and/or different behavior from other mice (very low velocity and poor
 % coverage of the arena). 2 = exclude G45 AND G48
 
@@ -395,14 +411,14 @@ corrs_all2 = [];
 shuffle_all = [];
 shuffle_all2 = [];
 time_all = [];
-figure(500)
+% figure(500)
 for j = 1:num_animals
-    subplot(4,1,j)
-    plot(Mouse(j).both_stat2.separate_win_time, Mouse(j).both_stat2.separate_win.all_means,...
-        'b*',Mouse(j).both_stat2.before_after_time, Mouse(j).both_stat2.before_after.all_means,'b*');
-    title(Mouse(j).Name)
-    xlabel('Days'); ylabel('Mean correlation')
-    xlim([0 7]); set(gca,'XTick',[1 2 3 4 5 6])
+%     subplot(4,1,j)
+%     plot(Mouse(j).both_stat2.separate_win_time, Mouse(j).both_stat2.separate_win.all_means,...
+%         'b*',Mouse(j).both_stat2.before_after_time, Mouse(j).both_stat2.before_after.all_means,'b*');
+%     title(Mouse(j).Name)
+%     xlabel('Days'); ylabel('Mean correlation')
+%     xlim([0 7]); set(gca,'XTick',[1 2 3 4 5 6])
     
     corrs_all = [corrs_all; Mouse(j).both_stat2.separate_win.all_means; ...
         Mouse(j).both_stat2.before_after.all_means]; 
@@ -434,25 +450,28 @@ xlabel('Days between session'); ylabel('Mean correlation - individual TMaps')
 xlim([-0.5 6.5]); set(gca,'XTick',[0 1 2 3 4 5 6])
 legend('Actual','Shuffled')
 
-figure(499)
-plot(time_all,corrs_all,'r*')
-xlabel('Days between session'); ylabel('Mean correlation - individual TMaps')
-xlim([-0.5 6.5]); set(gca,'XTick',[0 1 2 3 4 5 6])
+% figure(499)
+% plot(time_all,corrs_all,'r*')
+% xlabel('Days between session'); ylabel('Mean correlation - individual TMaps')
+% xlim([-0.5 6.5]); set(gca,'XTick',[0 1 2 3 4 5 6])
 
 % Do this but in ecdf format - that is, group ALL TMap individual
 % correlations for a given day together
+figure(502)
 corrs_all_by_day = arrayfun(@(a) cat(1,corrs_all2{time_all == a}),...
     days_plot,'UniformOutput',0);
 shuffle_all_comb = cat(1,shuffle_all2{:});
 
-figure(502)
+cmap_use = hsv(7);
 days_plot_ind = find(to_plot);
 days_plot2 = days_plot(days_plot_ind);
 for j = 1:length(days_plot2)
-    ecdf(corrs_all_by_day{days_plot_ind(j)});
+    [ft, xt] = ecdf(corrs_all_by_day{days_plot_ind(j)});
+    plot(xt,ft,'Color',cmap_use(j,:));
     hold on
 end
-ecdf(shuffle_all_comb)
+[fshuf, xshuf] = ecdf(shuffle_all_comb);
+plot(xshuf,fshuf,'Color',cmap_use(7,:));
 xlabel('Individual TMap Correlation Value');
 legend([cellfun(@(a) [num2str(a) ' Days'], num2cell(days_plot2),'UniformOutput',0), ...
     'Shuffle']);
@@ -516,13 +535,13 @@ nanstd(after_5_local_comb);
 % First stab
 [ statss.after_5.h, statss.after_5.p ] = twoenv_kstest( Mouse, shuffle_comb, after_5_local, after_5_distal);
 [ statss.sep_win.h, statss.sep_win.p, statss.sep_win.mean ] = twoenv_kstest( Mouse, shuffle_comb, ...
-    separate_win_local, separate_win_distal,'plot_ecdf','separate');
+    separate_win_local, separate_win_distal); %,'plot_ecdf','separate');
 [ statss.sep_conn1.h, statss.sep_conn1.p, statss.sep_conn1.mean ] = twoenv_kstest( Mouse, shuffle_comb, ...
-    sep_conn1_local, sep_conn1_distal,'plot_ecdf','sep_conn1');
+    sep_conn1_local, sep_conn1_distal); %,'plot_ecdf','sep_conn1');
 [ statss.sep_conn2.h, statss.sep_conn2.p , statss.sep_conn2.mean] = twoenv_kstest( Mouse, shuffle_comb, ...
-    sep_conn2_local, sep_conn2_distal,'plot_ecdf','sep_conn2');
+    sep_conn2_local, sep_conn2_distal); %,'plot_ecdf','sep_conn2');
 [ statss.before_after.h, statss.before_after.p, statss.before_after.mean] = twoenv_kstest( Mouse, shuffle_comb, ...
-    before_after_local, before_after_distal,'plot_ecdf','before_after');
+    before_after_local, before_after_distal); %,'plot_ecdf','before_after');
 
 %% Second stab - includes both aligned data!
 
