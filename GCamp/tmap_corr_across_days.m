@@ -1,5 +1,5 @@
 function [corr_matrix, pop_corr_struct, min_dist_matrix, pass_thresh, ...
-    corr_win, corr_shuffle_matrix, min_dist_shuffle_matrix] = ...
+    corr_win, corr_shuffle_matrix, min_dist_shuffle_matrix, pop_corr_shuffle_matrix] = ...
     tmap_corr_across_days(working_dir,varargin)
 % [corr_matrix, pop_corr_struct, min_dist_matrix, pass_thresh, ...
 %    corr_win, corr_shuffle_matrix, min_dist_shuffle_matrix] = ...
@@ -296,6 +296,9 @@ if num_shuffles >= 1
                 ok_ind{2} = ok_ind{1}(randperm(length(ok_ind{1}))); % randomize 2nd session indices
                 map1_2_shuffle = zeros(size(sesh(k).TMap));
                 map1_base = get_neuronmap_from_batchmap(batch_session_map.map,k,ll);
+                
+                sesh1_pop = [];
+                sesh2_pop = [];
                 for j = 1:length(ok_ind{1})
                     sesh1_neuron = batch_session_map(1).map(ok_ind{1}(j),k+1);
                     sesh2_neuron = batch_session_map(1).map(ok_ind{2}(j),ll+1);
@@ -303,7 +306,21 @@ if num_shuffles >= 1
                     temp = corrcoef(sesh(k).TMap{sesh1_neuron}(:),...
                         sesh(ll).TMap{sesh2_neuron}(:));
                     corr_shuffle_matrix(n,k,ll,ok_ind{1}(j)) = temp(1,2);
+                    
+                    %%% Population Vectors
+                    if (sesh1_neuron ~= 0) && (sesh2_neuron ~= 0) && ...
+                            ~isnan(sum(sesh(k).TMap{sesh1_neuron}(:))) && ...
+                            ~isnan(sum(sesh(ll).TMap{sesh2_neuron}(:)))% ~isempty(sesh1_neuron) && ~isempty(sesh2_neuron) && ~isnan(sesh1_neuron) && ~isnan(sesh2_neuron)
+                        sesh1_pop = [sesh1_pop; sesh(k).TMap{sesh1_neuron}(:)];
+                        sesh2_pop = [sesh2_pop; sesh(ll).TMap{sesh2_neuron}(:)];
+                    end
                 end
+                
+                % Calculate PV correlations
+                [r_temp, ~] = corr(sesh1_pop,sesh2_pop);
+                pop_corr_shuffle_matrix(n,k,ll) = r_temp(1,2);
+                
+                
                 % Calculate distances between place fields
 %                 neuron_map_use = get_neuronmap_from_batchmap(batch_session_map.map,...
 %                     k,ll);
@@ -316,11 +333,14 @@ if num_shuffles >= 1
                     end
                 end
                 
+                
+                
             end
         end
     end
 else
     corr_shuffle_matrix = [];
+    pop_corr_shuffle_matrix = [];
 end
 
 toc

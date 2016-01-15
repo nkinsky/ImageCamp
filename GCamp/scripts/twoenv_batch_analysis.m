@@ -49,7 +49,8 @@ for j = 1:num_animals
         tt = tic;
         for m = 0:1
             [Mouse(j).corr_matrix{m+1,k}, pop_struct_temp, Mouse(j).min_dist_matrix{m+1,k}, Mouse(j).pass_count{m+1,k},...
-                Mouse(j).within_corr{m+1,k}, Mouse(j).shuffle_matrix{m+1,k}, Mouse(j).dist_shuffle_matrix{m+1,k}] = ...
+                Mouse(j).within_corr{m+1,k}, Mouse(j).shuffle_matrix{m+1,k}, Mouse(j).dist_shuffle_matrix{m+1,k},...
+                Mouse(j).pop_corr_shuffle_matrix{m+1,k}] = ...
                 tmap_corr_across_days(Mouse(j).working_dirs{k},...
                 'rotate_to_std',m,'population_corr',1,'trans_rate_thresh', ...
                 trans_rate_thresh, 'pval_thresh',pval_thresh,...
@@ -401,6 +402,12 @@ for j = 1:length(Mouse)
     Mouse(j).both_stat2.before_after_time = get_time_from_session(before_after_aligned{j},...
         time_index);
     
+    % Get other version of population vector correlations
+    
+     [temp_local_PV, temp_distal_PV, ~] = twoenv_get_ind_mean(Mouse(j), ...
+         separate_conflict{j}, separate_conflict{j}, 'metric_type', 'pop_corr_matrix');
+     Mouse(j).local_stat2.separate_win.PV_stat_orig = temp_local_PV;
+     Mouse(j).distal_stat2.separate_win.PV_stat_orig = temp_distal_PV;
 end
 
 %% Plot stability over time
@@ -555,6 +562,8 @@ means_sameday_day_all = [];
 means_sameday_arena_all = [];
 local_rot_PV_corrs_all = [];
 distal_rot_PV_corrs_all = [];
+local_rot_PV_orig_corrs_all = [];
+distal_rot_PV_orig_corrs_all = [];
 shuf_PV_corrs_all = [];
 PV_means_sameday_day_all = [];
 PV_means_sameday_arena_all = [];
@@ -598,6 +607,12 @@ for j = 1:num_animals
     shuf_PV_corrs_all = [shuf_PV_corrs_all; temp_shuf];
     Mouse(j).local_stat2.separate_win.PV_stat.shuffle_stat.means_sameday = temp_shuf;
     
+    % Original PV stats for comparison
+    temp_local = Mouse(j).local_stat2.separate_win.PV_stat_orig.all_means(same_day_indices);
+    local_rot_PV_orig_corrs_all = [local_rot_PV_orig_corrs_all; temp_local];
+    temp_distal = Mouse(j).distal_stat2.separate_win.PV_stat_orig.all_means(same_day_indices);
+    distal_rot_PV_orig_corrs_all = [distal_rot_PV_orig_corrs_all; temp_distal];
+    
 end
 
 % Plot of everything - 1) overall mean correlation for local cues or distal
@@ -619,6 +634,12 @@ distal_rot_PV_corrs_all_mean = mean(distal_rot_PV_corrs_all);
 distal_rot_PV_corrs_all_sem = std(distal_rot_PV_corrs_all)/sqrt(length(distal_rot_PV_corrs_all));
 shuf_PV_corrs_all_mean = mean(shuf_PV_corrs_all);
 shuf_PV_corrs_all_sem = std(shuf_PV_corrs_all)/sqrt(length(shuf_PV_corrs_all));
+
+% Group all original population correlations together
+local_rot_PV_orig_corrs_all_mean = mean(local_rot_PV_orig_corrs_all);
+local_rot_PV_orig_corrs_all_sem = std(local_rot_PV_orig_corrs_all)/sqrt(length(local_rot_PV_orig_corrs_all));
+distal_rot_PV_orig_corrs_all_mean = mean(distal_rot_PV_orig_corrs_all);
+distal_rot_PV_orig_corrs_all_sem = std(distal_rot_PV_orig_corrs_all)/sqrt(length(distal_rot_PV_orig_corrs_all));
 
 
 % Aggregate by day
@@ -670,11 +691,13 @@ figure(600)
 % just as a reference?
 subplot(2,2,1)
 bar_w_err([local_rot_corrs_all_mean, distal_rot_corrs_all_mean, shuf_corrs_all_mean;...
-    local_rot_PV_corrs_all_mean, distal_rot_PV_corrs_all_mean, shuf_PV_corrs_all_mean],...
+    local_rot_PV_corrs_all_mean, distal_rot_PV_corrs_all_mean, shuf_PV_corrs_all_mean;...
+    local_rot_PV_orig_corrs_all_mean, distal_rot_PV_orig_corrs_all_mean, nan],...
     [local_rot_corrs_all_sem, distal_rot_corrs_all_sem, shuf_corrs_all_sem;...
-    local_rot_PV_corrs_all_sem, distal_rot_PV_corrs_all_sem, shuf_PV_corrs_all_sem])
-xlim([0 3]); ylim([0 0.4]); 
-set(gca,'XTick',[1 2],'XTickLabel',{'Ind. Neurons','Population'})
+    local_rot_PV_corrs_all_sem, distal_rot_PV_corrs_all_sem, shuf_PV_corrs_all_sem;...
+    local_rot_PV_orig_corrs_all_sem, distal_rot_PV_orig_corrs_all_sem, nan])
+xlim([0 4]); ylim([-0.10 0.4]); 
+set(gca,'XTick',[1 2 3],'XTickLabel',{'Ind. Neurons','Population','Original Population Calc'})
 ylabel('Mean correlations')
 title('Mean TMap Correlations by cue alignment')
 legend('Local Cues Aligned','Distal Cues Aligned','Shuffled')
@@ -692,6 +715,7 @@ errorbar(day_plot, PV_means_by_day_plot, PV_means_by_day_sem);
 xlim([0.5 9.5]); ylim([-0.2 0.4])
 xlabel('Day of comparison'); ylabel('Mean TMap Correlation')
 legend('Individual Neurons','Population')
+title('Correlations by Day for Local Cue Rotations')
 
 % Local rotation correlations by arena
 subplot(2,2,3)
