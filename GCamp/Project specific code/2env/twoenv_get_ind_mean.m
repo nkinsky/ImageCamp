@@ -13,12 +13,20 @@ function [ local_stat, distal_stat, both_stat] = twoenv_get_ind_mean(Mouse_struc
 %   columns must be consistent across all
 
 %% Initialize variables and get varargins
+
+% Defaults
 temp_local = [];
 temp_distal = [];
 temp_both = []; both_sub_use = [];
+metric_type = 'corr_matrix';
+
+% Pull in varargins
 for j = 1:length(varargin)
    if strcmpi(varargin{j},'both_sub_use')
        both_sub_use = varargin{j+1};
+   end
+   if strcmpi(varargin{j},'metric_type')
+       metric_type = varargin{j+1};
    end
 end
 
@@ -30,14 +38,14 @@ both_sub_use = check_indices_type(both_sub_use);
 
 %% Create _stat variables
 
-local_stat = calc_group_stats(Mouse_struct, local_sub_use, 2);
+local_stat = calc_group_stats(Mouse_struct, local_sub_use, 2, metric_type);
 local_stat.PV_stat = calc_PV_group_stats(Mouse_struct, local_sub_use, 2);
 temp3 = calc_group_shuffled_stats(Mouse_struct, local_sub_use, 2);
 local_stat.shuffle_stat = temp3;
 temp5 = calc_PV_group_shuffled_stats(Mouse_struct, local_sub_use, 2);
-local_stat.PV_stat.shuffle_stat = temp3;
+local_stat.PV_stat.shuffle_stat = temp5;
 
-distal_stat = calc_group_stats(Mouse_struct, distal_sub_use,1);
+distal_stat = calc_group_stats(Mouse_struct, distal_sub_use,1, metric_type);
 distal_stat.PV_stat = calc_PV_group_stats(Mouse_struct, distal_sub_use,1);
 
 if ~isempty(both_sub_use)
@@ -88,10 +96,11 @@ for k = 1:length(animal_struct)
     for arena_use = 1:2
         sub_use_byarena = find(arena_use == sub_use(:,1)); % Pull-out subs for appropriate arena
         for m = 1:length(sub_use_byarena)
-            indices_use = make_mega_sub2ind(size(animal_struct(k).(metric_type){local_flag,arena_use}),...
-                sub_use(sub_use_byarena(m),2),sub_use(sub_use_byarena(m),3)); % convert subs to indices
+%             indices_use = make_mega_sub2ind(size(animal_struct(k).(metric_type){local_flag,arena_use}),...
+%                 sub_use(sub_use_byarena(m),2),sub_use(sub_use_byarena(m),3)); % convert subs to indices
             
-            temp = animal_struct(k).(metric_type){local_flag,arena_use}(indices_use); % Get appropriate correlations
+            temp = squeeze(animal_struct(k).(metric_type){local_flag,arena_use}...
+                (sub_use(sub_use_byarena(m),2),sub_use(sub_use_byarena(m),3),:)); % Get appropriate correlations
             all_out = [all_out; temp]; % Add appropriate comparisons into temp_out
             all_out2{sub_use_byarena(m)} = temp;
             all_means(sub_use_byarena(m)) = nanmean(temp);
