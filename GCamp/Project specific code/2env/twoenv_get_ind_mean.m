@@ -34,6 +34,8 @@ local_stat = calc_group_stats(Mouse_struct, local_sub_use, 2);
 local_stat.PV_stat = calc_PV_group_stats(Mouse_struct, local_sub_use, 2);
 temp3 = calc_group_shuffled_stats(Mouse_struct, local_sub_use, 2);
 local_stat.shuffle_stat = temp3;
+temp5 = calc_PV_group_shuffled_stats(Mouse_struct, local_sub_use, 2);
+local_stat.PV_stat.shuffle_stat = temp3;
 
 distal_stat = calc_group_stats(Mouse_struct, distal_sub_use,1);
 distal_stat.PV_stat = calc_PV_group_stats(Mouse_struct, distal_sub_use,1);
