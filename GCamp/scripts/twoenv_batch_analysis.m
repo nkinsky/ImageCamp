@@ -28,8 +28,8 @@ Mouse(3).working_dirs{1} = 'J:\GCamp Mice\Working\G45\2env\08_28_2015\1 - square
 Mouse(3).working_dirs{2} = 'J:\GCamp Mice\Working\G45\2env\08_29_2015\1 - oct right\Working';
 
 Mouse(4).Name = 'G48';
-Mouse(4).working_dirs{1} = 'I:\GCamp Mice\G48\2env\08_29_2015\1 - square right\Working';
-Mouse(4).working_dirs{2} = 'I:\GCamp Mice\G48\2env\08_30_2015\1 - oct mid\Working';
+Mouse(4).working_dirs{1} = 'E:\GCamp Mice\G48\2env\08_29_2015\1 - square right\Working';
+Mouse(4).working_dirs{2} = 'E:\GCamp Mice\G48\2env\08_30_2015\1 - oct mid\Working';
 
 num_animals = length(Mouse);
 
@@ -396,8 +396,6 @@ for j = 1:length(Mouse)
         Mouse(j).both_stat2.after_6] = twoenv_get_ind_mean(Mouse(j), ...
         after_6_conflict{j}, after_6_conflict{j}, 'both_sub_use',after_6_aligned{j});
     
-    
-
     Mouse(j).both_stat2.separate_win_time = get_time_from_session(separate_aligned{j},...
         time_index);
     Mouse(j).both_stat2.before_after_time = get_time_from_session(before_after_aligned{j},...
@@ -406,6 +404,8 @@ for j = 1:length(Mouse)
 end
 
 %% Plot stability over time
+
+% Add in plot of stability for each arena
 corrs_all = [];
 corrs_all2 = [];
 shuffle_all = [];
@@ -539,6 +539,174 @@ legend([cellfun(@(a) [num2str(a) ' Days'], num2cell(days_plot2),'UniformOutput',
 % that rotating typically does not induce a remapping relative to the local
 % cues - maybe this will pull more together...
 
+%% Remapping due to local cue rotation
+
+% Day lookup table - first column = arena, second column = session, third
+% column = day
+day_table = [1 1 1; 1 2 1; 2 1 2; 2 2 2; 2 3 3; 2 4 3; 1 3 4; 1 4 4; 1 5 5; ...
+    2 5 5; 1 6 6; 2 6 6; 1 7 7; 1 8 7; 2 7 8; 2 8 8];
+
+% Need to add in PV correlations also
+
+local_rot_corrs_all = [];
+distal_rot_corrs_all = [];
+shuf_corrs_all = [];
+means_sameday_day_all = [];
+means_sameday_arena_all = [];
+local_rot_PV_corrs_all = [];
+distal_rot_PV_corrs_all = [];
+shuf_PV_corrs_all = [];
+PV_means_sameday_day_all = [];
+PV_means_sameday_arena_all = [];
+for j = 1:num_animals
+    % Get indices for sessions that occur on the same day
+    same_day_indices = (separate_conflict{j}(:,2) == 1 & separate_conflict{j}(:,3) == 2) | ...
+        (separate_conflict{j}(:,2) == 3 & separate_conflict{j}(:,3) == 4) | ...
+        (separate_conflict{j}(:,2) == 7 & separate_conflict{j}(:,3) == 8);
+    
+    % Individual Stats
+    temp_local = Mouse(j).local_stat2.separate_win.all_means(same_day_indices);
+    local_rot_corrs_all = [local_rot_corrs_all; temp_local];
+    Mouse(j).local_stat2.separate_win.means_sameday = temp_local;
+    Mouse(j).local_stat2.separate_win.means_sameday_day = lookup_day(separate_conflict{j}...
+        (same_day_indices,1),separate_conflict{j}(same_day_indices,2));
+    means_sameday_day_all = [ means_sameday_day_all; ...
+        Mouse(j).local_stat2.separate_win.means_sameday_day];
+    means_sameday_arena_all = [ means_sameday_arena_all; ...
+        separate_conflict{j}(same_day_indices,1)];
+    
+    temp_distal = Mouse(j).distal_stat2.separate_win.all_means(same_day_indices);
+    distal_rot_corrs_all = [distal_rot_corrs_all; temp_distal];
+    Mouse(j).distal_stat2.separate_win.means_sameday = temp_distal;
+    
+    temp_shuf = Mouse(j).local_stat2.separate_win.shuffle_stat.all_means(same_day_indices);
+    shuf_corrs_all = [shuf_corrs_all; temp_shuf];
+    Mouse(j).local_stat2.separate_win.shuffle_stat.means_sameday = temp_shuf;
+    
+    % PV stats
+    temp_local = Mouse(j).local_stat2.separate_win.PV_stat.all_means(same_day_indices);
+    local_rot_PV_corrs_all = [local_rot_PV_corrs_all; temp_local];
+    Mouse(j).local_stat2.separate_win.PV_stat.means_sameday = temp_local;
+    Mouse(j).local_stat2.separate_win.PV_stat.means_sameday_day = lookup_day(separate_conflict{j}...
+        (same_day_indices,1),separate_conflict{j}(same_day_indices,2));
+    
+    temp_distal = Mouse(j).distal_stat2.separate_win.PV_stat.all_means(same_day_indices);
+    distal_rot_PV_corrs_all = [distal_rot_PV_corrs_all; temp_distal];
+    Mouse(j).distal_stat2.separate_win.PV_stat.means_sameday = temp_distal;
+    
+    temp_shuf = Mouse(j).local_stat2.separate_win.PV_stat.shuffle_stat.all_means(same_day_indices);
+    shuf_PV_corrs_all = [shuf_PV_corrs_all; temp_shuf];
+    Mouse(j).local_stat2.separate_win.PV_stat.shuffle_stat.means_sameday = temp_shuf;
+    
+end
+
+% Plot of everything - 1) overall mean correlation for local cues or distal
+% cues aligned, 2) Same plot by with x-axis as day of comparison, and 3) 
+% square vs. circle .  PV and individual vectors.
+
+% Group all individual correlations together
+local_rot_corrs_all_mean = mean(local_rot_corrs_all);
+local_rot_corrs_all_sem = std(local_rot_corrs_all)/sqrt(length(local_rot_corrs_all));
+distal_rot_corrs_all_mean = mean(distal_rot_corrs_all);
+distal_rot_corrs_all_sem = std(distal_rot_corrs_all)/sqrt(length(distal_rot_corrs_all));
+shuf_corrs_all_mean = mean(shuf_corrs_all);
+shuf_corrs_all_sem = std(shuf_corrs_all)/sqrt(length(shuf_corrs_all));
+
+% Group all population correlations together
+local_rot_PV_corrs_all_mean = mean(local_rot_PV_corrs_all);
+local_rot_PV_corrs_all_sem = std(local_rot_PV_corrs_all)/sqrt(length(local_rot_PV_corrs_all));
+distal_rot_PV_corrs_all_mean = mean(distal_rot_PV_corrs_all);
+distal_rot_PV_corrs_all_sem = std(distal_rot_PV_corrs_all)/sqrt(length(distal_rot_PV_corrs_all));
+shuf_PV_corrs_all_mean = mean(shuf_PV_corrs_all);
+shuf_PV_corrs_all_sem = std(shuf_PV_corrs_all)/sqrt(length(shuf_PV_corrs_all));
+
+
+% Aggregate by day
+[day_plot, means_by_day] = aggregate_by_group( local_rot_corrs_all, ...
+    means_sameday_day_all);
+means_by_day_plot = cellfun(@mean, means_by_day);
+means_by_day_sem = cellfun(@(a) std(a)/sqrt(length(a)), means_by_day);
+
+[~, PV_means_by_day] = aggregate_by_group( local_rot_PV_corrs_all, ...
+    means_sameday_day_all);
+PV_means_by_day_plot = cellfun(@mean, PV_means_by_day);
+PV_means_by_day_sem = cellfun(@(a) std(a)/sqrt(length(a)), PV_means_by_day);
+
+
+% Aggregate by arena
+[arena_plot, means_by_arena] = aggregate_by_group( local_rot_corrs_all, ...
+    means_sameday_arena_all);
+means_by_arena_plot = cellfun(@mean, means_by_arena);
+means_by_arena_sem = cellfun(@(a) std(a)/sqrt(length(a)), means_by_arena);
+
+[~, PV_means_by_arena] = aggregate_by_group( local_rot_PV_corrs_all, ...
+    means_sameday_arena_all);
+PV_means_by_arena_plot = cellfun(@mean, PV_means_by_arena);
+PV_means_by_arena_sem = cellfun(@(a) std(a)/sqrt(length(a)), PV_means_by_arena);
+
+
+%% Local rotation effect plots
+
+%%% !!! Why are distal aligned individual correlations close to shuffled
+%%% but PV correlations are well above chance, and even close to local
+%%% aligned PV correlations?  Would this drop if I used the same size grid
+%%% that I do for individual TMaps?
+
+%%% NEED to look at middle of arena PV correlations to possibly explain why
+%%% local aligned correlations are low - if it is truly a global remapping
+%%% then this shold be low/equal to the mean for each session.  However, if
+%%% it is due to mis-orientation by the mouse (that is, the map rotates in
+%%% a fashion different than the arena has rotated due to the mouse using a
+%%% different cue) then the correlation should be very high.  Need to make
+%%% sure this doesn't happen anyway, and if it does, that might be
+%%% interesting anyway - could follow up by identifying sessions with high
+%%% mid PV correlations but low mean values and look for the rotation that
+%%% gives high correlations with the original to prove the mis-orientation.
+%%%  
+
+figure(600)
+
+% Local aligned v Distal aligned Corrs - maybe add in both_aligned here
+% just as a reference?
+subplot(2,2,1)
+bar_w_err([local_rot_corrs_all_mean, distal_rot_corrs_all_mean, shuf_corrs_all_mean;...
+    local_rot_PV_corrs_all_mean, distal_rot_PV_corrs_all_mean, shuf_PV_corrs_all_mean],...
+    [local_rot_corrs_all_sem, distal_rot_corrs_all_sem, shuf_corrs_all_sem;...
+    local_rot_PV_corrs_all_sem, distal_rot_PV_corrs_all_sem, shuf_PV_corrs_all_sem])
+xlim([0 3]); ylim([0 0.4]); 
+set(gca,'XTick',[1 2],'XTickLabel',{'Ind. Neurons','Population'})
+ylabel('Mean correlations')
+title('Mean TMap Correlations by cue alignment')
+legend('Local Cues Aligned','Distal Cues Aligned','Shuffled')
+
+% Local Correlations by day
+subplot(2,2,2)
+% for j = 1:num_animals
+%     plot(Mouse(j).local_stat2.separate_win.means_sameday_day,...
+%         Mouse(j).local_stat2.separate_win.means_sameday,'*');
+%     hold on
+% end
+errorbar(day_plot,means_by_day_plot, means_by_day_sem);
+hold on
+errorbar(day_plot, PV_means_by_day_plot, PV_means_by_day_sem);
+xlim([0.5 9.5]); ylim([-0.2 0.4])
+xlabel('Day of comparison'); ylabel('Mean TMap Correlation')
+legend('Individual Neurons','Population')
+
+% Local rotation correlations by arena
+subplot(2,2,3)
+bar_w_err([means_by_arena_plot; PV_means_by_arena_plot], ...
+    [means_by_arena_sem; PV_means_by_arena_sem])
+xlim([0 3]); ylim([0 0.4]); 
+set(gca,'XTick',[1 2],'XTickLabel',{'Ind. Neurons','Population'})
+ylabel('Mean correlations with local cues aligned')
+title('Mean TMap Correlations by arena')
+legend('Square','Circle')
+
+% Do above but aggregate for all days of separation
+
+%%% Are the low BUT above chance correlations being driven by a handful of
+%%% cells that have high corrs?
 
 %% Combine all stats
 local_stat2_all = twoenv_combine_stats('local_stat2',Mouse(1),Mouse(2),...
