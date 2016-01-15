@@ -224,7 +224,7 @@ for zz = 1:length(sessions_use_cell)
     ecdf(min_dist_after);
     legend('Before','During','After')
     xlabel('Distance between Place Field centroid location in opposite arena')
-    title(mouse_name_title(Mouse(zz).Animal))
+    title(mouse_name_title(sesh(1).Animal))
     
     plot_this2 = 0;
     
