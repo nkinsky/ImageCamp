@@ -3,12 +3,15 @@ close all
 start_ticker = tic;
 
 %% Filtering variables
-trans_rate_thresh = 0.005; % Hz
-pval_thresh = 0.05; % don't include ANY TMaps with p-values above this
+trans_rate_thresh = 0; %0.005; % Hz
+pval_thresh = 1; %0.05; % don't include ANY TMaps with p-values above this
 within_session = 1;
 num_shuffles = 10; 
 days_active_use = 2; % Do same plots using only neurons that are active this number of days
 file_append = ''; % If using archived PlaceMaps, this will be appended to the end of the Placemaps files
+
+%% Other variables
+PV_corr_bins = 5; % Number of bins to use for arenas when calculating PV correlations
 
 %% Set up mega-variable - note that working_dir 1 = square sessions and 2 = octagon sessions (REQUIRED)
 
@@ -19,6 +22,14 @@ Mouse(1).working_dirs{2} = 'J:\GCamp Mice\Working\G30\2env\11_20_2014\1 - 2env o
 Mouse(2).Name = 'G31';
 Mouse(2).working_dirs{1} = 'J:\GCamp Mice\Working\G31\2env\12_15_2014\1 - 2env square right\Working';
 Mouse(2).working_dirs{2} = 'J:\GCamp Mice\Working\G31\2env\12_16_2014\1 - 2env octagon left\Working';
+
+Mouse(3).Name = 'G45';
+Mouse(3).working_dirs{1} = 'J:\GCamp Mice\Working\G45\2env\08_28_2015\1 - square right\Working';
+Mouse(3).working_dirs{2} = 'J:\GCamp Mice\Working\G45\2env\08_29_2015\1 - oct right\Working';
+
+Mouse(4).Name = 'G48';
+Mouse(4).working_dirs{1} = 'E:\GCamp Mice\G48\2env\08_29_2015\1 - square right\Working';
+Mouse(4).working_dirs{2} = 'E:\GCamp Mice\G48\2env\08_30_2015\1 - oct mid\Working';
 
 num_animals = length(Mouse);
 
@@ -37,8 +48,10 @@ for j = 1:num_animals
         Mouse(j).days_active{k} = sum(batch_session_map.map(:,2:end) > 0,2); % Get #days active for each neuron
         tt = tic;
         for m = 0:1
-            [Mouse(j).corr_matrix{m+1,k}, pop_struct_temp, Mouse(j).pass_count{m+1,k},...
-                Mouse(j).within_corr{m+1,k}, Mouse(j).shuffle_matrix] = tmap_corr_across_days(Mouse(j).working_dirs{k},...
+            [Mouse(j).corr_matrix{m+1,k}, pop_struct_temp, Mouse(j).min_dist_matrix{m+1,k}, Mouse(j).pass_count{m+1,k},...
+                Mouse(j).within_corr{m+1,k}, Mouse(j).shuffle_matrix{m+1,k}, Mouse(j).dist_shuffle_matrix{m+1,k},...
+                Mouse(j).pop_corr_shuffle_matrix{m+1,k}] = ...
+                tmap_corr_across_days(Mouse(j).working_dirs{k},...
                 'rotate_to_std',m,'population_corr',1,'trans_rate_thresh', ...
                 trans_rate_thresh, 'pval_thresh',pval_thresh,...
                 'archive_name_append',file_append,'within_session',within_session,...
@@ -106,18 +119,51 @@ for ll = 1:num_sessions
 end
 
 % Get shuffled distributions
-shuffle_comb = Mouse(1).shuffle_matrix;
+shuffle_comb = Mouse(1).shuffle_matrix{1,1}; % Hacked for now
 for j = 2:num_animals
-   shuffle_comb = cat(4,shuffle_comb,Mouse(j).shuffle_matrix); 
+   shuffle_comb = cat(4,shuffle_comb,Mouse(j).shuffle_matrix{1,1}); % Hacked for now
 end
 
+
+%% Run PV correlations
+
+for j = 1:num_animals
+    disp(['RUNNING SECOND PV ANALYSIS FOR MOUSE ' num2str(j)])
+    for arena_counter = 1:2
+        for rot_counter = 0:1
+            temp = fix_batch_session_map(Mouse(j).batch_session_map(arena_counter));
+            [PV2, PV_corrs2] = get_PV_and_corr(temp.session,...
+                Mouse(j).batch_session_map(arena_counter).map,'rot_to_std',rot_counter,...
+                'use_trans',0,'NumXBins',PV_corr_bins,'NumYBins',PV_corr_bins);
+            Mouse(j).PV_corrs2{rot_counter+1,arena_counter} = PV_corrs2;
+        end
+    end
+end
+%% Mega-matrix2 - dump ALL neuron correlations together into appropriate matrices
+% simple version = only look at mean values for each animal
+% [ before_win2.distal_all, before_win2.local_all, before_win2.both_all, ...
+%     before_win2.distal_simple, before_win2.local_simple, before_win2.both_simple] = ...
+%     twoenv_make_megamean2(Mouse, before_win_conflict, before_win_aligned );
+
 %% Get basic stats - not done for population correlations yet
+
+exclude_G48 = 0; % Use if you want to exclude G48 due to high remapping within session
+% and/or different behavior from other mice (very low velocity and poor
+% coverage of the arena). 2 = exclude G45 AND G48
 
 % Better way to do things in the future is to get values for ALL neuron correlations in
 % each session and group them together somehow after classifying them due
 % to the various comparisons below
-mean_simple_distal_align = mean(mega_mean(1).matrix,3);
-mean_simple_local_align = mean(mega_mean(2).matrix,3);
+if exclude_G48 == 0
+    mean_simple_distal_align = mean(mega_mean(1).matrix,3);
+    mean_simple_local_align = mean(mega_mean(2).matrix,3);
+elseif exclude_G48 == 1
+    mean_simple_distal_align = mean(mega_mean(1).matrix(:,:,1:6),3);
+    mean_simple_local_align = mean(mega_mean(2).matrix(:,:,1:6),3);
+elseif exclude_G48 == 2
+    mean_simple_distal_align = mean(mega_mean(1).matrix(:,:,1:4),3);
+    mean_simple_local_align = mean(mega_mean(2).matrix(:,:,1:4),3);
+end
 if isnan(sum(mean_simple_local_align(:))) || isnan(sum(mean_simple_distal_align(:)))
     disp('Note - some sessions have NO good correlations due to not meeting the threshold - be sure to check!')
     mean_simple_distal_align = nanmean(mega_mean(1).matrix,3);
@@ -228,24 +274,31 @@ pop_after_6_distal_sem = std(mean_simple_pop_distal_align(after_6_distal_ind))/s
 
 % Attempt to get more legit statistics - get mean of ALL comparisons
 % across all mice, not mean of means...confusing, I know, but more legit
-mega_size = size(mega_mean(2).matrix);
+if exclude_G48 == 0
+    mega_size = [8 8 8]; % mega_size = size(mega_mean(2).matrix);
+elseif exclude_G48 == 1
+    mega_size = [8 8 6];
+elseif exclude_G48 == 2
+    mega_size = [8 8 4];
+end
+
 before_win_local_ind = make_mega_sub2ind(mega_size, before_win_local(:,1), before_win_local(:,2)); 
-before_win_distal_ind = make_mega_sub2ind(mega_size, before_win_local(:,1), before_win_local(:,2));
+before_win_distal_ind = make_mega_sub2ind(mega_size, before_win_distal(:,1), before_win_distal(:,2));
 before_after_local_ind = make_mega_sub2ind(mega_size, before_after_local(:,1), before_after_local(:,2)); 
 before_after_distal_ind = make_mega_sub2ind(mega_size, before_after_distal(:,1), before_after_distal(:,2)); 
 before_5_local_ind = make_mega_sub2ind(mega_size, before_5_local(:,1), before_5_local(:,2)); 
-before_5_distal_ind = make_mega_sub2ind(mega_size, before_5_local(:,1), before_5_local(:,2));
+before_5_distal_ind = make_mega_sub2ind(mega_size, before_5_distal(:,1), before_5_distal(:,2));
 after_5_local_ind = make_mega_sub2ind(mega_size, after_5_local(:,1), after_5_local(:,2)); 
-after_5_distal_ind = make_mega_sub2ind(mega_size, after_5_local(:,1), after_5_local(:,2));
+after_5_distal_ind = make_mega_sub2ind(mega_size, after_5_distal(:,1), after_5_distal(:,2));
 before_6_local_ind = make_mega_sub2ind(mega_size, before_6_local(:,1), before_6_local(:,2)); 
-before_6_distal_ind = make_mega_sub2ind(mega_size, before_6_local(:,1), before_6_local(:,2));
+before_6_distal_ind = make_mega_sub2ind(mega_size, before_6_distal(:,1), before_6_distal(:,2));
 after_6_local_ind = make_mega_sub2ind(mega_size, after_6_local(:,1), after_6_local(:,2)); 
-after_6_distal_ind = make_mega_sub2ind(mega_size, after_6_local(:,1), after_6_local(:,2));
+after_6_distal_ind = make_mega_sub2ind(mega_size, after_6_distal(:,1), after_6_distal(:,2));
 conn1_conn2_local_ind = make_mega_sub2ind(mega_size, conn1_conn2_local(:,1), conn1_conn2_local(:,2)); 
-conn1_conn2_distal_ind = make_mega_sub2ind(mega_size, conn1_conn2_local(:,1), conn1_conn2_local(:,2));
+conn1_conn2_distal_ind = make_mega_sub2ind(mega_size, conn1_conn2_distal(:,1), conn1_conn2_distal(:,2));
 
 % Combined groupings (separate, connected day 1, connected day 2)
-separate_win_local = [before_win_local; before_after_local];
+separate_win_local = [before_win_local; before_after_local]; % Should include after_win also!!!
 separate_win_local_ind = [before_win_local_ind; before_after_local_ind];
 separate_win_local_mean = mean(mega_mean(2).matrix(separate_win_local_ind));
 separate_win_local_sem = std(mega_mean(2).matrix(separate_win_local_ind))/sqrt(length(separate_win_local_ind));
@@ -282,10 +335,448 @@ before_after_local_sem2 = std(mega_mean(2).matrix(before_after_local_ind))/sqrt(
 before_after_distal_mean2 = mean(mega_mean(1).matrix(before_after_distal_ind));
 before_after_distal_sem2 = std(mega_mean(1).matrix(before_after_distal_ind))/sqrt(length(before_after_distal_ind));
 
-%% Attempt to do above for day restricted data
-for ll = 2:8
-   twoenv_bars( mega_mean_byday(ll).mega_mean, shuffle_comb, ll) 
+%% Do Above for individual mice
+for j = 1:length(Mouse)
+    [ Mouse(j).local_stat.separate_win, Mouse(j).distal_stat.separate_win ] = ...
+        twoenv_get_ind_mean(Mouse(j), separate_win_local, separate_win_distal);
+    [ Mouse(j).local_stat.sep_conn1, Mouse(j).distal_stat.sep_conn1 ] = ...
+        twoenv_get_ind_mean(Mouse(j), sep_conn1_local, sep_conn1_distal);
+    [ Mouse(j).local_stat.sep_conn2, Mouse(j).distal_stat.sep_conn2 ] = ...
+        twoenv_get_ind_mean(Mouse(j), sep_conn2_local, sep_conn2_distal);
+    [ Mouse(j).local_stat.before_after, Mouse(j).distal_stat.before_after ] = ...
+        twoenv_get_ind_mean(Mouse(j), before_after_local, before_after_distal);
 end
+
+% For all mice combined
+[ local_stat_all.separate_win, distal_stat_all.separate_win ] = ...
+    twoenv_get_ind_mean(Mouse, separate_win_local, separate_win_distal);
+[ local_stat_all.sep_conn1, distal_stat_all.sep_conn1 ] = ...
+    twoenv_get_ind_mean(Mouse, sep_conn1_local, sep_conn1_distal);
+[ local_stat_all.sep_conn2, distal_stat_all.sep_conn2 ] = ...
+    twoenv_get_ind_mean(Mouse, sep_conn2_local, sep_conn2_distal);
+[ local_stat_all.before_after, distal_stat_all.before_after ] = ...
+    twoenv_get_ind_mean(Mouse, before_after_local, before_after_distal);
+
+%% Do above but with better indices
+
+twoenv_betterindices; % Run script to get better indices
+separate_conflict = cellfun(@(a,b) [a; b],before_win_conflict, after_win_conflict,'UniformOutput',0);
+separate_aligned = cellfun(@(a,b) [a; b],before_win_aligned, after_win_aligned,'UniformOutput',0);
+
+sep_conn1_conflict = cellfun(@(a,b) [a; b],before_5_conflict, after_5_conflict,'UniformOutput',0);
+sep_conn1_aligned = cellfun(@(a,b) [a; b],before_5_aligned, after_5_aligned,'UniformOutput',0);
+
+sep_conn2_conflict = cellfun(@(a,b) [a; b],before_6_conflict, after_6_conflict,'UniformOutput',0);
+sep_conn2_aligned = cellfun(@(a,b) [a; b],before_6_aligned, after_6_aligned,'UniformOutput',0);
+
+
+for j = 1:length(Mouse)
+    [ Mouse(j).local_stat2.separate_win, Mouse(j).distal_stat2.separate_win,  ...
+        Mouse(j).both_stat2.separate_win] = twoenv_get_ind_mean(Mouse(j), ...
+        separate_conflict{j}, separate_conflict{j}, 'both_sub_use',separate_aligned{j});
+    [ Mouse(j).local_stat2.sep_conn1, Mouse(j).distal_stat2.sep_conn1,  ...
+        Mouse(j).both_stat2.sep_conn1] = twoenv_get_ind_mean(Mouse(j), ...
+        sep_conn1_conflict{j}, sep_conn1_conflict{j}, 'both_sub_use',sep_conn1_aligned{j});
+    [ Mouse(j).local_stat2.sep_conn2, Mouse(j).distal_stat2.sep_conn2,  ...
+        Mouse(j).both_stat2.sep_conn2] = twoenv_get_ind_mean(Mouse(j), ...
+        sep_conn2_conflict{j}, sep_conn2_conflict{j}, 'both_sub_use',sep_conn2_aligned{j});
+    [ Mouse(j).local_stat2.before_after, Mouse(j).distal_stat2.before_after,  ...
+        Mouse(j).both_stat2.before_after] = twoenv_get_ind_mean(Mouse(j), ...
+        before_after_conflict{j}, before_after_conflict{j}, 'both_sub_use',before_after_aligned{j});
+    
+    [ Mouse(j).local_stat2.before_5, Mouse(j).distal_stat2.before_5,  ...
+        Mouse(j).both_stat2.before_5] = twoenv_get_ind_mean(Mouse(j), ...
+        before_5_conflict{j}, before_5_conflict{j}, 'both_sub_use',before_5_aligned{j});
+    [ Mouse(j).local_stat2.before_6, Mouse(j).distal_stat2.before_6,  ...
+        Mouse(j).both_stat2.before_6] = twoenv_get_ind_mean(Mouse(j), ...
+        before_6_conflict{j}, before_6_conflict{j}, 'both_sub_use',before_6_aligned{j});
+    [ Mouse(j).local_stat2.after_5, Mouse(j).distal_stat2.after_5,  ...
+        Mouse(j).both_stat2.after_5] = twoenv_get_ind_mean(Mouse(j), ...
+        after_5_conflict{j}, after_5_conflict{j}, 'both_sub_use',after_5_aligned{j});
+    [ Mouse(j).local_stat2.after_6, Mouse(j).distal_stat2.after_6,  ...
+        Mouse(j).both_stat2.after_6] = twoenv_get_ind_mean(Mouse(j), ...
+        after_6_conflict{j}, after_6_conflict{j}, 'both_sub_use',after_6_aligned{j});
+    
+    Mouse(j).both_stat2.separate_win_time = get_time_from_session(separate_aligned{j},...
+        time_index);
+    Mouse(j).both_stat2.before_after_time = get_time_from_session(before_after_aligned{j},...
+        time_index);
+    
+    % Get other version of population vector correlations
+    
+     [temp_local_PV, temp_distal_PV, ~] = twoenv_get_ind_mean(Mouse(j), ...
+         separate_conflict{j}, separate_conflict{j}, 'metric_type', 'pop_corr_matrix');
+     Mouse(j).local_stat2.separate_win.PV_stat_orig = temp_local_PV;
+     Mouse(j).distal_stat2.separate_win.PV_stat_orig = temp_distal_PV;
+     
+     
+     % Shift number shuffles to 3rd dimension to keep compatible with
+     % twoenv_get_ind_mean
+     for kk = 1:4
+         size_shuf_mat = size(Mouse(j).pop_corr_shuffle_matrix{kk});
+         size_shuf_check = size_shuf_mat == [num_sessions, num_sessions, num_shuffles];
+         if sum(size_shuf_check) ~= length(size_shuf_check) % Only shift dimension if it doesn't match
+             Mouse(j).pop_corr_shuffle_matrix{kk} = shiftdim(Mouse(j).pop_corr_shuffle_matrix{kk},1);
+         end
+     end
+     
+     [temp_local_PV_shuffle, ~, ~] = twoenv_get_ind_mean(Mouse(j), ...
+         separate_conflict{j}, separate_conflict{j}, 'metric_type', 'pop_corr_shuffle_matrix');
+     
+     Mouse(j).local_stat2.separate_win.PV_stat_orig_shuffle = temp_local_PV_shuffle;
+end
+
+%% Plot stability over time
+
+% Add in plot of stability for each arena
+corrs_all = [];
+corrs_all2 = [];
+shuffle_all = [];
+shuffle_all2 = [];
+
+PV_corrs_all = [];
+PV_corrs_all2 = [];
+PV_shuffle_all = [];
+PV_shuffle_all2 = [];
+
+time_all = [];
+% figure(500)
+for j = 1:num_animals
+%     subplot(4,1,j)
+%     plot(Mouse(j).both_stat2.separate_win_time, Mouse(j).both_stat2.separate_win.all_means,...
+%         'b*',Mouse(j).both_stat2.before_after_time, Mouse(j).both_stat2.before_after.all_means,'b*');
+%     title(Mouse(j).Name)
+%     xlabel('Days'); ylabel('Mean correlation')
+%     xlim([0 7]); set(gca,'XTick',[1 2 3 4 5 6])
+    
+    corrs_all = [corrs_all; Mouse(j).both_stat2.separate_win.all_means; ...
+        Mouse(j).both_stat2.before_after.all_means]; 
+    corrs_all2 = [corrs_all2; Mouse(j).both_stat2.separate_win.all_out2; ...
+        Mouse(j).both_stat2.before_after.all_out2];
+    shuffle_all = [shuffle_all; Mouse(j).both_stat2.separate_win.shuffle_stat.all_means; ...
+        Mouse(j).both_stat2.before_after.shuffle_stat.all_means]; 
+    shuffle_all2 = [shuffle_all2; Mouse(j).both_stat2.separate_win.shuffle_stat.all_out2; ...
+        Mouse(j).both_stat2.before_after.shuffle_stat.all_out2];
+    time_all = [time_all; Mouse(j).both_stat2.separate_win_time; ...
+        Mouse(j).both_stat2.before_after_time]; 
+    
+    PV_corrs_all = [PV_corrs_all; Mouse(j).both_stat2.separate_win.PV_stat.all_means; ...
+        Mouse(j).both_stat2.before_after.PV_stat.all_means]; 
+    PV_corrs_all2 = [PV_corrs_all2; Mouse(j).both_stat2.separate_win.PV_stat.all_out2; ...
+        Mouse(j).both_stat2.before_after.PV_stat.all_out2];
+    PV_shuffle_all = [PV_shuffle_all; Mouse(j).both_stat2.separate_win.PV_stat.shuffle_stat.all_means; ...
+        Mouse(j).both_stat2.before_after.PV_stat.shuffle_stat.all_means]; 
+    PV_shuffle_all2 = [PV_shuffle_all2; Mouse(j).both_stat2.separate_win.PV_stat.shuffle_stat.all_out2; ...
+        Mouse(j).both_stat2.before_after.PV_stat.shuffle_stat.all_out2];
+
+    
+end
+
+days_plot = [0 1 2 3 4 5 6]; % Days between sessions to plot
+
+corrs_mean_by_day = arrayfun(@(a) mean(corrs_all(time_all == a)),days_plot);
+corrs_sem_by_day = arrayfun(@(a) std(corrs_all(time_all == a))/...
+    sum(time_all == a),days_plot);
+shuffle_mean_by_day = arrayfun(@(a) mean(shuffle_all(time_all == a)),days_plot);
+
+PV_corrs_mean_by_day = arrayfun(@(a) mean(PV_corrs_all(time_all == a)),days_plot);
+PV_corrs_sem_by_day = arrayfun(@(a) std(PV_corrs_all(time_all == a))/...
+    sum(time_all == a),days_plot);
+PV_shuffle_mean_by_day = arrayfun(@(a) mean(PV_shuffle_all(time_all == a)),days_plot);
+
+to_plot = ~isnan(corrs_mean_by_day);
+figure(501)
+% Individual TMap correlations
+subplot(2,1,1)
+plot(days_plot(to_plot),corrs_mean_by_day(to_plot),'k.-',days_plot(to_plot),...
+shuffle_mean_by_day(to_plot),'r--') % time_all,corrs_all,'r*'
+hold on
+errorbar(days_plot(to_plot),corrs_mean_by_day(to_plot),corrs_sem_by_day(to_plot),'k')
+xlabel('Days between session'); ylabel('Mean correlation')
+title('Stability - Individual Neurons Transient Map Correlations')
+xlim([-0.5 6.5]); set(gca,'XTick',[0 1 2 3 4 5 6])
+legend('Actual','Shuffled')
+% Population Correlations
+subplot(2,1,2)
+plot(days_plot(to_plot),PV_corrs_mean_by_day(to_plot),'k.-',days_plot(to_plot),...
+PV_shuffle_mean_by_day(to_plot),'r--') % time_all,corrs_all,'r*'
+hold on
+errorbar(days_plot(to_plot),PV_corrs_mean_by_day(to_plot),PV_corrs_sem_by_day(to_plot),'k')
+xlabel('Days between session'); ylabel('Mean correlation')
+title('Stability - Population Vector Correlations')
+xlim([-0.5 6.5]); set(gca,'XTick',[0 1 2 3 4 5 6])
+legend('Actual','Shuffled')
+
+% figure(499)
+% plot(time_all,corrs_all,'r*')
+% xlabel('Days between session'); ylabel('Mean correlation - individual TMaps')
+% xlim([-0.5 6.5]); set(gca,'XTick',[0 1 2 3 4 5 6])
+
+% Do this but in ecdf format - that is, group ALL TMap individual
+% correlations for a given day together
+figure(502)
+corrs_all_by_day = arrayfun(@(a) cat(1,corrs_all2{time_all == a}),...
+    days_plot,'UniformOutput',0);
+shuffle_all_comb = cat(1,shuffle_all2{:});
+
+cmap_use = hsv(7);
+days_plot_ind = find(to_plot);
+days_plot2 = days_plot(days_plot_ind);
+for j = 1:length(days_plot2)
+    [ft, xt] = ecdf(corrs_all_by_day{days_plot_ind(j)});
+    plot(xt,ft,'Color',cmap_use(j,:));
+    hold on
+end
+[fshuf, xshuf] = ecdf(shuffle_all_comb);
+plot(xshuf,fshuf,'Color',cmap_use(7,:));
+xlabel('Individual TMap Correlation Value');
+legend([cellfun(@(a) [num2str(a) ' Days'], num2cell(days_plot2),'UniformOutput',0), ...
+    'Shuffle']);
+
+% Similar to above but for Population Vectors
+figure(503)
+PV_corrs_all_by_day = arrayfun(@(a) cat(1,PV_corrs_all2{time_all == a}),...
+    days_plot,'UniformOutput',0);
+PV_shuffle_all_comb = cat(1,PV_shuffle_all2{:});
+
+cmap_use = hsv(7);
+days_plot_ind = find(to_plot);
+days_plot2 = days_plot(days_plot_ind);
+for j = 1:length(days_plot2)
+    [ft, xt] = ecdf(PV_corrs_all_by_day{days_plot_ind(j)});
+    plot(xt,ft,'Color',cmap_use(j,:));
+    hold on
+end
+[fshuf, xshuf] = ecdf(PV_shuffle_all_comb);
+plot(xshuf,fshuf,'Color',cmap_use(7,:));
+xlabel('Population Vector Correlation Value');
+legend([cellfun(@(a) [num2str(a) ' Days'], num2cell(days_plot2),'UniformOutput',0), ...
+    'Shuffle']);
+
+% 3 Day correlations are very low for some reason (yet still higher than
+% chance).  Most likely reason is that they include sessions right
+% before/after connection, whereas there are more sessions for the 5/6 day
+% comparisons that occur after at least one session back in the single
+% arenas.  GLM could maybe pull this apart...
+% Could do the same for the local individual correlations after showing
+% that rotating typically does not induce a remapping relative to the local
+% cues - maybe this will pull more together...
+
+%% Remapping due to local cue rotation
+
+% Day lookup table - first column = arena, second column = session, third
+% column = day
+day_table = [1 1 1; 1 2 1; 2 1 2; 2 2 2; 2 3 3; 2 4 3; 1 3 4; 1 4 4; 1 5 5; ...
+    2 5 5; 1 6 6; 2 6 6; 1 7 7; 1 8 7; 2 7 8; 2 8 8];
+
+% Need to add in PV correlations also
+
+local_rot_corrs_all = [];
+distal_rot_corrs_all = [];
+shuf_corrs_all = [];
+means_sameday_day_all = [];
+means_sameday_arena_all = [];
+local_rot_PV_corrs_all = [];
+distal_rot_PV_corrs_all = [];
+local_rot_PV_orig_corrs_all = [];
+distal_rot_PV_orig_corrs_all = [];
+shuf_PV_corrs_all = [];
+shuf_PV_orig_all = [];
+PV_means_sameday_day_all = [];
+PV_means_sameday_arena_all = [];
+for j = 1:num_animals
+    % Get indices for sessions that occur on the same day
+    same_day_indices = (separate_conflict{j}(:,2) == 1 & separate_conflict{j}(:,3) == 2) | ...
+        (separate_conflict{j}(:,2) == 3 & separate_conflict{j}(:,3) == 4) | ...
+        (separate_conflict{j}(:,2) == 7 & separate_conflict{j}(:,3) == 8);
+    
+    % Individual Stats
+    temp_local = Mouse(j).local_stat2.separate_win.all_means(same_day_indices);
+    local_rot_corrs_all = [local_rot_corrs_all; temp_local];
+    Mouse(j).local_stat2.separate_win.means_sameday = temp_local;
+    Mouse(j).local_stat2.separate_win.means_sameday_day = lookup_day(separate_conflict{j}...
+        (same_day_indices,1),separate_conflict{j}(same_day_indices,2));
+    means_sameday_day_all = [ means_sameday_day_all; ...
+        Mouse(j).local_stat2.separate_win.means_sameday_day];
+    means_sameday_arena_all = [ means_sameday_arena_all; ...
+        separate_conflict{j}(same_day_indices,1)];
+    
+    temp_distal = Mouse(j).distal_stat2.separate_win.all_means(same_day_indices);
+    distal_rot_corrs_all = [distal_rot_corrs_all; temp_distal];
+    Mouse(j).distal_stat2.separate_win.means_sameday = temp_distal;
+    
+    temp_shuf = Mouse(j).local_stat2.separate_win.shuffle_stat.all_means(same_day_indices);
+    shuf_corrs_all = [shuf_corrs_all; temp_shuf];
+    Mouse(j).local_stat2.separate_win.shuffle_stat.means_sameday = temp_shuf;
+    
+    % PV stats
+    temp_local = Mouse(j).local_stat2.separate_win.PV_stat.all_means(same_day_indices);
+    local_rot_PV_corrs_all = [local_rot_PV_corrs_all; temp_local];
+    Mouse(j).local_stat2.separate_win.PV_stat.means_sameday = temp_local;
+    Mouse(j).local_stat2.separate_win.PV_stat.means_sameday_day = lookup_day(separate_conflict{j}...
+        (same_day_indices,1),separate_conflict{j}(same_day_indices,2));
+    
+    temp_distal = Mouse(j).distal_stat2.separate_win.PV_stat.all_means(same_day_indices);
+    distal_rot_PV_corrs_all = [distal_rot_PV_corrs_all; temp_distal];
+    Mouse(j).distal_stat2.separate_win.PV_stat.means_sameday = temp_distal;
+    
+    temp_shuf = Mouse(j).local_stat2.separate_win.PV_stat.shuffle_stat.all_means(same_day_indices);
+    shuf_PV_corrs_all = [shuf_PV_corrs_all; temp_shuf];
+    Mouse(j).local_stat2.separate_win.PV_stat.shuffle_stat.means_sameday = temp_shuf;
+    
+    % Original PV stats for comparison
+    temp_local = Mouse(j).local_stat2.separate_win.PV_stat_orig.all_means(same_day_indices);
+    local_rot_PV_orig_corrs_all = [local_rot_PV_orig_corrs_all; temp_local];
+    temp_distal = Mouse(j).distal_stat2.separate_win.PV_stat_orig.all_means(same_day_indices);
+    distal_rot_PV_orig_corrs_all = [distal_rot_PV_orig_corrs_all; temp_distal];
+    
+    % Original PV shuffled stats
+    temp_shuffle = Mouse(j).local_stat2.separate_win.PV_stat_orig_shuffle.all_means;
+    shuf_PV_orig_all = [shuf_PV_orig_all; temp_shuffle];
+    
+end
+
+% Plot of everything - 1) overall mean correlation for local cues or distal
+% cues aligned, 2) Same plot by with x-axis as day of comparison, and 3) 
+% square vs. circle .  PV and individual vectors.
+
+% Group all individual correlations together
+local_rot_corrs_all_mean = mean(local_rot_corrs_all);
+local_rot_corrs_all_sem = std(local_rot_corrs_all)/sqrt(length(local_rot_corrs_all));
+distal_rot_corrs_all_mean = mean(distal_rot_corrs_all);
+distal_rot_corrs_all_sem = std(distal_rot_corrs_all)/sqrt(length(distal_rot_corrs_all));
+shuf_corrs_all_mean = mean(shuf_corrs_all);
+shuf_corrs_all_sem = std(shuf_corrs_all)/sqrt(length(shuf_corrs_all));
+
+% Group all population correlations together
+local_rot_PV_corrs_all_mean = mean(local_rot_PV_corrs_all);
+local_rot_PV_corrs_all_sem = std(local_rot_PV_corrs_all)/sqrt(length(local_rot_PV_corrs_all));
+distal_rot_PV_corrs_all_mean = mean(distal_rot_PV_corrs_all);
+distal_rot_PV_corrs_all_sem = std(distal_rot_PV_corrs_all)/sqrt(length(distal_rot_PV_corrs_all));
+shuf_PV_corrs_all_mean = mean(shuf_PV_corrs_all);
+shuf_PV_corrs_all_sem = std(shuf_PV_corrs_all)/sqrt(length(shuf_PV_corrs_all));
+
+% Group all original population correlations together
+local_rot_PV_orig_corrs_all_mean = mean(local_rot_PV_orig_corrs_all);
+local_rot_PV_orig_corrs_all_sem = std(local_rot_PV_orig_corrs_all)/sqrt(length(local_rot_PV_orig_corrs_all));
+distal_rot_PV_orig_corrs_all_mean = mean(distal_rot_PV_orig_corrs_all);
+distal_rot_PV_orig_corrs_all_sem = std(distal_rot_PV_orig_corrs_all)/sqrt(length(distal_rot_PV_orig_corrs_all));
+shuf_PV_orig_all_mean = mean(shuf_PV_orig_all);
+shuf_PV_orig_all_sem = std(shuf_PV_orig_all)/sqrt(length(shuf_PV_orig_all));
+
+% Aggregate by day
+[day_plot, means_by_day] = aggregate_by_group( local_rot_corrs_all, ...
+    means_sameday_day_all);
+means_by_day_plot = cellfun(@mean, means_by_day);
+means_by_day_sem = cellfun(@(a) std(a)/sqrt(length(a)), means_by_day);
+
+[~, PV_means_by_day] = aggregate_by_group( local_rot_PV_corrs_all, ...
+    means_sameday_day_all);
+PV_means_by_day_plot = cellfun(@mean, PV_means_by_day);
+PV_means_by_day_sem = cellfun(@(a) std(a)/sqrt(length(a)), PV_means_by_day);
+
+
+% Aggregate by arena
+[arena_plot, means_by_arena] = aggregate_by_group( local_rot_corrs_all, ...
+    means_sameday_arena_all);
+means_by_arena_plot = cellfun(@mean, means_by_arena);
+means_by_arena_sem = cellfun(@(a) std(a)/sqrt(length(a)), means_by_arena);
+
+[~, PV_means_by_arena] = aggregate_by_group( local_rot_PV_corrs_all, ...
+    means_sameday_arena_all);
+PV_means_by_arena_plot = cellfun(@mean, PV_means_by_arena);
+PV_means_by_arena_sem = cellfun(@(a) std(a)/sqrt(length(a)), PV_means_by_arena);
+
+
+%% Local rotation effect plots
+
+%%% !!! Why are distal aligned individual correlations close to shuffled
+%%% but PV correlations are well above chance, and even close to local
+%%% aligned PV correlations?  Would this drop if I used the same size grid
+%%% that I do for individual TMaps?
+
+%%% NEED to look at middle of arena PV correlations to possibly explain why
+%%% local aligned correlations are low - if it is truly a global remapping
+%%% then this shold be low/equal to the mean for each session.  However, if
+%%% it is due to mis-orientation by the mouse (that is, the map rotates in
+%%% a fashion different than the arena has rotated due to the mouse using a
+%%% different cue) then the correlation should be very high.  Need to make
+%%% sure this doesn't happen anyway, and if it does, that might be
+%%% interesting anyway - could follow up by identifying sessions with high
+%%% mid PV correlations but low mean values and look for the rotation that
+%%% gives high correlations with the original to prove the mis-orientation.
+%%%  
+
+figure(600)
+
+% Local aligned v Distal aligned Corrs - maybe add in both_aligned here
+% just as a reference?
+subplot(2,2,1)
+bar_w_err([local_rot_corrs_all_mean, distal_rot_corrs_all_mean, shuf_corrs_all_mean;...
+    local_rot_PV_corrs_all_mean, distal_rot_PV_corrs_all_mean, shuf_PV_corrs_all_mean;...
+    local_rot_PV_orig_corrs_all_mean, distal_rot_PV_orig_corrs_all_mean, shuf_PV_orig_all_mean],...
+    [local_rot_corrs_all_sem, distal_rot_corrs_all_sem, shuf_corrs_all_sem;...
+    local_rot_PV_corrs_all_sem, distal_rot_PV_corrs_all_sem, shuf_PV_corrs_all_sem;...
+    local_rot_PV_orig_corrs_all_sem, distal_rot_PV_orig_corrs_all_sem, shuf_PV_orig_all_sem])
+xlim([0 4]); ylim([-0.10 0.4]); 
+set(gca,'XTick',[1 2 3],'XTickLabel',{'Ind. Neurons','Population','Original Population Calc'})
+ylabel('Mean correlations')
+title('Mean TMap Correlations by cue alignment')
+legend('Local Cues Aligned','Distal Cues Aligned','Shuffled')
+
+% Local Correlations by day
+subplot(2,2,2)
+% for j = 1:num_animals
+%     plot(Mouse(j).local_stat2.separate_win.means_sameday_day,...
+%         Mouse(j).local_stat2.separate_win.means_sameday,'*');
+%     hold on
+% end
+errorbar(day_plot,means_by_day_plot, means_by_day_sem);
+hold on
+errorbar(day_plot, PV_means_by_day_plot, PV_means_by_day_sem);
+xlim([0.5 9.5]); ylim([-0.2 0.4])
+xlabel('Day of comparison'); ylabel('Mean TMap Correlation')
+legend('Individual Neurons','Population')
+title('Correlations by Day for Local Cue Rotations')
+
+% Local rotation correlations by arena
+subplot(2,2,3)
+bar_w_err([means_by_arena_plot; PV_means_by_arena_plot], ...
+    [means_by_arena_sem; PV_means_by_arena_sem])
+xlim([0 3]); ylim([0 0.4]); 
+set(gca,'XTick',[1 2],'XTickLabel',{'Ind. Neurons','Population'})
+ylabel('Mean correlations with local cues aligned')
+title('Mean TMap Correlations by arena')
+legend('Square','Circle')
+
+% Do above but aggregate for all days of separation
+
+%%% Are the low BUT above chance correlations being driven by a handful of
+%%% cells that have high corrs?
+
+%% Combine all stats
+local_stat2_all = twoenv_combine_stats('local_stat2',Mouse(1),Mouse(2),...
+    Mouse(3),Mouse(4));
+distal_stat2_all = twoenv_combine_stats('distal_stat2',Mouse(1),Mouse(2),...
+    Mouse(3),Mouse(4));
+both_stat2_all = twoenv_combine_stats('both_stat2',Mouse(1),Mouse(2),...
+    Mouse(3),Mouse(4));
+
+local_stat2_all_noG48 = twoenv_combine_stats('local_stat2',Mouse(1),Mouse(2),...
+    Mouse(3));
+distal_stat2_all_noG48 = twoenv_combine_stats('distal_stat2',Mouse(1),Mouse(2),...
+    Mouse(3));
+both_stat2_all_noG48 = twoenv_combine_stats('both_stat2',Mouse(1),Mouse(2),...
+    Mouse(3));
+
+local_stat2_all_noG45G48 = twoenv_combine_stats('local_stat2',Mouse(1),Mouse(2));
+distal_stat2_all_noG45G48 = twoenv_combine_stats('distal_stat2',Mouse(1),Mouse(2));
+both_stat2_all_noG45G48 = twoenv_combine_stats('both_stat2',Mouse(1),Mouse(2));
+
+%% Attempt to do above for day restricted data
+% for ll = 2:8
+%    twoenv_bars( mega_mean_byday(ll).mega_mean, shuffle_comb, ll) 
+% end
 
 %% First attempt to get real stats
 
@@ -309,15 +800,43 @@ end
 nanmean(after_5_local_comb);
 nanstd(after_5_local_comb);
 
+% First stab
 [ statss.after_5.h, statss.after_5.p ] = twoenv_kstest( Mouse, shuffle_comb, after_5_local, after_5_distal);
 [ statss.sep_win.h, statss.sep_win.p, statss.sep_win.mean ] = twoenv_kstest( Mouse, shuffle_comb, ...
-    separate_win_local, separate_win_distal,'plot_ecdf','separate');
+    separate_win_local, separate_win_distal); %,'plot_ecdf','separate');
 [ statss.sep_conn1.h, statss.sep_conn1.p, statss.sep_conn1.mean ] = twoenv_kstest( Mouse, shuffle_comb, ...
-    sep_conn1_local, sep_conn1_distal,'plot_ecdf','sep_conn1');
+    sep_conn1_local, sep_conn1_distal); %,'plot_ecdf','sep_conn1');
 [ statss.sep_conn2.h, statss.sep_conn2.p , statss.sep_conn2.mean] = twoenv_kstest( Mouse, shuffle_comb, ...
-    sep_conn2_local, sep_conn2_distal,'plot_ecdf','sep_conn2');
+    sep_conn2_local, sep_conn2_distal); %,'plot_ecdf','sep_conn2');
 [ statss.before_after.h, statss.before_after.p, statss.before_after.mean] = twoenv_kstest( Mouse, shuffle_comb, ...
-    before_after_local, before_after_distal,'plot_ecdf','before_after');
+    before_after_local, before_after_distal); %,'plot_ecdf','before_after');
+
+%% Second stab - includes both aligned data!
+
+compare_types = {'separate_win','sep_conn1','sep_conn2','before_after'};
+plot_title = {'Separate','Separate - Connected Day 1','Separate - Connected Day 2',...
+    'Before - After'};
+figure(400)
+for j = 1:4
+subplot(2,2,j)
+[f1, x1] = ecdf(local_stat2_all.(compare_types{j}).all);
+[f2, x2] = ecdf(distal_stat2_all.(compare_types{j}).all);
+if ~isempty(both_stat2_all.(compare_types{j}).all) % don't plot if empty
+    [f3, x3] = ecdf(both_stat2_all.(compare_types{j}).all);   
+end
+[fshuf, xshuf] = ecdf(shuffle_comb(:));
+
+if ~isempty(both_stat2_all.(compare_types{j}).all)
+    plot(x1,f1,'b',x2,f2,'y',x3,f3,'r',xshuf,fshuf,'k-.')
+    legend('Local Cues aligned','Distal Cues Aligned','Both Cues Aligned','Shuffled')
+else
+    plot(x1,f1,'b',x2,f2,'y',xshuf,fshuf,'k-.')
+    legend('Local Cues Aligned','Distal Cues Aligned','Shuffled')
+end
+title(plot_title{j});
+xlabel('TMap correlations')
+end
+
 
 %% Plot individual neuron summaries
 error_on = 1;
@@ -369,6 +888,48 @@ h_legend = legend([h(1) h(2) h2],'Local cues aligned','Distal cues aligned','Cha
 hold off
 ylims_given = get(gca,'YLim');
 % ylim([ylims_given(1)-0.1, ylims_given(2)+0.1]);
+
+%% Similar to above but with "both" alignment included
+figure(111)
+plot_simplified_summary(local_stat2_all, distal_stat2_all, 'both_stat',...
+    both_stat2_all)
+ylabel('Transient Map Mean Correlations - Individual Neurons')
+set(gca,'XTickLabel',{'Separate','Separate - Connected Day 1',...
+    'Separate - Connected Day 2','Before - After'})
+title('All Mice');
+
+figure(112)
+plot_simplified_summary(local_stat2_all_noG48, distal_stat2_all_noG48, 'both_stat',...
+    both_stat2_all_noG48)
+ylabel('Transient Map Mean Correlations - Individual Neurons')
+set(gca,'XTickLabel',{'Separate','Separate - Connected Day 1',...
+    'Separate - Connected Day 2','Before - After'})
+title('No G48');
+
+figure(113)
+plot_simplified_summary(local_stat2_all_noG45G48, distal_stat2_all_noG45G48, 'both_stat',...
+    both_stat2_all_noG45G48)
+ylabel('Transient Map Mean Correlations - Individual Neurons')
+set(gca,'XTickLabel',{'Separate','Separate - Connected Day 1',...
+    'Separate - Connected Day 2','Before - After'})
+title('G30 and G31 only');
+
+%% Simplified for all Animals
+figure(115)
+for j = 1:length(Mouse)
+   subplot(4,1,j)
+   plot_simplified_summary(Mouse(j).local_stat,Mouse(j).distal_stat)
+   title(Mouse(j).Name)
+end
+
+% Divided into distal aligned, local aligned, and both aligned groups
+figure(116)
+for j = 1:length(Mouse)
+   subplot(4,1,j)
+   plot_simplified_summary(Mouse(j).local_stat2,Mouse(j).distal_stat2,...
+       'both_stat',Mouse(j).both_stat2)
+   title(Mouse(j).Name)
+end
 
 %% Plot population correlation summary
 figure(11)
@@ -643,3 +1204,15 @@ for m = 1:2
     end
 end
 
+%% Display All Mouse corr_matrix
+
+alignment = {'distal','local'};
+arena = {'square','octagon'};
+for j = 1:num_animals
+    for k = 1:2
+        for ll = 1:2
+            disp(['Mouse ' num2str(j) ' - ' alignment{k} ' - ' arena{ll}])
+            nanmean(Mouse(j).corr_matrix{k,ll},3)
+        end
+    end
+end

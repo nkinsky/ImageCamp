@@ -1,5 +1,5 @@
 function [ OccMap_smooth, TMap_nan ] = make_nan_TMap( OccMap, TMap )
-%[ nan_occmap ] = make_nan_TMap( Occmap, TMap )
+%[ OccMap_smooth, TMap_nan ] = make_nan_TMap( OccMap, TMap )
 %   This function takes Occmap and TMap and assigned nans to all 0 values
 %   in the Occmap so that you can plot the track as white using imagesc_nan
 %   OccMap_smooth is a smoothed occupancy map, with zeros at points of zero

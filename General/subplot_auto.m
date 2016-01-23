@@ -20,8 +20,10 @@ elseif n_total <= 9
     subplot(3,3,n)
 elseif n_total <= 16
     subplot(4,4,n)
+elseif n_total <= 25
+    subplot(5,5,n)
 else
-    disp('You really want to have more than 16 subplots in a figure?')
+    disp('You really want to have more than 25 subplots in a figure?')
 end
 
 end
