@@ -317,8 +317,8 @@ if num_shuffles >= 1
                 end
                 
                 % Calculate PV correlations
-                [r_temp, ~] = corr(sesh1_pop,sesh2_pop);
-                pop_corr_shuffle_matrix(n,k,ll) = r_temp(1,2);
+                pop_corr_shuffle_matrix(n,k,ll) = corr(sesh1_pop,sesh2_pop);
+%                 pop_corr_shuffle_matrix(n,k,ll) = r_temp(1,2);
                 
                 
                 % Calculate distances between place fields

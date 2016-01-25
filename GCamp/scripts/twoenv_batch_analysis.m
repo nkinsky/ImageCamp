@@ -408,6 +408,22 @@ for j = 1:length(Mouse)
          separate_conflict{j}, separate_conflict{j}, 'metric_type', 'pop_corr_matrix');
      Mouse(j).local_stat2.separate_win.PV_stat_orig = temp_local_PV;
      Mouse(j).distal_stat2.separate_win.PV_stat_orig = temp_distal_PV;
+     
+     
+     % Shift number shuffles to 3rd dimension to keep compatible with
+     % twoenv_get_ind_mean
+     for kk = 1:4
+         size_shuf_mat = size(Mouse(j).pop_corr_shuffle_matrix{kk});
+         size_shuf_check = size_shuf_mat == [num_sessions, num_sessions, num_shuffles];
+         if sum(size_shuf_check) ~= length(size_shuf_check) % Only shift dimension if it doesn't match
+             Mouse(j).pop_corr_shuffle_matrix{kk} = shiftdim(Mouse(j).pop_corr_shuffle_matrix{kk},1);
+         end
+     end
+     
+     [temp_local_PV_shuffle, ~, ~] = twoenv_get_ind_mean(Mouse(j), ...
+         separate_conflict{j}, separate_conflict{j}, 'metric_type', 'pop_corr_shuffle_matrix');
+     
+     Mouse(j).local_stat2.separate_win.PV_stat_orig_shuffle = temp_local_PV_shuffle;
 end
 
 %% Plot stability over time
@@ -565,6 +581,7 @@ distal_rot_PV_corrs_all = [];
 local_rot_PV_orig_corrs_all = [];
 distal_rot_PV_orig_corrs_all = [];
 shuf_PV_corrs_all = [];
+shuf_PV_orig_all = [];
 PV_means_sameday_day_all = [];
 PV_means_sameday_arena_all = [];
 for j = 1:num_animals
@@ -613,6 +630,10 @@ for j = 1:num_animals
     temp_distal = Mouse(j).distal_stat2.separate_win.PV_stat_orig.all_means(same_day_indices);
     distal_rot_PV_orig_corrs_all = [distal_rot_PV_orig_corrs_all; temp_distal];
     
+    % Original PV shuffled stats
+    temp_shuffle = Mouse(j).local_stat2.separate_win.PV_stat_orig_shuffle.all_means;
+    shuf_PV_orig_all = [shuf_PV_orig_all; temp_shuffle];
+    
 end
 
 % Plot of everything - 1) overall mean correlation for local cues or distal
@@ -640,7 +661,8 @@ local_rot_PV_orig_corrs_all_mean = mean(local_rot_PV_orig_corrs_all);
 local_rot_PV_orig_corrs_all_sem = std(local_rot_PV_orig_corrs_all)/sqrt(length(local_rot_PV_orig_corrs_all));
 distal_rot_PV_orig_corrs_all_mean = mean(distal_rot_PV_orig_corrs_all);
 distal_rot_PV_orig_corrs_all_sem = std(distal_rot_PV_orig_corrs_all)/sqrt(length(distal_rot_PV_orig_corrs_all));
-
+shuf_PV_orig_all_mean = mean(shuf_PV_orig_all);
+shuf_PV_orig_all_sem = std(shuf_PV_orig_all)/sqrt(length(shuf_PV_orig_all));
 
 % Aggregate by day
 [day_plot, means_by_day] = aggregate_by_group( local_rot_corrs_all, ...
@@ -692,10 +714,10 @@ figure(600)
 subplot(2,2,1)
 bar_w_err([local_rot_corrs_all_mean, distal_rot_corrs_all_mean, shuf_corrs_all_mean;...
     local_rot_PV_corrs_all_mean, distal_rot_PV_corrs_all_mean, shuf_PV_corrs_all_mean;...
-    local_rot_PV_orig_corrs_all_mean, distal_rot_PV_orig_corrs_all_mean, nan],...
+    local_rot_PV_orig_corrs_all_mean, distal_rot_PV_orig_corrs_all_mean, shuf_PV_orig_all_mean],...
     [local_rot_corrs_all_sem, distal_rot_corrs_all_sem, shuf_corrs_all_sem;...
     local_rot_PV_corrs_all_sem, distal_rot_PV_corrs_all_sem, shuf_PV_corrs_all_sem;...
-    local_rot_PV_orig_corrs_all_sem, distal_rot_PV_orig_corrs_all_sem, nan])
+    local_rot_PV_orig_corrs_all_sem, distal_rot_PV_orig_corrs_all_sem, shuf_PV_orig_all_sem])
 xlim([0 4]); ylim([-0.10 0.4]); 
 set(gca,'XTick',[1 2 3],'XTickLabel',{'Ind. Neurons','Population','Original Population Calc'})
 ylabel('Mean correlations')
