@@ -152,7 +152,8 @@ Object.DataSize = size_metadata_use;
 max_time = Object.TimeFrame(end);
 orig_numframes = length(Object.TimeFrame);
 SR_use = 1/round(Object.FrameRate);
-Object.TimeFrame(orig_numframes+1:end_frame) = max_time+SR_use:SR_use:max_time+SR_use*(end_frame-orig_numframes);
+% Object.TimeFrame(orig_numframes+1:end_frame) = max_time+SR_use:SR_use:max_time+SR_use*(end_frame-orig_numframes);
+Object.TimeFrame = 0:SR_use:(size_metadata_use(3)-1)*SR_use; % Fill in appropriate time-stamps
 Object.DroppedFrames = 0; % Without this they will still appear empty in Mosaic
 % Save everything in the appropriate file
 save(new_mat1file,'Index','Object');
