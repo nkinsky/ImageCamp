@@ -1,6 +1,6 @@
 function [ ] = combine_tracking( varargin )
 % combine_tracking( FTframes1, Pos1, FTframes2, Pos2, ... )
-% Takes tracking sessions that have been split into 2 session (due to
+% Takes tracking sessions that have been split into 2 or more sessions (due to
 % camera fritzing out, cord needing untangling, etc.) and combines them
 % into one session that matches up with the fluorescence trace...NOTE: you
 % should probably check and make sure this has been combined

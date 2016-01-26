@@ -20,6 +20,7 @@ end
 
 h5create(outfile,'/Object',info.Dataspace.Size,'ChunkSize',[XDim YDim 1 1],'Datatype','uint16');
 
+p = ProgressBar(NumFrames);
 for i = 1:NumFrames
     
     if sum(i == bad_frames) > 0
@@ -30,8 +31,10 @@ for i = 1:NumFrames
         F{i} = h5read(infile,'/Object',[1 1 i 1],[XDim YDim 1 1]);
         h5write(outfile,'/Object',uint16(F{i}),[1 1 i 1],[XDim YDim 1 1]);
     end
+    p.progress;
 
 end
+p.stop;
 
 toc
 end
