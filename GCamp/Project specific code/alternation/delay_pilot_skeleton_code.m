@@ -47,7 +47,7 @@ close all
 
 session = MD(160); % Continuous block(s)
 session(2) = MD(161); % Delay block(s)
-session(3) = MD(160); % Control - Continuous baseline session for comparison
+session(3) = MD(159); % Control - Continuous baseline session for comparison
 
 %% Step 1: Identify Blocks for each condition type and correct trials for each type (Sam?)
 % Copy ProcOut.mat to new folder for each type, add into
@@ -134,6 +134,7 @@ bw_sesh_dist = bw_sesh_dist_all(neuron_filter); % Keep only those that meet the 
 % Get correlations between individual blocks of the same type (e.g.
 % continuous v. continuous or delay v. delay)
 
+if 
 neuron_filter_control = find(session(3).pval > (1-pval_filter)); % filter
 
 bw_sesh_corrs_control = nan(length(neuron_filter_control),1);
@@ -194,14 +195,18 @@ corr_binary_control_stable = bw_sesh_corrs_control > corr_cutoff_high;
 dist_binary_control_remap = bw_sesh_dist_control >= dist_cutoff_high;
 dist_binary_control_stable = bw_sesh_dist_control < dist_cutoff_low;
 
-stable_corr_ratio = sum(fire_binary & corr_binary_stable)/length(fire_binary);
-remap_corr_ratio = sum(fire_binary & corr_binary_remap | ~fire_binary)...
-    /length(fire_binary);
+% Get ratios of each type of neuron
+num_filtered = length(bw_sesh_corrs);
+remappers = neuron_filter(corr_binary_remap | ~fire_binary);
+stable = neuron_filter(corr_binary_stable & fire_binary);
+num_filtered_control = length(bw_sesh_corrs_control);
+remappers_control = neuron_filter_control(corr_binary_control_remap | ~fire_binary_control);
+stable_control = neuron_filter_control(corr_binary_control_stable & fire_binary_control);
 
-stable_corr_ratio_control = sum(fire_binary_control & corr_binary_control_stable)...
-    /length(fire_binary_control);
-remap_corr_ratio_control = sum(fire_binary_control & corr_binary_control_remap ...
-    | ~fire_binary_control)/length(fire_binary_control);
+remap_corr_ratio = length(remappers)/num_filtered;
+stable_corr_ratio = length(stable)/num_filtered;
+remap_corr_ratio_control = length(remappers_control)/num_filtered_control;
+stable_corr_ratio_control = length(stable_control)/num_filtered_control;
 
 stable_dist_ratio = sum(fire_binary & dist_binary_stable)/length(fire_binary);
 remap_dist_ratio = sum(fire_binary & dist_binary_remap | ~fire_binary)...
