@@ -47,7 +47,7 @@ close all
 
 session = MD(160); % Continuous block(s)
 session(2) = MD(161); % Delay block(s)
-session(3) = MD(159); % Control - Continuous baseline session for comparison
+session(3) = MD(160); % Control - Continuous baseline session for comparison
 
 %% Step 1: Identify Blocks for each condition type and correct trials for each type (Sam?)
 % Copy ProcOut.mat to new folder for each type, add into
@@ -83,11 +83,14 @@ disp('Getting TMap correlations and distances')
 %%% VARIABLES %%%
 corr_type = 'Spearman'; % type of correlation - recommend Spearman
 pval_filter = 0.1; % Keep only neurons whose TMap has a p-value below this
+num_transient_min = 5; % Keep only neurons firing this number of transients
 
 % Load each trial block
 for j = 1:2
     ChangeDirectory_NK(session(j));
     load('PlaceMaps.mat','TMap_gauss','TMap_half','pval');
+    load('ProcOut.mat','NumTransients');
+    session(j).NumTransients = NumTransients;
     session(j).TMap_gauss = TMap_gauss;
     session(j).TMap_half = TMap_half;
     session(j).PF_centroid_half(1).TMap_gauss = get_PF_centroid(session(j).TMap_half(1).TMap_gauss,0.9);
@@ -99,6 +102,8 @@ end
 % Load 'control' block
 ChangeDirectory_NK(session(3));
 load('PlaceMaps.mat','TMap_half','pval');
+load('ProcOut.mat','NumTransients');
+session(3).NumTransients = NumTransients;
 session(3).TMap_half = TMap_half;
 session(3).pval = pval;
 session(3).PF_centroid_1st = get_PF_centroid(session(3).TMap_half(1).TMap_gauss,0.9);
@@ -109,7 +114,7 @@ session(3).PF_centroid_2nd = get_PF_centroid(session(3).TMap_half(2).TMap_gauss,
 % Keep only neurons that meet the p-value threshold for either set of
 % blocks
 neuron_filter = find(session(1).pval > (1-pval_filter) | ...
-    session(2).pval > (1-pval_filter));
+    session(2).pval > (1-pval_filter) & session(1).NumTransients > num_transient_min);
 
 bw_sesh_corrs = nan(length(neuron_filter),1);
 bw_sesh_corrs_half = cell(1,2);
@@ -134,8 +139,12 @@ bw_sesh_dist = bw_sesh_dist_all(neuron_filter); % Keep only those that meet the 
 % Get correlations between individual blocks of the same type (e.g.
 % continuous v. continuous or delay v. delay)
 
-if 
-neuron_filter_control = find(session(3).pval > (1-pval_filter)); % filter
+if seshcmp(session(1),session(3)) || seshcmp(session(2),session(3))
+    neuron_filter_control = neuron_filter;
+else
+    neuron_filter_control = find(session(3).pval > (1-pval_filter) ...
+        & session(3).NumTransients > num_transient_min); % filter
+end
 
 bw_sesh_corrs_control = nan(length(neuron_filter_control),1);
 for k = 1:length(neuron_filter_control)
@@ -175,10 +184,10 @@ legend('Cont v Delay', 'Cont v Cont')
 %% Step 6.1 - Start quantifying remapping types
 
 % Cutoffs - anything below this fails the test
-corr_cutoff_high = 0.7; % Correlation value above which we consider stable
+corr_cutoff_high = 0.3; % Correlation value above which we consider stable
 corr_cutoff_low = 0.3; % Correlation value below which we consider remapping
-dist_cutoff_low = 5; % cm - distance cutoff below which we consider stable
-dist_cutoff_high = 15; % cm - distance cutoff above which we consider remapping
+dist_cutoff_low = 7.5; % cm - distance cutoff below which we consider stable
+dist_cutoff_high = 7.5; % cm - distance cutoff above which we consider remapping
 
 % a) calculate firing binary for each set of blocks
 fire_binary = ~isnan(bw_sesh_corrs); % This is a proxy but should work since TMap is Nan if FR = 0
@@ -216,6 +225,33 @@ stable_dist_ratio_control = sum(fire_binary_control & dist_binary_control_stable
     /length(fire_binary_control);
 remap_dist_ratio_control = sum(fire_binary_control & dist_binary_control_remap ...
     | ~fire_binary_control)/length(fire_binary_control);
+
+% Bar comparing proportions
+figure(102)
+bar([stable_corr_ratio, stable_corr_ratio_control; remap_corr_ratio,...
+    remap_corr_ratio_control]);
+ylim([0 1]);
+set(gca,'XTickLabel',{['Stable (rho > ' num2str(corr_cutoff_high) ')'],...
+    ['Remapping (rho <= ' num2str(corr_cutoff_low) ' or no transients during one block type)']})
+ylabel('Proportion of Neurons')
+legend('Continuous v Delay','Control (within block type)')
+title('Stability breakdown using correlation values')
+
+figure(103)
+bar([stable_dist_ratio, stable_dist_ratio_control; remap_dist_ratio,...
+    remap_dist_ratio_control]);
+ylim([0 1]);
+set(gca,'XTickLabel',{['Stable (d_{centroid} < ' num2str(dist_cutoff_low) ' cm)'],...
+    ['Remapping (d_{centroid} >= ' num2str(dist_cutoff_high) ' cm or no transients during one block type)']})
+ylabel('Proportion of Neurons')
+legend('Continuous v Delay','Control (within block type)')
+title('Stability breakdown using distance between place field centroids')
+
+%% Plot all the maps against each other
+disp('Displaying remappers - hit any key over the figure window to scroll through')
+delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_remap), 1)
+disp('Displaying stable neurons - hit any key over the figure window to scroll through')
+delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_stable), 1)
 
 %% Step 7: Single-unit splitting (Nat)
 % Run Will's functions for each condition and compare...
