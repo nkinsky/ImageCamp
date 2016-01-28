@@ -25,14 +25,18 @@ session_use(2) = delay_sesh; % Delay block(s)
 % Load relevant variables from each session
 ChangeDirectory_NK(session_use(1));
 load('PlaceMaps.mat', 'RunOccMap', 'TMap_gauss', 'pval','x','y','t','FT');
+load('PFstats','PFpcthits');
 TMap_continuous = TMap_gauss;
 RunOccMap_continuous = RunOccMap;
+pcthits_continuous = PFpcthits;
 pval_continuous = pval;
 
 ChangeDirectory_NK(session_use(2));
 load('PlaceMaps.mat', 'RunOccMap', 'TMap_gauss', 'pval');
+load('PFstats','PFpcthits');
 TMap_delay = TMap_gauss;
 RunOccMap_delay = RunOccMap;
+pcthits_delay = PFpcthits;
 pval_delay = pval;
 
 % % filter neurons - keep ones that have ok pval in either session
@@ -47,11 +51,19 @@ figure(501);
 cm = colormap('jet');
 for j = 1:length(neurons_to_plot) 
     
+    % Scale each TMap to reflect pcthits
+    TMap_cont_scale = scale_TMap_rough(TMap_continuous{neurons_to_plot(j)},...
+        max(pcthits_continuous(neurons_to_plot(j),:)));
+    TMap_delay_scale = scale_TMap_rough(TMap_delay{neurons_to_plot(j)},...
+        max(pcthits_delay(neurons_to_plot(j),:)));
+    
+    cmax = max([TMap_cont_scale(:); TMap_delay_scale(:)])l
+    
     % Make non-occupied spots white
     [~, TMap_cont_nan] = make_nan_TMap(RunOccMap_continuous,...
-        TMap_continuous{neurons_to_plot(j)}); % Continuous blocks
+        TMap_cont_scale); % Continuous blocks
     [~, TMap_delay_nan] = make_nan_TMap(RunOccMap_delay,...
-        TMap_delay{neurons_to_plot(j)}); % Delayed blocks
+        TMap_delay_scale); % Delayed blocks
     
     corr_plot(j) = corr(TMap_continuous{neurons_to_plot(j)}(:),...
         TMap_delay{neurons_to_plot(j)}(:)); % Get correlation value
@@ -64,11 +76,15 @@ for j = 1:length(neurons_to_plot)
     
     subplot(6,1,[1 2]); 
     imagesc_nan(rot90(TMap_cont_nan,1), cm, [1 1 1]);
+    set(gca,'CLim',[0 cmax]); % Scale to max probability
+    colorbar('Ticks',[0 cmax]); % Add colorbar
     title(['Continuous - neuron ' num2str(neurons_to_plot(j)) ...
         ' with correlation = ' num2str(corr_plot(j))])
     
     subplot(6,1,[3 4]); 
     imagesc_nan(rot90(TMap_delay_nan,1), cm, [1 1 1]);
+    set(gca,'CLim',[0 cmax]); % Scale to max probability
+    colorbar('Ticks',[0 cmax]); % Add colorbar
     title(['Delayed - neuron ' num2str(neurons_to_plot(j))])
     
     trans_train = logical(FT(neurons_to_plot(j),:));
