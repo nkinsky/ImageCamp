@@ -10,7 +10,8 @@ function [ ] = combine_tracking( varargin )
 %   INPUTS - Need to be entered in the same order that the movie was
 %   concatenated.
 %
-%   FTframes: the number of frames in each fluorescence movie
+%   FTframes: the number of frames in each fluorescence movie - get from
+%   XML files
 %
 %   Pos1,Pos2,...: all the variables from the Pos.mat file for each
 %   Cineplex file, dumped into a structure variable for the appropriate sessions.  
@@ -50,7 +51,7 @@ for k = 1:length(pos)
 end
 
 MoMtime = pos{1}.MoMtime;
-start_time = pos{2}.start_time;
+start_time = pos{1}.start_time;
 
 % Get sample rate in sec from mean difference between timestamps
 SR = mean(diff(t_use{1})); 
@@ -73,10 +74,10 @@ for j = 1:num_sessions
     % Align the end of the imaging and tracking data
     n_frames_tracking = t_use{j}(end)/SR; % Number of frames there would be if the frames started at 0+SR.
     if n_image_frames{j} > n_frames_tracking 
-        fill_frames = n_image_frames{j} - round(n_frames_tracking,0);
-        t_chop{j} = [t_use{j} t_use{j}(end) + SR:SR:SR*fill_frames];
-        x_chop{j} = [x_use{j} fill_pos(1)*ones(1,fill_frames)]; % filler frames due to drift in frame rates between systems
-        y_chop{j} = [y_use{j} fill_pos(2)*ones(1,fill_frames)];
+        fill_frames = n_image_frames{j} - round(n_frames_tracking);
+        t_chop{j} = [t_use{j}, t_use{j}(end) + (SR:SR:SR*fill_frames)];
+        x_chop{j} = [x_use{j}, fill_pos(1)*ones(1,fill_frames)]; % filler frames due to drift in frame rates between systems
+        y_chop{j} = [y_use{j}, fill_pos(2)*ones(1,fill_frames)];
         
     elseif n_image_frames{j} <= n_frames_tracking
         chop_ind = findclosest(t_use{j},n_image_frames{j}*SR);
