@@ -71,9 +71,10 @@ session(3) = MD(160); % Control - Continuous baseline session for comparison
 % for each neuron.  Compare to binary between like blocks to make sure ca
 % imaging variability isn't causing difference.
 
-% Load FT from PlaceMaps.mat for full session, sum all frames during one session
-% versus the other while the mouse is running (important, must set a
-% velocity threshold, suggest 2 cm/s)
+% 
+[PFhits, PFiffr]=IFFR_Sam(userstr,session)
+%Need to have already run tenaspis, aligned tracking data and made place
+%fields
 
 %% Step 5: Get TMap correlations b/w conditions (Nat)
 % probably the easiest step - Spearman? - use output from Step 3.
