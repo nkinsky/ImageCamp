@@ -45,9 +45,9 @@
 
 close all
 
-session = MD(160); % Continuous block(s)
-session(2) = MD(161); % Delay block(s)
-session(3) = MD(160); % Control - Continuous baseline session for comparison
+session = MD(163); % Continuous block(s)
+session(2) = MD(164); % Delay block(s)
+session(3) = MD(163); % Control - Continuous baseline session for comparison
 
 %% Step 1: Identify Blocks for each condition type and correct trials for each type (Sam?)
 % Copy ProcOut.mat to new folder for each type, add into
@@ -184,10 +184,10 @@ legend('Cont v Delay', 'Cont v Cont')
 %% Step 6.1 - Start quantifying remapping types
 
 % Cutoffs - anything below this fails the test
-corr_cutoff_high = 0.3; % Correlation value above which we consider stable
-corr_cutoff_low = 0.3; % Correlation value below which we consider remapping
-dist_cutoff_low = 7.5; % cm - distance cutoff below which we consider stable
-dist_cutoff_high = 7.5; % cm - distance cutoff above which we consider remapping
+corr_cutoff_high = 0.7; % Correlation value above which we consider stable
+corr_cutoff_low = 0.7; % Correlation value below which we consider remapping
+dist_cutoff_low = 5; % cm - distance cutoff below which we consider stable
+dist_cutoff_high = 5; % cm - distance cutoff above which we consider remapping
 
 % a) calculate firing binary for each set of blocks
 fire_binary = ~isnan(bw_sesh_corrs); % This is a proxy but should work since TMap is Nan if FR = 0
