@@ -1,4 +1,4 @@
-function [] = delay_pilot_TMap_compare(continuous_sesh, delay_sesh, filter_use, plot_type)
+function [] = delay_pilot_TMap_compare(continuous_sesh, delay_sesh, filter_use, plot_type,varargin)
 % delay_pilot_TMap_compare(continuous_sesh, delay_sesh, filter_use)
 % Plot TMaps for continuous v delay and compare to continuous within
 % session
@@ -13,10 +13,20 @@ function [] = delay_pilot_TMap_compare(continuous_sesh, delay_sesh, filter_use, 
 % plot_type: 1 = scroll through each neuron for visual inspection
 %            2 = run through and save each plot to the continuous_sesh
 %            directory
+%
+% varargins: 'disp_iffr': display in-field firing rate - must be followed
+% by output PFhits from function IFFR_Sam
 
-% Set
+%% Set plot_type if not specified
 if nargin < 4
     plot_type = 1;
+end
+%% Get varargins
+PFhits = []; % default
+for j = 1:length(varargin)
+   if strcmpi('disp_iffr',varargin{j})
+       PFhits = varargin{j+1};
+   end
 end
 
 session_use = continuous_sesh; % Continuous block(s)
