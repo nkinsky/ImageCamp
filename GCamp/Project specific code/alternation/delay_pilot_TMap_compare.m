@@ -15,7 +15,8 @@ function [] = delay_pilot_TMap_compare(continuous_sesh, delay_sesh, filter_use, 
 %            directory
 %
 % varargins: 'disp_iffr': display in-field firing rate - must be followed
-% by output PFhits from function IFFR_Sam
+% by output PFhits and PFiffr from function IFFR_Sam, e.g.
+% ...'disp_iffr',PFhits,PFiffr,...
 
 %% Set plot_type if not specified
 if nargin < 4
@@ -23,9 +24,16 @@ if nargin < 4
 end
 %% Get varargins
 PFhits = []; % default
+PFiffr = []; % default
+PFpasses = []; % default
+disp_iffr = 0; % default
 for j = 1:length(varargin)
    if strcmpi('disp_iffr',varargin{j})
+       disp_iffr = 1; % plot flag
+       % Get and calculate all required values for plotting
        PFhits = varargin{j+1};
+       PFiffr = varargin{j+2};
+       PFpasses = round(PFhits*100./PFiffr);
    end
 end
 
@@ -57,10 +65,10 @@ pval_delay = pval;
 
 neurons_to_plot = filter_use; 
 
-figure(501); 
+h1 = figure(501); 
 cm = colormap('jet');
 for j = 1:length(neurons_to_plot) 
-    
+    clf
     % Scale each TMap to reflect pcthits
     TMap_cont_scale = scale_TMap_rough(TMap_continuous{neurons_to_plot(j)},...
         max(pcthits_continuous(neurons_to_plot(j),:)));
@@ -102,6 +110,44 @@ for j = 1:length(neurons_to_plot)
     plot(t,x,'b',t(trans_train),x(trans_train),'r*');
     xlabel('time (s)'); ylabel('x position (cm)');
     legend('Trajectory','Ca Transients');
+    
+    if disp_iffr == 1
+        %%% ADD TEXT FOR IFFR %%% - note that these are only work well for
+        %%% Nat's computer setup currently - may need to tweak for your own...
+        % Create textbox
+        
+        % If there are multiple place-fields, identify which one has the
+        % maximum IFFR in EITHER condition
+        
+        [~, ~, max_field_num] = find(max(PFiffr(neurons_to_plot(j),:)) ...
+            == PFiffr(neurons_to_plot(j),:,:));
+        
+        if any(PFiffr(neurons_to_plot(j),:))
+            
+            try
+                annotation(figure(h1),'textbox',...
+                    [0.01271875 0.802618328298087 0.09275 0.0453172205438066],...
+                    'String',{['IFFR = ' num2str(PFiffr(neurons_to_plot(j),max_field_num,1))],...
+                    ['( ' num2str(PFhits(neurons_to_plot(j),max_field_num,1)) ' hits / '], ...
+                    [ num2str(PFpasses(neurons_to_plot(j),max_field_num,1)) ' passes)']},...
+                    'FitBoxToText','on');
+                
+                % Create textbox
+                annotation(figure(h1),'textbox',...
+                    [0.01428125 0.505538771399799 0.08728125 0.0493454179254783],...
+                    'String',{['IFFR = ' num2str(PFiffr(neurons_to_plot(j),max_field_num,2))],...
+                    ['( ' num2str(PFhits(neurons_to_plot(j),max_field_num,2)) ' hits / '], ...
+                    [ num2str(PFpasses(neurons_to_plot(j),max_field_num,2)) ' passes)']},...
+                    'FitBoxToText','on');
+            catch
+                disp('Annotation error-catching enabled')
+                keyboard
+            end
+        else
+            disp(['Error in ' num2str(neurons_to_plot(j)) ' PFiffr'])
+        end
+    
+    end
     
 %     subplot(6,1,6)
 %     plot(t,y,'b',t(trans_train),y(trans_train),'r*');
