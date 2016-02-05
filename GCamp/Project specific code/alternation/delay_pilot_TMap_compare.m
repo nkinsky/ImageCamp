@@ -46,7 +46,7 @@ load('PlaceMaps.mat', 'RunOccMap', 'TMap_gauss', 'pval','x','y','t','FT');
 load('PFstats','PFpcthits');
 TMap_continuous = TMap_gauss;
 RunOccMap_continuous = RunOccMap;
-pcthits_continuous = PFpcthits;
+pcthits_continuous = max(PFpcthits,2);
 pval_continuous = pval;
 
 ChangeDirectory_NK(session_use(2));
@@ -54,8 +54,15 @@ load('PlaceMaps.mat', 'RunOccMap', 'TMap_gauss', 'pval');
 load('PFstats','PFpcthits');
 TMap_delay = TMap_gauss;
 RunOccMap_delay = RunOccMap;
-pcthits_delay = PFpcthits;
+pcthits_delay = max(PFpcthits,2);
 pval_delay = pval;
+
+% Above way of getting pcthits is a hack - using IFFR from Sam's script is
+% better!
+if disp_iffr == 1
+    pcthits_continuous = max(PFiffr(:,:,1),[],2);
+    pcthits_delay = max(PFiffr(:,:,2),[],2);
+end
 
 % % filter neurons - keep ones that have ok pval in either session
 % neuron_use_either = find(pval_continuous > (1 - pval_thresh) | ...
@@ -71,9 +78,9 @@ for j = 1:length(neurons_to_plot)
     clf
     % Scale each TMap to reflect pcthits
     TMap_cont_scale = scale_TMap_rough(TMap_continuous{neurons_to_plot(j)},...
-        max(pcthits_continuous(neurons_to_plot(j),:)));
+        pcthits_continuous(neurons_to_plot(j)));
     TMap_delay_scale = scale_TMap_rough(TMap_delay{neurons_to_plot(j)},...
-        max(pcthits_delay(neurons_to_plot(j),:)));
+        pcthits_delay(neurons_to_plot(j)));
     
     cmax = max([TMap_cont_scale(:); TMap_delay_scale(:)]);
     cmin = min([TMap_cont_scale(:); TMap_delay_scale(:)]);
@@ -119,8 +126,9 @@ for j = 1:length(neurons_to_plot)
         % If there are multiple place-fields, identify which one has the
         % maximum IFFR in EITHER condition
         
-        [~, ~, max_field_num] = find(max(PFiffr(neurons_to_plot(j),:)) ...
-            == PFiffr(neurons_to_plot(j),:,:));
+        ii = find(max(PFiffr(neurons_to_plot(j),:)) ...
+            == PFiffr(neurons_to_plot(j),:,:)); % Get index of max IFFR
+        [~, max_field_num, ~] = ind2sub(size(PFiffr(neurons_to_plot(j),:,:)),ii); %Pull-out which field_number it is
         
         if any(PFiffr(neurons_to_plot(j),:))
             
