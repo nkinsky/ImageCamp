@@ -74,14 +74,17 @@ session(4) = MD(162); % Combined session for pulling out IFFRs in step 4.
 
 % Run sam's function to get in-field "firing" rates for every neuron for
 % each block type
-[PFhits, PFiffr]=IFFR_Sam(session(4));
+disp('>>>>Getting IFFR for delay vs. continuous blocks<<<<')
+[PFhits, PFiffr]=IFFR_Sam(session(4),'use_prev_blockind',1);
 PFpasses = round(PFhits*100./PFiffr);
 % Need to have already run tenaspis, aligned tracking data and made place
 % fields
 
+disp('>>>>Getting IFFR for control block 1 vs. control block 2<<<<')
 % Do the same but for the control session
 disp('SELECT 1ST CONTINUOUS BLOCK AS ''CONTINUOUS'' BLOCK AND 2ND CONTINUOUS BLOCK AS ''DELAY BLOCK'' IN FOLLOWING');
-[PFhits_control, PFiffr_control]=IFFR_Sam(session(3));
+[PFhits_control, PFiffr_control]=IFFR_Sam(session(3),'use_prev_blockind',1,...
+    'name_append','_control');
 PFpasses_control = round(PFhits_control*100./PFiffr_control);
 
 % Calculate ratio between IFFR for each block
@@ -197,8 +200,8 @@ legend('Cont v Delay', 'Cont v Cont')
 %% Step 6.1 - Start quantifying remapping types
 
 % Cutoffs - anything below this fails the test
-corr_cutoff_high = 0.7; % Correlation value above which we consider stable
-corr_cutoff_low = 0.7; % Correlation value below which we consider remapping
+corr_cutoff_high = 0.3; % Correlation value above which we consider stable
+corr_cutoff_low = 0.3; % Correlation value below which we consider remapping
 dist_cutoff_low = 5; % cm - distance cutoff below which we consider stable
 dist_cutoff_high = 5; % cm - distance cutoff above which we consider remapping
 rate_remap_ratio = 1.5; % if the ratio of IFFR between blocks in ANY field is greater than this, consider it a rate-remapper (if it also passes other criteria)
@@ -312,7 +315,8 @@ disp('Displaying global remappers - hit any key over the figure window to scroll
 delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_remap), ...
     1,'disp_IFFR',PFhits,PFiffr)
 disp('Displaying stable neurons - hit any key over the figure window to scroll through')
-delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_stable), 1)
+delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_stable),...
+    1,'disp_IFFR',PFhits,PFiffr)
 
 %% Step 7: Single-unit splitting (Nat)
 % Run Will's functions for each condition and compare...
