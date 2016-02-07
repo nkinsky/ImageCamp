@@ -1,4 +1,4 @@
-function [] = delay_pilot_TMap_compare(continuous_sesh, delay_sesh, filter_use, plot_type,varargin)
+function [] = delay_pilot_TMap_compare(continuous_sesh, delay_sesh, filter_use,varargin)
 % delay_pilot_TMap_compare(continuous_sesh, delay_sesh, filter_use)
 % Plot TMaps for continuous v delay and compare to continuous within
 % session
@@ -10,19 +10,22 @@ function [] = delay_pilot_TMap_compare(continuous_sesh, delay_sesh, filter_use, 
 %
 % filter_use is a vector of neuron numbers that you wish to include
 %
-% plot_type: 1 = scroll through each neuron for visual inspection
-%            2 = run through and save each plot to the continuous_sesh
-%            directory
 %
-% varargins: 'disp_iffr': display in-field firing rate - must be followed
-% by output PFhits and PFiffr from function IFFR_Sam, e.g.
-% ...'disp_iffr',PFhits,PFiffr,...
+% varargins: 
+% - 'disp_iffr': display in-field firing rate - must be followed
+%           by output PFhits and PFiffr from function IFFR_Sam, e.g.
+%            ...'disp_iffr',PFhits,PFiffr,...
+% 
+% - % 'plot_type': 1 (default) = scroll through each neuron for visual 
+%           inspection
+%           2 = run through and save each plot to the continuous_sesh
+%           directory.  Must list the working directory you wish to save
+%           the plots in (suggest NOT using the one with all your MATLAB
+%           variables as this will blow up that folder).  e.g.
+%           ...'plot_type', 2, [pwd filesep 'plot_folder'],...
 
-%% Set plot_type if not specified
-if nargin < 4
-    plot_type = 1;
-end
 %% Get varargins
+plot_type = 1; % default
 PFhits = []; % default
 PFiffr = []; % default
 PFpasses = []; % default
@@ -34,6 +37,10 @@ for j = 1:length(varargin)
        PFhits = varargin{j+1};
        PFiffr = varargin{j+2};
        PFpasses = round(PFhits*100./PFiffr);
+   end
+   if strcmpi('plot_type',varargin{j})
+      plot_type = varargin{j+1}; 
+      plot_folder = varargin{j+2};
    end
 end
 
@@ -101,14 +108,14 @@ for j = 1:length(neurons_to_plot)
 %     end
     
     subplot(6,1,[1 2]); 
-    imagesc_nan(rot90(TMap_cont_nan,1), cm, [1 1 1], [cmin, cmax]);
-    colorbar('Ticks', [cmin, cmax]); % Add colorbar
+    imagesc_nan(rot90(TMap_cont_nan,1), cm, [1 1 1], [cmin, round(cmax,1)]);
+    colorbar('Ticks', [cmin, round(cmax,1)]); % Add colorbar
     title(['Continuous - neuron ' num2str(neurons_to_plot(j)) ...
-        ' with correlation = ' num2str(corr_plot(j))])
-    
+        ' with correlation = ' num2str(corr_plot(j),'%.2f')])
+
     subplot(6,1,[3 4]); 
-    imagesc_nan(rot90(TMap_delay_nan,1), cm, [1 1 1], [cmin, cmax]);
-    colorbar('Ticks', [cmin, cmax]); % Add colorbar
+    imagesc_nan(rot90(TMap_delay_nan,1), cm, [1 1 1], [cmin, round(cmax,1)]);
+    colorbar('Ticks', [cmin, round(cmax,1)]); % Add colorbar
     title(['Delayed - neuron ' num2str(neurons_to_plot(j))])
     
     trans_train = logical(FT(neurons_to_plot(j),:));
@@ -134,16 +141,16 @@ for j = 1:length(neurons_to_plot)
             
             try
                 annotation(figure(h1),'textbox',...
-                    [0.01271875 0.802618328298087 0.09275 0.0453172205438066],...
-                    'String',{['IFFR = ' num2str(PFiffr(neurons_to_plot(j),max_field_num,1))],...
+                    [0.013 0.80 0.093 0.05],...
+                    'String',{['IFTL = ' num2str(PFiffr(neurons_to_plot(j),max_field_num,1),'%.2f')],...
                     ['( ' num2str(PFhits(neurons_to_plot(j),max_field_num,1)) ' hits / '], ...
                     [ num2str(PFpasses(neurons_to_plot(j),max_field_num,1)) ' passes)']},...
                     'FitBoxToText','on');
                 
                 % Create textbox
                 annotation(figure(h1),'textbox',...
-                    [0.01428125 0.505538771399799 0.08728125 0.0493454179254783],...
-                    'String',{['IFFR = ' num2str(PFiffr(neurons_to_plot(j),max_field_num,2))],...
+                    [0.013 0.51 0.093 0.05],...
+                    'String',{['IFTL = ' num2str(PFiffr(neurons_to_plot(j),max_field_num,2),'%.2f')],...
                     ['( ' num2str(PFhits(neurons_to_plot(j),max_field_num,2)) ' hits / '], ...
                     [ num2str(PFpasses(neurons_to_plot(j),max_field_num,2)) ' passes)']},...
                     'FitBoxToText','on');
@@ -171,10 +178,10 @@ for j = 1:length(neurons_to_plot)
 %     
     if plot_type == 1
         waitforbuttonpress;
-    else
-        disp('Haven''t finished code for plot_type = 2 yet!')
-        break
-    end
+    elseif plot_type == 2 % Save all stuff to PDFs
+
+%         print(fullfile(plot_folder,['Neuron #',num2str(neurons_to_plot(j))]),'-dpdf'); % formatting for this sucks
+        export_fig(fullfile(plot_folder,['Neuron #',num2str(neurons_to_plot(j))]),'-pdf')
 end
 
 end

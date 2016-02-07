@@ -200,8 +200,8 @@ legend('Cont v Delay', 'Cont v Cont')
 %% Step 6.1 - Start quantifying remapping types
 
 % Cutoffs - anything below this fails the test
-corr_cutoff_high = 0.3; % Correlation value above which we consider stable
-corr_cutoff_low = 0.3; % Correlation value below which we consider remapping
+corr_cutoff_high = 0.5; % Correlation value above which we consider stable
+corr_cutoff_low = 0.5; % Correlation value below which we consider remapping
 dist_cutoff_low = 5; % cm - distance cutoff below which we consider stable
 dist_cutoff_high = 5; % cm - distance cutoff above which we consider remapping
 rate_remap_ratio = 1.5; % if the ratio of IFFR between blocks in ANY field is greater than this, consider it a rate-remapper (if it also passes other criteria)
@@ -308,15 +308,18 @@ title('Stability breakdown using distance between place field centroids')
 
 %% Plot all the maps against each other
 % disp('Displaying NaN corrs - hit any key over the figure window to scroll through')
-% delay_pilot_TMap_compare(session(1), session(2), neuron_filter(~fire_binary), ...
-%     1)
 
-disp('Displaying global remappers - hit any key over the figure window to scroll through')
+remap_folder = [session(4).Location filesep 'Remappers'];
+stable_rate_folder = [session(4).Location filesep 'Stable_or_rate_remappers'];
+
+% disp('Displaying global remappers - hit any key over the figure window to scroll through')
+% delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_remap), ...
+%     1,'disp_IFFR',PFhits,PFiffr)
 delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_remap), ...
-    1,'disp_IFFR',PFhits,PFiffr)
+    1,'disp_IFFR',PFhits,PFiffr,'plot_type',2,remap_folder)
 disp('Displaying stable neurons - hit any key over the figure window to scroll through')
 delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_stable),...
-    1,'disp_IFFR',PFhits,PFiffr)
+    1,'disp_IFFR',PFhits,PFiffr,'plot_type',2,stable_rate_folder)
 
 %% Step 7: Single-unit splitting (Nat)
 % Run Will's functions for each condition and compare...
