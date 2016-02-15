@@ -45,10 +45,36 @@
 
 close all
 
-session = MD(163); % Continuous block(s)
-session(2) = MD(164); % Delay block(s)
-session(3) = MD(163); % Control - Continuous baseline session for comparison
-session(4) = MD(162); % Combined session for pulling out IFFRs in step 4.
+[MD, ref] = MakeMouseSessionList('Nat');
+
+compare_type = 'all'; % options are for G45 1/18/2016 sessions and are: 
+% 'all' (both continuous v 1st delay'), '1v1' (1st continuous v 1st delay', or 
+% '2v1' (2nd control v 1st delay)
+plot_type = 1; % 1 = scroll through plots, 2 = save to folder in
+% Session references for easy loading here
+G45_start = ref.G45.alternation_delay_pilot_good(1);
+G45_end = ref.G45.alternation_delay_pilot_good(2);
+
+switch lower(compare_type)
+    case 'all'
+        session = MD(G45_start+1); % Continuous block(s)
+        session(2) = MD(G45_start+2); % Delay block(s)
+        session(3) = MD(G45_start+1); % Control - Continuous baseline session for comparison
+        session(4) = MD(G45_start); % Combined session for pulling out IFFRs in step 4.
+    case '1v1'
+        session = MD(G45_start+4); % Continuous block(s)
+        session(2) = MD(G45_start+2); % Delay block(s)
+        session(3) = MD(G45_start+1); % Control - Continuous baseline session for comparison
+        session(4) = MD(G45_start+3); % Combined session for pulling out IFFRs in step 4.
+    case '2v1'
+        session = MD(G45_start+6); % Continuous block(s)
+        session(2) = MD(G45_start+2); % Delay block(s)
+        session(3) = MD(G45_start+1); % Control - Continuous baseline session for comparison
+        session(4) = MD(G45_start+5); % Combined session for pulling out IFFRs in step 4.
+    otherwise
+        disp('Case type is not valid. Try again.')
+end
+
 
 %% Step 1: Identify Blocks for each condition type and correct trials for each type (Sam?)
 % Copy ProcOut.mat to new folder for each type, add into
@@ -88,9 +114,26 @@ disp('SELECT 1ST CONTINUOUS BLOCK AS ''CONTINUOUS'' BLOCK AND 2ND CONTINUOUS BLO
 PFpasses_control = round(PFhits_control*100./PFiffr_control);
 
 % Calculate ratio between IFFR for each block
-PFiffr_ratio = PFiffr(:,:,1)./PFiffr(:,:,2);
-PFiffr_ratio_control = PFiffr_control(:,:,1)./PFiffr_control(:,:,2);
+% PFiffr_ratio = PFiffr(:,:,1)./PFiffr(:,:,2);
+% PFiffr_ratio_control = PFiffr_control(:,:,1)./PFiffr_control(:,:,2);
 
+% Get index (column number) for the place field number with the maximum
+% in-field firing rate
+[~, temp] = max(PFiffr(:,:),[],2); % Get index of max IFFR for both conditions combined (i.e. 1 to 2*size(PFiffr,2)
+max_fr_field_num = mod(temp, size(PFiffr,2)); % Convert that index to span from 1 to size(PFiffr_diffratio_control,2), below
+[~, temp] = max(PFiffr_control(:,:),[],2);
+max_fr_field_num_control = mod(temp, size(PFiffr_control,2));
+
+% Get difference ratio ( abs(IFFR1-IFFR2)/max(IFFR1,IFFR2)) for only the
+% field with the maximum firing rate in either condition if there are
+% multiple fields
+PFiffr_diffratio = abs(PFiffr(:,:,1) - PFiffr(:,:,2))./max(PFiffr,[],3); %
+PFiffr_diffratio = PFiffr_diffratio(sub2ind(size(PFiffr_diffratio),...
+    [1:size(PFiffr_diffratio,1)]',max_fr_field_num));
+PFiffr_diffratio_control = abs(PFiffr_control(:,:,1) - PFiffr_control(:,:,2))./...
+    max(PFiffr_control,[],3);
+PFiffr_diffratio_control = PFiffr_diffratio_control(sub2ind(size(PFiffr_diffratio_control),...
+    [1:size(PFiffr_diffratio_control,1)]',max_fr_field_num_control));
 %% Step 5: Get TMap correlations b/w conditions (Nat)
 % probably the easiest step - Spearman? - use output from Step 3.
 
@@ -109,8 +152,8 @@ for j = 1:2
     session(j).NumTransients = NumTransients;
     session(j).TMap_gauss = TMap_gauss;
     session(j).TMap_half = TMap_half;
-    session(j).PF_centroid_half(1).TMap_gauss = get_PF_centroid(session(j).TMap_half(1).TMap_gauss,0.9);
-    session(j).PF_centroid_half(2).TMap_gauss = get_PF_centroid(session(j).TMap_half(2).TMap_gauss,0.9);
+%     session(j).PF_centroid_half(1).TMap_gauss = get_PF_centroid(session(j).TMap_half(1).TMap_gauss,0.9);
+%     session(j).PF_centroid_half(2).TMap_gauss = get_PF_centroid(session(j).TMap_half(2).TMap_gauss,0.9);
     session(j).pval = pval;
     session(j).PF_centroid = get_PF_centroid(session(j).TMap_gauss,0.9);
 end
@@ -132,8 +175,9 @@ session(3).PF_centroid_2nd = get_PF_centroid(session(3).TMap_half(2).TMap_gauss,
 neuron_filter = find(session(1).pval > (1-pval_filter) | ...
     session(2).pval > (1-pval_filter) & session(1).NumTransients > num_transient_min);
 
+% bw_sesh_corrs = nan(length(neuron_filter),1);
+% bw_sesh_corrs_half = cell(1,2);
 bw_sesh_corrs = nan(length(neuron_filter),1);
-bw_sesh_corrs_half = cell(1,2);
 for k = 1:length(neuron_filter)
     Tmap1 = session(1).TMap_gauss{neuron_filter(k)};
     Tmap2 = session(2).TMap_gauss{neuron_filter(k)};
@@ -141,11 +185,11 @@ for k = 1:length(neuron_filter)
     
     % Now do the same but b/w 1st blocks and 2nd blocks in each condition
     % to see if sampling bias might make up for differences
-    for m = 1:2
-        TMap_half1 = session(1).TMap_half(m).TMap_gauss{neuron_filter(k)};
-        TMap_half2 = session(2).TMap_half(m).TMap_gauss{neuron_filter(k)};
-        bw_sesh_corrs_half{m}(k) = corr(TMap_half1(:), TMap_half2(:));
-    end
+%     for m = 1:2
+%         TMap_half1 = session(1).TMap_half(m).TMap_gauss{neuron_filter(k)};
+%         TMap_half2 = session(2).TMap_half(m).TMap_gauss{neuron_filter(k)};
+%         bw_sesh_corrs_half{m}(k) = corr(TMap_half1(:), TMap_half2(:));
+%     end
 end
 
 bw_sesh_dist_all = get_PF_centroid_diff(session(1).PF_centroid, session(2).PF_centroid,...
@@ -155,12 +199,12 @@ bw_sesh_dist = bw_sesh_dist_all(neuron_filter); % Keep only those that meet the 
 % Get correlations between individual blocks of the same type (e.g.
 % continuous v. continuous or delay v. delay)
 
-if seshcmp(session(1),session(3)) || seshcmp(session(2),session(3))
-    neuron_filter_control = neuron_filter;
-else
-    neuron_filter_control = find(session(3).pval > (1-pval_filter) ...
-        & session(3).NumTransients > num_transient_min); % filter
-end
+% if seshcmp(session(1),session(3)) || seshcmp(session(2),session(3))
+    neuron_filter_control = neuron_filter; % Use the same neurons for control and actual comparisons
+% else
+%     neuron_filter_control = find(session(3).pval > (1-pval_filter) ...
+%         & session(3).NumTransients > num_transient_min); % filter
+% end
 
 bw_sesh_corrs_control = nan(length(neuron_filter_control),1);
 for k = 1:length(neuron_filter_control)
@@ -204,10 +248,11 @@ corr_cutoff_high = 0.5; % Correlation value above which we consider stable
 corr_cutoff_low = 0.5; % Correlation value below which we consider remapping
 dist_cutoff_low = 5; % cm - distance cutoff below which we consider stable
 dist_cutoff_high = 5; % cm - distance cutoff above which we consider remapping
-rate_remap_ratio = 1.5; % if the ratio of IFFR between blocks in ANY field is greater than this, consider it a rate-remapper (if it also passes other criteria)
-global_remap_ratio = 4; % if the ratio of IFFR between blocks in ANY field is greater than this, consider it a global-remapper (if it also passes other criteria)
+rate_remap_diffratio = 0.4; % if the diffratio of IFFR between blocks in ANY field is greater than this but less than the gloab diffratio cutoff below, consider it a rate-remapper (if it also passes other criteria)
+global_remap_diffratio = 0.9; % if the diffratio of IFFR between blocks in ANY field is greater than this, consider it a global-remapper (if it also passes other criteria)
 
-% a) calculate firing binary for each set of blocks
+% a) calculate firing binary for each set of blocks - NRK work through this
+% - what does it mean?
 fire_binary = ~isnan(bw_sesh_corrs); % This is a proxy but should work since TMap is Nan if FR = 0
 fire_binary_control = ~isnan(bw_sesh_corrs_control);
 
@@ -217,70 +262,51 @@ corr_binary_stable = bw_sesh_corrs > corr_cutoff_high;
 dist_binary_remap = bw_sesh_dist >= dist_cutoff_high;
 dist_binary_stable = bw_sesh_dist < dist_cutoff_low;
 
-corr_binary_control_remap = bw_sesh_corrs_control <= corr_cutoff_low | ~fire_binary_control;
-corr_binary_control_stable = bw_sesh_corrs_control > corr_cutoff_high;
-dist_binary_control_remap = bw_sesh_dist_control >= dist_cutoff_high;
-dist_binary_control_stable = bw_sesh_dist_control < dist_cutoff_low;
+corr_binary_remap_control = bw_sesh_corrs_control <= corr_cutoff_low | ~fire_binary_control;
+corr_binary_stable_control = bw_sesh_corrs_control > corr_cutoff_high;
+dist_binary_remap_control = bw_sesh_dist_control >= dist_cutoff_high;
+dist_binary_stable_control = bw_sesh_dist_control < dist_cutoff_low;
 
-% c) calculate binary for rate remapping - these aren't quite correct
-global_remap_fr_binary = any(PFiffr_ratio > global_remap_ratio | ...
-    PFiffr_ratio < 1/global_remap_ratio,2);
-global_remap_fr_binary = global_remap_fr_binary(neuron_filter);
-rate_remap_fr_binary = any((PFiffr_ratio > rate_remap_ratio | PFiffr_ratio < 1/rate_remap_ratio) ...
-    & (PFiffr_ratio ~= 0 & ~isinf(PFiffr_ratio)),2);
-rate_remap_fr_binary = rate_remap_fr_binary(neuron_filter);
+% c) calculate binary for rate remapping using firing rate
+rate_remap_binary = PFiffr_diffratio(neuron_filter) > rate_remap_diffratio & ...
+    PFiffr_diffratio(neuron_filter) <= global_remap_diffratio;
+global_remap_binary = PFiffr_diffratio(neuron_filter) > global_remap_diffratio;
+stable_binary = PFiffr_diffratio(neuron_filter) <= rate_remap_diffratio; 
 
-stable_fr_binary = any((PFiffr_ratio < rate_remap_ratio & PFiffr_ratio ~= 0) & ...
-    (PFiffr_ratio > 1/rate_remap_ratio & ~isinf(PFiffr_ratio)),2);
-stable_fr_binary = stable_fr_binary(neuron_filter);
+rate_remap_binary_control = PFiffr_diffratio_control(neuron_filter_control) > rate_remap_diffratio & ...
+    PFiffr_diffratio_control(neuron_filter_control) <= global_remap_diffratio;
+global_remap_binary_control = PFiffr_diffratio_control(neuron_filter_control) > global_remap_diffratio;
+stable_binary_control = PFiffr_diffratio_control(neuron_filter_control) <= rate_remap_diffratio; 
 
-rate_remap_fr_binary_control = any((PFiffr_ratio_control > rate_remap_ratio | ...
-    PFiffr_ratio_control < 1/rate_remap_ratio) ...
-    & (PFiffr_ratio_control ~= 0 & ~isinf(PFiffr_ratio_control)),2);
-rate_remap_fr_binary_control = rate_remap_fr_binary_control(neuron_filter_control);
-global_remap_fr_binary_control = any(PFiffr_ratio_control > global_remap_ratio | ...
-    PFiffr_ratio_control < 1/global_remap_ratio,2);
-global_remap_fr_binary_control = global_remap_fr_binary_control(neuron_filter_control);
-stable_fr_binary_control = any((PFiffr_ratio_control < rate_remap_ratio & PFiffr_ratio_control ~= 0) & ...
-    (PFiffr_ratio_control > 1/rate_remap_ratio & ~isinf(PFiffr_ratio_control)),2);
-stable_fr_binary_control = stable_fr_binary_control(neuron_filter_control);
+% 50th attempt to get numbers correct
+global_remappers = neuron_filter(corr_binary_remap | ...
+    (corr_binary_stable & global_remap_binary));
+rate_remappers = neuron_filter(corr_binary_stable & rate_remap_binary);
+stable = neuron_filter(corr_binary_stable & stable_binary);
 
-% Get ratios of each type of neuron
-num_filtered = length(bw_sesh_corrs);
-global_remappers = neuron_filter(~fire_binary | global_remap_fr_binary | ...
-    (fire_binary & ~rate_remap_fr_binary & corr_binary_remap));
-stable_or_rate = neuron_filter(fire_binary & ~global_remap_fr_binary);
-stable = neuron_filter(corr_binary_stable & fire_binary & stable_fr_binary);
-rate_remappers = neuron_filter(corr_binary_stable & fire_binary & rate_remap_fr_binary);
-
-% stable2 = neuron_filter(stable & stable_fr_binary);
-
-num_filtered_control = length(bw_sesh_corrs_control);
-% remappers_control = corr_binary_control_remap |...
-%     ~fire_binary_control;
-stable_control = neuron_filter_control(corr_binary_control_stable &...
-    fire_binary_control & stable_fr_binary_control);
-rate_remappers_control = neuron_filter_control(corr_binary_control_stable & ...
-    fire_binary_control & rate_remap_fr_binary_control);
-global_remappers_control = neuron_filter_control(corr_binary_control_remap | ...
-    (corr_binary_control_stable & global_remap_fr_binary_control | ~fire_binary_control));
-% stable2_control = neuron_filter_control(stable_control & stable_fr_binary_control);
+global_remappers_control = neuron_filter_control(corr_binary_remap_control | ...
+    (corr_binary_stable_control & global_remap_binary_control));
+rate_remappers_control = neuron_filter_control(corr_binary_stable_control & rate_remap_binary_control);
+stable_control = neuron_filter_control(corr_binary_stable_control & stable_binary_control);
 
 %%% NRK - need to update here to get correct numbers out
+num_filtered = length(neuron_filter);
 global_remap_corr_ratio = length(global_remappers)/num_filtered;
 rate_remap_corr_ratio = length(rate_remappers)/num_filtered;
 stable_corr_ratio = length(stable)/num_filtered;
+
+num_filtered_control = length(neuron_filter_control);
 global_remap_corr_ratio_control = length(global_remappers_control)/num_filtered_control;
 rate_remap_corr_ratio_control = length(rate_remappers_control)/num_filtered_control;
-stable_corr_ratio_control = length(stable2_control)/num_filtered_control;
+stable_corr_ratio_control = length(stable_control)/num_filtered_control;
 
 stable_dist_ratio = sum(fire_binary & dist_binary_stable)/length(fire_binary);
 remap_dist_ratio = sum(fire_binary & dist_binary_remap | ~fire_binary)...
     /length(fire_binary);
 
-stable_dist_ratio_control = sum(fire_binary_control & dist_binary_control_stable)...
+stable_dist_ratio_control = sum(fire_binary_control & dist_binary_stable_control)...
     /length(fire_binary_control);
-remap_dist_ratio_control = sum(fire_binary_control & dist_binary_control_remap ...
+remap_dist_ratio_control = sum(fire_binary_control & dist_binary_remap_control ...
     | ~fire_binary_control)/length(fire_binary_control);
 
 % Bar comparing proportions
@@ -296,15 +322,15 @@ ylabel('Proportion of Neurons')
 legend('Continuous v Delay','Control (within block type)')
 title('Stability breakdown using correlation values')
 
-figure(103)
-bar([stable_dist_ratio, stable_dist_ratio_control; remap_dist_ratio,...
-    remap_dist_ratio_control]);
-ylim([0 1]);
-set(gca,'XTickLabel',{['Stable (d_{centroid} < ' num2str(dist_cutoff_low) ' cm)'],...
-    ['Remapping (d_{centroid} >= ' num2str(dist_cutoff_high) ' cm or no transients during one block type)']})
-ylabel('Proportion of Neurons')
-legend('Continuous v Delay','Control (within block type)')
-title('Stability breakdown using distance between place field centroids')
+% figure(103)
+% bar([stable_dist_ratio, stable_dist_ratio_control; remap_dist_ratio,...
+%     remap_dist_ratio_control]);
+% ylim([0 1]);
+% set(gca,'XTickLabel',{['Stable (d_{centroid} < ' num2str(dist_cutoff_low) ' cm)'],...
+%     ['Remapping (d_{centroid} >= ' num2str(dist_cutoff_high) ' cm or no transients during one block type)']})
+% ylabel('Proportion of Neurons')
+% legend('Continuous v Delay','Control (within block type)')
+% title('Stability breakdown using distance between place field centroids')
 
 %% Plot all the maps against each other
 % disp('Displaying NaN corrs - hit any key over the figure window to scroll through')
@@ -312,14 +338,20 @@ title('Stability breakdown using distance between place field centroids')
 remap_folder = [session(4).Location filesep 'Remappers'];
 stable_rate_folder = [session(4).Location filesep 'Stable_or_rate_remappers'];
 
-% disp('Displaying global remappers - hit any key over the figure window to scroll through')
-% delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_remap), ...
-%     1,'disp_IFFR',PFhits,PFiffr)
-delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_remap), ...
-    1,'disp_IFFR',PFhits,PFiffr,'plot_type',2,remap_folder)
-disp('Displaying stable neurons - hit any key over the figure window to scroll through')
-delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_stable),...
-    1,'disp_IFFR',PFhits,PFiffr,'plot_type',2,stable_rate_folder)
+if plot_type == 1
+    disp('Displaying global remappers - hit any key over the figure window to scroll through')
+    delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_remap), ...
+        1,'disp_IFFR',PFhits,PFiffr,'plot_type',1)
+    disp('Displaying stable neurons - hit any key over the figure window to scroll through')
+    delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_stable),...
+        1,'disp_IFFR',PFhits,PFiffr,'plot_type',1)
+elseif plot_type == 2
+    disp('Saving plots of all neurons as remappers or stable neurons')
+    delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_remap), ...
+        1,'disp_IFFR',PFhits,PFiffr,'plot_type',2,remap_folder)
+    delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_stable),...
+        1,'disp_IFFR',PFhits,PFiffr,'plot_type',2,stable_rate_folder)
+end
 
 %% Step 7: Single-unit splitting (Nat)
 % Run Will's functions for each condition and compare...
@@ -373,6 +405,51 @@ delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_stabl
 
 % Cross-correlate L correct and R correct PVs
 
+%% Old code that never really worked out
+
+%these aren't quite correct
+% global_remap_fr_binary = any(PFiffr_ratio > global_remap_ratio | ...
+%     PFiffr_ratio < 1/global_remap_ratio,2);
+% global_remap_fr_binary = global_remap_fr_binary(neuron_filter);
+% rate_remap_fr_binary = any((PFiffr_ratio > rate_remap_ratio | PFiffr_ratio < 1/rate_remap_ratio) ...
+%     & (PFiffr_ratio ~= 0 & ~isinf(PFiffr_ratio)),2);
+% rate_remap_fr_binary = rate_remap_fr_binary(neuron_filter);
+% 
+% stable_fr_binary = any((PFiffr_ratio < rate_remap_ratio & PFiffr_ratio ~= 0) & ...
+%     (PFiffr_ratio > 1/rate_remap_ratio & ~isinf(PFiffr_ratio)),2);
+% stable_fr_binary = stable_fr_binary(neuron_filter);
+% 
+% rate_remap_fr_binary_control = any((PFiffr_ratio_control > rate_remap_ratio | ...
+%     PFiffr_ratio_control < 1/rate_remap_ratio) ...
+%     & (PFiffr_ratio_control ~= 0 & ~isinf(PFiffr_ratio_control)),2);
+% rate_remap_fr_binary_control = rate_remap_fr_binary_control(neuron_filter_control);
+% global_remap_fr_binary_control = any(PFiffr_ratio_control > global_remap_ratio | ...
+%     PFiffr_ratio_control < 1/global_remap_ratio,2);
+% global_remap_fr_binary_control = global_remap_fr_binary_control(neuron_filter_control);
+% stable_fr_binary_control = any((PFiffr_ratio_control < rate_remap_ratio & PFiffr_ratio_control ~= 0) & ...
+%     (PFiffr_ratio_control > 1/rate_remap_ratio & ~isinf(PFiffr_ratio_control)),2);
+% stable_fr_binary_control = stable_fr_binary_control(neuron_filter_control);
+
+% % Get ratios of each type of neuron
+% num_filtered = length(bw_sesh_corrs);
+% global_remappers = neuron_filter(~fire_binary | global_remap_fr_binary | ...
+%     (fire_binary & ~rate_remap_fr_binary & corr_binary_remap));
+% stable_or_rate = neuron_filter(fire_binary & ~global_remap_fr_binary);
+% stable = neuron_filter(corr_binary_stable & fire_binary & stable_fr_binary);
+% rate_remappers = neuron_filter(corr_binary_stable & fire_binary & rate_remap_fr_binary);
+% 
+% % stable2 = neuron_filter(stable & stable_fr_binary);
+% 
+% num_filtered_control = length(bw_sesh_corrs_control);
+% % remappers_control = corr_binary_control_remap |...
+% %     ~fire_binary_control;
+% stable_control = neuron_filter_control(corr_binary_control_stable &...
+%     fire_binary_control & stable_fr_binary_control);
+% rate_remappers_control = neuron_filter_control(corr_binary_control_stable & ...
+%     fire_binary_control & rate_remap_fr_binary_control);
+% global_remappers_control = neuron_filter_control(corr_binary_control_remap | ...
+%     (corr_binary_control_stable & global_remap_fr_binary_control | ~fire_binary_control));
+% % stable2_control = neuron_filter_control(stable_control & stable_fr_binary_control);
 
 
 
