@@ -775,6 +775,17 @@ set(gca,'XTick',[1 2 3],'XTickLabel',{'Before','During','After'})
 % Construct proper name for the title
 title('All Mice');
 
+figure(348)
+discr_ratio_proportion = [sum(abs(All.discr_before) == 1)/sum(~isnan(abs(All.discr_before))),...
+    sum(abs(All.discr_during) == 1)/sum(~isnan(abs(All.discr_during))), ...
+    sum(abs(All.discr_after) == 1)/sum(~isnan(abs(All.discr_after)))];
+plot([1 2 3],discr_ratio_proportion,'*-')
+xlim([0 4]); ylim([0.4 0.8])
+ylabel('Proportion of Cells with Discr Ratio = 1')
+set(gca,'XTick',[1 2 3],'XTickLabel',{'Before','During','After'})
+% Construct proper name for the title
+title('All Mice');
+
 %% Between shape firing comparisons
 
 figure(350)
@@ -831,7 +842,7 @@ if plot_this5 == 1
             compare_sesh(2)+1)}, reginfo{2});
         imagesc(AllICmask_reg + 2*neuron_reg)
         waitforbuttonpress
-end
+    end
 
 end
 
