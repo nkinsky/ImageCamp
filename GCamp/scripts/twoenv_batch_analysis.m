@@ -3,8 +3,8 @@ close all
 start_ticker = tic;
 
 %% Filtering variables
-trans_rate_thresh = 0; %0.005; % Hz
-pval_thresh = 1; %0.05; % don't include ANY TMaps with p-values above this
+trans_rate_thresh = 0.005; %0.005; % Hz
+pval_thresh = 0.05; %0.05; % don't include ANY TMaps with p-values above this
 within_session = 1;
 num_shuffles = 10; 
 days_active_use = 2; % Do same plots using only neurons that are active this number of days
@@ -749,10 +749,24 @@ ylabel('Mean correlations with local cues aligned')
 title('Mean TMap Correlations by arena')
 legend('Square','Circle')
 
+figure(601)
+bar_w_err([local_rot_corrs_all_mean, distal_rot_corrs_all_mean, shuf_corrs_all_mean],...
+    [local_rot_corrs_all_sem, distal_rot_corrs_all_sem, shuf_corrs_all_sem])
+xlim([0 4]); ylim([-0.10 0.4]); 
+set(gca,'XTick',[1 2 3],'XTickLabel',{'Local Cues Aligned','Distal Cues Aligned',...
+    'Shuffled'})
+ylabel('Mean correlations')
+title('Mean TMap Correlations by cue alignment')
+% legend('Local Cues Aligned','Distal Cues Aligned','Shuffled')
+
+
 % Do above but aggregate for all days of separation
 
 %%% Are the low BUT above chance correlations being driven by a handful of
 %%% cells that have high corrs?
+
+%%% WHY ARE THE PV CORRELATIONS FOR DISTAL ALIGNED ABOVE CHANCE BUT NOT THE
+%%% INDIVIDUAL MEAN CORRELATIONS?
 
 %% Combine all stats
 local_stat2_all = twoenv_combine_stats('local_stat2',Mouse(1),Mouse(2),...
