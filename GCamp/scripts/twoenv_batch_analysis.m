@@ -440,15 +440,8 @@ PV_shuffle_all = [];
 PV_shuffle_all2 = [];
 
 time_all = [];
-% figure(500)
 for j = 1:num_animals
-%     subplot(4,1,j)
-%     plot(Mouse(j).both_stat2.separate_win_time, Mouse(j).both_stat2.separate_win.all_means,...
-%         'b*',Mouse(j).both_stat2.before_after_time, Mouse(j).both_stat2.before_after.all_means,'b*');
-%     title(Mouse(j).Name)
-%     xlabel('Days'); ylabel('Mean correlation')
-%     xlim([0 7]); set(gca,'XTick',[1 2 3 4 5 6])
-    
+
     corrs_all = [corrs_all; Mouse(j).both_stat2.separate_win.all_means; ...
         Mouse(j).both_stat2.before_after.all_means]; 
     corrs_all2 = [corrs_all2; Mouse(j).both_stat2.separate_win.all_out2; ...
@@ -514,44 +507,47 @@ legend('Actual','Shuffled')
 
 % Do this but in ecdf format - that is, group ALL TMap individual
 % correlations for a given day together
-figure(502)
-corrs_all_by_day = arrayfun(@(a) cat(1,corrs_all2{time_all == a}),...
-    days_plot,'UniformOutput',0);
-shuffle_all_comb = cat(1,shuffle_all2{:});
-
-cmap_use = hsv(7);
-days_plot_ind = find(to_plot);
-days_plot2 = days_plot(days_plot_ind);
-for j = 1:length(days_plot2)
-    [ft, xt] = ecdf(corrs_all_by_day{days_plot_ind(j)});
-    plot(xt,ft,'Color',cmap_use(j,:));
-    hold on
-end
-[fshuf, xshuf] = ecdf(shuffle_all_comb);
-plot(xshuf,fshuf,'Color',cmap_use(7,:));
-xlabel('Individual TMap Correlation Value');
-legend([cellfun(@(a) [num2str(a) ' Days'], num2cell(days_plot2),'UniformOutput',0), ...
+hide_ecdf = 1;
+if hide_ecdf == 0
+    figure(502)
+    corrs_all_by_day = arrayfun(@(a) cat(1,corrs_all2{time_all == a}),...
+        days_plot,'UniformOutput',0);
+    shuffle_all_comb = cat(1,shuffle_all2{:});
+    
+    cmap_use = hsv(7);
+    days_plot_ind = find(to_plot);
+    days_plot2 = days_plot(days_plot_ind);
+    for j = 1:length(days_plot2)
+        [ft, xt] = ecdf(corrs_all_by_day{days_plot_ind(j)});
+        plot(xt,ft,'Color',cmap_use(j,:));
+        hold on
+    end
+    [fshuf, xshuf] = ecdf(shuffle_all_comb);
+    plot(xshuf,fshuf,'Color',cmap_use(7,:));
+    xlabel('Individual TMap Correlation Value');
+    legend([cellfun(@(a) [num2str(a) ' Days'], num2cell(days_plot2),'UniformOutput',0), ...
+        'Shuffle']);
+    
+    % Similar to above but for Population Vectors
+    figure(503)
+    PV_corrs_all_by_day = arrayfun(@(a) cat(1,PV_corrs_all2{time_all == a}),...
+        days_plot,'UniformOutput',0);
+    PV_shuffle_all_comb = cat(1,PV_shuffle_all2{:});
+    
+    cmap_use = hsv(7);
+    days_plot_ind = find(to_plot);
+    days_plot2 = days_plot(days_plot_ind);
+    for j = 1:length(days_plot2)
+        [ft, xt] = ecdf(PV_corrs_all_by_day{days_plot_ind(j)});
+        plot(xt,ft,'Color',cmap_use(j,:));
+        hold on
+    end
+    [fshuf, xshuf] = ecdf(PV_shuffle_all_comb);
+    plot(xshuf,fshuf,'Color',cmap_use(7,:));
+    xlabel('Population Vector Correlation Value');
+    legend([cellfun(@(a) [num2str(a) ' Days'], num2cell(days_plot2),'UniformOutput',0), ...
     'Shuffle']);
-
-% Similar to above but for Population Vectors
-figure(503)
-PV_corrs_all_by_day = arrayfun(@(a) cat(1,PV_corrs_all2{time_all == a}),...
-    days_plot,'UniformOutput',0);
-PV_shuffle_all_comb = cat(1,PV_shuffle_all2{:});
-
-cmap_use = hsv(7);
-days_plot_ind = find(to_plot);
-days_plot2 = days_plot(days_plot_ind);
-for j = 1:length(days_plot2)
-    [ft, xt] = ecdf(PV_corrs_all_by_day{days_plot_ind(j)});
-    plot(xt,ft,'Color',cmap_use(j,:));
-    hold on
 end
-[fshuf, xshuf] = ecdf(PV_shuffle_all_comb);
-plot(xshuf,fshuf,'Color',cmap_use(7,:));
-xlabel('Population Vector Correlation Value');
-legend([cellfun(@(a) [num2str(a) ' Days'], num2cell(days_plot2),'UniformOutput',0), ...
-    'Shuffle']);
 
 % 3 Day correlations are very low for some reason (yet still higher than
 % chance).  Most likely reason is that they include sessions right
@@ -749,17 +745,6 @@ ylabel('Mean correlations with local cues aligned')
 title('Mean TMap Correlations by arena')
 legend('Square','Circle')
 
-figure(601)
-bar_w_err([local_rot_corrs_all_mean, distal_rot_corrs_all_mean, shuf_corrs_all_mean],...
-    [local_rot_corrs_all_sem, distal_rot_corrs_all_sem, shuf_corrs_all_sem])
-xlim([0 4]); ylim([-0.10 0.4]); 
-set(gca,'XTick',[1 2 3],'XTickLabel',{'Local Cues Aligned','Distal Cues Aligned',...
-    'Shuffled'})
-ylabel('Mean correlations')
-title('Mean TMap Correlations by cue alignment')
-% legend('Local Cues Aligned','Distal Cues Aligned','Shuffled')
-
-
 % Do above but aggregate for all days of separation
 
 %%% Are the low BUT above chance correlations being driven by a handful of
@@ -853,57 +838,63 @@ end
 
 
 %% Plot individual neuron summaries
-error_on = 1;
-figure(10)
-h = bar([before_win_local_mean, before_win_distal_mean;  ...
-    before_5_local_mean, before_5_distal_mean; after_5_local_mean, after_5_distal_mean; ...
-    before_6_local_mean, before_6_distal_mean; after_6_local_mean, after_6_distal_mean; ...
-    before_after_local_mean, before_after_distal_mean;]);
-hold on
-if error_on == 1
-    errorbar(h(1).XData + h(1).XOffset, [before_win_local_mean, ...
-        before_5_local_mean, after_5_local_mean, before_6_local_mean, after_6_local_mean, before_after_local_mean], [before_win_local_sem, ...
-        before_5_local_sem, after_5_local_sem, before_6_local_sem, after_6_local_sem, before_after_local_sem],...
-        '.')
-    errorbar(h(2).XData + h(2).XOffset, [before_win_distal_mean, ...
-        before_5_distal_mean, after_5_distal_mean, before_6_distal_mean, after_6_distal_mean, before_after_distal_mean], [before_win_distal_sem, ...
-        before_5_distal_sem, after_5_distal_sem, before_6_distal_sem, after_6_distal_sem, before_after_distal_sem],...
-        '.')
+hide_section1 = 1; % 1 = don't plot this section, 0 = do plot it
+error_on = 1; % Plot error bars on all bar plots
+    
+if hide_section1 == 0
+    figure(10)
+    h = bar([before_win_local_mean, before_win_distal_mean;  ...
+        before_5_local_mean, before_5_distal_mean; after_5_local_mean, after_5_distal_mean; ...
+        before_6_local_mean, before_6_distal_mean; after_6_local_mean, after_6_distal_mean; ...
+        before_after_local_mean, before_after_distal_mean;]);
+    hold on
+    if error_on == 1
+        errorbar(h(1).XData + h(1).XOffset, [before_win_local_mean, ...
+            before_5_local_mean, after_5_local_mean, before_6_local_mean, after_6_local_mean, before_after_local_mean], [before_win_local_sem, ...
+            before_5_local_sem, after_5_local_sem, before_6_local_sem, after_6_local_sem, before_after_local_sem],...
+            '.')
+        errorbar(h(2).XData + h(2).XOffset, [before_win_distal_mean, ...
+            before_5_distal_mean, after_5_distal_mean, before_6_distal_mean, after_6_distal_mean, before_after_distal_mean], [before_win_distal_sem, ...
+            before_5_distal_sem, after_5_distal_sem, before_6_distal_sem, after_6_distal_sem, before_after_distal_sem],...
+            '.')
+    end
+    h2 = plot(get(gca,'XLim'),[shuffle_mean shuffle_mean],'r--');
+    set(gca,'XTickLabel',{'Before within','Before-Day5','After-Day5',...
+        'Before-Day6','After-Day6', 'Before-After'})
+    ylabel('Transient Map Mean Correlations - Individual Neurons')
+    h_legend = legend([h(1) h(2) h2],'Rotated (local cues align)','Not-rotated (distal cues align)','Chance (Shuffled Data)');
+    hold off
+    ylims_given = get(gca,'YLim');
+    
+    % Simplified
+    figure(110)
+    set(gcf,'Position',[1988 286 1070 477])
+    h = bar([separate_win_local_mean, separate_win_distal_mean;  ...
+        sep_conn1_local_mean, sep_conn1_distal_mean; sep_conn2_local_mean, sep_conn2_distal_mean;...
+        before_after_local_mean2, before_after_distal_mean2]);
+    hold on
+    if error_on == 1
+        errorbar(h(1).XData + h(1).XOffset, [separate_win_local_mean, ...
+            sep_conn1_local_mean, sep_conn2_local_mean, before_after_local_mean2], [separate_win_local_sem, ...
+            sep_conn1_local_sem, sep_conn2_local_sem, before_after_local_sem2],'.')
+        errorbar(h(2).XData + h(2).XOffset, [separate_win_distal_mean, ...
+            sep_conn1_distal_mean, sep_conn2_distal_mean, before_after_distal_mean2], [separate_win_distal_sem, ...
+            sep_conn1_distal_sem, sep_conn2_distal_sem, before_after_distal_sem2],'.')
+    end
+    
+    h2 = plot(get(gca,'XLim'),[shuffle_mean shuffle_mean],'r--');
+    set(gca,'XTickLabel',{'Separate','Separate - Connected Day 1',...
+        'Separate - Connected Day 2','Before - After'})
+    ylabel('Transient Map Mean Correlations - Individual Neurons')
+    h_legend = legend([h(1) h(2) h2],'Local cues aligned','Distal cues aligned','Chance (Shuffled Data)');
+    hold off
+    ylims_given = get(gca,'YLim');
+    % ylim([ylims_given(1)-0.1, ylims_given(2)+0.1]);
 end
-h2 = plot(get(gca,'XLim'),[shuffle_mean shuffle_mean],'r--');
-set(gca,'XTickLabel',{'Before within','Before-Day5','After-Day5',...
-    'Before-Day6','After-Day6', 'Before-After'})
-ylabel('Transient Map Mean Correlations - Individual Neurons')
-h_legend = legend([h(1) h(2) h2],'Rotated (local cues align)','Not-rotated (distal cues align)','Chance (Shuffled Data)');
-hold off
-ylims_given = get(gca,'YLim');
-
-% Simplified
-figure(110)
-set(gcf,'Position',[1988 286 1070 477])
-h = bar([separate_win_local_mean, separate_win_distal_mean;  ...
-    sep_conn1_local_mean, sep_conn1_distal_mean; sep_conn2_local_mean, sep_conn2_distal_mean;...
-    before_after_local_mean2, before_after_distal_mean2]);
-hold on
-if error_on == 1
-    errorbar(h(1).XData + h(1).XOffset, [separate_win_local_mean, ...
-        sep_conn1_local_mean, sep_conn2_local_mean, before_after_local_mean2], [separate_win_local_sem, ...
-        sep_conn1_local_sem, sep_conn2_local_sem, before_after_local_sem2],'.')
-    errorbar(h(2).XData + h(2).XOffset, [separate_win_distal_mean, ...
-        sep_conn1_distal_mean, sep_conn2_distal_mean, before_after_distal_mean2], [separate_win_distal_sem, ...
-        sep_conn1_distal_sem, sep_conn2_distal_sem, before_after_distal_sem2],'.')
-end
-
-h2 = plot(get(gca,'XLim'),[shuffle_mean shuffle_mean],'r--');
-set(gca,'XTickLabel',{'Separate','Separate - Connected Day 1',...
-    'Separate - Connected Day 2','Before - After'})
-ylabel('Transient Map Mean Correlations - Individual Neurons')
-h_legend = legend([h(1) h(2) h2],'Local cues aligned','Distal cues aligned','Chance (Shuffled Data)');
-hold off
-ylims_given = get(gca,'YLim');
-% ylim([ylims_given(1)-0.1, ylims_given(2)+0.1]);
 
 %% Similar to above but with "both" alignment included
+hide_subsets = 1; % 1 = don't plot these for subsets of mice in 112 and 113
+
 figure(111)
 plot_simplified_summary(local_stat2_all, distal_stat2_all, 'both_stat',...
     both_stat2_all)
@@ -912,29 +903,31 @@ set(gca,'XTickLabel',{'Separate','Separate - Connected Day 1',...
     'Separate - Connected Day 2','Before - After'})
 title('All Mice');
 
-figure(112)
-plot_simplified_summary(local_stat2_all_noG48, distal_stat2_all_noG48, 'both_stat',...
-    both_stat2_all_noG48)
-ylabel('Transient Map Mean Correlations - Individual Neurons')
-set(gca,'XTickLabel',{'Separate','Separate - Connected Day 1',...
-    'Separate - Connected Day 2','Before - After'})
-title('No G48');
-
-figure(113)
-plot_simplified_summary(local_stat2_all_noG45G48, distal_stat2_all_noG45G48, 'both_stat',...
-    both_stat2_all_noG45G48)
-ylabel('Transient Map Mean Correlations - Individual Neurons')
-set(gca,'XTickLabel',{'Separate','Separate - Connected Day 1',...
-    'Separate - Connected Day 2','Before - After'})
-title('G30 and G31 only');
+if hide_subsets == 0
+    figure(112)
+    plot_simplified_summary(local_stat2_all_noG48, distal_stat2_all_noG48, 'both_stat',...
+        both_stat2_all_noG48)
+    ylabel('Transient Map Mean Correlations - Individual Neurons')
+    set(gca,'XTickLabel',{'Separate','Separate - Connected Day 1',...
+        'Separate - Connected Day 2','Before - After'})
+    title('No G48');
+    
+    figure(113)
+    plot_simplified_summary(local_stat2_all_noG45G48, distal_stat2_all_noG45G48, 'both_stat',...
+        both_stat2_all_noG45G48)
+    ylabel('Transient Map Mean Correlations - Individual Neurons')
+    set(gca,'XTickLabel',{'Separate','Separate - Connected Day 1',...
+        'Separate - Connected Day 2','Before - After'})
+    title('G30 and G31 only');
+end
 
 %% Simplified for all Animals
-figure(115)
-for j = 1:length(Mouse)
-   subplot(4,1,j)
-   plot_simplified_summary(Mouse(j).local_stat,Mouse(j).distal_stat)
-   title(Mouse(j).Name)
-end
+% figure(115)
+% for j = 1:length(Mouse)
+%    subplot(4,1,j)
+%    plot_simplified_summary(Mouse(j).local_stat,Mouse(j).distal_stat)
+%    title(Mouse(j).Name)
+% end
 
 % Divided into distal aligned, local aligned, and both aligned groups
 figure(116)
@@ -946,105 +939,102 @@ for j = 1:length(Mouse)
 end
 
 %% Plot population correlation summary
-figure(11)
-h = bar([pop_before_win_local_mean, pop_before_win_distal_mean; ...
-    pop_before_5_local_mean, pop_before_5_distal_mean; pop_after_5_local_mean, pop_after_5_distal_mean; ...
-    pop_before_6_local_mean, pop_before_6_distal_mean; pop_after_6_local_mean, pop_after_6_distal_mean; ...
-    pop_before_after_local_mean, pop_before_after_distal_mean]);
-hold on
-if error_on == 1
-    errorbar(h(1).XData + h(1).XOffset, [pop_before_win_local_mean, ...
-        pop_before_5_local_mean, pop_after_5_local_mean, pop_before_6_local_mean, pop_after_6_local_mean, pop_before_after_local_mean],...
-        [pop_before_win_local_sem, pop_before_5_local_sem, pop_after_5_local_sem, pop_before_6_local_sem, pop_after_6_local_sem,pop_before_after_local_sem],...
-        '.')
-    errorbar(h(2).XData + h(2).XOffset, [pop_before_win_distal_mean, ...
-        pop_before_5_distal_mean, pop_after_5_distal_mean, pop_before_6_distal_mean, pop_after_6_distal_mean, pop_before_after_distal_mean], [pop_before_win_distal_sem, ...
-        pop_before_5_distal_sem, pop_after_5_distal_sem, pop_before_6_distal_sem, pop_after_6_distal_sem, pop_before_after_distal_sem],...
-        '.')
+hide_old_PV = 1;
+
+if hide_old_PV == 0
+    figure(11)
+    h = bar([pop_before_win_local_mean, pop_before_win_distal_mean; ...
+        pop_before_5_local_mean, pop_before_5_distal_mean; pop_after_5_local_mean, pop_after_5_distal_mean; ...
+        pop_before_6_local_mean, pop_before_6_distal_mean; pop_after_6_local_mean, pop_after_6_distal_mean; ...
+        pop_before_after_local_mean, pop_before_after_distal_mean]);
+    hold on
+    if error_on == 1
+        errorbar(h(1).XData + h(1).XOffset, [pop_before_win_local_mean, ...
+            pop_before_5_local_mean, pop_after_5_local_mean, pop_before_6_local_mean, pop_after_6_local_mean, pop_before_after_local_mean],...
+            [pop_before_win_local_sem, pop_before_5_local_sem, pop_after_5_local_sem, pop_before_6_local_sem, pop_after_6_local_sem,pop_before_after_local_sem],...
+            '.')
+        errorbar(h(2).XData + h(2).XOffset, [pop_before_win_distal_mean, ...
+            pop_before_5_distal_mean, pop_after_5_distal_mean, pop_before_6_distal_mean, pop_after_6_distal_mean, pop_before_after_distal_mean], [pop_before_win_distal_sem, ...
+            pop_before_5_distal_sem, pop_after_5_distal_sem, pop_before_6_distal_sem, pop_after_6_distal_sem, pop_before_after_distal_sem],...
+            '.')
+    end
+    set(gca,'XTickLabel',{'Before within','Before-Day5','After-Day5',...
+        'Before-Day6','After-Day6','Before-After'})
+    ylabel('Transient Map Mean Population Correlations')
+    legend('Rotated (local cues align)','Not-rotated (distal cues align)')
+    hold off
+    ylims_given = get(gca,'YLim');
+    % ylim([ylims_given(1)-0.1, ylims_given(2)+0.1]);
 end
-set(gca,'XTickLabel',{'Before within','Before-Day5','After-Day5',...
-    'Before-Day6','After-Day6','Before-After'})
-ylabel('Transient Map Mean Population Correlations')
-legend('Rotated (local cues align)','Not-rotated (distal cues align)')
-hold off
-ylims_given = get(gca,'YLim');
-% ylim([ylims_given(1)-0.1, ylims_given(2)+0.1]);
-
-disp(['Script done running in ' num2str(toc(start_ticker)) ' seconds total'])
-
 
 %% Get example plots of rotated versus non-rotated correlation histograms and hopefully example neurons
+hide_example_hists = 1;
+
 session_distal = squeeze(Mouse(1).corr_matrix{1,2}(1,4,:));
 session_local = squeeze(Mouse(1).corr_matrix{2,2}(1,4,:));
 session2_distal = squeeze(Mouse(1).corr_matrix{1,2}(6,8,:));
 session2_local = squeeze(Mouse(1).corr_matrix{2,2}(6,8,:));
 centers = -0.2:0.05:0.9;
 
-% Before - Separate
-figure(300)
-set(gcf,'Position', [2121, 482, 500, 370]);
-subplot(1,2,1)
-hist(session_distal,centers);
-h = findobj(gca,'Type','patch');
-h.FaceColor = 'y';
-mean_distal = nanmean(session_distal);
-ylim_use = get(gca,'YLim');
-hold on;
-plot([mean_distal, mean_distal],[ylim_use(1), ylim_use(2)],'r--')
-hold off;
-title(char('     Separate','Distal cues aligned'))
-xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
+if hide_example_hists == 0
+    % Before - Separate
+    figure(300)
+    set(gcf,'Position', [2121, 482, 500, 370]);
+    subplot(1,2,1)
+    hist(session_distal,centers);
+    h = findobj(gca,'Type','patch');
+    h.FaceColor = 'y';
+    mean_distal = nanmean(session_distal);
+    ylim_use = get(gca,'YLim');
+    hold on;
+    plot([mean_distal, mean_distal],[ylim_use(1), ylim_use(2)],'r--')
+    hold off;
+    title(char('     Separate','Distal cues aligned'))
+    xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
+    
+    subplot(1,2,2)
+    hist(session_local,centers);
+    mean_local = nanmean(session_local);
+    % ylim_use = get(gca,'YLim');
+    hold on;
+    plot([mean_local, mean_local],[ylim_use(1), ylim_use(2)],'r--')
+    hold off;
+    title(char('     Separate','Local cues aligned'))
+    xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
+    set(gca,'YLim',ylim_use);
+    % ylim([0 80])
+    
+    % Separate-Connected
+    figure(301)
+    
+    subplot(1,2,2)
+    hist(session2_local,centers);
+    mean_local2 = nanmean(session2_local);
+    ylim_use = get(gca,'YLim');
+    hold on;
+    plot([mean_local2, mean_local2],[ylim_use(1), ylim_use(2)],'r--')
+    hold off;
+    title(char('Separate-Connected Day 2','Local cues aligned'))
+    xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
+    
+    set(gcf,'Position', [2600, 482, 500, 370]);
+    subplot(1,2,1)
+    hist(session2_distal,centers);
+    h = findobj(gca,'Type','patch');
+    h.FaceColor = 'y';
+    mean_distal2 = nanmean(session2_distal);
+    % ylim_use = get(gca,'YLim');
+    hold on;
+    plot([mean_distal2, mean_distal2],[ylim_use(1), ylim_use(2)],'r--')
+    hold off;
+    title(char('Separate-Connected Day 2','Distal cues aligned'))
+    xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
+    set(gca,'YLim',ylim_use);
 
-subplot(1,2,2)
-hist(session_local,centers);
-mean_local = nanmean(session_local);
-% ylim_use = get(gca,'YLim');
-hold on;
-plot([mean_local, mean_local],[ylim_use(1), ylim_use(2)],'r--')
-hold off;
-title(char('     Separate','Local cues aligned'))
-xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
-set(gca,'YLim',ylim_use);
-% ylim([0 80])
-
-% Separate-Connected
-figure(301)
-
-subplot(1,2,2)
-hist(session2_local,centers);
-mean_local2 = nanmean(session2_local);
-ylim_use = get(gca,'YLim');
-hold on;
-plot([mean_local2, mean_local2],[ylim_use(1), ylim_use(2)],'r--')
-hold off;
-title(char('Separate-Connected Day 2','Local cues aligned'))
-xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
-
-set(gcf,'Position', [2600, 482, 500, 370]);
-subplot(1,2,1)
-hist(session2_distal,centers);
-h = findobj(gca,'Type','patch');
-h.FaceColor = 'y';
-mean_distal2 = nanmean(session2_distal);
-% ylim_use = get(gca,'YLim');
-hold on;
-plot([mean_distal2, mean_distal2],[ylim_use(1), ylim_use(2)],'r--')
-hold off;
-title(char('Separate-Connected Day 2','Distal cues aligned'))
-xlabel('Calcium Transient Heat Map Correlation'); ylabel('Count')
-set(gca,'YLim',ylim_use);
-
-% subplot(1,3,3)
-% ecdf(squeeze(Mouse(1).corr_matrix{1,2}(1,4,:))); 
-% hold on; 
-% ecdf(squeeze(Mouse(1).corr_matrix{2,2}(1,4,:)));
-% ecdf(shuffle_comb(:))
-% legend('Distal cues aligned','Local cues aligned',...
-%     'Shuffled Data','Location','SouthEast')
-% title('Empirical CDF')
-% xlabel('Calcium Transient Heat Map Correlation (x)');
+end
 
 %% Get and plot numbers of cells that pass criteria for each session
+hide_cell_pass_hist = 1;
 
 num_pass_comb = [];
 for j = 1:num_animals
@@ -1062,14 +1052,18 @@ for j = 1:num_animals
         num_pass_comb = [num_pass_comb num_pass];
     end
 end
-    
-nn = histc(num_pass_comb,0.5:8.5);
-figure(25)
-bar(0.5:8.5,nn,'histc')
-xlim([0.5 8.5])
-xlabel('Number of Sessions Passing Criteria')
-ylabel('Neuron Count')
-title('Histogram - neurons passing inclusion criteria')
+
+if hide_cell_pass_hist == 0
+    nn = histc(num_pass_comb,0.5:8.5);
+    figure(25)
+    bar(0.5:8.5,nn,'histc')
+    xlim([0.5 8.5])
+    xlabel('Number of Sessions Passing Criteria')
+    ylabel('Neuron Count')
+    title('Histogram - neurons passing inclusion criteria')
+end
+
+disp(['Script done running in ' num2str(toc(start_ticker)) ' seconds total'])
 
 %% Example plots of correlations < 0, and high ones
 
