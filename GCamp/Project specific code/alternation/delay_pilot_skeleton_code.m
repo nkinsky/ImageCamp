@@ -47,7 +47,7 @@ close all
 
 [MD, ref] = MakeMouseSessionList('Nat');
 
-compare_type = 'all'; % options are for G45 1/18/2016 sessions and are: 
+compare_type = 'all_v_all'; % options are for G45 1/18/2016 sessions and are: 
 % 'all' (both continuous v 1st delay'), '1v1' (1st continuous v 1st delay', or 
 % '2v1' (2nd control v 1st delay)
 plot_type = 1; % 1 = scroll through plots, 2 = save to folder in
@@ -56,7 +56,7 @@ G45_start = ref.G45.alternation_delay_pilot_good(1);
 G45_end = ref.G45.alternation_delay_pilot_good(2);
 
 switch lower(compare_type)
-    case 'all'
+    case 'all_v_all'
         session = MD(G45_start+1); % Continuous block(s)
         session(2) = MD(G45_start+2); % Delay block(s)
         session(3) = MD(G45_start+1); % Control - Continuous baseline session for comparison
@@ -72,7 +72,7 @@ switch lower(compare_type)
         session(3) = MD(G45_start+1); % Control - Continuous baseline session for comparison
         session(4) = MD(G45_start+5); % Combined session for pulling out IFFRs in step 4.
     otherwise
-        disp('Case type is not valid. Try again.')
+        disp('variable ''compare_type'' is not valid. Try again.')
 end
 
 
@@ -321,6 +321,7 @@ set(gca,'XTickLabel',{['Stable (rho > ' num2str(corr_cutoff_high) ')'],...
 ylabel('Proportion of Neurons')
 legend('Continuous v Delay','Control (within block type)')
 title('Stability breakdown using correlation values')
+export_fig(fullfile(session(4).Location,['Remapping Breakdown' compare_type]),'-pdf');
 
 % figure(103)
 % bar([stable_dist_ratio, stable_dist_ratio_control; remap_dist_ratio,...
@@ -335,22 +336,45 @@ title('Stability breakdown using correlation values')
 %% Plot all the maps against each other
 % disp('Displaying NaN corrs - hit any key over the figure window to scroll through')
 
-remap_folder = [session(4).Location filesep 'Remappers'];
-stable_rate_folder = [session(4).Location filesep 'Stable_or_rate_remappers'];
+% folders to save in when using plot_type = 2
+global_remap_folder = [session(4).Location filesep 'Global Remappers' filesep compare_type];
+rate_remap_folder = [session(4).Location filesep 'Rate Remappers' filesep compare_type];
+stable_rate_folder = [session(4).Location filesep 'Stable neurons' filesep compare_type];
+
+% files to save pdfs in when using plot_type = 3
+global_remap_file = [session(4).Location filesep 'Global_Remappers_' compare_type ];
+rate_remap_file = [session(4).Location filesep 'Rate_Remappers_' compare_type];
+stable_rate_file = [session(4).Location filesep 'Stable_' compare_type];
 
 if plot_type == 1
     disp('Displaying global remappers - hit any key over the figure window to scroll through')
-    delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_remap), ...
+    delay_pilot_TMap_compare(session(1), session(2), global_remappers, ...
+        1,'disp_IFFR',PFhits,PFiffr,'plot_type',1)
+    disp('Displaying rate remappers - hit any key over the figure window to scroll through')
+    delay_pilot_TMap_compare(session(1), session(2), rate_remappers, ...
         1,'disp_IFFR',PFhits,PFiffr,'plot_type',1)
     disp('Displaying stable neurons - hit any key over the figure window to scroll through')
-    delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_stable),...
+    delay_pilot_TMap_compare(session(1), session(2), stable,...
         1,'disp_IFFR',PFhits,PFiffr,'plot_type',1)
 elseif plot_type == 2
-    disp('Saving plots of all neurons as remappers or stable neurons')
-    delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_remap), ...
-        1,'disp_IFFR',PFhits,PFiffr,'plot_type',2,remap_folder)
-    delay_pilot_TMap_compare(session(1), session(2), neuron_filter(corr_binary_stable),...
+    disp('Saving plots of all global remappers')
+    delay_pilot_TMap_compare(session(1), session(2), global_remappers, ...
+        1,'disp_IFFR',PFhits,PFiffr,'plot_type',2,global_remap_folder)
+    disp('Saving plots of all rate remappers')
+    delay_pilot_TMap_compare(session(1), session(2), rate_remappers, ...
+        1,'disp_IFFR',PFhits,PFiffr,'plot_type',2,rate_remap_folder)
+    disp('Saving plots of all stable neurons')
+    delay_pilot_TMap_compare(session(1), session(2), stable,...
         1,'disp_IFFR',PFhits,PFiffr,'plot_type',2,stable_rate_folder)
+elseif plot_type == 3
+    disp('Saving plots of all neurons as global remappers, rate remappers,  or stable neurons')
+    delay_pilot_TMap_compare(session(1), session(2), global_remappers, ...
+        1,'disp_IFFR',PFhits,PFiffr,'plot_type',3, global_remap_file)
+    delay_pilot_TMap_compare(session(1), session(2), rate_remappers, ...
+        1,'disp_IFFR',PFhits,PFiffr,'plot_type',3, rate_remap_file)
+    delay_pilot_TMap_compare(session(1), session(2), stable,...
+        1,'disp_IFFR',PFhits,PFiffr,'plot_type',3, stable_file)
+    
 end
 
 %% Step 7: Single-unit splitting (Nat)
