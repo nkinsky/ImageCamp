@@ -18,11 +18,16 @@ function [] = delay_pilot_TMap_compare(continuous_sesh, delay_sesh, filter_use,v
 % 
 % - % 'plot_type': 1 (default) = scroll through each neuron for visual 
 %           inspection
+%
 %           2 = run through and save each plot to the continuous_sesh
-%           directory.  Must list the working directory you wish to save
-%           the plots in (suggest NOT using the one with all your MATLAB
-%           variables as this will blow up that folder).  e.g.
+%           directory as a separate pdf.  Must list the working directory 
+%           you wish to save the plots in (suggest NOT using the one with 
+%           all your MATLAB variables as this will blow up that folder).  e.g.
 %           ...'plot_type', 2, [pwd filesep 'plot_folder'],...
+%
+%           3 = same as 2 but all plots are put into the same PDF.  Must be
+%           followed by the full path to the pdf name where the files will
+%           be saved.
 
 %% Get varargins
 plot_type = 1; % default
@@ -42,6 +47,8 @@ for j = 1:length(varargin)
       plot_type = varargin{j+1}; 
       if plot_type == 2
           plot_folder = varargin{j+2};
+      elseif plot_type == 3
+          plot_file = varargin{j+2};
       end
    end
 end
@@ -83,6 +90,8 @@ neurons_to_plot = filter_use;
 
 h1 = figure(501); 
 cm = colormap('jet');
+
+p = ProgressBar(length(neurons_to_plot));
 for j = 1:length(neurons_to_plot)
     clf
     % Scale each TMap to reflect pcthits
@@ -185,10 +194,12 @@ for j = 1:length(neurons_to_plot)
     %
     if plot_type == 1
         waitforbuttonpress;
-    elseif plot_type == 2 % Save all stuff to PDFs
-        
-        %         print(fullfile(plot_folder,['Neuron #',num2str(neurons_to_plot(j))]),'-dpdf'); % formatting for this sucks
+    elseif plot_type == 2 % Save all stuff to individual PDFs
         export_fig(fullfile(plot_folder,['Neuron #',num2str(neurons_to_plot(j))]),'-pdf')
+    elseif plot_type == 3 % Save all to the same pdf
+        export_fig(plot_file,'-pdf','-append')
     end
+    p.progress;
 
 end
+p.stop;
