@@ -116,7 +116,7 @@ stat_use.sem = nanstd(all_out)/sqrt(num_comparisons); % Don't think this is vali
 
 end
 
-%% sub-fuction to get correlations out and calculate mean/sem
+%% sub-fuction to get PV correlations out and calculate mean/sem
 function [stat_use] = calc_PV_group_stats(animal_struct, sub_use, local_flag, metric_type)
 % local_flag: 1 = use distal aligned comparisons, 2 = use local aligned
 % comparisons, metric_type = 'PV_corr' (default) or PV_dist'

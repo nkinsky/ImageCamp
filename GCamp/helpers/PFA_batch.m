@@ -27,7 +27,7 @@ function [] = PFA_batch(session_struct,roomstr,progress_bar,varargin)
 %   -'use_mut_info': use mutual information along with entropy to calculate
 %   pvals...
 %
-%   -'mispeed': threshold for calculating placemaps.  Any values below
+%   -'minspeed': threshold for calculating placemaps.  Any values below
 %        are not used. 1 cm/s = default.  
 %
 %   -'pos_align_file': use to load a Pos_align file that is not either
