@@ -65,8 +65,6 @@ for j = 1:num_files
     disp('Creating TS Lowpass Divide movie')
     TS_Lowpass_Divide(filterMovie_fullpath_h5,LPMovie_fullpath_h5);
     
-    keyboard
-    
     % Cleanup everything
     disp(['Deleting smoothed movie 1: ' filterMovie_fullpath_h5]);
     delete(filterMovie_fullpath_h5);
