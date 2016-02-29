@@ -1063,154 +1063,197 @@ if hide_cell_pass_hist == 0
     title('Histogram - neurons passing inclusion criteria')
 end
 
+%% Remapping between sessions analysis - plot correlations between designated
+% sessions in circle vs. square
+sessions_compare = [4 7; 3 7; 3 8; 5 6]; 
+
+% Pull out appropriate comparisons
+circ_v_square = cell(2,num_sessions,num_sessions);
+for align_type = 1:2
+    for arena_type = 1:2
+        for j = 1:num_animals
+            temp = nanmean(Mouse(j).corr_matrix{align_type,arena_type},3);
+            for k = 1:size(sessions_compare)
+                circ_v_square{align_type, sessions_compare(k,1), sessions_compare(k,2)}(j,arena_type) = ...
+                    temp(sessions_compare(k,1), sessions_compare(k,2));
+            end
+        end
+    end
+end
+
+align_plot = {'Distal Aligned','Local Aligned'};
+for align_type = 1:2
+    figure(700+align_type)
+    for j = 1:size(sessions_compare,1)
+        subplot(2,2,j)
+        for m = 1:num_animals
+            plot(circ_v_square{align_type,sessions_compare(j,1),sessions_compare(j,2)}(m,1),...
+                circ_v_square{align_type,sessions_compare(j,1),sessions_compare(j,2)}(m,2),...
+                '*'); hold on;
+        end
+        xlabel('Square Correlation'); ylabel('Circle Correlation');
+        title(['Session ' num2str(sessions_compare(j,1))  ' - ' ...
+            num2str(sessions_compare(j,2)) ' with ' align_plot{align_type}])
+        xlim([-0.2 0.7]); ylim([-0.2 0.7])
+        legend(arrayfun(@(a) a.Name,Mouse,'UniformOutput',0))
+        hold off
+        
+    end
+end
+
+
+%%
 disp(['Script done running in ' num2str(toc(start_ticker)) ' seconds total'])
 
+
+%% Everything below has been commented out because it isn't that useful each
+% time this script is run, but might be in the future
 %% Example plots of correlations < 0, and high ones
 
-load('j:\GCamp Mice\Working\G30\2env\11_21_2014\1 - 2env octagon mid 201B\Working\PlaceMaps.mat','TMap','TMap_gauss')
-TMaps_distal{3} = TMap_gauss;
-load('j:\GCamp Mice\Working\G30\2env\11_21_2014\2 - 2env octagon left 90CW 201B\Working\PlaceMaps.mat','TMap','TMap_gauss')
-TMaps_distal{4} = TMap_gauss;
-load('j:\GCamp Mice\Working\G30\2env\11_21_2014\1 - 2env octagon mid 201B\Working\PlaceMaps_rot_to_std.mat','TMap','TMap_gauss')
-TMaps_rot{3} = TMap_gauss;
-load('j:\GCamp Mice\Working\G30\2env\11_21_2014\2 - 2env octagon left 90CW 201B\Working\PlaceMaps_rot_to_std.mat','TMap','TMap_gauss')
-TMaps_rot{4} = TMap_gauss;
-load('J:\GCamp Mice\Working\G30\2env\11_20_2014\1 - 2env octagon left\Working\batch_session_map.mat');
-
-highcorrs_ind = find(squeeze(Mouse(1).corr_matrix{2,2}(3,4,:)) > 0.8);
-lowcorrs_ind = find(squeeze(Mouse(1).corr_matrix{1,2}(3,4,:)) < 0.2);
-
-j = 1; 
-for j = 1:length(highcorrs_ind)
-figure(50); 
-row = highcorrs_ind(j); 
-subplot(1,2,1); imagesc(TMaps_rot{3}{batch_session_map.map(row,4)}); 
-title(['Neuron ' num2str(batch_session_map.map(row,4)) ...
-    ' w/Correlation = ' num2str(Mouse(1).corr_matrix{2,2}(3,4,row))]);
-subplot(1,2,2); imagesc(TMaps_rot{4}{batch_session_map.map(row,5)});
-title(['Neuron ' num2str(batch_session_map.map(row,5))])
-
-waitforbuttonpress
-
-end
-
-for j = 1:length(lowcorrs_ind)
-figure(50); 
-row = lowcorrs_ind(j); 
-subplot(1,2,1); imagesc(TMaps_distal{3}{batch_session_map.map(row,4)}); 
-title(['Neuron ' num2str(batch_session_map.map(row,4)) ...
-    ' w/Correlation = ' num2str(Mouse(1).corr_matrix{1,2}(3,4,row))]);
-subplot(1,2,2); imagesc(TMaps_distal{4}{batch_session_map.map(row,5)});
-title(['Neuron ' num2str(batch_session_map.map(row,5))])
-
-waitforbuttonpress
-
-end
-
-%% Plot out placemaps across days...
-
-% Specify base directory here
-base_sesh = ref.G31.two_env(1)+2;
-rot_to_std = 1; % 0 = no, 1 = yes rotate such that local cues align
-start_neuron = 108; % Start here when cycling through neurons
-
-if rot_to_std == 0
-    place_file = ['PlaceMaps' file_append '.mat'];
-elseif rot_to_std == 1
-    place_file = ['PlaceMaps_rot_to_std' file_append '.mat'];
-end
-
-% Load neuron mapping file
-base_map = fullfile(MD(base_sesh).Location,'batch_session_map.mat');
-load(base_map)
-
-curr_dir = cd;
-% Load TMaps for all relevant sessions
-num_sessions = length(batch_session_map.session);
-num_neurons = size(batch_session_map.map,1);
-disp('Loading TMaps')
-for j = 1:num_sessions
-    ChangeDirectory(batch_session_map.session(j).mouse, batch_session_map.session(j).date,...
-        batch_session_map.session(j).session);
-    load(place_file,'TMap_gauss')
-    sesh(j).TMap_gauss = TMap_gauss;
-end
-
-figure(200)
-set(gcf,'Position',[27 724 1823 230])
-blank = nan(size(sesh(1).TMap_gauss{1}));
-disp('Plotting out TMaps across sessions')
-for k = start_neuron:num_neurons
-    for j = 1:num_sessions
-        neuron_use = batch_session_map.map(k,j+1);
-        if neuron_use ~= 0
-            TMap_plot = sesh(j).TMap_gauss{neuron_use};
-            title_use = ['Session ' num2str(j) ' neuron ' num2str(neuron_use)];
-        else
-            TMap_plot = blank;
-            title_use = ['Session ' num2str(j) ' - no valid map'];
-        end
-    
-    subplot(1,num_sessions,j)
-    imagesc_nan(TMap_plot)
-    title(title_use,'FontSize',8)
-    end
-    waitforbuttonpress
-    
-end
-
-%% Plot of activity versus within day correlations
-
-% Get sessions to look at correlations for...
-within_day = [1 2; 3 4; 7 8]; within_day_ind = sub2ind([8 8],within_day(:,1), within_day(:,2));
-before_win_local = [1 2 ; 1 3; 1 4; 2 3; 2 4; 3 4]; before_win_local_ind = sub2ind([8 8],before_win_local(:,1), before_win_local(:,2));
-
-days_active = sum(Mouse(1).batch_session_map(1).map(:,2:9) ~= 0,2); %# days each neuron is active
-for j = 1:length(days_active)
-    temp = [];
-    for k = 1:size(within_day,1)
-        temp = [temp, Mouse(1).corr_matrix{2,1}(within_day(k,1),within_day(k,2),j)];
-    end
-    within_day_corrs(j,:) = temp;
-end
-
-%% Start to getting cell stability phenotypes
-remap_index = 0.4; % Wang/Muzzio uses 0.21 for e-phys
-
-for m = 1:num_animals
-    stable_seshs = [];
-    neuron_pass = [];
-    for ll = 1:2
-        for j = 1:size(Mouse(m).corr_matrix{2,ll},3);
-            stable_seshs(j) = nansum(nansum(Mouse(m).corr_matrix{2,ll}(:,:,j) > remap_index & ...
-                Mouse(m).corr_matrix{2,ll}(:,:,j) ~= 1 & Mouse(m).pass_count{2,ll}(:,:,j) == 1));
-            neuron_pass(j) = sum(sum(Mouse(m).pass_count{2,ll}(:,:,j))) > 0;
-        end
-        stable_2sesh = sum(stable_seshs == 1);
-        stable_longerterm = sum(stable_seshs > 1);
-        unstable = sum(neuron_pass) - stable_2sesh - stable_longerterm;
-       total = sum(neuron_pass);
-        
-        Mouse(m).cellphenos{ll}.stable_2sesh = stable_2sesh ;
-        Mouse(m).cellphenos{ll}.stable_longerterm = stable_longerterm;
-        Mouse(m).cellphenos{ll}.unstable = unstable;
-        Mouse(m).cellphenos{ll}.total = total;
-    end
-end
-
-% Sum up for ALL sessions and mice
-total_all = 0;
-stable_2sesh_all = 0;
-stable_longerterm_all = 0;
-unstable_all = 0;
-for m = 1:2
-    for ll = 1:2
-        stable_2sesh_all = stable_2sesh_all + Mouse(m).cellphenos{ll}.stable_2sesh;
-        stable_longerterm_all = stable_longerterm_all + Mouse(m).cellphenos{ll}.stable_longerterm;
-        unstable_all = unstable_all + Mouse(m).cellphenos{ll}.unstable;
-        total_all = total_all + Mouse(m).cellphenos{ll}.total;
-    end
-end
+% load('j:\GCamp Mice\Working\G30\2env\11_21_2014\1 - 2env octagon mid 201B\Working\PlaceMaps.mat','TMap','TMap_gauss')
+% TMaps_distal{3} = TMap_gauss;
+% load('j:\GCamp Mice\Working\G30\2env\11_21_2014\2 - 2env octagon left 90CW 201B\Working\PlaceMaps.mat','TMap','TMap_gauss')
+% TMaps_distal{4} = TMap_gauss;
+% load('j:\GCamp Mice\Working\G30\2env\11_21_2014\1 - 2env octagon mid 201B\Working\PlaceMaps_rot_to_std.mat','TMap','TMap_gauss')
+% TMaps_rot{3} = TMap_gauss;
+% load('j:\GCamp Mice\Working\G30\2env\11_21_2014\2 - 2env octagon left 90CW 201B\Working\PlaceMaps_rot_to_std.mat','TMap','TMap_gauss')
+% TMaps_rot{4} = TMap_gauss;
+% load('J:\GCamp Mice\Working\G30\2env\11_20_2014\1 - 2env octagon left\Working\batch_session_map.mat');
+% 
+% highcorrs_ind = find(squeeze(Mouse(1).corr_matrix{2,2}(3,4,:)) > 0.8);
+% lowcorrs_ind = find(squeeze(Mouse(1).corr_matrix{1,2}(3,4,:)) < 0.2);
+% 
+% j = 1; 
+% for j = 1:length(highcorrs_ind)
+% figure(50); 
+% row = highcorrs_ind(j); 
+% subplot(1,2,1); imagesc(TMaps_rot{3}{batch_session_map.map(row,4)}); 
+% title(['Neuron ' num2str(batch_session_map.map(row,4)) ...
+%     ' w/Correlation = ' num2str(Mouse(1).corr_matrix{2,2}(3,4,row))]);
+% subplot(1,2,2); imagesc(TMaps_rot{4}{batch_session_map.map(row,5)});
+% title(['Neuron ' num2str(batch_session_map.map(row,5))])
+% 
+% waitforbuttonpress
+% 
+% end
+% 
+% for j = 1:length(lowcorrs_ind)
+% figure(50); 
+% row = lowcorrs_ind(j); 
+% subplot(1,2,1); imagesc(TMaps_distal{3}{batch_session_map.map(row,4)}); 
+% title(['Neuron ' num2str(batch_session_map.map(row,4)) ...
+%     ' w/Correlation = ' num2str(Mouse(1).corr_matrix{1,2}(3,4,row))]);
+% subplot(1,2,2); imagesc(TMaps_distal{4}{batch_session_map.map(row,5)});
+% title(['Neuron ' num2str(batch_session_map.map(row,5))])
+% 
+% waitforbuttonpress
+% 
+% end
+% 
+% %% Plot out placemaps across days...
+% 
+% % Specify base directory here
+% base_sesh = ref.G31.two_env(1)+2;
+% rot_to_std = 1; % 0 = no, 1 = yes rotate such that local cues align
+% start_neuron = 108; % Start here when cycling through neurons
+% 
+% if rot_to_std == 0
+%     place_file = ['PlaceMaps' file_append '.mat'];
+% elseif rot_to_std == 1
+%     place_file = ['PlaceMaps_rot_to_std' file_append '.mat'];
+% end
+% 
+% % Load neuron mapping file
+% base_map = fullfile(MD(base_sesh).Location,'batch_session_map.mat');
+% load(base_map)
+% 
+% curr_dir = cd;
+% % Load TMaps for all relevant sessions
+% num_sessions = length(batch_session_map.session);
+% num_neurons = size(batch_session_map.map,1);
+% disp('Loading TMaps')
+% for j = 1:num_sessions
+%     ChangeDirectory(batch_session_map.session(j).mouse, batch_session_map.session(j).date,...
+%         batch_session_map.session(j).session);
+%     load(place_file,'TMap_gauss')
+%     sesh(j).TMap_gauss = TMap_gauss;
+% end
+% 
+% figure(200)
+% set(gcf,'Position',[27 724 1823 230])
+% blank = nan(size(sesh(1).TMap_gauss{1}));
+% disp('Plotting out TMaps across sessions')
+% for k = start_neuron:num_neurons
+%     for j = 1:num_sessions
+%         neuron_use = batch_session_map.map(k,j+1);
+%         if neuron_use ~= 0
+%             TMap_plot = sesh(j).TMap_gauss{neuron_use};
+%             title_use = ['Session ' num2str(j) ' neuron ' num2str(neuron_use)];
+%         else
+%             TMap_plot = blank;
+%             title_use = ['Session ' num2str(j) ' - no valid map'];
+%         end
+%     
+%     subplot(1,num_sessions,j)
+%     imagesc_nan(TMap_plot)
+%     title(title_use,'FontSize',8)
+%     end
+%     waitforbuttonpress
+%     
+% end
+% 
+% %% Plot of activity versus within day correlations
+% 
+% % Get sessions to look at correlations for...
+% within_day = [1 2; 3 4; 7 8]; within_day_ind = sub2ind([8 8],within_day(:,1), within_day(:,2));
+% before_win_local = [1 2 ; 1 3; 1 4; 2 3; 2 4; 3 4]; before_win_local_ind = sub2ind([8 8],before_win_local(:,1), before_win_local(:,2));
+% 
+% days_active = sum(Mouse(1).batch_session_map(1).map(:,2:9) ~= 0,2); %# days each neuron is active
+% for j = 1:length(days_active)
+%     temp = [];
+%     for k = 1:size(within_day,1)
+%         temp = [temp, Mouse(1).corr_matrix{2,1}(within_day(k,1),within_day(k,2),j)];
+%     end
+%     within_day_corrs(j,:) = temp;
+% end
+% 
+% %% Start to getting cell stability phenotypes
+% remap_index = 0.4; % Wang/Muzzio uses 0.21 for e-phys
+% 
+% for m = 1:num_animals
+%     stable_seshs = [];
+%     neuron_pass = [];
+%     for ll = 1:2
+%         for j = 1:size(Mouse(m).corr_matrix{2,ll},3);
+%             stable_seshs(j) = nansum(nansum(Mouse(m).corr_matrix{2,ll}(:,:,j) > remap_index & ...
+%                 Mouse(m).corr_matrix{2,ll}(:,:,j) ~= 1 & Mouse(m).pass_count{2,ll}(:,:,j) == 1));
+%             neuron_pass(j) = sum(sum(Mouse(m).pass_count{2,ll}(:,:,j))) > 0;
+%         end
+%         stable_2sesh = sum(stable_seshs == 1);
+%         stable_longerterm = sum(stable_seshs > 1);
+%         unstable = sum(neuron_pass) - stable_2sesh - stable_longerterm;
+%        total = sum(neuron_pass);
+%         
+%         Mouse(m).cellphenos{ll}.stable_2sesh = stable_2sesh ;
+%         Mouse(m).cellphenos{ll}.stable_longerterm = stable_longerterm;
+%         Mouse(m).cellphenos{ll}.unstable = unstable;
+%         Mouse(m).cellphenos{ll}.total = total;
+%     end
+% end
+% 
+% % Sum up for ALL sessions and mice
+% total_all = 0;
+% stable_2sesh_all = 0;
+% stable_longerterm_all = 0;
+% unstable_all = 0;
+% for m = 1:2
+%     for ll = 1:2
+%         stable_2sesh_all = stable_2sesh_all + Mouse(m).cellphenos{ll}.stable_2sesh;
+%         stable_longerterm_all = stable_longerterm_all + Mouse(m).cellphenos{ll}.stable_longerterm;
+%         unstable_all = unstable_all + Mouse(m).cellphenos{ll}.unstable;
+%         total_all = total_all + Mouse(m).cellphenos{ll}.total;
+%     end
+% end
 
 %% Display All Mouse corr_matrix
 
