@@ -42,34 +42,6 @@ end
 [before_after_distal_mean, before_after_distal_sem] = parse_stat_vars(distal_stat.before_after);
 [before_after_both_mean, before_after_both_sem] = parse_stat_vars(both_stat.before_after);
 
-% separate_win_local_mean = local_stat.separate_win.mean;
-% separate_win_distal_mean = distal_stat.separate_win.mean;
-% separate_win_both_mean = both_stat.separate_win.mean;
-% separate_win_local_sem = local_stat.separate_win.sem;
-% separate_win_distal_sem = distal_stat.separate_win.sem;
-% separate_win_both_sem = both_stat.separate_win.sem;
-
-% sep_conn1_local_mean = local_stat.sep_conn1.mean;
-% sep_conn1_distal_mean = distal_stat.sep_conn1.mean;
-% sep_conn1_both_mean = both_stat.sep_conn1.mean;
-% sep_conn1_local_sem = local_stat.sep_conn1.sem;
-% sep_conn1_distal_sem = distal_stat.sep_conn1.sem;
-% sep_conn1_both_sem = both_stat.sep_conn1.sem;
-% 
-% sep_conn2_local_mean = local_stat.sep_conn2.mean;
-% sep_conn2_distal_mean = distal_stat.sep_conn2.mean;
-% sep_conn2_both_mean = both_stat.sep_conn2.mean;
-% sep_conn2_local_sem = local_stat.sep_conn2.sem;
-% sep_conn2_distal_sem = distal_stat.sep_conn2.sem;
-% sep_conn2_both_sem = both_stat.sep_conn2.sem;
-% 
-% before_after_local_mean = local_stat.before_after.mean;
-% before_after_distal_mean = distal_stat.before_after.mean;
-% before_after_both_mean = both_stat.before_after.mean;
-% before_after_local_sem = local_stat.before_after.sem;
-% before_after_distal_sem = distal_stat.before_after.sem;
-% before_after_both_sem = both_stat.before_after.sem;
-
 %% Plot stuff
 if plot_both_stat == 0
     h = bar([separate_win_local_mean, separate_win_distal_mean;  ...
