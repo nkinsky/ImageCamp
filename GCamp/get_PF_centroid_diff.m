@@ -1,4 +1,4 @@
-function [ min_dist ] = get_PF_centroid_diff( PlaceMap1, PlaceMap2, neuron_map, centroid_input )
+function [ min_dist, vec ] = get_PF_centroid_diff( PlaceMap1, PlaceMap2, neuron_map, centroid_input )
 % min_dist = get_PF_centroid_diff( PlaceMap1, PlaceMap2, neuron_map )
 %   Gets distance between a neuron's place map from one session to the
 %   next.  In the case of multiple fields, it finds the minimum distance
@@ -20,6 +20,11 @@ function [ min_dist ] = get_PF_centroid_diff( PlaceMap1, PlaceMap2, neuron_map, 
 %
 %       min_dist: an array the length of PlaceMap1 with the minimum
 %       distance between placefields between sessions
+%
+%       vec: a data structure with fields:
+%           .xy which contains the x,y coordinates of the field in PlaceMap1
+%           .uv which contains the dx,dy vector direction it moved to in
+%           PlaceMap2
 
 %% FUTURE ADD-INS
 % 1) Angle and distance from center so that you can later determine if
@@ -57,16 +62,23 @@ for j = 1:num_neurons(1)
             num_valid(1) = sum(cellfun(@(a) ~isempty(a),session(1).PF_centroid(j,:)));
             num_valid(2) = sum(cellfun(@(a) ~isempty(a),session(2).PF_centroid(neuron2,:)));
             
+            % Get distances between all field centroids
             if num_valid(1) > 0 && num_valid(2) > 0 % Only run if both sessions have a valid PF
                 dist_temp = [];
+                cent_diff = [];
                 for k = 1:num_valid(1)
                     for ll = 1:num_valid(2)
-                        cent_diff = session(1).PF_centroid{j,k} - ...
+                        cent_diff{k,ll} = session(1).PF_centroid{j,k} - ...
                             session(2).PF_centroid{neuron2,ll};
-                        dist_temp = [dist_temp sqrt(cent_diff(1)^2 + cent_diff(2)^2)];
+%                         dist_temp = [dist_temp sqrt(cent_diff(1)^2 + cent_diff(2)^2)];
+                        dist_temp(k,ll) = sqrt(cent_diff{k,ll}(1)^2 + cent_diff{k,ll}(2)^2);
                     end
                 end
-                min_dist(j) = min(dist_temp);
+                min_dist(j) = min(dist_temp(:));
+                [sesh1_field, sesh2_field] = find(dist_temp == min_dist(j)); % Get fields in 1st and 2nd session to which this distance corresponds
+                vec.xy = session(1).PF_centroid{j,sesh1_field}; % x,y coordinates of sesh1 field centroid
+                vec.uv = cent_diff{sesh1_field,sesh2_field};
+                
             else
                 continue
             end
