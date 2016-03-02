@@ -73,7 +73,7 @@ plot_confusion_matrix = 0; % default
 pval_thresh = 0; % default
 archive_name_append = [];
 within_session = 0; % default
-shuffle = 0; % default
+num_shuffles = 0;
 for j = 1:length(varargin)
    if strcmpi(varargin{j},'rotate_to_std')
        rotate_to_std = varargin{j+1};
