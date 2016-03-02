@@ -3,10 +3,10 @@ close all
 start_ticker = tic;
 
 %% Filtering variables
-trans_rate_thresh = 0.005; %0.005; % Hz
-pval_thresh = 0.05; %0.05; % don't include ANY TMaps with p-values above this
+trans_rate_thresh = 0.005; % Hz
+pval_thresh = 0.5; % don't include ANY TMaps with p-values above this
 within_session = 1;
-num_shuffles = 10; 
+num_shuffles = 1; 
 days_active_use = 2; % Do same plots using only neurons that are active this number of days
 file_append = ''; % If using archived PlaceMaps, this will be appended to the end of the Placemaps files
 
@@ -14,22 +14,27 @@ file_append = ''; % If using archived PlaceMaps, this will be appended to the en
 PV_corr_bins = 5; % Number of bins to use for arenas when calculating PV correlations
 
 %% Set up mega-variable - note that working_dir 1 = square sessions and 2 = octagon sessions (REQUIRED)
+[MD, ref] = MakeMouseSessionList('Nat');
 
 Mouse(1).Name = 'G30';
 Mouse(1).working_dirs{1} = 'J:\GCamp Mice\Working\G30\2env\11_19_2014\1 - 2env square left 201B\Working';
 Mouse(1).working_dirs{2} = 'J:\GCamp Mice\Working\G30\2env\11_20_2014\1 - 2env octagon left\Working';
+Mouse(1).square_base_sesh = MD(ref.G30.two_env(1));
 
 Mouse(2).Name = 'G31';
 Mouse(2).working_dirs{1} = 'J:\GCamp Mice\Working\G31\2env\12_15_2014\1 - 2env square right\Working';
 Mouse(2).working_dirs{2} = 'J:\GCamp Mice\Working\G31\2env\12_16_2014\1 - 2env octagon left\Working';
+Mouse(2).square_base_sesh = MD(ref.G31.two_env(1));
 
 Mouse(3).Name = 'G45';
 Mouse(3).working_dirs{1} = 'J:\GCamp Mice\Working\G45\2env\08_28_2015\1 - square right\Working';
 Mouse(3).working_dirs{2} = 'J:\GCamp Mice\Working\G45\2env\08_29_2015\1 - oct right\Working';
+Mouse(3).square_base_sesh = MD(ref.G45.twoenv(1));
 
 Mouse(4).Name = 'G48';
 Mouse(4).working_dirs{1} = 'E:\GCamp Mice\G48\2env\08_29_2015\1 - square right\Working';
 Mouse(4).working_dirs{2} = 'E:\GCamp Mice\G48\2env\08_30_2015\1 - oct mid\Working';
+Mouse(4).square_base_sesh = MD(ref.G48.twoenv(1));
 
 num_animals = length(Mouse);
 
@@ -1065,10 +1070,24 @@ end
 
 %% Remapping between sessions analysis - plot correlations between designated
 % sessions in circle vs. square
-sessions_compare = [4 7; 3 7; 3 8; 5 6]; 
+sessions_compare = [1 4; 4 7; 3 7; 3 4; 3 8; 5 6]; 
+
+% Register octagon neurons to square neurons
+disp('Registering octagon to square sessions')
+if isempty(Mouse(4).sq_to_cir_map)
+    for j = 1:num_animals
+        disp(['Mouse number ' num2str(j)])
+        load(fullfile(Mouse(j).working_dirs{1},'batch_session_map.mat'))
+        [COM_square, MeanMask_square] = get_batch_COM(batch_session_map);
+        load(fullfile(Mouse(j).working_dirs{2},'batch_session_map.mat'))
+        [COM_circle, MeanMask_circle] = get_batch_COM(batch_session_map,Mouse(j).square_base_sesh);
+        Mouse(j).sq_to_cir_map = COM_register(COM_square, COM_circle, MeanMask_square, MeanMask_circle);
+    end
+end
 
 % Pull out appropriate comparisons
 circ_v_square = cell(2,num_sessions,num_sessions);
+circ_v_square_all = cell(2,2,num_sessions,num_sessions,num_animals);
 for align_type = 1:2
     for arena_type = 1:2
         for j = 1:num_animals
@@ -1076,6 +1095,22 @@ for align_type = 1:2
             for k = 1:size(sessions_compare)
                 circ_v_square{align_type, sessions_compare(k,1), sessions_compare(k,2)}(j,arena_type) = ...
                     temp(sessions_compare(k,1), sessions_compare(k,2));
+                % Assign appropriate indices to use
+                if arena_type == 1
+                    neuron_indices = 1:size(Mouse(j).corr_matrix{align_type,arena_type},3);
+                elseif arena_type == 2
+                    neuron_indices = Mouse(j).sq_to_cir_map;
+                end
+                valid_indices = ~isnan(neuron_indices); % non-nan indices
+                invalid_indices = isnan(neuron_indices); % non-valid neuron assignments
+                
+                circ_v_square_all{align_type, arena_type, sessions_compare(k,1), sessions_compare(k,2),j}...
+                    (valid_indices,1) = Mouse(j).corr_matrix{align_type,arena_type}...
+                    (sessions_compare(k,1),sessions_compare(k,2), neuron_indices(valid_indices));
+                circ_v_square_all{align_type, arena_type, sessions_compare(k,1), sessions_compare(k,2),j}...
+                    (invalid_indices,1) = nan; % Assign NaNs to neurons that don't map between sessions
+                    
+                
             end
         end
     end
@@ -1085,7 +1120,7 @@ align_plot = {'Distal Aligned','Local Aligned'};
 for align_type = 1:2
     figure(700+align_type)
     for j = 1:size(sessions_compare,1)
-        subplot(2,2,j)
+        subplot(2,3,j)
         for m = 1:num_animals
             plot(circ_v_square{align_type,sessions_compare(j,1),sessions_compare(j,2)}(m,1),...
                 circ_v_square{align_type,sessions_compare(j,1),sessions_compare(j,2)}(m,2),...
@@ -1101,7 +1136,88 @@ for align_type = 1:2
     end
 end
 
+% Same as above but for ALL neurons
+align_plot = {'Distal Aligned','Local Aligned'};
+for align_type = 1:2
+    figure(710+align_type)
+    for j = 1:size(sessions_compare,1)
+        subplot(2,3,j)
+        for m = 1:num_animals
+            plot(circ_v_square_all{align_type, 1, sessions_compare(j,1), sessions_compare(j,2), m},...
+                circ_v_square_all{align_type, 2, sessions_compare(j,1), sessions_compare(j,2), m},...
+                '*'); hold on;
+        end
+        xlabel('Square Correlation'); ylabel('Circle Correlation');
+        title(['Session ' num2str(sessions_compare(j,1))  ' - ' ...
+            num2str(sessions_compare(j,2)) ' with ' align_plot{align_type}])
+        xlim([-0.2 0.7]); ylim([-0.2 0.7])
+        legend(arrayfun(@(a) a.Name,Mouse,'UniformOutput',0))
+        hold off
+        
+    end
+end
 
+%% More 4-7 session remapping plots
+
+comp_get = {'remap_34','remap_34_sq','remap_34_circ',...
+    'remap_47','remap_47_sq','remap_47_circ', ...
+    'remap_37','remap_37_sq','remap_37_circ',...
+    'remap_56','remap_56_sq','remap_56_circ'};
+
+% fields_get = 
+
+for j = 1:num_animals
+    for kk = 1:length(comp_get)
+    
+    % Get correlations for appropriate sessions (4-7, 3-7, 5-6)
+    [ Mouse(j).local_stat2.remap_47, Mouse(j).distal_stat2.remap_47,  ...
+        Mouse(j).both_stat2.remap_47] = twoenv_get_ind_mean(Mouse(j), ...
+        remap_47_conflict{j}, remap_47_conflict{j}, 'both_sub_use',remap_47_aligned{j});
+    
+    [ Mouse(j).local_stat2.(comp_get{kk}), Mouse(j).distal_stat2.(comp_get{kk}),  ...
+        Mouse(j).both_stat2.(comp_get{kk})] = twoenv_get_ind_mean(Mouse(j), ...
+        remap_struct.([(comp_get{kk}) '_conflict']){j}, remap_struct.([(comp_get{kk}) '_conflict']){j}, ...
+        'both_sub_use',remap_struct.([(comp_get{kk}) '_aligned']){j});
+    end
+end
+
+stat_type = {'local_stat2','distal_stat2'};
+
+for k = 1:length(comp_get)
+    for ll = 1:2
+    temp = arrayfun(@(a) a.(stat_type{ll}).(comp_get{k}).all_means,Mouse,'UniformOutput',0); % Gets values for all mice for comparison in comp_get{k}
+    remap_comb.(comp_get{k}).(stat_type{ll}).all_means = cat(1,temp{:});
+    remap_comb.(comp_get{k}).(stat_type{ll}).mean = mean(remap_comb.(comp_get{k}).(stat_type{ll}).all_means);
+    remap_comb.(comp_get{k}).(stat_type{ll}).sem = std(remap_comb.(comp_get{k}).(stat_type{ll}).all_means)/...
+        sqrt(length(remap_comb.(comp_get{k}).(stat_type{ll}).all_means));
+    end
+end
+
+
+figure(800)
+k = [1 4 7 10];
+
+for j = 1:4
+    subplot(2,2,j)
+    h = bar([remap_comb.([comp_get{k(j)} '_sq']).local_stat2.mean, remap_comb.([comp_get{k(j)} '_sq']).distal_stat2.mean; ...
+        remap_comb.([comp_get{k(j)} '_circ']).local_stat2.mean, remap_comb.([comp_get{k(j)} '_circ']).distal_stat2.mean; ...
+        remap_comb.(comp_get{k(j)}).local_stat2.mean, remap_comb.(comp_get{k(j)}).distal_stat2.mean]);
+    hold on
+    errorbar(h(1).XData + h(1).XOffset, ...
+        [remap_comb.([comp_get{k(j)} '_sq']).local_stat2.mean, remap_comb.([comp_get{k(j)} '_circ']).local_stat2.mean, ...
+        remap_comb.(comp_get{k(j)}).local_stat2.mean], [remap_comb.([comp_get{k(j)} '_sq']).local_stat2.sem, ...
+        remap_comb.([comp_get{k(j)} '_circ']).local_stat2.sem, ...
+        remap_comb.(comp_get{k(j)}).local_stat2.sem],'k.')
+    errorbar(h(2).XData + h(2).XOffset, ...
+        [remap_comb.([comp_get{k(j)} '_sq']).distal_stat2.mean, remap_comb.([comp_get{k(j)} '_circ']).distal_stat2.mean, ...
+        remap_comb.(comp_get{k(j)}).distal_stat2.mean], [remap_comb.([comp_get{k(j)} '_sq']).distal_stat2.sem, ...
+        remap_comb.([comp_get{k(j)} '_circ']).distal_stat2.sem, ...
+        remap_comb.(comp_get{k(j)}).distal_stat2.sem],'k.')
+    hold off
+    title(strrep(comp_get{k(j)},'_','\_'))
+    legend('Local','Distal');
+    set(gca,'XTick',[1 2 3],'XTickLabel',{'Square','Circle','Combined'})
+end
 %%
 disp(['Script done running in ' num2str(toc(start_ticker)) ' seconds total'])
 
