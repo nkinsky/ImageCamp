@@ -1,4 +1,4 @@
-% Mosaic Batch Pre-processing
++% Mosaic Batch Pre-processing
 
 close all
 % clear all
