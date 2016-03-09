@@ -9,6 +9,7 @@ within_session = 1;
 num_shuffles = 1; 
 days_active_use = 2; % Do same plots using only neurons that are active this number of days
 file_append = ''; % If using archived PlaceMaps, this will be appended to the end of the Placemaps files
+num_grids_PFdens = 3; % Number of grids to use when dividing up arena for PFdensity analysis
 
 %% Other variables
 PV_corr_bins = 5; % Number of bins to use for arenas when calculating PV correlations
@@ -42,6 +43,19 @@ for j = 1:num_animals
     Mouse(j).key = '1,1 = square distal cues aligned, 1,2 = octagon distal cues aligned, 2,1 = square local cues aligned, 2,2 = octagon local cues aligned';
 end
 
+%% Check for already run instances of the above and load to save time
+
+cd(Mouse(1).working_dirs{1});
+[exist_logical, dirstr] = exist_saved_workspace('workspace','trans_rate_thresh',trans_rate_thresh,...
+        'pval_thresh',pval_thresh,'within_session',within_session,...
+        'num_shuffles',num_shuffles,'PV_corr_bins',PV_corr_bins,...
+        'num_grids_PFdens',num_grids_PFdens);
+% Don't save if it already exists
+if exist_logical == 1
+    disp('Previously ran workspace found - loading and skipping running most stuff')
+    load(dirstr)
+else % Run everything and save at end.
+
 %% Run tmap_corr_across_days for all conditions
 curr_dir = cd;
 for j = 1:num_animals
@@ -53,7 +67,8 @@ for j = 1:num_animals
         Mouse(j).days_active{k} = sum(batch_session_map.map(:,2:end) > 0,2); % Get #days active for each neuron
         tt = tic;
         for m = 0:1
-            [Mouse(j).corr_matrix{m+1,k}, pop_struct_temp, Mouse(j).min_dist_matrix{m+1,k}, Mouse(j).pass_count{m+1,k},...
+            [Mouse(j).corr_matrix{m+1,k}, pop_struct_temp, Mouse(j).min_dist_matrix{m+1,k}, ...
+                Mouse(j).vec_diff_matrix{m+1,k}, Mouse(j).pass_count{m+1,k},...
                 Mouse(j).within_corr{m+1,k}, Mouse(j).shuffle_matrix{m+1,k}, Mouse(j).dist_shuffle_matrix{m+1,k},...
                 Mouse(j).pop_corr_shuffle_matrix{m+1,k}] = ...
                 tmap_corr_across_days(Mouse(j).working_dirs{k},...
@@ -69,6 +84,23 @@ for j = 1:num_animals
     Mouse(j).trans_rate_thresh = trans_rate_thresh;
 end
 cd(curr_dir)
+
+%% Create PF density maps
+disp('Creating PF density maps')
+for j = 1:num_animals
+    for k = 1:2
+       batch_map_use = fix_batch_session_map(Mouse(j).batch_session_map(k));
+       for ll = 1:8
+           dirstr = ChangeDirectory_NK(batch_map_use.session(ll),0); % Get base directory
+           load(fullfile(dirstr,'PlaceMaps_rot_to_std.mat'),'TMap_gauss',...
+               'RunOccMap'); % Load TMaps and Occupancy map
+           temp = create_PFdensity_map(cellfun(@(a) ...
+               make_binary_TMap(a),TMap_gauss,'UniformOutput',0)); % create density map from binary TMaps
+           [~, Mouse(j).PFdens_map{k,ll}] = make_nan_TMap(RunOccMap,temp); % Make non-occupied pixels white
+           Mouse(j).PFdensity_analysis(k).RunOccMap{ll} = RunOccMap; % save RunOccMaps for future analysis
+       end
+    end
+end
 
 %% Dump means into a mega-matrix (combine ALL correlation values here also to get a mega cdf for each session?)
 
@@ -429,6 +461,8 @@ for j = 1:length(Mouse)
          separate_conflict{j}, separate_conflict{j}, 'metric_type', 'pop_corr_shuffle_matrix');
      
      Mouse(j).local_stat2.separate_win.PV_stat_orig_shuffle = temp_local_PV_shuffle;
+end
+
 end
 
 %% Plot stability over time
@@ -1218,6 +1252,193 @@ for j = 1:4
     legend('Local','Distal');
     set(gca,'XTick',[1 2 3],'XTickLabel',{'Square','Circle','Combined'})
 end
+
+%% Create Place-field density maps - move to top eventually...
+
+% Define properties for smoothing of occupancy maps below
+gauss_std = 2.5; disk_rad = 4; 
+sm_gauss = fspecial('gaussian',[round(8*gauss_std,0), round(8*gauss_std,0)],gauss_std);
+
+arena_type = {'Square', 'Circle'};
+cm = colormap('jet');
+for j = 1:num_animals
+    figure(900+j)
+    for k = 1:2
+       for ll = 1:8
+           subplot(4,4,(k-1)*8+ll)
+           imagesc_nan(Mouse(j).PFdens_map{k,ll},cm,[1 1 1]); % Plot with non-occupied pixels white
+           colorbar
+           title([arena_type{k} ' session ' num2str(ll) ' PF density'])
+           xlabel('Local cues aligned')
+       end
+    end
+end
+
+disp('Making PFdensity difference plots')
+% Now do difference plots
+for j = 1:num_animals
+   for k = 1:2
+       
+       % First calculate all comparisons to get cmax and cmin
+       cmin = 0; cmax = 0;
+       occmin = 0; occmax = 0;
+       for ll = 1:8
+           for mm = 1:8
+               diff_map = Mouse(j).PFdens_map{k,mm} - Mouse(j).PFdens_map{k,ll};
+               cmin = min([cmin nanmin(diff_map(:))]);
+               cmax = max([cmax nanmax(diff_map(:))]);
+               
+               Mouse(j).PFdensity_analysis(k).diff_map{ll,mm} = diff_map;
+               
+               % Calculate PF density differences by grid
+               [~, Mouse(j).PFdensity_analysis(k).grid_sum{ll,mm}] = ...
+                   divide_arena(diff_map,num_grids_PFdens);
+               
+               % Get differences in Occupancy
+               occ_diff_map = nan(size(Mouse(j).PFdensity_analysis(k).RunOccMap{mm}));
+               occ_diff_map(:) = nansum([Mouse(j).PFdensity_analysis(k).RunOccMap{mm}(:) ...
+                   -Mouse(j).PFdensity_analysis(k).RunOccMap{ll}(:)],2); % Get difference, treating nans as zeros with nansum
+               occmap_comb = Mouse(j).PFdensity_analysis(k).RunOccMap{mm} | ...
+                   Mouse(j).PFdensity_analysis(k).RunOccMap{ll}; % combined occupancy map - used identify areas where the mouse was in EITHER session
+               % Smooth difference maps
+               occsum = nansum(occ_diff_map(:)); % Get original occupancy sum
+               temp = imfilter(occ_diff_map, sm_gauss); % Perform smoothing
+               occ_diff_map_sm = temp*occsum./sum(temp(:)); % Make smoothed map add up to the same number as the raw map
+               occmin = min([occmin nanmin(occ_diff_map_sm(:))]);
+               occmax = max([occmax nanmax(occ_diff_map_sm(:))]);
+               [~, occ_diff_map_sm] = make_nan_TMap(occmap_comb,occ_diff_map_sm); % Make non-occupied areas in BOTH conditions NaN
+               Mouse(j).PFdensity_analysis(k).RunOccMap_diff{ll,mm} = occ_diff_map_sm; % Assign to mouse variable
+               
+               % Calculate Occupancy map differences by grid
+               [~, Mouse(j).PFdensity_analysis(k).occ_grid_sum{ll,mm}] = ...
+                   divide_arena(occ_diff_map_sm,num_grids_PFdens);
+               
+           end
+       end
+       
+       % Plot PFdensity differences
+       figure(920+(j-1)*2 + k)
+       set(gcf,'Name',[Mouse(j).Name ' PF density differences'])
+       for ll = 1:8
+           for mm = 1:8
+               subplot(8,8,(ll-1)*8+mm)
+               imagesc_nan(Mouse(j).PFdens_map{k,mm} - Mouse(j).PFdens_map{k,ll},...
+                   cm, [1 1 1], [cmin cmax]);
+               if ll == 1 && mm == 1
+                   colorbar
+               end
+               title([num2str(mm) ' - ' num2str(ll)])
+           end
+       end
+       
+%        % Plot occupancy differences
+%        figure(940+(j-1)*2 + k)
+%        set(gcf,'Name',[Mouse(j).Name ' Occupancy Differences'])
+%        for ll = 1:8
+%            for mm = 1:8
+%                subplot(8,8,(ll-1)*8+mm)
+%                imagesc_nan(Mouse(j).PFdensity_analysis(k).RunOccMap_diff{ll,mm},...
+%                    cm, [1 1 1])% , [occmin occmax]);
+%                if ll == 1 && mm == 1
+%                    colorbar
+%                end
+%                title([num2str(mm) ' - ' num2str(ll)])
+%            end
+%        end
+       
+   end
+end
+
+% Combine all
+grid_sum_all = nan(2,8,8,num_grids_PFdens,num_grids_PFdens,num_animals);
+occ_grid_sum_all = nan(2,8,8,num_grids_PFdens,num_grids_PFdens,num_animals);
+for k = 1:2
+    for ll = 1:7
+        for mm = ll+1:8
+            temp = [];
+            for j = 1:num_animals
+                grid_sum_all(k,ll,mm,:,:,j) = ...
+                    Mouse(j).PFdensity_analysis(k).grid_sum{ll,mm};
+                occ_grid_sum_all(k,ll,mm,:,:,j) = ...
+                    Mouse(j).PFdensity_analysis(k).occ_grid_sum{ll,mm};
+            end
+        end
+    end
+end
+
+% Run stats on above
+% For all session-mice-arena-grid combos individually
+grid_sum_mean = nanmean(grid_sum_all(:));
+grid_sum_std = nanstd(grid_sum_all(:));
+grid_sum_z = (grid_sum_all - grid_sum_mean)./grid_sum_std;
+% How do I want to do this?  Should I combine all the mice into one
+% mega-session, get a distribution of PF density changes from all sessions
+% and all grids, and then calculate where the combined value lies on that
+% distribution with a ztest?
+
+% For combined mice
+grid_sum_comb = mean(grid_sum_all,6); % Gives you a mean for all mice (num_arenas x num_sessions x num_sessions x num_grids x num_grids)
+grid_sum_comb_mean = nanmean(grid_sum_comb(:));
+grid_sum_comb_std = nanstd(grid_sum_comb(:));
+occ_grid_sum_comb = mean(occ_grid_sum_all,6);
+% I think this is a good start for how to do a z-test to prove PFs move
+% toward the hallway during the connected sessions
+[h, p] = ztest(squeeze(grid_sum_comb(1,1:4,5:6,3,2)),grid_sum_comb_mean,grid_sum_comb_std);
+
+% Bar graph comparing PF density in each arena near the hallway to the rest
+% of the arena - do ANOVA on the two groups (effect of grid location?)
+[ conn_hw_mean_square, conn_hw_sem_square, conn_nonhw_mean_square, ...
+    conn_nonhw_sem_square ] = twoenv_get_hallway_PFincrease( grid_sum_comb, 3, 2, 1);
+[ conn_hw_mean_circle, conn_hw_sem_circle, conn_nonhw_mean_circle, ...
+    conn_nonhw_sem_circle ] = twoenv_get_hallway_PFincrease( grid_sum_comb, 1, 2, 2);
+[ occ_conn_hw_mean_square, occ_conn_hw_sem_square, occ_conn_nonhw_mean_square, ...
+    occ_conn_nonhw_sem_square ] = twoenv_get_hallway_PFincrease( occ_grid_sum_comb, 3, 2, 1);
+[ occ_conn_hw_mean_circle, occ_conn_hw_sem_circle, occ_conn_nonhw_mean_circle, ...
+    occ_conn_nonhw_sem_circle ] = twoenv_get_hallway_PFincrease( occ_grid_sum_comb, 1, 2, 2);
+
+
+%% PF density plots
+figure(930)
+subplot(2,2,1) 
+h10 = bar([conn_hw_mean_square conn_nonhw_mean_square; conn_hw_mean_circle ...
+    conn_nonhw_mean_circle]);
+hold on;
+errorbar(h10(1).XData + h10(1).XOffset, [conn_hw_mean_square conn_hw_mean_circle], ...
+    [conn_hw_sem_square conn_hw_sem_circle],'k.');
+errorbar(h10(2).XData + h10(2).XOffset, [conn_nonhw_mean_square conn_nonhw_mean_circle], ...
+    [conn_nonhw_sem_square conn_nonhw_sem_circle],'k.');
+hold off
+set(gca,'XTickLabel',{'Square','Circle'})
+legend('Near Hallway','Everywhere else')
+title('Increase in PF density by arena region')
+ylabel('Number fields')
+subplot(2,2,2)
+hist(grid_sum_comb(:),50)
+xlabel('PF density change (#fields/grid)')
+ylabel('Count');
+% Occupany plots
+subplot(2,2,3)
+h10 = bar([occ_conn_hw_mean_square occ_conn_nonhw_mean_square; occ_conn_hw_mean_circle ...
+    occ_conn_nonhw_mean_circle]);
+hold on;
+errorbar(h10(1).XData + h10(1).XOffset, [occ_conn_hw_mean_square occ_conn_hw_mean_circle], ...
+    [occ_conn_hw_sem_square occ_conn_hw_sem_circle],'k.');
+errorbar(h10(2).XData + h10(2).XOffset, [occ_conn_nonhw_mean_square occ_conn_nonhw_mean_circle], ...
+    [occ_conn_nonhw_sem_square occ_conn_nonhw_sem_circle],'k.');
+hold off
+set(gca,'XTickLabel',{'Square','Circle'})
+legend('Near Hallway','Everywhere else')
+title('Increase in Occupancy by arena region')
+subplot(2,2,4)
+hist(occ_grid_sum_comb(:),100)
+xlabel('Occupancy change (need unit here)')
+ylabel('Count');
+
+
+% Similar analysis for Occupancy in each region
+
+
+
 %%
 disp(['Script done running in ' num2str(toc(start_ticker)) ' seconds total'])
 
@@ -1383,3 +1604,14 @@ for j = 1:num_animals
         end
     end
 end
+
+%% Save workspace for future easy reference
+
+if exist_logical == 0
+    cd(Mouse(1).working_dirs{1});
+    [savefile_name] = save_workspace_name('workspace');
+    disp(['Saving workspace as ' fullfile(Mouse(1).working_dirs{1},savefile_name)])
+    save(savefile_name)
+end
+
+
