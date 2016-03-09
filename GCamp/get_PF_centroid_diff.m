@@ -14,7 +14,8 @@ function [ min_dist, vec ] = get_PF_centroid_diff( PlaceMap1, PlaceMap2, neuron_
 %
 %       centroid_input: 1 = indicates that centroids (obtained from get_PF_centroid) are
 %       entered in lieu of the PlacMap cell arrays for the first two
-%       inputs. Use if running a lot to save time.  0 = default
+%       inputs. Use if running a lot to save time.  0 = default. 2 = use
+%       centroids in lieu of location of max firing (not recommended)
 %
 %   OUTPUTS:
 %
@@ -44,15 +45,23 @@ num_neurons(1) = min([length(PlaceMap1) length(neuron_map)]); % if a number of t
 num_neurons(2) = min([length(PlaceMap2) max(neuron_map)]);
 %%
 if centroid_input == 0
-    session(1).PF_centroid = get_PF_centroid(PlaceMap1,thresh);
-    session(2).PF_centroid = get_PF_centroid(PlaceMap2,thresh);
-else
+    [ ~, session(1).PF_centroid ] = get_PF_centroid(PlaceMap1,thresh);
+    [ ~, session(2).PF_centroid ] = get_PF_centroid(PlaceMap2,thresh);
+elseif centroid_input == 1
     session(1).PF_centroid = PlaceMap1;
     session(2).PF_centroid = PlaceMap2;
+elseif centroid_input == 2
+    [ session(1).PF_centroid, ~ ] = get_PF_centroid(PlaceMap1,thresh);
+    [ session(2).PF_centroid, ~ ] = get_PF_centroid(PlaceMap2,thresh);
 end
 
 %% Calculate distance to closest PF centroid
+
+% Pre-allocate
 min_dist = nan(num_neurons(1),1);
+vec.xy = nan(num_neurons(1),2);
+vec.uv = nan(num_neurons(1),2);
+% Step through each neuron
 for j = 1:num_neurons(1)
     try % Error catching statement
         neuron2 = neuron_map(j); % Get second session neuron to use
@@ -64,20 +73,29 @@ for j = 1:num_neurons(1)
             
             % Get distances between all field centroids
             if num_valid(1) > 0 && num_valid(2) > 0 % Only run if both sessions have a valid PF
-                dist_temp = [];
-                cent_diff = [];
-                for k = 1:num_valid(1)
-                    for ll = 1:num_valid(2)
-                        cent_diff{k,ll} = session(1).PF_centroid{j,k} - ...
-                            session(2).PF_centroid{neuron2,ll};
-%                         dist_temp = [dist_temp sqrt(cent_diff(1)^2 + cent_diff(2)^2)];
-                        dist_temp(k,ll) = sqrt(cent_diff{k,ll}(1)^2 + cent_diff{k,ll}(2)^2);
-                    end
-                end
-                min_dist(j) = min(dist_temp(:));
-                [sesh1_field, sesh2_field] = find(dist_temp == min_dist(j)); % Get fields in 1st and 2nd session to which this distance corresponds
-                vec.xy = session(1).PF_centroid{j,sesh1_field}; % x,y coordinates of sesh1 field centroid
-                vec.uv = cent_diff{sesh1_field,sesh2_field};
+                %%% OLD CODE - looked for minimum distance between all pairs of fields.
+                %%% Better is to look for distance only between fields with
+                %%% the max firing rate...
+%                 dist_temp = [];
+%                 cent_diff = [];
+%                 for k = 1:num_valid(1)
+%                     for ll = 1:num_valid(2)
+%                         cent_diff{k,ll} = session(1).PF_centroid{j,k} - ...
+%                             session(2).PF_centroid{neuron2,ll};
+% %                         dist_temp = [dist_temp sqrt(cent_diff(1)^2 + cent_diff(2)^2)];
+%                         dist_temp(k,ll) = sqrt(cent_diff{k,ll}(1)^2 + cent_diff{k,ll}(2)^2);
+%                     end
+%                 end
+%                 min_dist(j) = min(dist_temp(:));
+%                 [sesh1_field, sesh2_field] = find(dist_temp == min_dist(j)); % Get fields in 1st and 2nd session to which this distance corresponds
+%                 vec.xy(j,:) = session(1).PF_centroid{j,sesh1_field(1)}; % x,y coordinates of sesh1 field centroid
+%                 vec.uv(j,:) = cent_diff{sesh1_field(1),sesh2_field(1)};
+                
+                cent_diff = session(1).PF_centroid{j,1} - ...
+                    session(2).PF_centroid{neuron2,1};
+                min_dist(j) = sqrt(cent_diff(1)^2 + cent_diff{k,ll}(2)^2);
+                vec.xy(j,:) = session(1).PF_centroid{j,1}; % x,y coordinates of sesh1 field centroid
+                vec.uv(j,:) = cent_diff;
                 
             else
                 continue
@@ -92,7 +110,6 @@ for j = 1:num_neurons(1)
         keyboard
     end
 end
-
 
 end
 
