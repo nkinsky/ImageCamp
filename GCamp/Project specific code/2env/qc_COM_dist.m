@@ -18,7 +18,7 @@ for j = 1:2
         PFfilename{align_type}),'TMap_gauss','RunOccMap');
     [~, map_plot(j).TMap] = cellfun(@(a) make_nan_TMap(RunOccMap,a), ...
         TMap_gauss,'UniformOutput',0);
-    PF_centroid_plot{j} = get_PF_centroid(TMap_gauss,PF_thresh);
+    [~,PF_centroid_plot{j}] = get_PF_centroid(TMap_gauss,PF_thresh);
 end
 
 %%
@@ -26,7 +26,7 @@ figure(124)
 cm = colormap('jet');
 for j = 1:size(batch_map_use.map,1)
     sesh_neuron(1) = batch_map_use.map(j,1 + sesh_compare(1)); % Get neuron number for each session
-    sesh_neuron(2) = batch_map_use.map(j,1 + sesh_compare(1));
+    sesh_neuron(2) = batch_map_use.map(j,1 + sesh_compare(2));
     if sesh_neuron(1) == 0 && sesh_neuron(2) == 0
         continue
     else

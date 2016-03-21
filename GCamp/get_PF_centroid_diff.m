@@ -1,4 +1,4 @@
-function [ min_dist, vec ] = get_PF_centroid_diff( PlaceMap1, PlaceMap2, neuron_map, centroid_input )
+function [ min_dist, vec ] = get_PF_centroid_diff( PlaceMap1, PlaceMap2, neuron_map, centroid_input, varargin )
 % min_dist = get_PF_centroid_diff( PlaceMap1, PlaceMap2, neuron_map )
 %   Gets distance between a neuron's place map from one session to the
 %   next.  In the case of multiple fields, it finds the minimum distance
@@ -16,6 +16,9 @@ function [ min_dist, vec ] = get_PF_centroid_diff( PlaceMap1, PlaceMap2, neuron_
 %       entered in lieu of the PlacMap cell arrays for the first two
 %       inputs. Use if running a lot to save time.  0 = default. 2 = use
 %       centroids in lieu of location of max firing (not recommended)
+%
+%       varargins: ...,'todebug',1) will plot PlaceMaps with overlying
+%       differences between the two.
 %
 %   OUTPUTS:
 %
@@ -36,6 +39,17 @@ function [ min_dist, vec ] = get_PF_centroid_diff( PlaceMap1, PlaceMap2, neuron_
 
 if nargin < 4
     centroid_input = 0;
+end
+
+%% Parse varargins
+for j = 1:length(varargin)
+   if strcmpi(varargin{j},'todebug')
+       todebug = logical(varargin{j+1});
+       if todebug == 1 && centroid_input ~= 0
+           todebug = false;
+           disp('todebug can only be set to 1 in combination with centroid_input = 1')
+       end
+   end
 end
 %%
 thresh = 0.9; % PF threshold
@@ -61,6 +75,9 @@ end
 min_dist = nan(num_neurons(1),1);
 vec.xy = nan(num_neurons(1),2);
 vec.uv = nan(num_neurons(1),2);
+if todebug
+    hqc = figure;
+end
 % Step through each neuron
 for j = 1:num_neurons(1)
     try % Error catching statement
@@ -91,11 +108,36 @@ for j = 1:num_neurons(1)
 %                 vec.xy(j,:) = session(1).PF_centroid{j,sesh1_field(1)}; % x,y coordinates of sesh1 field centroid
 %                 vec.uv(j,:) = cent_diff{sesh1_field(1),sesh2_field(1)};
                 
-                cent_diff = session(1).PF_centroid{j,1} - ...
-                    session(2).PF_centroid{neuron2,1};
-                min_dist(j) = sqrt(cent_diff(1)^2 + cent_diff{k,ll}(2)^2);
+                cent_diff= session(2).PF_centroid{neuron2,1} - ...
+                    session(1).PF_centroid{j,1};
+                min_dist(j) = sqrt(cent_diff(1)^2 + cent_diff(2)^2);
                 vec.xy(j,:) = session(1).PF_centroid{j,1}; % x,y coordinates of sesh1 field centroid
                 vec.uv(j,:) = cent_diff;
+                
+                % Debug plotting
+                if todebug
+                    figure(hqc)
+                    subplot(1,2,1) % PlaceMap1 with uv plotted on it using quiver
+                    imagesc(PlaceMap1{j})
+                    set(gca, 'YDir', 'Normal')
+                    hold on
+                    plot(session(1).PF_centroid{j,1}(1),...
+                        session(1).PF_centroid{j,1}(2),'w*')
+                    quiver(vec.xy(j,1),vec.xy(j,2), vec.uv(j,1), vec.uv(j,2),0,'w');
+                    title('Session 1 place field with displacement vector noted')
+                    hold off
+                    subplot(1,2,2) % PlaceMap2 with uv plotted on it using quiver
+                    imagesc(PlaceMap2{neuron_map(j)})
+                    set(gca, 'YDir', 'Normal')
+                    hold on
+                    plot(session(2).PF_centroid{neuron_map(j),1}(1),...
+                        session(1).PF_centroid{neuron_map(j),1}(2),'w*')
+                    quiver(vec.xy(j,1),vec.xy(j,2), vec.uv(j,1), vec.uv(j,2),0,'w');
+                    title('Session 2 place field with displacement vector noted')
+                    hold off
+                    waitforbuttonpress
+                    
+                end
                 
             else
                 continue
@@ -111,5 +153,8 @@ for j = 1:num_neurons(1)
     end
 end
 
+if todebug
+    close(hqc)
+end
 end
 

@@ -148,7 +148,7 @@ for j = 1:num_sessions
    sesh(j).trans_rate_pass = sesh(j).trans_rate >= trans_rate_thresh;
    
    % Get Place Field centroid locations for each session
-   sesh(j).PF_centroid = get_PF_centroid(sesh(j).TMap,PF_thresh);
+   [~, sesh(j).PF_centroid] = get_PF_centroid(sesh(j).TMap,PF_thresh);
 end
 
 
@@ -249,6 +249,7 @@ for k = 1:num_sessions
                 k,ll); % Get map from 2nd session to 1st session
             [temp_dist, temp_vec] = get_PF_centroid_diff(sesh(k).PF_centroid,...
                 sesh(ll).PF_centroid, neuron_map_use,1); % get PF differences from 1st to second session
+            % Assign distance comparisons to the appropriate base neuron
             for j = 1:length(temp_dist)
                 neuron_index = neuron_map_base(j);
                 if neuron_index ~= 0;

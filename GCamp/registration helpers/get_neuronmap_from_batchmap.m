@@ -17,7 +17,7 @@ for j = 1:2
         max(map{j}(valid_indices))];
 end
 
-%% 
+%% Map session 2 to session 1
 
 sesh1_neurons = neuron_range{1}(1):neuron_range{1}(2);
 map_sesh1_sesh2 = zeros(neuron_range{1}(2),1);
