@@ -1,6 +1,9 @@
 function [ ] = set_color_scheme(varargin)
 %set_color_scheme(scheme )
 %   scheme = 'default' (also left blank) or black
+%
+% Note that this is a hack - to look for stuff you can possibly change,
+% open the matlab.prf file using >>edit(fullfile(prefdir,'matlab.prf'));
 
 scheme = 'default';
 if ~isempty(varargin)
@@ -31,6 +34,8 @@ elseif strcmpi(scheme,'black')
     com.mathworks.services.Prefs.setColorPref('ColorsBackground',java.awt.Color.black);
     com.mathworks.services.Prefs.setColorPref('ColorsText',java.awt.Color.green);
     com.mathworks.services.Prefs.setColorPref('Editorhighlight-lines',java.awt.Color(0.15,0.15,0.15));
+    com.mathworks.services.Prefs.setColorPref('Editor.VariableHighlighting.Color',java.awt.Color(0.5,0.5,0.5));
+    com.mathworks.services.Prefs.setColorPref('ColorsMLintAutoFixBackground',java.awt.Color(0.64,0.08,0.19));
 end
 
 % Update everything
