@@ -29,6 +29,21 @@ classdef ProgressBar < handle
     %       percent = p.progress;
     %       percent = p.stop;
     %
+    % IMPORTANT NOTE: If N is very large, ProgressBar can take up a lot of
+    % time running progress.  To get around this, run the following code,
+    % which only updates the bar every resol percent (Nat Kinsky edit)
+    %
+    %   resol = 10; % Percent resolution for progress bar, in this case 10%
+    %   p = ProgressBar(resol);
+    %   update_inc = round(N/resol); % Get increments for updating ProgressBar
+    %   parfor i=1:N
+    %       pause(rand); % Replace with real code
+    %       if round(i/update_inc) == (i/update_inc)
+    %           p.progress; % Also percent = p.progress;
+    %       end
+    %   end
+    %   p.stop; % Also percent = p.stop;
+    %
     % By: Stefan Doerr
     %
     % Based on: parfor_progress written by Jeremy Scheff    
