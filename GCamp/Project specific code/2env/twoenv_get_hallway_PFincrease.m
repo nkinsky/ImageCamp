@@ -1,7 +1,11 @@
-function [ conn_hw_mean, conn_hw_sem, conn_nonhw_mean, conn_nonhw_sem ] = twoenv_get_hallway_PFincrease( grid_sum_comb, hw_grid_row, hw_grid_col, arena_type, before_after )
-% [ conn_hw_mean, conn_hw_sem, conn_nonhw_mean, conn_nonhw_sem ] = twoenv_get_hallway_PFincrease( grid_sum_comb, hw_grid_row, hw_grid_col )
+function [ conn_hw_mean, conn_hw_sem, conn_nonhw_mean, conn_nonhw_sem ] = ...
+    twoenv_get_hallway_PFincrease( grid_sum_comb, hw_grid_row, hw_grid_col, arena_type, before_after )
+% [ conn_hw_mean, conn_hw_sem, conn_nonhw_mean, conn_nonhw_sem ] = ...
+% twoenv_get_hallway_PFincrease( grid_sum_comb, hw_grid_row, hw_grid_col, arena_type, before_after)
+%
 %   Breaks apart increases in place field density near the hallway versus
 %   the rest of the grids.  
+%
 %   INPUTS:
 %
 %   grid_sum_comb, a num_arenas x num_sessions x num_sessions x num_grids 
