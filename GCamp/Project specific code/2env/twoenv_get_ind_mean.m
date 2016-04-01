@@ -37,8 +37,11 @@ distal_sub_use = check_indices_type(distal_sub_use);
 both_sub_use = check_indices_type(both_sub_use);
 
 %% Create _stat variables
-
+try
 local_stat = calc_group_stats(Mouse_struct, local_sub_use, 2, metric_type);
+catch
+    keyboard
+end
 local_stat.PV_stat = calc_PV_group_stats(Mouse_struct, local_sub_use, 2);
 temp3 = calc_group_shuffled_stats(Mouse_struct, local_sub_use, 2);
 local_stat.shuffle_stat = temp3;

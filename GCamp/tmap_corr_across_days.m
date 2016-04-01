@@ -1,7 +1,7 @@
-function [corr_matrix, pop_corr_struct, min_dist_matrix, pass_thresh, ...
+function [corr_matrix, pop_corr_struct, min_dist_matrix, vec_diff_matrix, pass_thresh, ...
     corr_win, corr_shuffle_matrix, min_dist_shuffle_matrix, pop_corr_shuffle_matrix] = ...
     tmap_corr_across_days(working_dir,varargin)
-% [corr_matrix, pop_corr_struct, min_dist_matrix, pass_thresh, ...
+% [corr_matrix, pop_corr_struct, min_dist_matrix, vec_diff_matrix, pass_thresh, ...
 %    corr_win, corr_shuffle_matrix, min_dist_shuffle_matrix] = ...
 %    tmap_corr_across_days(working_dir,varargin)
 %
@@ -73,7 +73,7 @@ plot_confusion_matrix = 0; % default
 pval_thresh = 0; % default
 archive_name_append = [];
 within_session = 0; % default
-shuffle = 0; % default
+num_shuffles = 0;
 for j = 1:length(varargin)
    if strcmpi(varargin{j},'rotate_to_std')
        rotate_to_std = varargin{j+1};
@@ -148,7 +148,7 @@ for j = 1:num_sessions
    sesh(j).trans_rate_pass = sesh(j).trans_rate >= trans_rate_thresh;
    
    % Get Place Field centroid locations for each session
-   sesh(j).PF_centroid = get_PF_centroid(sesh(j).TMap,PF_thresh);
+   [~, sesh(j).PF_centroid] = get_PF_centroid(sesh(j).TMap,PF_thresh);
 end
 
 
@@ -247,12 +247,15 @@ for k = 1:num_sessions
                 0,k); % Get map from 1st session to all neurons
             neuron_map_use = get_neuronmap_from_batchmap(batch_session_map.map,...
                 k,ll); % Get map from 2nd session to 1st session
-            temp = get_PF_centroid_diff(sesh(k).PF_centroid,...
+            [temp_dist, temp_vec] = get_PF_centroid_diff(sesh(k).PF_centroid,...
                 sesh(ll).PF_centroid, neuron_map_use,1); % get PF differences from 1st to second session
-            for j = 1:length(temp)
+            % Assign distance comparisons to the appropriate base neuron
+            for j = 1:length(temp_dist)
                 neuron_index = neuron_map_base(j);
                 if neuron_index ~= 0;
-                    min_dist_matrix(k,ll,neuron_index) = temp(j);
+                    min_dist_matrix(k,ll,neuron_index) = temp_dist(j);
+                    vec_diff_matrix(k,ll).xy(neuron_index,:) = temp_vec.xy(j,:);
+                    vec_diff_matrix(k,ll).uv(neuron_index,:) = temp_vec.uv(j,:);
                 end
             end
         catch

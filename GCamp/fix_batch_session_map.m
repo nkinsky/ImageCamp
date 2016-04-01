@@ -12,7 +12,7 @@ for j = 1:length(batch_session_map_old.session)
     elseif isfield(batch_session_map_old.session,'Animal')
         session_new(j).Animal = batch_session_map_old.session(j).Animal;
     else
-        error('.mouse field doesn''t exists in batch_session_map.session')
+        error('.mouse field doesn''t exist in batch_session_map.session')
     end
     if ~isfield(batch_session_map_old.session,'Date') && ...
             isfield(batch_session_map_old.session,'date')
@@ -20,7 +20,7 @@ for j = 1:length(batch_session_map_old.session)
     elseif isfield(batch_session_map_old.session,'Date')
         session_new(j).Date = batch_session_map_old.session(j).Date;
     else
-        error('.date field doesn''t exists in batch_session_map.session')
+        error('.date field doesn''t exist in batch_session_map.session')
     end
     if ~isfield(batch_session_map_old.session,'Session') && ...
             isfield(batch_session_map_old.session,'session')
@@ -28,7 +28,7 @@ for j = 1:length(batch_session_map_old.session)
     elseif isfield(batch_session_map_old.session,'Session')
         session_new(j).Session = batch_session_map_old.session(j).Session;
     else
-        error('.session field doesn''t exists in batch_session_map.session')
+        error('.session field doesn''t exist in batch_session_map.session')
     end
 end
 

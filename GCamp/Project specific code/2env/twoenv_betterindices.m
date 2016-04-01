@@ -33,6 +33,34 @@ after_6_aligned{1} = [];
 conn1_conn2_conflict{1} = [1 5 6; 2 5 6];
 conn1_conn2_aligned{1} = [];
 
+remap_34_conflict{1} = [1 3 4; 2 3 4];
+remap_34_aligned{1} = [];
+remap_34_sq_conflict{1} = [1 3 4];
+remap_34_sq_aligned{1} = [];
+remap_34_circ_conflict{1} = [2 3 4];
+remap_34_circ_aligned{1} = [];
+
+remap_47_conflict{1} = [1 4 7; 2 4 7];
+remap_47_aligned{1} = [];
+remap_47_sq_conflict{1} = [1 4 7];
+remap_47_sq_aligned{1} = [];
+remap_47_circ_conflict{1} = [2 4 7];
+remap_47_circ_aligned{1} = [];
+
+remap_37_conflict{1} = [1 3 7; 2 3 7];
+remap_37_aligned{1} = [];
+remap_37_sq_conflict{1} = [1 3 7];
+remap_37_sq_aligned{1} = [];
+remap_37_circ_conflict{1} = [2 3 7];
+remap_37_circ_aligned{1} = [];
+
+remap_56_conflict{1} = [1 5 6; 2 5 6];
+remap_56_aligned{1} = [];
+remap_56_sq_conflict{1} = [1 5 6];
+remap_56_sq_aligned{1} = [];
+remap_56_circ_conflict{1} = [2 5 6];
+remap_56_circ_aligned{1} = [];
+
 % G31
 before_win_conflict{2} = [1 1 2; 1 1 4; 1 2 3; 1 2 4; 1 3 4; 2 1 2; 2 1 4; 2 2 3; 2 2 4; 2 3 4];
 before_win_aligned{2} = [ 1 1 3; 2 1 3];
@@ -57,6 +85,34 @@ after_6_aligned{2} = [];
 
 conn1_conn2_conflict{2} = [1 5 6; 2 5 6];
 conn1_conn2_aligned{2} = [];
+
+remap_34_conflict{2} = [1 3 4; 2 3 4];
+remap_34_aligned{2} = [];
+remap_34_sq_conflict{2} = [1 3 4];
+remap_34_sq_aligned{2} = [];
+remap_34_circ_conflict{2} = [2 3 4];
+remap_34_circ_aligned{2} = [];
+
+remap_47_conflict{2} = [1 4 7; 2 4 7];
+remap_47_aligned{2} = [];
+remap_47_sq_conflict{2} = [1 4 7];
+remap_47_sq_aligned{2} = [];
+remap_47_circ_conflict{2} = [2 4 7];
+remap_47_circ_aligned{2} = [];
+
+remap_37_conflict{2} = [1 3 7; 2 3 7];
+remap_37_aligned{2} = [];
+remap_37_sq_conflict{2} = [1 3 7];
+remap_37_sq_aligned{2} = [];
+remap_37_circ_conflict{2} = [2 3 7];
+remap_37_circ_aligned{2} = [];
+
+remap_56_conflict{2} = [1 5 6; 2 5 6];
+remap_56_aligned{2} = [];
+remap_56_sq_conflict{2} = [1 5 6];
+remap_56_sq_aligned{2} = [];
+remap_56_circ_conflict{2} = [2 5 6];
+remap_56_circ_aligned{2} = [];
 
 % G45
 before_win_conflict{3} = [1 1 2; 1 1 4; 1 2 3; 1 2 4; 1 3 4; 2 1 2; 2 1 4; 2 2 3; 2 2 4; 2 3 4];
@@ -83,6 +139,34 @@ after_6_aligned{3} = [];
 conn1_conn2_conflict{3} = [1 5 6; 2 5 6];
 conn1_conn2_aligned{3} = [];
 
+remap_34_conflict{3} = [1 3 4; 2 3 4];
+remap_34_aligned{3} = [];
+remap_34_sq_conflict{3} = [1 3 4];
+remap_34_sq_aligned{3} = [];
+remap_34_circ_conflict{3} = [2 3 4];
+remap_34_circ_aligned{3} = [];
+
+remap_47_conflict{3} = [1 4 7; 2 4 7];
+remap_47_aligned{3} = [];
+remap_47_sq_conflict{3} = [1 4 7];
+remap_47_sq_aligned{3} = [];
+remap_47_circ_conflict{3} = [2 4 7];
+remap_47_circ_aligned{3} = [];
+
+remap_37_conflict{3} = [1 3 7; 2 3 7];
+remap_37_aligned{3} = [];
+remap_37_sq_conflict{3} = [1 3 7];
+remap_37_sq_aligned{3} = [];
+remap_37_circ_conflict{3} = [2 3 7];
+remap_37_circ_aligned{3} = [];
+
+remap_56_conflict{3} = [1 5 6; 2 5 6];
+remap_56_aligned{3} = [];
+remap_56_sq_conflict{3} = [1 5 6];
+remap_56_sq_aligned{3} = [];
+remap_56_circ_conflict{3} = [2 5 6];
+remap_56_circ_aligned{3} = [];
+
 % G48
 
 before_win_conflict{4} = [1 1 2; 1 1 4; 1 2 3; 1 2 4; 1 3 4; 2 1 2; 2 1 4; 2 2 3; 2 2 4; 2 3 4];
@@ -108,6 +192,65 @@ after_6_aligned{4} = [];
 
 conn1_conn2_conflict{4} = [1 5 6; 2 5 6];
 conn1_conn2_aligned{4} = [];
+
+remap_34_conflict{4} = [1 3 4; 2 3 4];
+remap_34_aligned{4} = [];
+remap_34_sq_conflict{4} = [1 3 4];
+remap_34_sq_aligned{4} = [];
+remap_34_circ_conflict{4} = [2 3 4];
+remap_34_circ_aligned{4} = [];
+
+remap_47_conflict{4} = [1 4 7; 2 4 7];
+remap_47_aligned{4} = [];
+remap_47_sq_conflict{4} = [1 4 7];
+remap_47_sq_aligned{4} = [];
+remap_47_circ_conflict{4} = [2 4 7];
+remap_47_circ_aligned{4} = [];
+
+remap_37_conflict{4} = [1 3 7; 2 3 7];
+remap_37_aligned{4} = [];
+remap_37_sq_conflict{4} = [1 3 7];
+remap_37_sq_aligned{4} = [];
+remap_37_circ_conflict{4} = [2 3 7];
+remap_37_circ_aligned{4} = [];
+
+remap_56_conflict{4} = [1 5 6; 2 5 6];
+remap_56_aligned{4} = [];
+remap_56_sq_conflict{4} = [1 5 6];
+remap_56_sq_aligned{4} = [];
+remap_56_circ_conflict{4} = [2 5 6];
+remap_56_circ_aligned{4} = [];
+
+%% Combine remapping variables into a data structure for later easy indexing
+
+remap_struct.remap_34_conflict = remap_34_conflict;
+remap_struct.remap_34_aligned = remap_34_aligned;
+remap_struct.remap_34_sq_conflict = remap_34_sq_conflict;
+remap_struct.remap_34_sq_aligned = remap_34_sq_aligned;
+remap_struct.remap_34_circ_conflict = remap_34_circ_conflict;
+remap_struct.remap_34_circ_aligned = remap_34_circ_aligned;
+
+remap_struct.remap_47_conflict = remap_47_conflict;
+remap_struct.remap_47_aligned = remap_47_aligned;
+remap_struct.remap_47_sq_conflict = remap_47_sq_conflict;
+remap_struct.remap_47_sq_aligned = remap_47_sq_aligned;
+remap_struct.remap_47_circ_conflict = remap_47_circ_conflict;
+remap_struct.remap_47_circ_aligned = remap_47_circ_aligned;
+
+remap_struct.remap_37_conflict = remap_37_conflict;
+remap_struct.remap_37_aligned = remap_37_aligned;
+remap_struct.remap_37_sq_conflict = remap_37_sq_conflict;
+remap_struct.remap_37_sq_aligned = remap_37_sq_aligned;
+remap_struct.remap_37_circ_conflict = remap_37_circ_conflict;
+remap_struct.remap_37_circ_aligned = remap_37_circ_aligned;
+
+remap_struct.remap_56_conflict = remap_56_conflict;
+remap_struct.remap_56_aligned = remap_56_aligned;
+remap_struct.remap_56_sq_conflict = remap_56_sq_conflict;
+remap_struct.remap_56_sq_aligned = remap_56_sq_aligned;
+remap_struct.remap_56_circ_conflict = remap_56_circ_conflict;
+remap_struct.remap_56_circ_aligned = remap_56_circ_aligned;
+
 %% Combine all
 
 for j = 1:length(before_win_conflict)
