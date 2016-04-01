@@ -1,6 +1,5 @@
 % Batch script for two-env experiment
 close all
-start_ticker = tic;
 
 %% Filtering variables
 trans_rate_thresh = 0.005; % Hz
@@ -54,7 +53,10 @@ cd(Mouse(1).working_dirs{1});
 if exist_logical == 1
     disp('Previously ran workspace found - loading and skipping running most stuff')
     load(dirstr)
+    exist_logical = 1;
+    start_ticker = tic;
 else % Run everything and save at end.
+    start_ticker = tic;
 
 %% Run tmap_corr_across_days for all conditions
 curr_dir = cd;
