@@ -1,8 +1,12 @@
 function [ ] = MakeMeanBlobs_batch( session_struct, suppress_output )
 % MakeMeanBlobs_batch( session_struct, suppress_output )
 % Takes a structure with .Animal, .Date, and .Session and does a batch run
-% of MakeMeanBlobs.  suppress_output = 0 updates progress to your screen
+% of MakeMeanBlobs.  suppress_output = 0 (default) updates progress to your screen
 % via a simple progress bar.
+
+if nargin < 2
+    suppress_output = 0; % default
+end
 
 %% Check for existence of all the appropriate files
 for j = 1:length(session_struct)
