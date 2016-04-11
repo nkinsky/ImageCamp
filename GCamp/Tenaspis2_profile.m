@@ -68,7 +68,6 @@ NormalTraces('SLPDF.h5');
 stats_normtraces = profile('info');
 save stats_normtraces stats_normtraces
 
-
 profile clear
 profile on
 
@@ -99,7 +98,9 @@ disp('Adding Potential Transients ...')
 AddPoTransients;
 
 stats_addpo = profile('info');
-save stats_addpo stats_addpo
+save stats_addpo_calcahead_take2 stats_addpo
+
+%%
 
 % Determine rising events/on-times for all transients
 
