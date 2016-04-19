@@ -1,23 +1,36 @@
 function Tenaspis2_profile(animal_id,sess_date,sess_num)
 % Quick & dirty Tenaspis2
 % Requires DFF.h5, manualmask.mat, and SLPDF.h5 be present
+%
+%% If no inputs are specified, assume the current working directory is ok 
+% and mask_reg is in it and proceed
+
+skip_mask_reg = 0;
+if nargin < 3
+    skip_mask_reg = 1;
+end
 
 %% Register base session neuron mask to current session
-MasterDirectory = 'C:\MasterData';
 
-[init_date,init_sess] = GetInitRegMaskInfo(animal_id);
-init_dir = ChangeDirectory(animal_id,init_date,init_sess);
-% init_tif = fullfile(init_dir,'ICmovie_min_proj.tif');
+% Register mask unless inputs specify that you shouldn't
+if skip_mask_reg == 0
+    MasterDirectory = 'C:\MasterData';
+    
+    [init_date,init_sess] = GetInitRegMaskInfo(animal_id);
+    init_dir = ChangeDirectory(animal_id,init_date,init_sess);
+    % init_tif = fullfile(init_dir,'ICmovie_min_proj.tif');
+    
+    init_mask_loc = fullfile(MasterDirectory,[animal_id,'_initialmask.mat']);
+    
+    reg_struct.Animal = animal_id;
+    reg_struct.Date = sess_date;
+    reg_struct.Session = sess_num;
+    
+    sess_dir = ChangeDirectory(animal_id,sess_date,sess_num); % Change to session directory
+    if ~exist('mask_reg.mat','file')
+        mask_multi_image_reg(init_mask_loc,init_date,init_sess,reg_struct);
+    end
 
-init_mask_loc = fullfile(MasterDirectory,[animal_id,'_initialmask.mat']);
-
-reg_struct.Animal = animal_id;
-reg_struct.Date = sess_date;
-reg_struct.Session = sess_num;
-
-sess_dir = ChangeDirectory(animal_id,sess_date,sess_num); % Change to session directory
-if ~exist('mask_reg.mat','file')
-    mask_multi_image_reg(init_mask_loc,init_date,init_sess,reg_struct);
 end
 
 load mask_reg
@@ -90,6 +103,7 @@ save stats_calcppeak stats_calcppeak
 
 
 %%
+tic
 
 profile clear
 profile on
@@ -98,7 +112,9 @@ disp('Adding Potential Transients ...')
 AddPoTransients;
 
 stats_addpo = profile('info');
-save stats_addpo_calcahead_take2 stats_addpo
+save stats_addpo_calcahead1 stats_addpo
+
+toc
 
 %%
 
@@ -114,9 +130,9 @@ stats_detectslope = profile('info');
 save stats_detectslope stats_detectslope
 
 %% Calculate place fields and accompanying statistics
-CalculatePlacefields('201b','alt_inputs','T2output.mat','man_savename',...
-    'PlaceMapsv2.mat','half_window',0,'minspeed',3);
-PFstats;
+% CalculatePlacefields('201b','alt_inputs','T2output.mat','man_savename',...
+%     'PlaceMapsv2.mat','half_window',0,'minspeed',3);
+% PFstats;
 
 end
 
