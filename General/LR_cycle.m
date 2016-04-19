@@ -1,5 +1,5 @@
-function [ n_out] = LR_cycle( n_in, n_range, escape_flag )
-%[ n_out] = LR_cycle( n_in, n_range, escape_flag )
+function [ n_out, stay_in] = LR_cycle( n_in, n_range)
+%[ n_out] = LR_cycle( n_in, n_range)
 %   Lets you cycle n_in up one value or down one value depending on if you
 %   push the left or right buttons (spacebar exits).  Similar use to
 %   waitforbuttonpress within a for loop, except using LR_cycle in a while
@@ -11,11 +11,11 @@ function [ n_out] = LR_cycle( n_in, n_range, escape_flag )
 %
 %   figure
 %   xy = rand([6,2]);
-%   escape_flag = 'out';
 %   n_out = 1;
-%   while ~strcmpi(n_out,escape_flag)
+%   stay_in = true;
+%   while stay_in
 %       plot(xy(n_out,1),xy(n_out,2));
-%       n_out = LR_cycle(n_out,[1 6],escape_flag);
+%       [n_out, stay_in] = LR_cycle(n_out,[1 6]);
 %   end
 
 % ASCII definitions here
@@ -33,21 +33,25 @@ end
 [~,~,button] = ginput(1);
 switch button
     case left
-        n_out = n_in -1;
+        n_out = n_in - 1;
+        stay_in = true;
         if n_out < min(n_range)
             n_out = min(n_range);
         end
     case right
         n_out = n_in + 1;
+        stay_in = true;
         if n_out > max(n_range)
             n_out = max(n_range);
         end
     case spacebar
-        n_out = escape_flag;
+        n_out = [];
+        stay_in = false;
         clear disp_flag
     otherwise
         disp('error')
         n_out = n_in;
+        stay_in = true;
    
 end
 
