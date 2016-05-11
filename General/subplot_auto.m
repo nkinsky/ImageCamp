@@ -1,5 +1,5 @@
-function [  ] = subplot_auto( n_total, n )
-% subplot_auto( n_total, n )
+function [h] = subplot_auto( n_total, n )
+% h = subplot_auto( n_total, n )
 %
 % Automatically creates subplots that keep the images as close to square as
 % possible, e.g. if you have 3 or 4 plots, it uses subplot (2,2,x), if you
@@ -13,15 +13,15 @@ function [  ] = subplot_auto( n_total, n )
 % Example: subplot_auto(3,2) is the same as subplot(2,2,3);
 
 if n_total <= 2
-    subplot(1,2,n)
+    h = subplot(1,2,n);
 elseif n_total <= 4
-    subplot(2,2,n)
+    h = subplot(2,2,n);
 elseif n_total <= 9
-    subplot(3,3,n)
+    h = subplot(3,3,n);
 elseif n_total <= 16
-    subplot(4,4,n)
+    h = subplot(4,4,n);
 elseif n_total <= 25
-    subplot(5,5,n)
+    h = subplot(5,5,n);
 else
     disp('You really want to have more than 25 subplots in a figure?')
 end
