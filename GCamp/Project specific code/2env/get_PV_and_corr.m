@@ -16,6 +16,9 @@ num_shuffles = 1;
 NumXBins = 5;
 NumYBins = NumXBins;
 disp_prog_bar = 1;
+calc_half = 0; % Default. 1 = calculate between 1st and 2nd halves - need to load valid indices to use for each in a length = 2 cell following the string 'calc_half'
+use_alf_file = false;
+neuron_filter = true(size(batch_map)); % Default = include all neurons. Otherwise, use a logical array that matches the size of batch_map.
 for j = 1:length(varargin)
     if strcmpi(varargin{j},'rot_to_std')
         rot_to_std = varargin{j+1};
@@ -38,20 +41,49 @@ for j = 1:length(varargin)
     if strcmpi(varargin{j},'disp_prog_bar')
        disp_prog_bar = varargin{j+1};
     end
+    if strcmpi(varargin{j},'calc_half')
+        calc_half = true;
+        half_indices = varargin{j+1};
+    end
+    if strcmpi(varargin{j},'alt_file_use')
+        use_alt_file = true;
+        alt_PM_file = varargin{j+1};
+        alt_pos_file = varargin{j+2};
+    end
+    
+    if strcmpi(varargin{j},'calc_half')
+        calc_half = true;
+        half_indices = varargin{j+1};
+    end
+    
+    % Not yet implementd - can't figure out the best way to do so.
+    if strcmpi(varargin{j},'neuron_filter')
+       neuron_filter = varargin{j+1};
+    end
 end
 
 %% Load required variables from session_struct
 sesh = session_struct;
 
 % Get appropriate PlaceMap and Pos file to load
-[PM_file, pos_file] = get_PM_name(rot_to_std,use_trans);
+if ~use_alt_file
+    [PM_file, pos_file] = get_PM_name(rot_to_std,use_trans);
+elseif use_alt_file
+    PM_file = alt_PM_file;
+    pos_file = alt_pos_file;
+end
 
 curr_dir = cd;
 for j = 1:length(session_struct)
    ChangeDirectory(session_struct(j).Animal,session_struct(j).Date,...
        session_struct(j).Session);
    load(PM_file,'FT','x','y');
-   load(pos_file,'xmin','xmax','ymin','ymax');
+   if ~calc_half 
+       load(pos_file,'xmin','xmax','ymin','ymax');
+   elseif calc_half
+       xmin = min(x); xmax = max(x);
+       ymin = min(y); ymax = max(y);
+   end
    sesh(j).FT = FT;
    sesh(j).frames_include = find( x < xmax & x > xmin & y < ymax & y > ymin);
    sesh(j).x = x;
@@ -62,6 +94,21 @@ for j = 1:length(session_struct)
    sesh(j).ymax = ymax;
 end
 cd(curr_dir)
+
+% Split up session appropriately if calc_half is flagged.
+if calc_half
+    if length(sesh) > 1
+        error('Within session correlations only work for one session at at time.')
+    end
+    sesh(2) = sesh(1);
+    for j = 1:2
+        sesh(j).FT = sesh(j).FT(:,half_indices{j});
+        sesh(j).frames_include = true(1,length(half_indices{j}));
+        sesh(j).x = sesh(j).x(half_indices{j});
+        sesh(j).y = sesh(j).y(half_indices{j});
+    end
+    batch_map = repmat((1:size(FT,1))',1,3); % Make mapping the exact same for each half.
+end
 
 %% Get population vectors for a 5 x 5 grid for each arena
 
@@ -113,10 +160,10 @@ for m = 1:length(sesh)
                 PV1 = squeeze(PV(m,j,k,:));
                 PV2 = squeeze(PV(ll,j,k,:));
                 
-                ind_use = ~isnan(PV1) & ~isnan(PV2); %Indices that are not NaN in both sessions
-                ind_use_both = ~isnan(PV1) | ~isnan(PV2); % Indices that are not NaN in either session
-                ind_only{1} = ~isnan(PV1) & ~ind_use; % Indices that are active in session 1 only
-                ind_only{2} = ~isnan(PV2) & ~ind_use; % Indices that are active in session 2 only
+                ind_use = ~isnan(PV1) & ~isnan(PV2); %Indices of neurons that are not NaN in both sessions
+                ind_use_both = ~isnan(PV1) | ~isnan(PV2); % Indices of neurons that are not NaN in either session
+                ind_only{1} = ~isnan(PV1) & ~ind_use; % Indices of neurons that are active in session 1 only
+                ind_only{2} = ~isnan(PV2) & ~ind_use; % Indices of neurons that are active in session 2 only
                 
                 % Change indices from NaN to zeros for those neurons that
                 % are active in the other session
@@ -127,7 +174,11 @@ for m = 1:length(sesh)
                 PV2_use = PV2(ind_use_both);
                 
                 % Get correlations and distances
-                PV_corr(m,ll,j,k) = corr(PV1_use,PV2_use,'type',corr_type);
+                if isempty(PV1_use) || isempty(PV2_use)
+                    PV_corr(m,ll,j,k) = nan;
+                else
+                    PV_corr(m,ll,j,k) = corr(PV1_use,PV2_use,'type',corr_type);
+                end
 %                 if isnan(PV_corr(m,ll,j,k))
 %                     disp('Getting a NaN correlation - error catching')
 %                     keyboard
@@ -141,8 +192,12 @@ for m = 1:length(sesh)
                     % identity in second session
                     PV2_shuffle = PV2_use(randperm(length(PV2_use)));
                     
-                    PV_corr_shuffle(m,ll,j,k,zzz) = corr(PV1_use,PV2_shuffle,...
-                        'type',corr_type);
+                    if isempty(PV1_use) || isempty(PV2_shuffle)
+                        PV_corr_shuffle(m,ll,j,k,zzz) = nan;
+                    else
+                        PV_corr_shuffle(m,ll,j,k,zzz) = corr(PV1_use,PV2_shuffle,...
+                            'type',corr_type);
+                    end
                     temp = dist([PV1_use, PV2_shuffle]);
                     PV_dist_shuffle(m,ll,j,k,zzz) = temp(1,2);
                 end
