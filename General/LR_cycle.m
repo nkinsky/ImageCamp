@@ -1,5 +1,6 @@
 function [ n_out, stay_in] = LR_cycle( n_in, n_range)
 %[ n_out] = LR_cycle( n_in, n_range)
+%
 %   Lets you cycle n_in up one value or down one value depending on if you
 %   push the left or right buttons (spacebar exits).  Similar use to
 %   waitforbuttonpress within a for loop, except using LR_cycle in a while
