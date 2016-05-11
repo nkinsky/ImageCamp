@@ -64,14 +64,6 @@ function [ neuron_map] = image_register_simple( mouse_name, base_date, base_sess
 %       .num_not_assigned: number of neurons that had no neurons in the
 %       second session within min_thresh.
 %
-% Version Tracking
-% 0.8: confident that false positives and false negative rates are low.
-% Possible false negatives occur due to two factors: 1) drastically
-% different shapes of neurons from day 1 to day 2 (unfixable), and 2) two
-% different neurons in session 1 mapping to the same neuron in session
-%
-% 0.85 (working): need to add in some type of flag to load AllMasks when
-% doing multiple session registrations
 
 %% Magic variables
 min_thresh = 3; % distance in pixels beyond which we consider a cell a different cell
