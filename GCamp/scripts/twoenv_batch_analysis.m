@@ -469,6 +469,10 @@ end
 
 %% Plot stability over time
 
+% Load control data
+[control_dir, ~] = ChangeDirectory('GCamp6f_45','08_05_2015',3,0);
+time_control = load(fullfile(control_dir, 'control_time_data.mat'));
+
 % Add in plot of stability for each arena
 corrs_all = [];
 corrs_all2 = [];
@@ -518,28 +522,41 @@ PV_corrs_sem_by_day = arrayfun(@(a) std(PV_corrs_all(time_all == a))/...
     sum(time_all == a),days_plot);
 PV_shuffle_mean_by_day = arrayfun(@(a) mean(PV_shuffle_all(time_all == a)),days_plot);
 
+% Calculate control sessions
+tcontrol_corrs = arrayfun(@(a) nanmean(a.corrs_half(a.pval > 0.95)), time_control(1).session);
+tcontrol_mean = mean(tcontrol_corrs);
+tcontrol_sem = std(tcontrol_corrs)/length(tcontrol_corrs);
+
+tcontrol_PV_corrs = arrayfun(@(a) nanmean(a.PVcorr(:)),session);
+tcontrol_PV_corr_mean = mean(tcontrol_PV_corrs);
+tcontrol_PV_corr_sem = std(tcontrol_PV_corrs)/length(tcontrol_PV_corrs);
+
 to_plot = ~isnan(corrs_mean_by_day);
 figure(501)
 % Individual TMap correlations
 subplot(2,1,1)
 plot(days_plot(to_plot),corrs_mean_by_day(to_plot),'k.-',days_plot(to_plot),...
-shuffle_mean_by_day(to_plot),'r--') % time_all,corrs_all,'r*'
+shuffle_mean_by_day(to_plot),'r--', 0, tcontrol_mean, 'g.') % time_all,corrs_all,'r*'
 hold on
-errorbar(days_plot(to_plot),corrs_mean_by_day(to_plot),corrs_sem_by_day(to_plot),'k')
+errorbar(days_plot(to_plot),corrs_mean_by_day(to_plot),corrs_sem_by_day(to_plot),'k');
+errorbar(days_plot(to_plot),[tcontrol_mean -1 -1 -1 -1],[tcontrol_sem 0 0 0 0],'g.')
 xlabel('Days between session'); ylabel('Mean correlation')
 title('Stability - Individual Neurons Transient Map Correlations')
-xlim([-0.5 6.5]); set(gca,'XTick',[0 1 2 3 4 5 6])
-legend('Actual','Shuffled')
+xlim([-0.5 6.5]); ylim([0 0.6]); set(gca,'XTick',[0 1 2 3 4 5 6])
+legend('Actual','Shuffled','Continuous Session Control (1st v 2nd half)')
+hold off
 % Population Correlations
 subplot(2,1,2)
 plot(days_plot(to_plot),PV_corrs_mean_by_day(to_plot),'k.-',days_plot(to_plot),...
-PV_shuffle_mean_by_day(to_plot),'r--') % time_all,corrs_all,'r*'
+PV_shuffle_mean_by_day(to_plot),'r--',0,tcontrol_PV_corr_mean,'g.') % time_all,corrs_all,'r*'
 hold on
-errorbar(days_plot(to_plot),PV_corrs_mean_by_day(to_plot),PV_corrs_sem_by_day(to_plot),'k')
+ht1 = errorbar(days_plot(to_plot),PV_corrs_mean_by_day(to_plot),PV_corrs_sem_by_day(to_plot),'k');
+ht2 = errorbar(days_plot(to_plot),[tcontrol_PV_corr_mean -1 -1 -1 -1],[tcontrol_PV_corr_sem 0 0 0 0],'g.');
 xlabel('Days between session'); ylabel('Mean correlation')
 title('Stability - Population Vector Correlations')
-xlim([-0.5 6.5]); set(gca,'XTick',[0 1 2 3 4 5 6])
-legend('Actual','Shuffled')
+xlim([-0.5 6.5]); ylim([-0.1 0.4]); set(gca,'XTick',[0 1 2 3 4 5 6])
+legend('Actual','Shuffled','Continuous Session Control (1st v 2nd half)')
+hold off
 
 % figure(499)
 % plot(time_all,corrs_all,'r*')
@@ -743,23 +760,23 @@ PV_means_by_arena_sem = cellfun(@(a) std(a)/sqrt(length(a)), PV_means_by_arena);
 %%% mid PV correlations but low mean values and look for the rotation that
 %%% gives high correlations with the original to prove the mis-orientation.
 %%%  
-
+plot_all_rot = 0;
+if plot_all_rot == 1
 figure(600)
 
 % Local aligned v Distal aligned Corrs - maybe add in both_aligned here
 % just as a reference?
 subplot(2,2,1)
-bar_w_err([local_rot_corrs_all_mean, distal_rot_corrs_all_mean, shuf_corrs_all_mean;...
-    local_rot_PV_corrs_all_mean, distal_rot_PV_corrs_all_mean, shuf_PV_corrs_all_mean;...
-    local_rot_PV_orig_corrs_all_mean, distal_rot_PV_orig_corrs_all_mean, shuf_PV_orig_all_mean],...
-    [local_rot_corrs_all_sem, distal_rot_corrs_all_sem, shuf_corrs_all_sem;...
-    local_rot_PV_corrs_all_sem, distal_rot_PV_corrs_all_sem, shuf_PV_corrs_all_sem;...
-    local_rot_PV_orig_corrs_all_sem, distal_rot_PV_orig_corrs_all_sem, shuf_PV_orig_all_sem])
-xlim([0 4]); ylim([-0.10 0.4]); 
-set(gca,'XTick',[1 2 3],'XTickLabel',{'Ind. Neurons','Population','Original Population Calc'})
+bar_w_err([corrs_mean_by_day(1), local_rot_corrs_all_mean, distal_rot_corrs_all_mean, shuf_corrs_all_mean;...
+    PV_corrs_mean_by_day(1), local_rot_PV_corrs_all_mean, distal_rot_PV_corrs_all_mean, shuf_PV_corrs_all_mean],... %... %nan, local_rot_PV_orig_corrs_all_mean, distal_rot_PV_orig_corrs_all_mean, shuf_PV_orig_all_mean],...
+    [ corrs_sem_by_day(1), local_rot_corrs_all_sem, distal_rot_corrs_all_sem, shuf_corrs_all_sem;...
+    PV_corrs_sem_by_day(1), local_rot_PV_corrs_all_sem, distal_rot_PV_corrs_all_sem, shuf_PV_corrs_all_sem]); %...
+%     nan, local_rot_PV_orig_corrs_all_sem, distal_rot_PV_orig_corrs_all_sem, shuf_PV_orig_all_sem])
+xlim([0 3]); ylim([-0.10 0.5]); 
+set(gca,'XTick',[1 2],'XTickLabel',{'Ind. Neurons','Population'})% ,'Original Population Calc'})
 ylabel('Mean correlations')
-title('Mean TMap Correlations by cue alignment')
-legend('Local Cues Aligned','Distal Cues Aligned','Shuffled')
+title('Mean TMap Correlations by cue alignment - same day')
+legend('No rotation', 'Local Cues Aligned','Distal Cues Aligned','Shuffled')
 
 % Local Correlations by day
 subplot(2,2,2)
@@ -785,6 +802,22 @@ set(gca,'XTick',[1 2],'XTickLabel',{'Ind. Neurons','Population'})
 ylabel('Mean correlations with local cues aligned')
 title('Mean TMap Correlations by arena')
 legend('Square','Circle')
+end
+
+figure(601)
+
+% Local aligned v Distal aligned Corrs - maybe add in both_aligned here
+% just as a reference?
+bar_w_err([corrs_mean_by_day(1), local_rot_corrs_all_mean, distal_rot_corrs_all_mean, shuf_corrs_all_mean;...
+    PV_corrs_mean_by_day(1), local_rot_PV_corrs_all_mean, distal_rot_PV_corrs_all_mean, shuf_PV_corrs_all_mean],... %... %nan, local_rot_PV_orig_corrs_all_mean, distal_rot_PV_orig_corrs_all_mean, shuf_PV_orig_all_mean],...
+    [ corrs_sem_by_day(1), local_rot_corrs_all_sem, distal_rot_corrs_all_sem, shuf_corrs_all_sem;...
+    PV_corrs_sem_by_day(1), local_rot_PV_corrs_all_sem, distal_rot_PV_corrs_all_sem, shuf_PV_corrs_all_sem]); %...
+%     nan, local_rot_PV_orig_corrs_all_sem, distal_rot_PV_orig_corrs_all_sem, shuf_PV_orig_all_sem])
+xlim([0 3]); ylim([-0.10 0.5]); 
+set(gca,'XTick',[1 2],'XTickLabel',{'Ind. Neurons','Population'})% ,'Original Population Calc'})
+ylabel('Mean correlations')
+title('Mean TMap Correlations by cue alignment - same day')
+legend('No rotation', 'Local Cues Aligned','Distal Cues Aligned','Shuffled')
 
 % Do above but aggregate for all days of separation
 
@@ -1389,15 +1422,40 @@ occ_grid_sum_comb = mean(occ_grid_sum_all,6);
 
 % Bar graph comparing PF density in each arena near the hallway to the rest
 % of the arena - do ANOVA on the two groups (effect of grid location?)
-[ conn_hw_mean_square, conn_hw_sem_square, conn_nonhw_mean_square, ...
-    conn_nonhw_sem_square ] = twoenv_get_hallway_PFincrease( grid_sum_comb, 3, 2, 1);
-[ conn_hw_mean_circle, conn_hw_sem_circle, conn_nonhw_mean_circle, ...
-    conn_nonhw_sem_circle ] = twoenv_get_hallway_PFincrease( grid_sum_comb, 1, 2, 2);
-[ occ_conn_hw_mean_square, occ_conn_hw_sem_square, occ_conn_nonhw_mean_square, ...
-    occ_conn_nonhw_sem_square ] = twoenv_get_hallway_PFincrease( occ_grid_sum_comb, 3, 2, 1);
-[ occ_conn_hw_mean_circle, occ_conn_hw_sem_circle, occ_conn_nonhw_mean_circle, ...
-    occ_conn_nonhw_sem_circle ] = twoenv_get_hallway_PFincrease( occ_grid_sum_comb, 1, 2, 2);
+[ conn_hw_mean_square, conn_hw_sem_square, conn_hw_square_all, conn_nonhw_mean_square, ...
+    conn_nonhw_sem_square, conn_nonhw_square_all ] = twoenv_get_hallway_PFincrease( grid_sum_comb, 3, 2, 1);
+[ conn_hw_mean_circle, conn_hw_sem_circle, conn_hw_circle_all, conn_nonhw_mean_circle, ...
+    conn_nonhw_sem_circle, conn_nonhw_circle_all ] = twoenv_get_hallway_PFincrease( grid_sum_comb, 1, 2, 2);
+[ occ_conn_hw_mean_square, occ_conn_hw_sem_square, occ_conn_hw_square_all, occ_conn_nonhw_mean_square, ...
+    occ_conn_nonhw_sem_square, occ_conn_square_nonhw_all ] = twoenv_get_hallway_PFincrease( occ_grid_sum_comb, 3, 2, 1);
+[ occ_conn_hw_mean_circle, occ_conn_hw_sem_circle, occ_conn_hw_circle_all, occ_conn_nonhw_mean_circle, ...
+    occ_conn_nonhw_sem_circle, occ_conn_nonhw_circle_all] = twoenv_get_hallway_PFincrease( occ_grid_sum_comb, 1, 2, 2);
 
+%% Attempts to combine PFdensity plots for ALL mice into one.
+k =2; ll = 3;
+temp = Mouse(1).PFdens_map{k,ll};
+size_use = size(temp);
+for j = 2:num_animals
+    temp = cat(3,temp,resize(Mouse(j).PFdens_map{k,ll},size_use));
+end
+
+figure(1002)
+for j = 1:num_animals
+    subplot(2,5,j)
+    imagesc_nan(Mouse(j).PFdens_map{k,ll},cm,[1 1 1])
+    title('Original')
+    subplot(2,5,5+j)
+    imagesc_nan(squeeze(temp(:,:,j)),cm,[1 1 1])
+    title('Resized')
+end
+
+% For above, Mouse(4) has his arena off-kilter from the others.  May need
+% to re-run everything for him.  For now, combine the first three only
+
+figure(1002)
+subplot(2,5,10)
+imagesc_nan(nanmean(temp(:,:,1:3),3),cm,[1 1 1])
+title('Resized and combining mice 1-3')
 
 %% PF density plots
 figure(930)
