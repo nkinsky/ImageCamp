@@ -14,9 +14,33 @@
 
 % If you want to run with jitter, specify here
 
+% Other steps:
+% 1) All the above quantifies how well our method works for image
+% registration - run a comparison of some sort across all our sessions and
+% compare to using neuron ROIs to register.  Maybe make it able to do
+% either? YES - then if you have a mouse with no good landmarks this will
+% work well.  DON'T do if you get good agreement between two methods for
+% G27 (who has very few good landmarks)
+%   plot differences between our method and others somehow?
+%
+% 2) For neuron registration:
+%   - quantify average overlap and centroid distance across many sessions,
+%   plot as a bar graph and scatter plot?
+%   - using real data, plot how much you can intenionally shift the image
+%   registration and what happens to a) centroid distance, b) overlap, and
+%   c) place field correlations for a stable/non-remapping session.  At
+%   what point do the values go to zero?
+%
+% 3) Plot what happens to centroid diffs for a systematic shift? e.g. if I
+% move the image 3 pixels to the right, do I see that the average centroid
+% vector also points 3 pixels to the right?
+%
+% 4) quantify average numbers for how many neurons pass the transitive test
+% based on number of sessions...
+
 close all
-%% Specifications for running with transforme intentionally jittered
-run_with_jitter = 0;
+%% Specifications for running with transform intentionally jittered
+run_with_jitter = 1;
 batch_map_file = 'batch_session_map';
 name_append = '';
 if run_with_jitter == 1
@@ -29,7 +53,7 @@ end
 % same across sessions after registration (can do this for each type of
 % registration also...)
 
-base_session = MD(81); % Session where batch_session_map for the sessions you want to look at resides
+base_session = MD(ref.G30.two_env(1)); % Session where batch_session_map for the sessions you want to look at resides
 
 % Load base_session_map, iterate through sessions and create
 % allBinBlobs_mask
@@ -50,6 +74,7 @@ num_neurons_total = size(batch_session_map.map,1);
 
 % Plot out all active neuron mean masks for every session that all are
 % active
+
 disp('Constructing and plotting BinBlobs for all neurons active every session')
 figure(101)
 figure(1011)
@@ -64,20 +89,22 @@ for j = 1:num_sessions
    AllBinBlobs{j} = create_AllICmask(BinBlobs);
    session(j).allactive_BinBlobs = BinBlobs(active_all_map(:,j));
    figure(101)
-   subplot_auto(num_sessions,j)
+   h1(j) = subplot_auto(num_sessions,j);
    imagesc(allseshactive_BinBlobsMask{j}); 
    title(['Session ' num2str(j)])
    figure(1011)
-   subplot_auto(num_sessions,j)
+   h2(j) = subplot_auto(num_sessions,j);
    imagesc(allseshactive_BinBlobsMask{j} + AllBinBlobs{j}); 
    title(['Session ' num2str(j)])
     
 end
+linkaxes(h1); linkaxes(h2);
 
 clear BinBlobs
+
 %% Register each session back to base
 disp('Registering each BinBlobs mask to the base session via image_registerX')
-ChangeDirectory_NK(base_session)
+ChangeDirectory_NK(base_session);
 
 allactive_BinMask_reg = cell(1,num_sessions);
 BinBlobs_reg = cell(1,num_sessions);
@@ -109,12 +136,18 @@ end
 % clear BinBlobs_temp
 %% Cycle through each session to see if neurons appear/disappear/change shape, etc.
 % (basically look for anything that could indicate a bad registration)
+run_this1 = 0;
+
+if run_this1 == 1
 disp('Now you can cycle through each session')
 figure(102)
-while ~ischar(j)
+stay_in = true;
+while stay_in
    imagesc(allactive_BinMask_reg{j});
    title(['Session ' num2str(j)])
-   j = LR_cycle(j,[1 num_sessions],'get_out');
+   [j, stay_in] = LR_cycle(j,[1 num_sessions]);
+end
+
 end
 
 
@@ -122,15 +155,17 @@ end
 
 num_shuffles = 100;
 
-[ neuron_cm, cm_dist, neuron_axisratio, ratio_diff, neuron_orientation, ...
+if run_with_jitter == 0
+    [ neuron_cm, cm_dist, neuron_axisratio, ratio_diff, neuron_orientation, ...
     orientation_diff ] = dist_bw_reg_sessions( BinBlobs_reg );
-
-if run_with_jitter == 1
-   cm_dist_jitter = cm_dist; 
-   ratio_diff_jitter = ratio_diff; 
-   orientation_diff_jitter = orientation_diff;
+elseif run_with_jitter == 1
+    [ neuron_cm_jitter, cm_dist_jitter, neuron_axisratio_jitter, ratio_diff_jitter, neuron_orientation_jitter, ...
+    orientation_diff_jitter ] = dist_bw_reg_sessions( BinBlobs_reg );
 end
 
+% Note that this just shuffles neuron identify from session to session -
+% not a very good shuffling comparison... we would expect huge differences
+% if this happened.
 cm_dist_shuffle = [];
 ratio_diff_shuffle = [];
 orientation_diff_shuffle = [];
@@ -157,6 +192,9 @@ end
 
 PF_thresh = 0.9;
 
+% Fix batch_session_map if old
+batch_session_map = fix_batch_session_map(batch_session_map);
+
 % Load up all the necessary variables
 curr_dir = cd;
 TMap_use = cell(1,num_sessions);
@@ -172,15 +210,31 @@ end
 cd(curr_dir);
 
 % Get distance to closest place-field in different session
-min_dist = cell(1,num_sessions);
-for j = 1:num_sessions
-    min_dist{1,j} = get_PF_centroid_diff(PFcentroid_use{1},...
-        PFcentroid_use{j},map_use{1,j},1);
+% min_dist_temp = cell(1,num_sessions);
+% for j = 1:num_sessions
+%     min_dist_temp{1,j} = get_PF_centroid_diff(PFcentroid_use{1},...
+%         PFcentroid_use{j},map_use{1,j},1);
+%     
+% end
+
+disp('Getting distances between PF centroids for all sessions')
+min_dist_temp = cell(num_sessions,num_sessions);
+for j = 1:num_sessions-1
+    for k = j + 1: num_sessions
+        map_use = get_neuronmap_from_batchmap(batch_session_map.map,j,k);
+        min_dist_temp{j,k} = get_PF_centroid_diff(PFcentroid_use{j}, ...
+            PFcentroid_use{k}, map_use,1);
+    end
 end
 
-if run_with_jitter == 1
-   min_dist_jitter = min_dist;
+
+if run_with_jitter == 0
+    min_dist = min_dist_temp;
+elseif run_with_jitter == 1
+    min_dist_jitter = min_dist_temp;
 end
+
+
 
 %% Now calculate shuffled distributions
 
@@ -192,14 +246,14 @@ for j = 1:num_shuffles
         disp(['Performing Shuffle ' num2str(j) ' of ' num2str(num_shuffles)])
     end
     
-    map_use_shuffle = map_use;
     for k = 1:num_sessions
-        ind_use = find(map_use_shuffle{1,k} ~=0); 
-        map_use_shuffle{1,k}(ind_use) = map_use_shuffle{1,k}(ind_use(randperm(length(ind_use))));
-        min_dist_temp(:,k) = get_PF_centroid_diff(PFcentroid_use{1},...
-            PFcentroid_use{k},map_use_shuffle{1,k},1);
+        map_use_shuffle = batch_session_map.map(:,k+1);
+        ind_use = find(map_use_shuffle ~=0); 
+        map_use_shuffle(ind_use) = map_use_shuffle(ind_use(randperm(length(ind_use))));
+        min_dist_temp2(:,k) = get_PF_centroid_diff(PFcentroid_use{1},...
+            PFcentroid_use{k},map_use_shuffle,1);
     end
-    min_dist_shuffle = [min_dist_shuffle; min_dist_temp];
+    min_dist_shuffle = [min_dist_shuffle; min_dist_temp2(:)];
 end
 
 %% Plot metrics after running with and without jitter
