@@ -68,7 +68,7 @@ xlims = get(gca,'XLim');
 % Plot PF distance differences
 metric = min_dist{1,2};
 metric_jitter = min_dist_jitter{1,2};
-metric_shuffle = min_dist_shuffle(:,2);
+metric_shuffle = min_dist_shuffle;
 
 subplot(2,2,4)
 [f_metric, x_metric] = ecdf(metric); 
