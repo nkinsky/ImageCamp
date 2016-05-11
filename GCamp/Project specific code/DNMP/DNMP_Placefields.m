@@ -28,12 +28,13 @@ if stats_only == 0
         ChangeDirectory_NK(session_struct(j));
         exc_frames = load('exclude_frames.mat'); % Load frames to exclude for each type of trials - must run DNMP_parse_trials beforehand to get
         
-        for k = 1:length(save_names)
+        for k = 1:1 %length(save_names)
             % Get on-maze PFs
+            disp(['Running CalculatePlaceFields for ' name_append{k} ' session.'])
             CalculatePlacefields(room,'exclude_frames_raw',exc_frames.(exc_frames_type{k}),...
                 'alt_inputs','T2output.mat','man_savename',save_names{k},...
                 'half_window',0,'minspeed',3,'cmperbin',cmperbin,...
-                'NumShuffles',NumShuffles);
+                'NumShuffles',NumShuffles,'calc_half',1);
         end
         
         
@@ -45,8 +46,9 @@ end
 
 %% Get stats
 
-for k = 1:length(save_names)
-   PFstats(0, 'alt_file_use', save_names{k}, name_append{k})
+for k = 1:1 % length(save_names)
+    disp(['Running PFstats for ' name_append{k} ' session.'])
+    PFstats(0, 'alt_file_use', save_names{k}, name_append{k})
 end
 
 end
