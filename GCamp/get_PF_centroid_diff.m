@@ -42,6 +42,7 @@ if nargin < 4
 end
 
 %% Parse varargins
+todebug = false; % default
 for j = 1:length(varargin)
    if strcmpi(varargin{j},'todebug')
        todebug = logical(varargin{j+1});
@@ -108,7 +109,7 @@ for j = 1:num_neurons(1)
 %                 vec.xy(j,:) = session(1).PF_centroid{j,sesh1_field(1)}; % x,y coordinates of sesh1 field centroid
 %                 vec.uv(j,:) = cent_diff{sesh1_field(1),sesh2_field(1)};
                 
-                cent_diff= session(2).PF_centroid{neuron2,1} - ...
+                cent_diff = session(2).PF_centroid{neuron2,1} - ...
                     session(1).PF_centroid{j,1};
                 min_dist(j) = sqrt(cent_diff(1)^2 + cent_diff(2)^2);
                 vec.xy(j,:) = session(1).PF_centroid{j,1}; % x,y coordinates of sesh1 field centroid
