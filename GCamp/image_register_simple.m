@@ -273,6 +273,7 @@ end
 %% Get distance to all other neurons
 disp('Calculating Distances between cells')
 cm_dist = 100*ones(size(sesh(1).cms,2),size(sesh(2).cms,2)); % Set all values to arbitrarily large distances to start.
+p = ProgressBar(size(sesh(1).cms,2));
 for j = 1:size(sesh(1).cms,2); % Cycle through all base session neurons
     if ~isempty(sesh(1).cms(j).x)
         pos_cm(:,1) = [sesh(1).cms(j).x ; sesh(1).cms(j).y];
@@ -284,8 +285,10 @@ for j = 1:size(sesh(1).cms,2); % Cycle through all base session neurons
                     disp(['Error at j = ' num2str(j) ' & m = ' num2str(m)])
                     keyboard
                 end
-                temp = dist(pos_cm);
-                cm_dist(j,m) = temp(1,2);
+%                 temp = dist(pos_cm);
+%                 cm_dist2(j,m) = temp(1,2);
+                cm_dist(j,m) = sqrt((pos_cm(1,1)-pos_cm(1,2))^2 + (pos_cm(2,1)-pos_cm(2,2))^2);
+
             elseif isempty(sesh(2).cms(m).x)
                 % Edge case where one of the neurons has disappeared during
                 % registration (probably due to being near the edge of the 
@@ -298,7 +301,9 @@ for j = 1:size(sesh(1).cms,2); % Cycle through all base session neurons
     elseif isempty(sesh(1).cms(j).x)
         cm_dist(j,:) = 100*ones(size(cm_dist(j,:)));
     end
+    p.progress;
 end
+p.stop;
 
 cm_dist_min = min(cm_dist,[],2); % Get minimum distance to nearest neighbor for all cells
 
