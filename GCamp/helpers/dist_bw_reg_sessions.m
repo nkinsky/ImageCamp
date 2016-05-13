@@ -4,6 +4,12 @@ function [ neuron_centroid, centroid_dist, neuron_axisratio, ratio_diff, ...
 % orientation_diff ] = dist_bw_reg_sessions( BinBlobs_reg, shuffle )
 %   Calculate neuron centroid and distance to same centroid in each
 %   registered session.
+% 
+%   Use in conjunction with map_ROIs function:
+%
+%   [ mapped_ROIs, valid_neurons ] = map_ROIs( neuron_map.neuron_id, NeuronROI_reg );
+%   [cent, cent_d, aratio, aratio_d, orient, orient_diff] = ...
+%   dist_bw_reg_sessions ({NeuronROI_base(valid_neurons), mapped_ROIs);
 %
 % INPUTS
 %   BinBlobs_reg: of the form BinBlobs{session_number}{neuron_number},
@@ -31,6 +37,7 @@ num_sessions = length(BinBlobs_reg);
 num_neurons = length(BinBlobs_reg{1});
 
 %% Get centroids, axis ratios, and orientations for each neuron
+
 for j = 1:num_sessions
    for k = 1: num_neurons
       stats_temp = regionprops(BinBlobs_reg{j}{k},'Centroid','MajorAxisLength','MinorAxisLength','Orientation');
@@ -58,10 +65,16 @@ for k = 1:num_sessions-1
             centroid_dist(k,ll,j) = sqrt((neuron_centroid{k}{j}(1) - neuron_centroid{ll}{neuron_index_use(j)}(1))^2 ...
                 + (neuron_centroid{k}{j}(2) - neuron_centroid{ll}{neuron_index_use(j)}(2))^2);
         end
-        ratio_diff(k,ll,:) = neuron_axisratio{ll}(neuron_index_use) - neuron_axisratio{k};
-        orientation_diff(k,ll,:) = neuron_orientation{ll}(neuron_index_use) - neuron_orientation{k};
+        try
+            ratio_diff(k,ll,:) = neuron_axisratio{ll}(neuron_index_use) - neuron_axisratio{k};
+            orientation_diff(k,ll,:) = neuron_orientation{ll}(neuron_index_use) - neuron_orientation{k};
+        catch
+            keyboard
+        end
+        
     end
 end
+
 
 end
 
