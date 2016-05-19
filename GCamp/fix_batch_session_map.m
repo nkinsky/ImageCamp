@@ -1,5 +1,6 @@
 function [ batch_session_map_new] = fix_batch_session_map( batch_session_map_old )
-% batch_session_map_new] = fix_batch_session_map( batch_session_map_old )
+% batch_session_map_new = fix_batch_session_map( batch_session_map_old )
+%
 %   Fixes session information in older versions of batch_session_map (i.e.
 %   using .mouse, .date, and .sesssion) and updates it the proper names
 %   (i.e. .Animal, .Date, .Session).  Does nothing to the field if it

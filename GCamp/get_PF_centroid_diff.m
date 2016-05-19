@@ -23,7 +23,8 @@ function [ min_dist, vec ] = get_PF_centroid_diff( PlaceMap1, PlaceMap2, neuron_
 %   OUTPUTS:
 %
 %       min_dist: an array the length of PlaceMap1 with the minimum
-%       distance between placefields between sessions
+%       distance between placefields between sessions.  In pixels. Use
+%       cmperbin variable in PlaceMaps.mat to convert to cm.
 %
 %       vec: a data structure with fields:
 %           .xy which contains the x,y coordinates of the field in PlaceMap1

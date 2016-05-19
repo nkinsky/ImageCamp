@@ -1,5 +1,5 @@
 function [ dirstr ] = ChangeDirectory_NK(MD_in,change_dir_flag)
-% dirstr = ChangeDirectory_NK(MD_in)
+% dirstr = ChangeDirectory_NK(MD_in,change_dir_flag)
 %
 % Lazy man's ChangeDirectory - takes only the appropriate session from MD as
 % input.  

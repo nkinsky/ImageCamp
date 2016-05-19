@@ -29,7 +29,10 @@ end
 %% Make PlaceMaps binary 
 PF_centroid = cell(num_PFs,1);
 max_FR_location = cell(num_PFs,1);
-PF_solidity = cell(num_PFs,1);
+% PF_solidity = cell(num_PFs,1);
+disp('Getting PF centroids')
+
+% Run it
 for j = 1:num_PFs
     if sum(~isnan(PlaceMap{j}(:))) > 0
 %         [f, x] = ecdf(PlaceMap{j}(:));
@@ -56,7 +59,7 @@ for j = 1:num_PFs
     else
 %         PF_centroid{j,1} = [];
     end
-    
+       
 end
 
 %% Quality control plot if necessary
