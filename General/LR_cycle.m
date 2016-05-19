@@ -31,29 +31,34 @@ if ~exist('disp_flag','var') || isempty(disp_flag)
 end
 
 %% Run it
-[~,~,button] = ginput(1);
-switch button
-    case left
-        n_out = n_in - 1;
-        stay_in = true;
-        if n_out < min(n_range)
-            n_out = min(n_range);
-        end
-    case right
-        n_out = n_in + 1;
-        stay_in = true;
-        if n_out > max(n_range)
-            n_out = max(n_range);
-        end
-    case spacebar
-        n_out = [];
-        stay_in = false;
-        clear disp_flag
-    otherwise
-        disp('error')
-        n_out = n_in;
-        stay_in = true;
-   
+try
+    [~,~,button] = ginput(1);
+    switch button
+        case left
+            n_out = n_in - 1;
+            stay_in = true;
+            if n_out < min(n_range)
+                n_out = min(n_range);
+            end
+        case right
+            n_out = n_in + 1;
+            stay_in = true;
+            if n_out > max(n_range)
+                n_out = max(n_range);
+            end
+        case spacebar
+            n_out = [];
+            stay_in = false;
+            clear disp_flag
+        otherwise
+            disp('error')
+            n_out = n_in;
+            stay_in = true;
+            
+    end
+catch % clear disp_flag if you exit randomly for some reason
+    clear disp_flag
+    return
 end
 
 end
