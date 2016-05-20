@@ -40,7 +40,7 @@ base_sesh = MD(base_sesh_index);
 PF_filterspec = 4; % 3 = use only neurons with a valid PF in BOTH session, 4 = either session
 PF_pval_thresh = 0.05; % pval threshold on spatial information for filtering out neurons
 num_shuffles = 100;
-reg_self = 0; % 0 = register to next session indicated below, 1 = register session to itself
+reg_self = 1; % 0 = register to next session indicated below, 1 = register session to itself
 fine_res = 0; % 0, Sets shift difference from 0:10 pixels, 1 sets it from 2:3 pixels
 
 % For Part 2 - set file to do comparisons on.  Might want to make this
@@ -73,7 +73,7 @@ if fine_res == 0
     dist_shift = 0:10; % Number of pixels to shift
     angle_shift = 0:pi/4:2*pi-0.05; % Angles to shift
 elseif fine_res == 1
-    dist_shift = [0, 2:0.2:3, 10];
+    dist_shift = [0, 2:0.2:3, 4];
     angle_shift = 0:pi/4:2*pi-0.05; % Angles to shift
 end
 
