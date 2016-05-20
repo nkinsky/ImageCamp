@@ -41,6 +41,19 @@ num_neurons = length(BinBlobs_reg{1});
 for j = 1:num_sessions
    for k = 1: num_neurons
       stats_temp = regionprops(BinBlobs_reg{j}{k},'Centroid','MajorAxisLength','MinorAxisLength','Orientation');
+      if length(stats_temp) > 1
+          try
+          disp(['Multiple Neuron ROIs detected for Session ' num2str(j) ' Neuron ' num2str(k) '. Skipping'])
+          neuron_centroid{j}{k} = [nan nan];
+          neuron_axisratio{j}(k) = nan;
+          neuron_orientation{j}(k) = nan;
+          catch
+              disp('error catching in dist_bw_reg_sessions')
+              keyboard
+          end
+              key
+          continue
+      end
       neuron_centroid{j}{k} = stats_temp.Centroid;
       neuron_axisratio{j}(k) = stats_temp.MinorAxisLength/stats_temp.MajorAxisLength;
       neuron_orientation{j}(k) = stats_temp.Orientation;
