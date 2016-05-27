@@ -1,6 +1,7 @@
 function [ translation, rotation, tform_struct ] = import_treg_lmarks( filename )
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+% [ translation, rotation, tform_struct ] = import_treg_lmarks( filename )
+%   Get image registration information compatible with image_registerX
+%   outputs from turboreg output files.
 
 % Import registration data from TurboReg output
 fid = fopen(filename);

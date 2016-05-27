@@ -1,5 +1,5 @@
 function [ mapped_ROIs, valid_neurons] = map_ROIs( neuron_map, reg_ROIs )
-% registered_ROIs = map_ROIs( neuron_map, reg_ROIs )
+% [ mapped_ROIs, valid_neurons] = map_ROIs( neuron_map, reg_ROIs )
 %   Takes a neuron map between two session (base session and reg session)
 %   obtained from image_register_simple and maps the neuron ROIs (reg_ROIs) 
 %   from the registered session to the same indices as the neuron ROIs in 
