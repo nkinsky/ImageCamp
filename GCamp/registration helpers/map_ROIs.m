@@ -19,7 +19,8 @@ function [ mapped_ROIs, valid_neurons] = map_ROIs( neuron_map, reg_ROIs )
 %   OUTPUTS
 %
 %   mapped_ROIs: a cell with the registered neuron ROIs placed in the
-%   matching index indicated in neuron map.
+%   matching index indicated in neuron map. cells that are not validly
+%   mapped in the second session are left empty
 %
 %   valid_neurons: a list of the base session neurons with a valid map
 %   between sessions.
