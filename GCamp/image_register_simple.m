@@ -81,6 +81,7 @@ name_append_mask = '';
 alt_reg_flag = 0;
 alt_reg_tform = []; % default
 add_jitter = []; % default
+multi_map_method = 0; % default, see below for other options
 for j = 1:length(varargin)
    if strcmpi('multi_reg',varargin{j})
        multi_reg = varargin{j+1};
@@ -113,6 +114,16 @@ for j = 1:length(varargin)
    end
    if strcmpi('name_append',varargin{j})
        name_append = varargin{j+1};
+   end
+   if strcmpi('min_thresh',varargin{j})
+       min_thresh = varargin{j+1};
+   end
+   
+   % Method to resolve which neuron maps to the base session if multiple
+   % qualify. 0 = use overlap of neurons, highest wins, 1 = use closest
+   % neuron, 3 = use axis ratio (shape metric)
+   if strcmpi('multi_map_method',varargin{j})
+       multi_map_method = varargin{j+1};
    end
 end
 
@@ -313,11 +324,11 @@ n = 0;
 for j = 1:length(cm_dist_min)
     % Exclude any neurons whose cms are outside the distance threshold or
     % whose cms reside at 0,0 (meaning that they have disappeared due to
-    % registtration)
+    % registration)
     if cm_dist_min(j) > min_thresh || (sesh(1).cms(j).x == 0 && sesh(1).cms(j).y == 0)
         neuron_id{j,1} = [];
         n = n+1;
-    else
+    else % Map each neuron in the registered session to the closest neuron in the base session
         neuron_id{j,1} = find(cm_dist_min(j) == cm_dist(j,:));
     end
     
@@ -341,36 +352,85 @@ for j = 1:size(sesh(2).NeuronImage_reg,2);
     end
     if length(same_ind) > 1
 %         keyboard
-        overlap_ratio = zeros(1,length(same_ind)); % Pre-allocate
-        for k = 1:length(same_ind)
-            % Note neurons in the 1st session that map to the same cell
-            % in the 2nd session and set their values to NaN in the
-            % neuron_id variable
-            same_neuron(same_ind(k),j) = 1;
-            neuron_id_nan{same_ind(k)} = nan;
-            % Calculate overlapping pixels 
-            overlap_pixels = sum(sesh(1).NeuronMean_reg{same_ind(k)}(:) & ...
-                sesh(2).NeuronMean_reg{j}(:));
-            total_pixels = sum(sesh(1).NeuronMean_reg{same_ind(k)}(:) | ...
-                sesh(2).NeuronMean_reg{j}(:));
-%             min_neuron_size = min([sum(sesh(1).NeuronMean_reg{same_ind(k)}(:)) ...
-%                 sum(sesh(2).NeuronMean_reg{j}(:))]);
-%             overlap_ratio(k) = overlap_pixels/min_neuron_size; 
-            overlap_ratio(k) = overlap_pixels/total_pixels;
-        end
-        % Get neuron whose mask has the most overlap with the cell in the registration session
-        most_overlap = find(max(overlap_ratio) == overlap_ratio);
-        most_overlap_logical = max(overlap_ratio) == overlap_ratio;
-        least_overlap = find(~most_overlap_logical);
-        if length(most_overlap) == 1 % Only choose the cell with the most overlap if it is truly the most
-            neuron_id{same_ind(most_overlap)} = j;
-        elseif length(most_overlap) > 1 % send all to nans if more than one neuron is completely inside the other
-            for m = 1: length(most_overlap)
-                neuron_id{same_ind(most_overlap(m))} = nan;
+        if multi_map_method == 0 % use overlaps to disambiguate
+            overlap_ratio = zeros(1,length(same_ind)); % Pre-allocate
+            for k = 1:length(same_ind)
+                % Note neurons in the 1st session that map to the same cell
+                % in the 2nd session and set their values to NaN in the
+                % neuron_id variable
+                same_neuron(same_ind(k),j) = 1;
+                neuron_id_nan{same_ind(k)} = nan;
+                % Calculate overlapping pixels
+                overlap_pixels = sum(sesh(1).NeuronMean_reg{same_ind(k)}(:) & ...
+                    sesh(2).NeuronMean_reg{j}(:));
+                total_pixels = sum(sesh(1).NeuronMean_reg{same_ind(k)}(:) | ...
+                    sesh(2).NeuronMean_reg{j}(:));
+                %             min_neuron_size = min([sum(sesh(1).NeuronMean_reg{same_ind(k)}(:)) ...
+                %                 sum(sesh(2).NeuronMean_reg{j}(:))]);
+                %             overlap_ratio(k) = overlap_pixels/min_neuron_size;
+                overlap_ratio(k) = overlap_pixels/total_pixels;
+                
             end
-        end
-        for m = 1:length(least_overlap)
-            neuron_id{same_ind(least_overlap(m))} = nan;
+            % Get neuron whose mask has the most overlap with the cell in the registration session
+            most_overlap = find(max(overlap_ratio) == overlap_ratio);
+            most_overlap_logical = max(overlap_ratio) == overlap_ratio;
+            least_overlap = find(~most_overlap_logical);
+            if length(most_overlap) == 1 % Only choose the cell with the most overlap if it is truly the most
+                neuron_id{same_ind(most_overlap)} = j;
+            elseif length(most_overlap) > 1 % send all to nans if more than one neuron is completely inside the other
+                for m = 1: length(most_overlap)
+                    neuron_id{same_ind(most_overlap(m))} = nan;
+                end
+            end
+            for m = 1:length(least_overlap)
+                neuron_id{same_ind(least_overlap(m))} = nan;
+            end
+        elseif multi_map_method == 1 % Use closest neuron
+            
+            % Calculate distances
+            pos_cm(:,2) = [sesh(2).cms(j).x ; sesh(2).cms(j).y]; % Get session 2 neuron location
+            multi_dist = zeros(size(same_ind));
+            for k = 1:length(same_ind)
+                pos_cm(:,1) = [sesh(1).cms(same_ind(k)).x ; sesh(1).cms(same_ind(k)).y]; % Get session 1 neuron location
+                multi_dist(k) = sqrt((pos_cm(1,1)-pos_cm(1,2))^2 + (pos_cm(2,1)-pos_cm(2,2))^2);
+            end
+            closest = find(min(multi_dist) == multi_dist);
+            closest_logical = min(multi_dist) == multi_dist;
+            furthest = find(~closest_logical);
+            if length(closest) == 1 % Only choose the closest cell if there is no other cell equidistant
+                neuron_id{same_ind(closest)} = j;
+            elseif length(closest) > 1 % send all to nans if more than one neuron is the same distance away
+                for m = 1: length(closest)
+                    neuron_id{same_ind(closest(m))} = nan;
+                end
+            end
+            for m = 1:length(furthest)
+                neuron_id{same_ind(furthest(m))} = nan; % Send those further away to nans
+            end
+        elseif multi_map_method == 2 % use shape ratio
+            
+            % Get session 2 ROI shape ratio
+            stats_temp = regionprops(sesh(2).NeuronMean_reg{j},'MajorAxisLength','MinorAxisLength');
+            axratio_orig = stats_temp.MinorAxisLength/stats_temp.MajorAxisLength;
+            axratio_diff = zeros(size(same_ind));
+            for k = 1:length(same_ind)
+                stats_temp = regionprops(sesh(1).NeuronMean_reg{same_ind(k)},'MajorAxisLength','MinorAxisLength');
+                axratio2 = stats_temp.MinorAxisLength/stats_temp.MajorAxisLength;
+                axratio_diff(k) = abs(axratio_orig - axratio2);
+            end
+            closest = find(min(axratio_diff) == axratio_diff);
+            closest_logical = min(axratio_diff) == axratio_diff;
+            furthest = find(~closest_logical);
+            if length(closest) == 1 % Only choose the closest cell if there is no other cell equidistant
+                neuron_id{same_ind(closest)} = j;
+            elseif length(closest) > 1 % send all to nans if more than one neuron is the same distance away
+                for m = 1: length(closest)
+                    neuron_id{same_ind(closest(m))} = nan;
+                end
+            end
+            for m = 1:length(furthest)
+                neuron_id{same_ind(furthest(m))} = nan; % Send those further away to nans
+            end
         end
     end
     
@@ -511,6 +571,8 @@ neuron_map.register_file = RegistrationInfoX.register_file;
 neuron_map.reg_cms = sesh(2).cms_all;
 neuron_map.neuron_id = neuron_id;
 neuron_map.same_neuron = same_neuron;
+neuron_map.min_thresh = min_thresh;
+neuron_map.multi_map_method = multi_map_method;
  
 neuron_map.num_bad_cells = num_bad_cells;
 

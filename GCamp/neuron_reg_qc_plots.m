@@ -30,17 +30,20 @@ close all
 
 %% Step 0 overall: Set base sessions and variables
 
-base_sesh_index = ref.G45.twoenv(1)+2; % Specify the base 2env session to use
+base_sesh_index = ref.G31.two_env(1) + 2; % Specify the base 2env session to use
 base_sesh = MD(base_sesh_index);
 % Session references:
 % ref.G30.two_env(1) - good
-% ref.G45.twoenv(1) - ok, but remaps between session 1 and session 2
+% ref.G45.twoenv(1)+2 - good, other session (square) remaps
 % ref.G31.two_env(1) + 2 - good, the square remaps between sessions
+% ref.G48.twoenv(1) + 6;
 
 PF_filterspec = 4; % 3 = use only neurons with a valid PF in BOTH session, 4 = either session
 PF_pval_thresh = 0.05; % pval threshold on spatial information for filtering out neurons
+min_thresh = 10; % neurons must be at least this close in pixels to be validly mapped, default = 3
+multi_map_method = 2; % method for disambiguating multiple mapping neurons (0 = use most overlap, 1 = use closest, 2 = use smallest shape ratio difference)
 num_shuffles = 100;
-reg_self = 1; % 0 = register to next session indicated below, 1 = register session to itself
+reg_self = 0; % 0 = register to next session indicated below, 1 = register session to itself
 fine_res = 0; % 0, Sets shift difference from 0:10 pixels, 1 sets it from 2:3 pixels
 
 % For Part 2 - set file to do comparisons on.  Might want to make this
@@ -70,7 +73,7 @@ session(2).dir = ChangeDirectory_NK(session(2),0);
 % registration)
 
 if fine_res == 0
-    dist_shift = 0:10; % Number of pixels to shift
+    dist_shift = [0 1 2:0.2:3, 4:8]; %0:10; % Number of pixels to shift
     angle_shift = 0:pi/4:2*pi-0.05; % Angles to shift
 elseif fine_res == 1
     dist_shift = [0, 2:0.2:3, 4];
@@ -142,9 +145,18 @@ for j = 1:length(dist_shift)
                 dist_use*sin(angle_use) 1];
             
             % Next, get the neuron mapping for each shift
-            shift_map = image_register_simple( session(1).Animal, session(1).Date,...
-                session(1).Session, session(2).Date, session(2).Session, 0, ...
-                'add_jitter', shift_mat, ['_shift_' num2str(dist_shift(j)) 'pix_' num2str(k)]);
+            if multi_map_method == 0 && min_thresh == 3
+                shift_map = image_register_simple( session(1).Animal, session(1).Date,...
+                    session(1).Session, session(2).Date, session(2).Session, 0, ...
+                    'add_jitter', shift_mat, ['_shift_' num2str(dist_shift(j)) 'pix_' num2str(k)]);
+            else
+               shift_map = image_register_simple( session(1).Animal, session(1).Date,...
+                    session(1).Session, session(2).Date, session(2).Session, 0, ...
+                    'min_thresh', min_thresh, 'multi_map_method',...
+                    multi_map_method, 'add_jitter', shift_mat, ['_minthresh' num2str(min_thresh) ...
+                    '_multi' num2str(multi_map_method) '_shift_' num2str(dist_shift(j)) 'pix_' num2str(k)]);
+            end
+            
             
             disp('Registering shifted neuron ROIs to base session')
             % Register all shifted neuron ROIs to base session
@@ -304,7 +316,8 @@ for j = 1:length(dist_shift)+1
     if j <= length(dist_shift)
         subplot(2,2,2);
         hold on;
-        [f,x] = ecdf(cent_dist_all{j});
+%         [f,x] = ecdf(cent_dist_all{j});
+        [f, x] = ecdf(overlap_ratio_all{j});
         h2(j) = stairs(x,f);
         hold off
     end
@@ -333,7 +346,8 @@ end
 h2legend = arrayfun(@(a) [num2str(a) ' pixels'],dist_shift,'UniformOutput',0);
 subplot(2,2,2)
 % h = get(gca,'Children'); % Get line handles
-xlabel('Distance between centroids (pixels)')
+% xlabel('Distance between centroids (pixels)')
+xlabel('Neuron ROI overlap percentage')
 legend(h2,h2legend)
     
 h3legend = h2legend;
@@ -356,6 +370,7 @@ figure(2)
 cent_dist_all_mean = cellfun(@(a) nanmean(a), cent_dist_all);
 axratio_diff_all_mean = cellfun(@(a) nanmean(abs(a)), axratio_diff_all);
 orient_diff_all_mean = cellfun(@(a) nanmean(abs(a)), orient_diff_all);
+overlap_ratio_all_mean = cellfun(@nanmean, overlap_ratio_all);
 
 % subplot(2,2,1)
 % plot(dist_shift,cent_dist_all_mean(1:end-1),'b',...
@@ -364,21 +379,23 @@ orient_diff_all_mean = cellfun(@(a) nanmean(abs(a)), orient_diff_all);
 % ylabel('Distance b/w Neuron ROI centroids (pixels)') 
 
 subplot(2,2,2)
-plot(dist_shift,cent_dist_all_mean(1:end-1),'b')
+% plot(dist_shift,cent_dist_all_mean(1:end-1),'b')
+plot(dist_shift(1:end),overlap_ratio_all_mean,'b')
 xlabel('Registration Shift (pixels)')
-ylabel('Mean Distance b/w Neuron ROI centroids (pixels')
+% ylabel('Mean Distance b/w Neuron ROI centroids (pixels')
+ylabel('Mean overlap ratio of Neuron ROIs')
 
 subplot(2,2,3)
-[ax22, h22(1), h22(2)] = plotyy(dist_shift,axratio_diff_all_mean(1:end-1),...
+[ax23, h23(1), h23(2)] = plotyy(dist_shift,axratio_diff_all_mean(1:end-1),...
     dist_shift, p_axratio_v_actual(1:end-1)); hold on;
-h22(3) = plot([dist_shift(1) dist_shift(end)], repmat(axratio_diff_all_mean(end),1,2), 'r--');
+h23(3) = plot([dist_shift(1) dist_shift(end)], repmat(axratio_diff_all_mean(end),1,2), 'r--');
 hold off
 % plot(dist_shift,axratio_diff_all_mean(1:end-1),'b',...
 %     [dist_shift(1) dist_shift(end)], repmat(axratio_diff_all_mean(end),1,2), 'r--')
 xlabel('Registration Shift (pixels)')
-ylabel(ax22(1),'Mean Axis ratio difference')
-ylabel(ax22(2),'p-value')
-legend(h22,{'Shifted Data','p-value v actual data','Shuffled'})
+ylabel(ax23(1),'Mean Axis ratio difference')
+ylabel(ax23(2),'p-value')
+legend(h23,{'Shifted Data','p-value v actual data','Shuffled'})
 
 subplot(2,2,4)
 plot(dist_shift,orient_diff_all_mean(1:end-1),'b',...
