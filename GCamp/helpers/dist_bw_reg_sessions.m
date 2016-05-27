@@ -51,7 +51,6 @@ for j = 1:num_sessions
               disp('error catching in dist_bw_reg_sessions')
               keyboard
           end
-              key
           continue
       end
       neuron_centroid{j}{k} = stats_temp.Centroid;
