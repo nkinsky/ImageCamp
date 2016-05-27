@@ -12,11 +12,16 @@ end
 
 %% Process varargins
 calc_half = 0; % default
+tenaspis_only = 0; % default
 PF_only = 0; % default
+minspeed = 1; % Default
+PFsavename = 'PlaceMapsv2.mat';
 for j = 1:length(varargin)
     
     if strcmpi(varargin{j},'PF_only')
         PF_only = 1;
+    elseif strcmpi(varargin{j},'tenaspis_only')
+        tenaspis_only = varargin{j+1};
     elseif strcmpi(varargin{j},'calc_half')
         calc_half = varargin{j+1};
         if calc_half == 0 || calc_half == 1
@@ -26,7 +31,10 @@ for j = 1:length(varargin)
             PFsavename = 'PlaceMapsv2_oddeven.mat';
             name_append = '_v2_oddeven';
         end
+    elseif strcmpi(varargin{j},'minspeed')   
+        minspeed = varargin{j+1};
     end
+    
 end
 
 
@@ -57,26 +65,26 @@ load mask_reg
 mask_reg = logical(mask_reg); 
 
 %% Extract Blobs
-profile clear
-profile on
+% profile clear
+% profile on
 
 disp('Extracting blobs...'); 
 ExtractBlobs('DFF.h5',mask_reg);
 
-stats_extractblobs = profile('info');
-save stats_extractblobs stats_extractblobs
+% stats_extractblobs = profile('info');
+% save stats_extractblobs stats_extractblobs
 
 %% Connect blobs into transients
 
-profile clear
-profile on
+% profile clear
+% profile on
 
 disp('Making transients...');
-MakeTransients('DFF.h5',0); % Dave - the inputs to this are currently unused
+MakeTransients()
 !del InitClu.mat
 
-stats_maketransients = profile('info');
-save stats_maketransients stats_maketransients
+% stats_maketransients = profile('info');
+% save stats_maketransients stats_maketransients
 
 
 %% Group together individual transients under individual neurons
@@ -147,13 +155,15 @@ end
 
 % profile clear
 % profile on
+if tenaspis_only == 0
+    disp('Calculating Placefields ...')
+    [~, session_struct] = ChangeDirectory(animal_id, sess_date, sess_num); % Get session structure
+    CalculatePlacefields(session_struct.Location,'alt_inputs','T2output.mat','man_savename',...
+        PFsavename,'half_window',0,'minspeed',minspeed,'calc_half',calc_half,...
+        'exclude_frames',session_struct.exclude_frames);
+    PFstats(0,'alt_file_use',PFsavename,name_append);
 
-disp('Calculating Placefields ...')
-[~, session_struct] = ChangeDirectory(animal_id, sess_date, sess_num); % Get session structure
-CalculatePlacefields(session_struct.Location,'alt_inputs','T2output.mat','man_savename',...
-    PFsavename,'half_window',0,'minspeed',3,'calc_half',calc_half,...
-    'exclude_frames',session_struct.exclude_frames);
-PFstats(0,'alt_file_use',PFsavename,name_append);
+end
 
 % stats_PF = profile('info');
 % save stats_PF stats_PF
