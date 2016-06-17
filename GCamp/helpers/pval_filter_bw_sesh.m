@@ -43,16 +43,22 @@ elseif filter_spec == 3 || 4
     pval_filter = [thresh thresh];
 end
 
-valid_map1 = find(neuron_map ~= 0 & ~isnan(neuron_map)); % Get validly mapped neurons
-valid_map2 = neuron_map(valid_map1);
-sesh1_filter = zeros(size(neuron_map));
-sesh2_filter = zeros(size(neuron_map));
-sesh1_filter(valid_map1) = (1 - pval1(valid_map1)) < pval_filter(1);
-sesh2_filter(valid_map1) = (1 - pval2(valid_map2)) < pval_filter(2);
-if filter_spec == 1 || filter_spec == 2 || filter_spec == 3
-    good_neurons = find(sesh1_filter & sesh2_filter);
-elseif filter_spec == 4
-    good_neurons = find(sesh1_filter | sesh2_filter);
+try
+    valid_map1 = find(neuron_map ~= 0 & ~isnan(neuron_map)); % Get validly mapped neurons
+    valid_map2 = neuron_map(valid_map1);
+    sesh1_filter = zeros(size(neuron_map));
+    sesh2_filter = zeros(size(neuron_map));
+    sesh1_filter(valid_map1) = (1 - pval1(valid_map1)) < pval_filter(1);
+    sesh2_filter(valid_map1) = (1 - pval2(valid_map2)) < pval_filter(2);
+    if filter_spec == 1 || filter_spec == 2 || filter_spec == 3
+        good_neurons = find(sesh1_filter & sesh2_filter);
+    elseif filter_spec == 4
+        good_neurons = find(sesh1_filter | sesh2_filter);
+    end
+    
+catch
+    disp('Error catching in pval_filter_bw_sesh')
+    keyboard
 end
 
 end
