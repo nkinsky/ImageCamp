@@ -1,5 +1,6 @@
 function [ mapped_ROIs, valid_neurons] = map_ROIs( neuron_map, reg_ROIs, perform_mapping )
-% registered_ROIs = map_ROIs( neuron_map, reg_ROIs, perform_mapping )
+% [ mapped_ROIs, valid_neurons] = map_ROIs( neuron_map, reg_ROIs, perform_mapping )
+%
 %   Takes a neuron map between two session (base session and reg session)
 %   obtained from image_register_simple and maps the neuron ROIs (reg_ROIs) 
 %   from the registered session to the same indices as the neuron ROIs in 
@@ -18,12 +19,13 @@ function [ mapped_ROIs, valid_neurons] = map_ROIs( neuron_map, reg_ROIs, perform
 %   registered session directory
 %
 %   perform_mapping: 1 = actually register reg_ROIs to mapped_ROIs, 0 =
-%   just calculated valid_neurons.  Default = 1
+%   just calculate valid_neurons.  Default = 1
 %
 %   OUTPUTS
 %
 %   mapped_ROIs: a cell with the registered neuron ROIs placed in the
-%   matching index indicated in neuron map.
+%   matching index indicated in neuron map. cells that are not validly
+%   mapped in the second session are left empty
 %
 %   valid_neurons: a list of the base session neurons with a valid map
 %   between sessions.

@@ -5,15 +5,16 @@ function [ neuron_centroid, centroid_dist, neuron_axisratio, ratio_diff, ...
 %   Calculate neuron centroid and distance to same centroid in each
 %   registered session.
 % 
-%   Use in conjunction with map_ROIs function:
+%   Use in conjunction with map_ROIs function, e.g.:
 %
 %   [ mapped_ROIs, valid_neurons ] = map_ROIs( neuron_map.neuron_id, NeuronROI_reg );
-%   [cent, cent_d, aratio, aratio_d, orient, orient_diff] = ...
-%   dist_bw_reg_sessions ({NeuronROI_base(valid_neurons), mapped_ROIs);
+%   [cent, cent_d, aratio, aratio_diff, orient, orient_diff] = ...
+%   dist_bw_reg_sessions ({NeuronROI_base(valid_neurons), mapped_ROIs(valid_neurons)},0);
 %
 % INPUTS
 %   BinBlobs_reg: of the form BinBlobs{session_number}{neuron_number},
-%   where each entry is the neuron mask
+%   where each entry is the neuron mask that HAS BEEN REGISTERED back to
+%   the base session
 %
 %   shuffle(optional): 1 = shuffle BinBlobs_reg randomly for each session
 %   when calculating centroid_dist, ratio_diff, and orientation_diff

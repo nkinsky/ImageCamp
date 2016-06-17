@@ -1,5 +1,5 @@
 function [ min_dist, vec ] = get_PF_centroid_diff( PlaceMap1, PlaceMap2, neuron_map, centroid_input, varargin )
-% min_dist = get_PF_centroid_diff( PlaceMap1, PlaceMap2, neuron_map )
+% min_dist = get_PF_centroid_diff( PlaceMap1, PlaceMap2, neuron_map, centroid_input, ... )
 %   Gets distance between a neuron's place map from one session to the
 %   next.  In the case of multiple fields, it finds the minimum distance
 %   between any fields from session1 to session2.

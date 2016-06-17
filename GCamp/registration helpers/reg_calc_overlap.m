@@ -1,5 +1,5 @@
 function [ overlap_ratio, overlap_pixels, total_pixels, overlap_ratio2, overlap_ratio3 ] = reg_calc_overlap( ROIs1, ROIs2)
-% [ ROI_overlap, overlap_pixels, total_pixels ] = reg_calc_overlap( ROIs1, ROIs2, neuron_map )
+% [ ROI_overlap, overlap_pixels, total_pixels ] = reg_calc_overlap( ROIs1, ROIs2)
 %
 % Gets the overlap of neuron ROIs between two sessions that are mapped by
 % neuron_map. ROIs2 must have already been mapped to ROIs1 using the 
