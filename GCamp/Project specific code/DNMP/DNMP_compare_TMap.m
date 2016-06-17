@@ -1,10 +1,10 @@
 % DNMP figure export
 
 
-sesh = MD(164);
+sesh = MD(180);
 
-trial_types = {'Forced','Free'};
-file_name_append = {'_forced.mat','_free.mat'}; % Must match block types above
+trial_types = {'Forced L', 'Forced R', 'Free L', 'Free R'}; % {'Forced','Free'};
+file_name_append = {'_forced_left.mat', '_forced_right.mat', '_free_left.mat', '_free_right.mat'}; %{'_forced.mat','_free.mat'}; % Must match block types above
 plot_file = 'PFcompare_wpvalues';
 
 %% Plot actual comparisons
@@ -19,15 +19,25 @@ for k = 2:length(trial_types)
 end
 
 for k = 1:length(trial_types)
-    load(fullfile(sesh.Location,['PFstats' file_name_append{k}]),'PFnumhits');
+    load(fullfile(sesh.Location,['PFstatsv2' file_name_append{k}]),'PFnumhits');
     trials(k).PFnumhits = PFnumhits;
 end
 
 figure(543)
 cm = colormap('jet');
-for j = 1:NumNeurons
+for j = 1184:NumNeurons
+    
+    % Refresh figure every 100 to prevent slowdowns
+    if round(j/100) == (j/100)
+        close 543
+        figure(543)
+    end
     for k = 1:length(trials)
-        subplot(1,2,k)
+        if length(trials) == 2
+            subplot(1,2,k)
+        elseif length(trials) == 4
+            subplot(2,2,k)
+        end
         [~, nan_map] = make_nan_TMap(trials(k).RunOccMap,trials(k).TMap_gauss{j},...
             'perform_smooth',1);
         imagesc_nan(nan_map,cm,[1 1 1]);
