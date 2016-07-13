@@ -54,6 +54,12 @@ if isempty(custom_colors)
     colors = rand(NumNeurons,3);
 elseif ~isempty(custom_colors)
     colors = custom_colors;
+    
+    % If only one color value is entered, extend it to match the number of
+    % neurons
+    if size(custom_colors,1) == 1
+        colors = repmat(custom_colors, NumNeurons,1);
+    end
 end
 
 % keyboard
