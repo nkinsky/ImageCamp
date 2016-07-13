@@ -440,7 +440,8 @@ ylabel(ax21(2),'p-value')
 
 clear session
 
-sesh_use = ref.G45.twoenv(1) + [2:5 10 12 16:17]; % octagon sessions 
+sesh_use = ref.G45.twoenv(1) + [0 1 6 7 9 13:15]; % square sessions 
+% ref.G45.twoenv(1) + [0:7 9 10 12:17]; % all sessions % ref.G45.twoenv(1) + [2:5 10 12 16:17]; % octagon sessions 
 
 % Other possibilites
 %ref.G45.twoenv(1) + [0:7 9 10 12:17]; % square sessions %ref.G48.twoenv(1):ref.G48.twoenv(end); % 
@@ -559,6 +560,12 @@ for j = 2:length(sesh_use)
     
 end
 
+% Save the above
+cd(base_dir)
+save neuron_qc_bymouse axratio_diff_bymouse orient_diff_bymouse ...
+    overlap_ratio_bymouse axratio_diff_all orient_diff_all overlap_ratio_all ...
+    min_dist_bymouse min_dist_bymouse_filter
+
 %% Plot the above
 figure(3)
 for j = 2:16
@@ -606,11 +613,6 @@ hold off
 xlabel('Orientation difference (degrees)')
 legend({plot_legend{:} 'Shuffled'})
 
-
-
-%% Save the above
-cd(base_dir)
-save neuron_qc_bymouse axratio_diff_bymouse orient_diff_bymouse overlap_ratio_bymouse axratio_diff_all orient_diff_all overlap_ratio_all
 
 %% Aggregate results across mice
 sessions_plot = 1:3;
@@ -708,7 +710,9 @@ end
 % pvalue) of PF centroid diff OR all mice combined for PF centroid shift?
 
 mouse_use = 2; 
-sesh_use = ref.G45.twoenv(1) + [2:5 10 12 16:17]; % ref.G45.twoenv(1) + [0:7 9 10 12:17]; % square sessions
+sesh_use = ref.G45.twoenv(1) + [2:5 10 12 16:17]; % octagon sessions 
+% ref.G45.twoenv(1) + [0 1 6 7 9 13:15]; % square sessions 
+% ref.G45.twoenv(1) + [0:7 9 10 12:17]; % all sessions % 
 PF_plots_use = 2:length(sesh_use); %[2 7 8 9 12 13 14]; %[7 9 12 14];
 
 load(fullfile(MD(session_ref(mouse_use)).Location,'neuron_qc_plots_session1_session2_shifted.mat'));
