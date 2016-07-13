@@ -1,4 +1,4 @@
-function [ ] = batch_neuron_reg_check( batch_session_map, MD, varargin )
+function [ ] = batch_neuron_reg_check( batch_session_map, varargin )
 % batch_neuron_reg_check( batch_session_map, MD )
 %
 %   Checks how good your image/neuron registration is for all sessions

@@ -15,10 +15,7 @@ plot_types{1,2} = 'forced_right'; plot_title{1,2} = 'Sample Right';
 plot_types{2,1} = 'free_left'; plot_title{2,1} = 'Test Left';
 plot_types{2,2} = 'free_right'; plot_title{2,2} = 'Test Right';
 
-full_plot_type{1} = 'forced_025cmbins'; full_plot_title{1} = 'Sample';
-full_plot_type{2} = 'free_025cmbins'; full_plot_title{2} = 'Test';
 
-full_plot_type2 = 'onmaze_025cmbins';
 
 % Overwrite above to try different sessions
 plot_types{1,1} = 'forced_left_025cmbins';
@@ -114,7 +111,7 @@ legend('All PFs','MaxPF only')
 xlabel('Overlap ratio between Sample and Test PlaceFields')
 ylabel('Count')
 
-scroll_through = true;
+scroll_through = false;
 scroll_all = true;
 
 neurons_scroll = neurons_use_filter(overlap_ratio(:,1) == 0 & overlap_ratio(:,2) == 0);
@@ -136,7 +133,15 @@ end
 debug = false;
 ds_factor = 1;
 plot_type = 9;
-stable_thresh = 0.5;
+stable_thresh = 0.7;
+
+full_plot_type{1} = 'forced_025cmbins'; full_plot_title{1} = 'Sample';
+full_plot_type{2} = 'free_025cmbins'; full_plot_title{2} = 'Test';
+
+full_plot_type2 = 'onmaze_025cmbins';
+
+full_plot_type3 = {'forced_left_025cmbins', 'forced_right_025cmbins';...
+    'free_left_025cmbins', 'free_right_025cmbins'};
 
 % Calculate various filters to try
 neuron_filter2{1} = neurons_use_filter(corr_maxPF(:,1) < 0 & corr_maxPF(:,2) < 0); % potential remappers type 1
@@ -150,6 +155,13 @@ neuron_filter2{7} = neurons_use_filter(corr_all(:,1) > stable_thresh & corr_all(
 neuron_filter2{8} = neurons_use_filter(corr_all(:,1) > stable_thresh | corr_all(:,2) > stable_thresh);
 neuron_filter2{9} = neurons_use_filter(corr_maxPF(:,1) > stable_thresh & corr_maxPF(:,2) > stable_thresh);
 neuron_filter2{10} = neurons_use_filter(corr_maxPF(:,1) > stable_thresh | corr_maxPF(:,2) > stable_thresh);
+
+% LR stable cells
+neuron_filter_LR{1,1} = neurons_use_filter(corr_maxPF(:,1) > stable_thresh);
+neuron_filter_LR{1,2} = neurons_use_filter(corr_maxPF(:,2) > stable_thresh);
+% LR remappers
+neuron_filter_LR{2,1} = neurons_use_filter(corr_maxPF(:,1) < 0);
+neuron_filter_LR{2,2} = neurons_use_filter(corr_maxPF(:,2) < 0);
 
 % Down-sample neurons if desired
 if ds_factor ~= 1
@@ -220,6 +232,60 @@ for j = 1:2
     title(plot_titles2{j})
     
 end
+
+%%
+figure(104)
+neurons_plot2 = {neuron_filter2{2}, neuron_filter2{2}; ...
+    neuron_filter_LR{1}, neuron_filter_LR{2}};
+
+% neurons_plot2{1} = neurons_use_filter;
+% neurons_plot2{2} = neuron_filter2{10}; % stable on L AND R trials % neuron_filter2{10}; % stable on L OR R trials
+plot_titles2 = {['Remapping Neurons (R^2 < 0) - Left Trials'],...
+    ['Remapping Neurons (R^2 < 0) - Right Trials']; ...
+    ['Stable Neurons (R^2 > ' num2str(stable_thresh) ') - Left Trials'],...
+    ['Stable Neurons (R^2 > ' num2str(stable_thresh) ') - Right Trials']};
+for j = 1:2
+    for k = 1:2
+    
+        PMfile_use = ['PlaceMapsv2_' full_plot_type3{j,k} '.mat'];
+        PMstatsfile_use = ['PFstatsv2_' full_plot_type3{j,k} '.mat'];
+        
+        h = subplot(2,2,2*(j-1)+k);
+        draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+            PMstatsfile_use, 'custom_colors', custom_colors,'ax_handle', h,...
+            'neurons_use', neurons_plot2{j,k});
+        title(plot_titles2{j})
+    end
+    
+end
+
+%% 
+figure(105)
+neurons_plot2 = neuron_filter_LR;
+
+% neurons_plot2{1} = neurons_use_filter;
+% neurons_plot2{2} = neuron_filter2{10}; % stable on L AND R trials % neuron_filter2{10}; % stable on L OR R trials
+plot_titles2 = {'Left Trials', 'Right Trials'};
+
+custom_colors2 = [1 0.55 0; 0 1 0; ]; % [ green ; orange];
+for k = 1:2
+    for j = 1:2
+    
+        PMfile_use = ['PlaceMapsv2_' full_plot_type3{j,k} '.mat'];
+        PMstatsfile_use = ['PFstatsv2_' full_plot_type3{j,k} '.mat'];
+        
+        h = subplot(1,2,k);
+        hold on
+        draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+            PMstatsfile_use, 'custom_colors', custom_colors2(j,:),'ax_handle', h,...
+            'neurons_use', neurons_plot2{j,k});
+        hold off
+        title(plot_titles2{j})
+    end
+%     legend({['Stable (R^2 > ' num2str(stable_thresh) ')'], '', 'Remappers (R^2 < 0)' , ''});
+end
+
+
 %% Ditto but for PF density maps
 
 close 101
