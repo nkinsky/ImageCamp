@@ -159,16 +159,31 @@ end
 
 currdir = cd;
 sesh(1).folder = ChangeDirectory(mouse_name, base_date, base_session);
-if ~(exist('MeanBlobs.mat','file') == 2)
-    disp('MeanBlobs.mat not detected in working directory.  Running MakeMeanBlobs (This may take awhile)')
-    load('ProcOut.mat','c','cTon','GoodTrs')
-    MakeMeanBlobs(c, cTon, GoodTrs)
+if ~(exist('T2output.mat','file') == 2)
+    if ~(exist('MeanBlobs.mat','file') == 2)
+        disp('MeanBlobs.mat not detected in working directory.  Running MakeMeanBlobs to get neuron ROIs (This may take awhile)')
+        load('ProcOut.mat','c','cTon','GoodTrs')
+        MakeMeanBlobs(c, cTon, GoodTrs)
+    end
+elseif exist('T2output.mat','file') == 2 % hack for now
+    disp('Using NeuronImage variable from T2output.mat for neuron ROIs.  Saving in MeanBlobs.mat')
+    load('T2output.mat','NeuronImage')
+    BinBlobs = NeuronImage;
+    save MeanBlobs.mat BinBlobs
 end
+
 sesh(2).folder = ChangeDirectory(mouse_name, reg_date, reg_session);
-if ~(exist('MeanBlobs.mat','file') == 2)
-    disp('MeanBlobs.mat not detected in working directory.  Running MakeMeanBlobs (This may take awhile)')
-    load('ProcOut.mat','c','cTon','GoodTrs')
-    MakeMeanBlobs(c, cTon, GoodTrs)
+if ~(exist('T2output.mat','file') == 2)
+    if ~(exist('MeanBlobs.mat','file') == 2)
+        disp('MeanBlobs.mat not detected in working directory.  Running MakeMeanBlobs to get neuron ROIs (This may take awhile)')
+        load('ProcOut.mat','c','cTon','GoodTrs')
+        MakeMeanBlobs(c, cTon, GoodTrs)
+    end
+elseif exist('T2output.mat','file') == 2
+    disp('Using NeuronImage variable from T2output.mat for neuron ROIs.  Saving in MeanBlobs.mat')
+    load('T2output.mat','NeuronImage')
+    BinBlobs = NeuronImage;
+    save MeanBlobs.mat BinBlobs
 end
 cd(currdir)
 
@@ -330,6 +345,9 @@ for j = 1:length(cm_dist_min)
         n = n+1;
     else % Map each neuron in the registered session to the closest neuron in the base session
         neuron_id{j,1} = find(cm_dist_min(j) == cm_dist(j,:));
+        if length(neuron_id{j,1}) > 1 % Fix very rare edge case where two neurons in reg session are exactly the same distance from the base session neuron.
+            neuron_id{j,1} = [];
+        end
     end
     
 end
