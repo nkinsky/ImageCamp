@@ -722,50 +722,61 @@ load(fullfile(MD(sesh_use(1)).Location,'neuron_qc_bymouse.mat'));
 h2legend = arrayfun(@(a) [num2str(a) ' pixels'],dist_shift,'UniformOutput',0);
 h3legend = h2legend;
 h3legend{length(h2legend) + 1} = 'Shuffled';
-plot_legend = arrayfun(@(a) [mouse_name_title(a.Date) ' - ' num2str(a.Session)], ...
-    MD(sesh_use(2:end)),'UniformOutput',0);
+% plot_legend = arrayfun(@(a) [mouse_name_title(a.Date) ' - ' num2str(a.Session)], ...
+%     MD(sesh_use(2:end)),'UniformOutput',0);
+plot_legend = {'Same Day','1 Day: Session 1','1 Day: Session 2','3 Days', ...
+    '4 Days', '5 Days: Session 1', '5 Days: Session 2'};
 
 figure(560)
-for j = 1:length(dist_shift)+1
+shift_to_plot = [1:7, 12]; % 0-6 + shuffle % [1:2:7, 12]; % 0 2 4 6 shuffle % 
+n = 1;
+clear hf1 hf3
+for j = shift_to_plot % 1:length(dist_shift)+1
     
     % Shifted PF centroid distance distances
-    subplot(2,2,1)
+    subplot(2,2,3)
     hold on
     [f,x] = ecdf(min_dist_all{j}*cmperbin);
-    hf1(j) = stairs(x,f);
+    hf1(n) = stairs(x,f);
     hold off
     
     % Shifted axis orientation differences
-    subplot(2,2,3);
+    subplot(2,2,1);
     hold on;
     [f,x] = ecdf(orient_diff_all{j});
-    hf3(j) = stairs(x,f);
+    hf3(n) = stairs(x,f);
     hold off
+    
+    n = n + 1;
     
 end
 
-subplot(2,2,1)
+subplot(2,2,3)
 set(hf1(end),'LineStyle','--')
 xlabel('Distance between PF centroids (cm)')
-legend(hf1,h3legend)
-title('Session 1 to Session 2 with Image Reg. Shifted')
+ylabel('Cumulative Proportion')
+legend(hf1,h3legend(shift_to_plot))
+% title('Day 1: Session 1 to Session 2 with Image Reg. Shifted')
+title('Shifted Transformation')
 
-subplot(2,2,3)
+subplot(2,2,1)
 set(hf3(end),'LineStyle','--')
 xlabel('Orientation difference (degrees)')
-legend(hf3,h3legend)
-title('Session 1 to Session 2 with Image Reg. Shifted')
+ylabel('Cumulative Proportion')
+legend(hf3,h3legend(shift_to_plot))
+% title('Day 1: Session 1 to Session 2 with Image Reg. Shifted')
+title('Shifted Transformation')
 
 % Plot axis orientation difference for all sessions
 for j = 2:length(orient_diff_bymouse)
-    subplot(2,2,4)
+    subplot(2,2,2)
     hold on
     ecdf(orient_diff_bymouse{j});
     hold off
     
     % Play with 'defaultAxesColorOrder' or set(gca,'ColorOrder') to get a
     % better idea of which sessions are which!!!
-    subplot(2,2,2)
+    subplot(2,2,4)
     hold on
     if ismember(j,PF_plots_use)
         set(gca,'LineStyleOrder','-')
@@ -776,28 +787,37 @@ for j = 2:length(orient_diff_bymouse)
     hold off
 end
 
-subplot(2,2,4)
+subplot(2,2,2)
 hold on
-[f, x] =  ecdf(orient_diff_all{end});
+[f, x] =  ecdf(orient_diff_shuffle);
 hf4 = stairs(x,f);
 set(hf4,'LineStyle','--')
 hold off
 xlabel('Orientation difference (degrees)')
+ylabel('Cumulative Proportion')
 legend({plot_legend{:} 'Shuffled'})
-title('8/28/2015 Session 1 to multiple other sessions')
+% title('8/28/2015 Session 1 to multiple other sessions')
+title('Multiple Days')
 
-subplot(2,2,2)
+subplot(2,2,4)
 hold on
 [f, x] =  ecdf(min_dist_shuffle);
 hf2 = stairs(x,f);
 set(hf2,'LineStyle','--')
 hold off
 xlabel('Distance between PF centroids (cm)')
+ylabel('Cumulative Proportion')
 % legend({plot_legend{:} 'Shuffled'})
 legend({plot_legend{PF_plots_use-1} 'Shuffled'})
-title('8/28/2015 Session 1 to multiple other sessions')
+% title('8/28/2015 Session 1 to multiple other sessions')
+title('Multiple Days')
 
-
+% Get stats for above vs. shuffled
+p_cutoff = 1e-15; % p-value cutoff for good registrations (vs. shuffled reg) for orientation difference
+[h_os, p_os, ksstat_os] = cellfun(@(a) kstest2(orient_diff_shuffle,a,'alpha',p_cutoff),orient_diff_all(shift_to_plot)); % Shifted ROI orientation diff vs. shuffle
+[h_ds, p_ds, ksstat_ds] = cellfun(@(a) kstest2(min_dist_shuffle,a),min_dist_all(shift_to_plot)); % Shifted PF distance vs. shuffle
+[h_o, p_o, ksstat_o] = cellfun(@(a) kstest2(orient_diff_shuffle,a,'alpha',p_cutoff),orient_diff_bymouse(2:end)); % Actual ROI orientataion diff vs. shuffle
+[h_d, p_d, ksstat_d] = cellfun(@(a) kstest2(min_dist_shuffle,a),min_dist_bymouse_filter(2:end)); % Actual PF distance vs. shuffle
 
 %%% This plots only the lines for the first and last two registered
 %%% sessions for clarity.
@@ -817,7 +837,66 @@ title('8/28/2015 Session 1 to multiple other sessions')
 
 %%% Get neurons active in EVERY session
 
+%% Run Ziv style reg for all neurons
+% sesh_use = ref.G30.two_env(1) + [0 1 6 7 8 11 12 13]; % G30 square sessions
+sesh_use = ref.G31.two_env(1) + [2 3 4 5 9 10 14 15]; % G31 octagon sessions
+% sesh_use = ref.G48.twoenv(1) + [0 1 6 7 8 11 12 13]; % G48 square sessions
+% sesh_use = ref.G45.twoenv(1) + [2:5 10 12 16:17]; % octagon sessions 
+% ref.G45.twoenv(1) + [0 1 6 7 9 13:15]; % square sessions 
+% ref.G45.twoenv(1) + [0:7 9 10 12:17]; % all sessions % 
 
+phi_diff = nan(length(sesh_use),1);
+xy_diff = nan(length(sesh_use),2);
+dist_neurons = cell(1,length(sesh_use));
 
+figure(50)
+dirstr = ChangeDirectory_NK(MD(sesh_use(1)),0);
+for j = 2:length(sesh_use)
+    disp(['Calculating Neuron v min projection reg diff for session ' num2str(j)])
+    mouse_name = MD(sesh_use(j)).Animal;
+    reg_date = MD(sesh_use(j)).Date;
+    reg_session = MD(sesh_use(j)).Session;
+    regfile = fullfile(dirstr,['RegistrationInfo-' mouse_name '-' reg_date '-session' ...
+        num2str(reg_session) '.mat']);
+    regfile_byneurons = fullfile(dirstr,['RegistrationInfo-' mouse_name '-' reg_date '-session' ...
+        num2str(reg_session) '_regbyallactive.mat']);
+    reginfo = importdata(regfile);
+    reginfo_byactive = importdata(regfile_byneurons);
+    
+    tform_diff = reginfo.tform.T-reginfo_byactive.tform.T;
+    phi = acosd(reginfo.tform.T(1,1));
+    phi_byneurons = acosd(reginfo_byactive.tform.T(1,1));
+    phi_diff(j) = phi-phi_byneurons;
+    xy_diff(j,:) = reginfo.tform.T(3,[1 2]) - reginfo_byactive.tform.T(3,[1 2]);
+    
+    % ok, the best thing to do would be to take all the neurons masks from each
+    % session, have them go through each transformation, and then compare their
+    % distances from one another in the end to see how far off they were
+    regstr = ChangeDirectory_NK(MD(sesh_use(j)),0);
+    load(fullfile(regstr,'MeanBlobs.mat'),'BinBlobs');
+    
+    ROI_warp1 = cellfun(@(a) imwarp_quick(a,reginfo),BinBlobs,'UniformOutput',0);
+    ROI_warp2 = cellfun(@(a) imwarp_quick(a,reginfo_byactive),BinBlobs,'UniformOutput',0);
+    subplot(3,3,j)
+    allROI1 = create_AllICmask(ROI_warp1);
+    allROI2 = create_AllICmask(ROI_warp2);
+    imagesc(allROI1 + allROI2);
+    
+    dist_temp = nan(length(ROI_warp1),1);
+    for k = 1:length(ROI_warp1)
+        cent1 = regionprops(ROI_warp1{k},'Centroid');
+        cent2 = regionprops(ROI_warp2{k},'Centroid');
+        if  length(cent1) ~= 1 || length(cent2) ~= 1% If registration moves the ROI off the edge of the screen, skip below
+            continue
+        end
+        cent_diff = cent1.Centroid - cent2.Centroid; 
+        dist_temp(k) = sqrt(cent_diff(1).^2 + cent_diff(2).^2);
+    end
+    dist_neurons{j} = dist_temp;
+end
 
+dist_diff_rough = sqrt(xy_diff(:,1).^2 + xy_diff(:,2).^2);
+
+mu = nanmean(cat(1,dist_neurons{:}));
+rho = nanstd(cat(1,dist_neurons{:}));
 
