@@ -10,16 +10,20 @@ load('NormTraces.mat','trace')
 allmask = create_AllICmask(NeuronImage); 
 FT_use{1} = FT;
 FTTrigAvgs = MakeTrigAvg(FT_use);
+NumNeurons = length(FTTrigAvgs{1});
 
 figure(1) 
-for j = 1:length(FTTrigAvgs{1}); 
-    b = bwboundaries(NeuronImage{j},'noholes'); 
-    subplot(2,2,1) 
-    hold off 
-    imagesc(FTTrigAvgs{1}{j}); 
-    hold on 
+n_out = 1;
+stay_in = true;
+while stay_in
+    
+    b = bwboundaries(NeuronImage{n_out},'noholes');
+    subplot(2,2,1)
+    hold off
+    imagesc(FTTrigAvgs{1}{n_out});
+    hold on
     plot(b{1}(:,2),b{1}(:,1),'r')
-    title(['Neuron ' num2str(j)]); 
+    title(['Neuron ' num2str(n_out)]);
     
     subplot(2,2,2)
     hold off
@@ -27,11 +31,12 @@ for j = 1:length(FTTrigAvgs{1});
     hold on
     plot(b{1}(:,2),b{1}(:,1),'r')
     
-    subplot(2,2,[3 4]) 
-    plot(trace(j,:))
+    subplot(2,2,[3 4])
+    plot(trace(n_out,:))
     hold on
-    plot(find(logical(FT(j,:))),trace(j,logical(FT(j,:))),'r.')
-    title(['Neuron ' num2str(j)])
+    plot(find(logical(FT(n_out,:))),trace(n_out,logical(FT(n_out,:))),'r.')
+    title(['Neuron ' num2str(n_out)])
     hold off
-    waitforbuttonpress
+    
+    [n_out, stay_in] = LR_cycle(n_out, [1 NumNeurons]);
 end
