@@ -15,8 +15,6 @@ plot_types{1,2} = 'forced_right'; plot_title{1,2} = 'Sample Right';
 plot_types{2,1} = 'free_left'; plot_title{2,1} = 'Test Left';
 plot_types{2,2} = 'free_right'; plot_title{2,2} = 'Test Right';
 
-
-
 % Overwrite above to try different sessions
 plot_types{1,1} = 'forced_left_025cmbins';
 plot_types{1,2} = 'forced_right_025cmbins'; 
@@ -31,9 +29,10 @@ load(fullfile(dirstr,['PlaceMapsv2_' plot_types{1,1} '.mat']),'pval');
 NumNeurons = length(pval);
 
 neurons_use_log = false(NumNeurons,1);
-MaxPF_all = cell(2,2);
-PFpixels_all = cell(2,2);
-TMap_full_all = cell(2,2);
+MaxPF_all = cell(num_rows,num_cols);
+PFpixels_all = cell(num_rows,num_cols);
+TMap_full_all = cell(num_rows,num_cols);
+neuron_pass = cell(num_rows,num_cols);
 for j = 1:num_rows
     pval_array = zeros(NumNeurons,1);
     NumHits_array = zeros(NumNeurons,1);
@@ -44,7 +43,9 @@ for j = 1:num_rows
         PFpixels_all{j,k} = PFpixels;
         TMap_full_all{j,k} = TMap_gauss;
         pval_array = 1 - pval' < pval_thresh; % (:,(j-1)*num_rows+k)
-        NumHits_array(1:size(PFnumhits,1)) = PFnumhits(sub2ind(size(PFnumhits),1:size(PFnumhits,1),MaxPF(1:size(PFnumhits,1))))' >= hits_thresh;
+        NumHits_array(1:size(PFnumhits,1)) = PFnumhits(sub2ind(size(PFnumhits),1:size(PFnumhits,1),MaxPF(1:size(PFnumhits,1))))' >= hits_thresh; % Number of hits in max FR place field must be greater than hits_thresh to be included
+        neuron_pass_bin(j,k,:) = pval_array & NumHits_array;
+        neuron_pass{j,k} = find(pval_array & NumHits_array); % Get neurons passing each trial type/direction
         
         neurons_use_log = neurons_use_log | (pval_array & NumHits_array);
     end
@@ -60,6 +61,7 @@ overlap_ratio = nan(num_filt,num_rows);
 overlap_ratio_maxPF = nan(num_filt,num_rows);
 corr_all = nan(num_filt,num_rows);
 corr_maxPF = nan(num_filt,num_rows);
+corr_maxPF_nofire = nan(num_filt,num_rows);
 % TMap_size = size(TMap_full_all{1,1}{1});
 TMap_maxPF = cell(2,2);
 TMap_binary_all = cell(2,2);
@@ -83,11 +85,26 @@ for k = 1:num_rows
         TMap_binary_maxPF{n,k} = cellfun(@(a) make_binary_TMap(a,bin_thresh),...
             TMap_maxPF{n,k}(neurons_use_log),'UniformOutput',0);
     end
-    overlap_ratio_maxPF(:,k) = calc_PF_overlap(TMap_maxPF{1,k}(neurons_use_log),...
-        TMap_maxPF{2,k}(neurons_use_log));
+    overlap_ratio_maxPF(:,k) = calc_PF_overlap(TMap_binary_maxPF{1,k}(neurons_use_log),...
+        TMap_binary_maxPF{2,k}(neurons_use_log));
     corr_maxPF(:,k) = cellfun(@(a,b) corr(a(:), b(:),'type','Spearman'),...
         TMap_maxPF{1,k}(neurons_use_log), TMap_maxPF{2,k}(neurons_use_log));
+    
+    % Now, identify any TMaps that don't fire on BOTH study and test trials
+    corr_maxPF_nofire(:,k) = cellfun(@(a,b) isnan(sum(a(:))) & isnan(sum(b(:))),...
+        TMap_maxPF{1,k}(neurons_use_log), TMap_maxPF{2,k}(neurons_use_log));
 end
+
+%% Calc correlation between odd v even minutes for all times on the maze
+load('PlaceMapsv2_onmaze.mat', 'TMap_half')
+for n = 1:2
+        TMap_binary_half{n} = cellfun(@(a) make_binary_TMap(a,bin_thresh),...
+            TMap_half(n).TMap_gauss(neurons_use_log),'UniformOutput',0);  
+end
+overlap_ratio_half = calc_PF_overlap(TMap_binary_half{1}, ...
+    TMap_binary_half{2});
+corr_half = cellfun(@(a,b) corr(a(:), b(:),'type','Spearman'),...
+    TMap_half(1).TMap_gauss(neurons_use_log), TMap_half(2).TMap_gauss(neurons_use_log))';
 
 %% Plot the above
 corr_bins = -0.2:0.025:1;
@@ -285,7 +302,239 @@ for k = 1:2
 %     legend({['Stable (R^2 > ' num2str(stable_thresh) ')'], '', 'Remappers (R^2 < 0)' , ''});
 end
 
+%% Another plot
+% 1st row: Study L, Study R
+% 2nd row: Test L, Test R
+% 3rd row: High correlation L, high correlation R
+% 4th row: All PFs, merge of row 3
 
+% Get neurons to plot
+neuron_filter6{1,1} = neuron_pass{1,1}; neuron_filter6{1,2} = neuron_pass{1,2}; % Study L, Study R
+neuron_filter6{2,1} = neuron_pass{2,1}; neuron_filter6{2,2} = neuron_pass{2,2}; % Test L, Test R
+neuron_filter6{3,1} = neurons_use_filter(corr_maxPF(:,1) > stable_thresh); % High corr L
+neuron_filter6{3,2} = neurons_use_filter(corr_maxPF(:,2) > stable_thresh); % High corr R
+neuron_filter6{4,1} = neurons_use_filter; % All neurons with valid place fields in one of the four conditions
+neuron_filter6{4,2} = neurons_use_filter(corr_maxPF(:,1) > stable_thresh | ...
+    corr_maxPF(:,2) > stable_thresh); % neurons with high correlations between study and test on either L or R trials
+neuron_filter6{5,1} = neurons_use_filter(corr_maxPF(:,1) > stable_thresh & ...
+    corr_maxPF(:,2) > stable_thresh); % neurons with high correlations between study and test on either L or R trials
+
+% Set up files to use for grabbing place fields
+full_plot_type6 = ...
+    {'forced_left_025cmbins', 'forced_right_025cmbins';...
+    'free_left_025cmbins', 'free_right_025cmbins'; ...
+    'free_left_025cmbins', 'free_right_025cmbins';...
+    'onmaze_025cmbins', {'free_left_025cmbins', 'free_right_025cmbins'}}; % 'onmaze_025cmbins'}; %% ;
+
+titles6 = ...
+    {'Sample L', 'Sample R';...
+    'Test L', 'Test R';
+    'Stable L', 'Stable R';
+    'All Place Fields', 'Stable Place Fields'};
+
+custom_colors3 = ...
+    {[1 0.55 0], [1 0.55 0];...
+    [1 0.55 0], [1 0.55 0]; ...
+    [0 1 0], [0 0.5 0];...
+    [0 0 1], [0 1 0]}; % [o o ; o o ; g g; r g]
+
+figure(106)
+for j = 1:4
+    for k = 1:2
+        
+        PMfile_use = ['PlaceMapsv2_' full_plot_type6{j,k} '.mat'];
+        PMstatsfile_use = ['PFstatsv2_' full_plot_type6{j,k} '.mat'];
+        
+        h = subplot(4,2,2*(j-1)+k);
+        hold on
+        
+        % hack to plot high correlation condition
+        if j == 4 && k == 2
+            for mm = 1:2
+                PMfile_use = ['PlaceMapsv2_' full_plot_type6{mm,1} '.mat'];
+                PMstatsfile_use = ['PFstatsv2_' full_plot_type6{mm,1} '.mat'];
+                draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+                    PMstatsfile_use, 'custom_colors', custom_colors3{3,1},'ax_handle', h,...
+                    'neurons_use', neuron_filter6{3,1});
+                PMfile_use = ['PlaceMapsv2_' full_plot_type6{mm,2} '.mat'];
+                PMstatsfile_use = ['PFstatsv2_' full_plot_type6{mm,2} '.mat'];
+                draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+                    PMstatsfile_use, 'custom_colors', custom_colors3{3,2},'ax_handle', h,...
+                    'neurons_use', neuron_filter6{3,2});
+            end
+        else
+            draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+                PMstatsfile_use, 'custom_colors', custom_colors3{j,k},'ax_handle', h,...
+                'neurons_use', neuron_filter6{j,k});
+        end
+        hold off
+        title(titles6{j,k});
+    end
+end
+
+
+%% qc above
+qc = true;
+side_qc = 'left';
+side_ref = {'left','right'};
+side_use = find(strcmpi(side_qc,side_ref));
+if qc
+   figure(116)
+   
+   for j = 1:length(neuron_filter6{3,side_use})
+       for k = 1:2
+           PMfile_use = ['PlaceMapsv2_' full_plot_type6{k,side_use} '.mat'];
+           PMstatsfile_use = ['PFstatsv2_' full_plot_type6{k,side_use} '.mat'];
+           h = subplot(1,2,k);
+           draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+               PMstatsfile_use, 'custom_colors', custom_colors3{3,side_use},'ax_handle', h,...
+               'neurons_use', neuron_filter6{3,side_use}(j));
+           title(['Neuron ' num2str(neuron_filter6{3,side_use}(j))]);
+           
+       end
+       waitforbuttonpress
+   end
+end
+
+%% Plot - I’d like to be able to show what the place field overlaps look 
+% like in that high overlap panel, and I think we can do that because there 
+% are so few of them.  Can you make all 4 place field outlines for each 
+% cell in a distinct color, and distinguish L and R by the light-dark 
+% intensity?  So, for example, light green for L study and L test and dark 
+% green for R study and R test for one cell, and then the same for each 
+% other cell except with a distinct color for each cell (e.g, all red for 
+% the next cell).
+
+stable_thresh = 0.5; % correlation AND overlap criteria
+
+% ds_list = 1:length(neuron_filter6{4,2}); % plot all = ds_list = 1:length(neuron_filter6{4,2});
+figure(107)
+h = gca;
+    
+% Plot left study in half color
+PMfile_use = ['PlaceMapsv2_' full_plot_type6{1,1} '.mat'];
+PMstatsfile_use = ['PFstatsv2_' full_plot_type6{1,1} '.mat'];
+colors_use = draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+    PMstatsfile_use, 'ax_handle', h,'neurons_use', neuron_filter6{3,1},...
+    'alpha_use',0.5);
+
+% Plot left test in half color
+PMfile_use = ['PlaceMapsv2_' full_plot_type6{2,1} '.mat'];
+PMstatsfile_use = ['PFstatsv2_' full_plot_type6{2,1} '.mat'];
+draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+    PMstatsfile_use, 'custom_colors', colors_use,'ax_handle', h,...
+    'neurons_use', neuron_filter6{3,1}, 'alpha_use', 0.5);
+
+% Plot right study in half color
+PMfile_use = ['PlaceMapsv2_' full_plot_type6{1,2} '.mat'];
+PMstatsfile_use = ['PFstatsv2_' full_plot_type6{1,2} '.mat'];
+draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+    PMstatsfile_use, 'custom_colors', colors_use,'ax_handle', h,...
+    'neurons_use', neuron_filter6{3,2}, 'alpha_use', 1);
+
+% Plot right test in half color
+PMfile_use = ['PlaceMapsv2_' full_plot_type6{2,2} '.mat'];
+PMstatsfile_use = ['PFstatsv2_' full_plot_type6{2,2} '.mat'];
+draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+    PMstatsfile_use, 'custom_colors', colors_use,'ax_handle', h,...
+    'neurons_use', neuron_filter6{3,2}, 'alpha_use', 1);
+
+title(['Stable neurons (corr > ' num2str(stable_thresh) ' on either L or R trials)'])
+
+%% Yet another plot
+
+neuron_filter7 = neurons_use_filter((corr_maxPF(:,1) > stable_thresh & corr_maxPF(:,2) > stable_thresh) ...
+    | (corr_maxPF(:,1) > stable_thresh & corr_maxPF_nofire(:,2) == 1) ...
+    | (corr_maxPF(:,2) > stable_thresh & corr_maxPF_nofire(:,1) == 1));
+
+neuron_filter8 = neurons_use_filter((overlap_ratio_maxPF(:,1) > stable_thresh & overlap_ratio_maxPF(:,2) > stable_thresh) ...
+    | (overlap_ratio_maxPF(:,1) > stable_thresh & corr_maxPF_nofire(:,2) == 1) ...
+    | (overlap_ratio_maxPF(:,2) > stable_thresh & corr_maxPF_nofire(:,1) == 1));
+
+figure(108)
+h = gca;
+    
+% Plot left study in half color
+PMfile_use = ['PlaceMapsv2_' full_plot_type6{1,1} '.mat'];
+PMstatsfile_use = ['PFstatsv2_' full_plot_type6{1,1} '.mat'];
+colors_use = draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+    PMstatsfile_use, 'ax_handle', h,'neurons_use', neuron_filter7,...
+    'alpha_use',0.5);
+
+% Plot left test in half color
+PMfile_use = ['PlaceMapsv2_' full_plot_type6{2,1} '.mat'];
+PMstatsfile_use = ['PFstatsv2_' full_plot_type6{2,1} '.mat'];
+draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+    PMstatsfile_use, 'custom_colors', colors_use,'ax_handle', h,...
+    'neurons_use', neuron_filter7, 'alpha_use', 0.5);
+
+% Plot right study in half color
+PMfile_use = ['PlaceMapsv2_' full_plot_type6{1,2} '.mat'];
+PMstatsfile_use = ['PFstatsv2_' full_plot_type6{1,2} '.mat'];
+draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+    PMstatsfile_use, 'custom_colors', colors_use,'ax_handle', h,...
+    'neurons_use', neuron_filter7, 'alpha_use', 1);
+
+% Plot right test in half color
+PMfile_use = ['PlaceMapsv2_' full_plot_type6{2,2} '.mat'];
+PMstatsfile_use = ['PFstatsv2_' full_plot_type6{2,2} '.mat'];
+draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+    PMstatsfile_use, 'custom_colors', colors_use,'ax_handle', h,...
+    'neurons_use', neuron_filter7, 'alpha_use', 1);
+
+title(['Stable neurons (corr > ' num2str(stable_thresh) ')'])
+
+
+%% QC above
+disp('Loading PlaceMap files')
+for j = 1:2
+    for k = 1:2
+        load(['PlaceMapsv2_' full_plot_type6{j,k} '.mat'],'TMap_gauss','RunOccMap');
+        TMap_qc{j,k} = TMap_gauss;
+        RunOccMap_qc{j,k} = RunOccMap;
+    end
+end
+
+%% QC odd v even minutes
+load('PlaceMapsv2_onmaze.mat', 'TMap_half','RunOccMap')
+cm = colormap('jet');
+neurons_to_use = neurons_use_filter;
+half_title = {'Odd' 'Even'};
+figure(119)
+for j = 1:length(neurons_to_use)
+    neuron_plot = neurons_to_use(j);
+    for k = 1:2
+       [~, TMap_nan] = make_nan_TMap(RunOccMap,TMap_half(k).TMap_gauss{neuron_plot});
+       subplot(1,2,k)
+       imagesc_nan(TMap_nan,cm,[1 1 1])
+       title(['Neuron ' num2str(neuron_plot) ' ' half_title{k} ' Minutes'])
+    end
+    waitforbuttonpress
+end
+
+%%
+
+neurons_use_filter2 = neuron_filter7;
+figure(118)
+cm = colormap('jet');
+for i = 1:length(neurons_use_filter2)
+    for j = 1:2
+        for k = 1:2
+            
+            neuron_plot = neurons_use_filter2(i);
+            filter_neuron_plot = find(neuron_plot == neurons_use_filter);
+            [~, TMap_nan] = make_nan_TMap(RunOccMap_qc{j,k}, ...
+                TMap_qc{j,k}{neuron_plot});
+            subplot(2,2,2*(j-1)+k)
+            imagesc_nan(TMap_nan,cm,[1 1 1])
+            title([' neuron = ' num2str(neuron_plot) ', i = ' num2str(i) ...
+                ' corr = ' num2str(corr_maxPF(filter_neuron_plot,k))])
+            
+        end
+    end
+    waitforbuttonpress
+end
+    
 %% Ditto but for PF density maps
 
 close 101
