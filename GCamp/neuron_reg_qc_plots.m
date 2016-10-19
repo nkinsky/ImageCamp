@@ -30,7 +30,7 @@ close all
 
 %% Step 0 overall: Set base sessions and variables
 
-base_sesh_index = 3; % Specify the base 2env session to use from below
+base_sesh_index = 1; % Specify the base 2env session to use from below
 % Session references:
 session_ref(1) = ref.G30.two_env(1); % - good
 session_ref(2) = ref.G45.twoenv(1)+2; % - good, other session (square) remaps
@@ -440,8 +440,11 @@ ylabel(ax21(2),'p-value')
 
 clear session
 
-sesh_use = ref.G45.twoenv(1) + [0 1 6 7 9 13:15]; % square sessions 
-% ref.G45.twoenv(1) + [0:7 9 10 12:17]; % all sessions % ref.G45.twoenv(1) + [2:5 10 12 16:17]; % octagon sessions 
+% sesh_use = ref.G45.twoenv(1) + [0 1 6 7 9 13:15]; % square sessions 
+% ref.G45.twoenv(1) + [0:7 9 10 12:17]; % all sessions % 
+% ref.G45.twoenv(1) + [2:5 10 12 16:17]; % octagon sessions 
+sesh_use = ref.G30.two_env(1) + [0 1 6 7 8 11 12 13]; % G30 square sessions
+% sesh_use = ref.G30.two_env(1) + [2 3 4 5 9 10 14 15]; % G30 octagon sessions
 
 % Other possibilites
 %ref.G45.twoenv(1) + [0:7 9 10 12:17]; % square sessions %ref.G48.twoenv(1):ref.G48.twoenv(end); % 
@@ -709,10 +712,12 @@ end
 % Then aratio diff for actual sessions for one mouse, then mean (with
 % pvalue) of PF centroid diff OR all mice combined for PF centroid shift?
 
-mouse_use = 2; 
-sesh_use = ref.G45.twoenv(1) + [2:5 10 12 16:17]; % octagon sessions 
+mouse_use = 1; 
+% sesh_use = ref.G45.twoenv(1) + [2:5 10 12 16:17]; % octagon sessions 
 % ref.G45.twoenv(1) + [0 1 6 7 9 13:15]; % square sessions 
 % ref.G45.twoenv(1) + [0:7 9 10 12:17]; % all sessions % 
+sesh_use = ref.G30.two_env(1) + [0 1 6 7 8 11 12 13]; % G30 square sessions
+% sesh_use = ref.G30.two_env(1) + [2 3 4 5 9 10 14 15]; % G30 octagon sessions
 PF_plots_use = 2:length(sesh_use); %[2 7 8 9 12 13 14]; %[7 9 12 14];
 
 load(fullfile(MD(session_ref(mouse_use)).Location,'neuron_qc_plots_session1_session2_shifted.mat'));
