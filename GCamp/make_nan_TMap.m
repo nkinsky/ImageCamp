@@ -29,8 +29,17 @@ elseif perform_smooth == 0
     OccMap_smooth = OccMap;
 end
 
+
 TMap_nan = TMap;
+
+% Make TMaps where there are no cells firing above the speed threshold = 0 
+% where the OccMap is nonzero
+if nansum(TMap_nan(:)) == 0 
+    TMap_nan(~isnan(OccMap_smooth(:))) = 0;
+end
 TMap_nan(OccMap_smooth(:) == 0) = nan;
+
+
 
 end
 
