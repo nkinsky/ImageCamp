@@ -1,5 +1,5 @@
 function DNMP_parse_trials(xls_path, xls_sheet_num, pos_file_fullpath)
-% DNMP_parse_trials(xls_path, pos_file_fullpath)
+% DNMP_parse_trials(xls_path, xls_sheet_num, pos_file_fullpath)
 %   Saves exclude_frames_raw for running CalculatePlaceFields for different
 %   trial type breakdowns.
 
