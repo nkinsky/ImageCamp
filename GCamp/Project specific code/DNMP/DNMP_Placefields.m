@@ -10,7 +10,7 @@ for j = 1:length(varargin)
 end
 
 cmperbin = 1;
-NumShuffles = 500; % For starters
+NumShuffles = 10; % For starters
 
 % SaveNames
 save_names = {'PlaceMapsv2_onmaze.mat','PlaceMapsv2_forced.mat','PlaceMapsv2_free.mat',...
