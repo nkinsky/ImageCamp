@@ -58,6 +58,14 @@ try
 catch
     % Skip this step if it fails
 end
+
+% If all non-NaN values are zero, make zero come out at the base value of your
+% colormap... this is a hack for sure
+if nansum(a(:)) == 0
+    set(gca,'CLim',[-1, 50])
+end
+
+
 %# place a colorbar
 % hcb = colorbar;
 hcb = '';

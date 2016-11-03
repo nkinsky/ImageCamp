@@ -37,14 +37,18 @@ try
         case left
             n_out = n_in - 1;
             stay_in = true;
+            
+            % Skip to end if you are at beginning and hit left
             if n_out < min(n_range)
-                n_out = min(n_range);
+                n_out = max(n_range);
             end
         case right
             n_out = n_in + 1;
             stay_in = true;
+            
+            % Skip to beginning if you are at end and hit right
             if n_out > max(n_range)
-                n_out = max(n_range);
+                n_out = min(n_range);
             end
         case spacebar
             n_out = [];

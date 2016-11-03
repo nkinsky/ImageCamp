@@ -3,18 +3,27 @@ function [] = DNMP_Placefields( session_struct, varargin )
 %   Detailed explanation goes here
 
 stats_only = 0;
-calc_half = 1;
+
+neuron_input = 'T2output.mat';
+cmperbin = 2;
+minspeed = 7;
+NumShuffles = 10; % For starters
+
 for j = 1:length(varargin)
    if strcmpi(varargin{j},'stats_only') 
        stats_only = varargin{j+1};
    end
-   if strcmpi(varargin{j},'calc_half') 
-       calc_half = varargin{j+1};
+
+   if strcmpi(varargin{j},'neuron_input')
+       neuron_input = varargin{j+1};
+       disp(['Using neuronal data from file: ' neuron_input])
+   end
+   if strcmpi(varargin{j},'minspeed')
+       minspeed = varargin{j+1};
+       disp(['User set minspeed to ' num2str(minspeed) ' cm/s'])
    end
 end
 
-cmperbin = 0.25;
-NumShuffles = 500; % For starters
 
 % SaveNames
 save_names = {'PlaceMapsv2_forced_025cmbins.mat','PlaceMapsv2_free_025cmbins.mat'};% {'PlaceMapsv2_onmaze.mat','PlaceMapsv2_forced.mat','PlaceMapsv2_free.mat',...
@@ -32,13 +41,15 @@ if stats_only == 0
         ChangeDirectory_NK(session_struct(j));
         exc_frames = load('exclude_frames.mat'); % Load frames to exclude for each type of trials - must run DNMP_parse_trials beforehand to get
         
-        for k = 2 %length(save_names)
+
+        for k = 1:length(save_names)
             % Get on-maze PFs
             disp(['Running CalculatePlaceFields for ' name_append{k} ' session.'])
             CalculatePlacefields(room,'exclude_frames_raw',exc_frames.(exc_frames_type{k}),...
-                'alt_inputs','T2output.mat','man_savename',save_names{k},...
-                'half_window',0,'minspeed',3,'cmperbin',cmperbin,...
-                'NumShuffles',NumShuffles,'calc_half',calc_half);
+                'alt_inputs',neuron_input,'man_savename',save_names{k},...
+                'half_window',0,'minspeed',minspeed,'cmperbin',cmperbin,...
+                'NumShuffles',NumShuffles,'calc_half',1);
+
         end
         
         
@@ -50,9 +61,9 @@ end
 
 %% Get stats
 
-for k = 1:1 % length(save_names)
+for k = 1:length(save_names)
     disp(['Running PFstats for ' name_append{k} ' session.'])
-    PFstats(0, 'alt_file_use', save_names{k}, name_append{k})
+    PFstats(0, 'alt_file_use', save_names{k}, ['v2_' name_append{k}])
 end
 
 end

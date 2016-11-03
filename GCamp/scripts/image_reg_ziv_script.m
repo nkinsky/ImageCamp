@@ -29,3 +29,89 @@ for j = 1:length(session)
 end
 
 
+%% QC
+actual_tformfile = 'RegistrationInfo-GCamp6f_30-11_26_2014-session2.mat'; %'RegistrationInfo-GCamp6f_30-11_19_2014-session2_actual.mat';
+basename = 'RegistrationInfo-GCamp6f_30-11_26_2014-session2_ziv_reg'; % 'RegistrationInfo-GCamp6f_30-11_19_2014-session2_ziv_reg';
+
+reg_actual = importdata(actual_tformfile);
+phi_actual = acosd(reg_actual.tform.T(1,1));
+
+phi_diff = nan(1000,1);
+dist_diff = nan(1000,1);
+p = ProgressBar(1000);
+for j = 1:1000
+    
+    % Load each file
+    file_load = [basename num2str(j) '.mat'];
+    reg_ziv = importdata(file_load);
+    phi_diff(j) = acosd(reg_ziv.tform.T(1,1)) - phi_actual;
+    tform_diff = reg_actual.tform.T - reg_ziv.tform.T;
+    dist_diff(j) = sqrt(tform_diff(3,1)^2 + tform_diff(3,2)^2);
+    
+    p.progress;
+    
+end
+
+p.stop;
+
+%%
+ddist_all = [dist_diff_near, dist_diff_far1, dist_diff_far2];
+dphi_all = abs([phi_diff_near, phi_diff_far1, phi_diff_far2]);
+titles_use = {'Near Session', 'Far Session', 'Far Session2'};
+
+
+for j = 1:3
+    figure(20)
+    subplot(2,3,j)
+    histogram(ddist_all(:,j),30);
+    xlabel('Translation Difference (pixels)');
+    ylabel('Count')
+    title(titles_use{j})
+    
+    subplot(2,3,3+j)
+    histogram(dphi_all(:,j),30);
+    xlabel('Rotation Difference (degrees)');
+    ylabel('Count')
+    title(titles_use{j})
+    
+    figure(21)
+    subplot(2,1,1)
+    histogram(ddist_all(:,j),0:4:120);
+    xlabel('Translation Difference (pixels)');
+    ylabel('Count')
+    hold on
+    
+    subplot(2,1,2)
+    histogram(dphi_all(:,j),0:0.25:7);
+    xlabel('Rotation Difference (degrees)');
+    ylabel('Count')
+    hold on
+    
+    figure(22)
+    subplot(2,1,1)
+    ecdf(ddist_all(:,j))
+    xlabel('Translation Difference (pixels)');
+    hold on
+    
+    subplot(2,1,2)
+    ecdf(dphi_all(:,j));
+    xlabel('Rotation Difference (degrees)');
+    hold on
+    
+end
+
+figure(21)
+subplot(2,1,1)
+legend(titles_use);
+hold off
+subplot(2,1,2)
+legend(titles_use);
+hold off
+
+figure(22)
+subplot(2,1,1)
+legend(titles_use);
+hold off
+subplot(2,1,2)
+legend(titles_use);
+hold off
