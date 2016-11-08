@@ -31,6 +31,9 @@ for j = 1:length(varargin)
     if strcmpi(varargin{j},'alpha_use')
         alpha_use = varargin{j+1};
     end
+    if strcmpi(varargin{j},'dir_use')
+        dir_use = varargin{j+1};
+    end    
 end
 
 % create new figure if axis handle isn't specified
@@ -39,7 +42,9 @@ if ~exist('ax_handle','var')
     ax_handle = axes;
 end
 
-dir_use = ChangeDirectory_NK(session_struct,0);
+if ~exist('dir_use','var')
+    dir_use = ChangeDirectory_NK(session_struct,0);
+end    
 load(fullfile(dir_use,PMfile),'TMap_gauss','Pix2Cm','Xedges','Yedges','x','y');
 load(fullfile(dir_use,PMstatsfile),'PFnumepochs','PFpixels','MaxPF')
 

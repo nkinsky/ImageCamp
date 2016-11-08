@@ -111,8 +111,10 @@ for k = 1:num_rows
         TMap_binary_maxPF{n,k} = cellfun(@(a) make_binary_TMap(a,bin_thresh),...
             TMap_maxPF{n,k}(neurons_use_log),'UniformOutput',0);
     end
-    overlap_ratio_maxPF(:,k) = calc_PF_overlap(TMap_binary_maxPF{1,k}(neurons_use_log),...
-        TMap_binary_maxPF{2,k}(neurons_use_log));
+    %overlap_ratio_maxPF(:,k) = calc_PF_overlap(TMap_binary_maxPF{1,k}(neurons_use_log),...
+    %    TMap_binary_maxPF{2,k}(neurons_use_log)));
+    overlap_ratio_maxPF(:,k) = calc_PF_overlap(TMap_binary_maxPF{1,k},...
+        TMap_binary_maxPF{2,k});
     corr_maxPF(:,k) = cellfun(@(a,b) corr(a(:), b(:),'type','Spearman'),...
         TMap_maxPF{1,k}(neurons_use_log), TMap_maxPF{2,k}(neurons_use_log));
     
@@ -122,6 +124,7 @@ for k = 1:num_rows
 end
 
 %% Calc correlation between odd v even minutes for all times on the maze
+cd(placeMapDir)
 load('PlaceMapsv2_onmaze.mat', 'TMap_half')
 for n = 1:2
         TMap_binary_half{n} = cellfun(@(a) make_binary_TMap(a,bin_thresh),...
@@ -235,11 +238,11 @@ for j = 1:num_rows
         if j == 1 && k == 1
             [custom_colors, neurons_use] = draw_PF_outline(sesh_use,'PMfile' ,PMfile_use, 'PMstatsfile', ...
                 PMstatsfile_use, 'custom_colors', [], 'ax_handle', h,...
-                'neurons_use', neurons_use);
+                'neurons_use', neurons_use, 'dir_use', placeMapDir);
         else
             draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
                 PMstatsfile_use, 'custom_colors', custom_colors,'ax_handle', h,...
-                'neurons_use', neurons_use);
+                'neurons_use', neurons_use, 'dir_use', placeMapDir);
         end
             title(plot_title{j,k})
         
