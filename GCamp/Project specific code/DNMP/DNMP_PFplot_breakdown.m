@@ -1,14 +1,18 @@
 % Plot DNMP task PFs based on trial type and direction (L/R)
 
 % Session you want to analyze
+%{
 Mouse = 'GCamp6f_45_DNMP';
 Date = '04_04_2016';
 Session = 1;
+[dirstr, sesh_use] = ChangeDirectory(Mouse,Date,Session,0);
+
+%}
+dirstr= uigetdir('Choose Session Folder');   
+cd(dirstr);
 
 pval_thresh = 0.05;
 hits_thresh = 3;
-
-[dirstr, sesh_use] = ChangeDirectory(Mouse,Date,Session,0);
 
 plot_types{1,1} = 'forced_left'; plot_title{1,1} = 'Sample Left';
 plot_types{1,2} = 'forced_right'; plot_title{1,2} = 'Sample Right';
@@ -16,6 +20,8 @@ plot_types{2,1} = 'free_left'; plot_title{2,1} = 'Test Left';
 plot_types{2,2} = 'free_right'; plot_title{2,2} = 'Test Right';
 
 % Overwrite above to try different sessions
+
+
 plot_types{1,1} = 'forced_left_025cmbins';
 plot_types{1,2} = 'forced_right_025cmbins'; 
 plot_types{2,1} = 'free_left_025cmbins'; 
@@ -24,8 +30,28 @@ plot_types{2,2} = 'free_right_025cmbins';
 num_rows = size(plot_types,1);
 num_cols = size(plot_types,2);
 
+thisFolder=dir; isIt=zeros(1,length(thisFolder));
+for fileHere=1:length(thisFolder)
+    isIt(fileHere)=strcmpi(thisFolder(fileHere).name,'PlaceMapsv2');
+end
+if ~any(isIt)
+    disp('Could not find place maps here. Where are they?')
+    placeMapDir=uigetdir(dirstr,'Get folder with place maps');
+elseif any(isIt)
+    if sum(isIt)== 7
+        placeMapDir=dirstr;
+    elseif sum(isIt)==1 && thisFolder(isIt).isdir==1
+        disp(['Assuming ' thisFolder(isIt).name 'contains place field fields'])
+        %Guess we could run a check
+        paceMapDir=fullfile(dirstr,thisFolder(isIt).name);
+    else    
+        disp('Could not find place maps here. Where are they?')
+        placeMapDir=uigetdir(dirstr,'Get folder with place maps'); 
+    end    
+end
+
 %% Filter - accept only neurons that have high spatial information and enough PF hits in at least ONE of the categories above!
-load(fullfile(dirstr,['PlaceMapsv2_' plot_types{1,1} '.mat']),'pval');
+load(fullfile(placeMapDir,['PlaceMapsv2_' plot_types{1,1} '.mat']),'pval');
 NumNeurons = length(pval);
 
 neurons_use_log = false(NumNeurons,1);
@@ -37,8 +63,8 @@ for j = 1:num_rows
     pval_array = zeros(NumNeurons,1);
     NumHits_array = zeros(NumNeurons,1);
     for k = 1:num_cols
-        load(fullfile(dirstr,['PlaceMapsv2_' plot_types{j,k} '.mat']),'pval','TMap_gauss');
-        load(fullfile(dirstr,['PFstatsv2_' plot_types{j,k} '.mat']),'MaxPF','PFnumhits','PFpixels');
+        load(fullfile(placeMapDir,['PlaceMapsv2_' plot_types{j,k} '.mat']),'pval','TMap_gauss');
+        load(fullfile(placeMapDir,['PFstatsv2_' plot_types{j,k} '.mat']),'MaxPF','PFnumhits','PFpixels');
         MaxPF_all{j,k} = MaxPF;
         PFpixels_all{j,k} = PFpixels;
         TMap_full_all{j,k} = TMap_gauss;
