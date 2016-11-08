@@ -1,7 +1,7 @@
 % DNMP figure export
 
 
-sesh = MD(180);
+%sesh = md(1);
 
 trial_types = {'Forced L', 'Forced R', 'Free L', 'Free R'}; % {'Forced','Free'};
 file_name_append = {'_forced_left.mat', '_forced_right.mat', '_free_left.mat', '_free_right.mat'}; %{'_forced.mat','_free.mat'}; % Must match block types above
@@ -17,15 +17,15 @@ for k = 2:length(trial_types)
     trials(k) = load(fullfile(sesh.Location,['PlaceMapsv2' file_name_append{k}]),'TMap_gauss',...
         'RunOccMap','pval');
 end
-
+%
 for k = 1:length(trial_types)
     load(fullfile(sesh.Location,['PFstatsv2' file_name_append{k}]),'PFnumhits');
     trials(k).PFnumhits = PFnumhits;
 end
-
+%}
 figure(543)
 cm = colormap('jet');
-for j = 1184:NumNeurons
+for j = 1:NumNeurons
     
     % Refresh figure every 100 to prevent slowdowns
     if round(j/100) == (j/100)
@@ -42,10 +42,10 @@ for j = 1184:NumNeurons
             'perform_smooth',1);
         imagesc_nan(nan_map,cm,[1 1 1]);
         title(['Neuron ' num2str(j) ' ' trial_types{k} ' Trials'])
-        xlabel(['Number hits = ' num2str(max(trials(k).PFnumhits(j,:)))])
-        ylabel(['pval = ' num2str(1 - trials(k).pval(j))])
+        %xlabel(['Number hits = ' num2str(max(trials(k).PFnumhits(j,:)))])
+        %ylabel(['pval = ' num2str(1 - trials(k).pval(j))])
     end
-    
+     
      export_fig(plot_file,'-pdf','-append')
     
 end
