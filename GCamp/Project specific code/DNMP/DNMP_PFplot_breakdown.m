@@ -236,11 +236,11 @@ for j = 1:num_rows
         
         h = subplot(num_rows, num_cols, (j-1)*num_rows + k);
         if j == 1 && k == 1
-            [custom_colors, neurons_use] = draw_PF_outline(sesh_use,'PMfile' ,PMfile_use, 'PMstatsfile', ...
+            [custom_colors, neurons_use] = draw_PF_outline(placeMapDir,'PMfile' ,PMfile_use, 'PMstatsfile', ...
                 PMstatsfile_use, 'custom_colors', [], 'ax_handle', h,...
                 'neurons_use', neurons_use, 'dir_use', placeMapDir);
         else
-            draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+            draw_PF_outline(placeMapDir,'PMfile', PMfile_use, 'PMstatsfile', ...
                 PMstatsfile_use, 'custom_colors', custom_colors,'ax_handle', h,...
                 'neurons_use', neurons_use, 'dir_use', placeMapDir);
         end
@@ -257,9 +257,9 @@ for j = 1:2
     PMstatsfile_use = ['PFstatsv2_' full_plot_type{j} '.mat'];
     
     h = subplot(1,2,j);
-    draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+    draw_PF_outline(placeMapDir,'PMfile', PMfile_use, 'PMstatsfile', ...
         PMstatsfile_use, 'custom_colors', custom_colors,'ax_handle', h,...
-        'neurons_use', neurons_use);
+        'neurons_use', neurons_use, 'dir_use', placeMapDir);
     title(full_plot_title{j})
 end
 
@@ -272,9 +272,9 @@ plot_titles2 = {'All Neurons', ['Stable Neurons (R^2 > ' num2str(stable_thresh) 
 for j = 1:2
    
     h = subplot(1,2,j);
-    draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+    draw_PF_outline(placeMapDir,'PMfile', PMfile_use, 'PMstatsfile', ...
         PMstatsfile_use, 'custom_colors', custom_colors,'ax_handle', h,...
-        'neurons_use', neurons_plot2{j});
+        'neurons_use', neurons_plot2{j}, 'dir_use', placeMapDir);
     title(plot_titles2{j})
     
 end
@@ -297,9 +297,9 @@ for j = 1:2
         PMstatsfile_use = ['PFstatsv2_' full_plot_type3{j,k} '.mat'];
         
         h = subplot(2,2,2*(j-1)+k);
-        draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+        draw_PF_outline(placeMapDir,'PMfile', PMfile_use, 'PMstatsfile', ...
             PMstatsfile_use, 'custom_colors', custom_colors,'ax_handle', h,...
-            'neurons_use', neurons_plot2{j,k});
+            'neurons_use', neurons_plot2{j,k}, 'dir_use', placeMapDir);
         title(plot_titles2{j})
     end
     
@@ -322,9 +322,9 @@ for k = 1:2
         
         h = subplot(1,2,k);
         hold on
-        draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+        draw_PF_outline(placeMapDir,'PMfile', PMfile_use, 'PMstatsfile', ...
             PMstatsfile_use, 'custom_colors', custom_colors2(j,:),'ax_handle', h,...
-            'neurons_use', neurons_plot2{j,k});
+            'neurons_use', neurons_plot2{j,k}, 'dir_use', placeMapDir);
         hold off
         title(plot_titles2{j})
     end
@@ -350,10 +350,10 @@ neuron_filter6{5,1} = neurons_use_filter(corr_maxPF(:,1) > stable_thresh & ...
 
 % Set up files to use for grabbing place fields
 full_plot_type6 = ...
-    {'forced_left_025cmbins', 'forced_right_025cmbins';...
-    'free_left_025cmbins', 'free_right_025cmbins'; ...
-    'free_left_025cmbins', 'free_right_025cmbins';...
-    'onmaze_025cmbins', {'free_left_025cmbins', 'free_right_025cmbins'}}; % 'onmaze_025cmbins'}; %% ;
+    {'forced_left', 'forced_right';...
+    'free_left', 'free_right'; ...
+    'free_left', 'free_right';...
+    'onmaze', {'free_left', 'free_right'}}; % 'onmaze_025cmbins'}; %% ;
 
 titles6 = ...
     {'Sample L', 'Sample R';...
@@ -382,19 +382,19 @@ for j = 1:4
             for mm = 1:2
                 PMfile_use = ['PlaceMapsv2_' full_plot_type6{mm,1} '.mat'];
                 PMstatsfile_use = ['PFstatsv2_' full_plot_type6{mm,1} '.mat'];
-                draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+                draw_PF_outline(placeMapDir,'PMfile', PMfile_use, 'PMstatsfile', ...
                     PMstatsfile_use, 'custom_colors', custom_colors3{3,1},'ax_handle', h,...
-                    'neurons_use', neuron_filter6{3,1});
+                    'neurons_use', neuron_filter6{3,1}, 'dir_use', placeMapDir);
                 PMfile_use = ['PlaceMapsv2_' full_plot_type6{mm,2} '.mat'];
                 PMstatsfile_use = ['PFstatsv2_' full_plot_type6{mm,2} '.mat'];
-                draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+                draw_PF_outline(placeMapDir,'PMfile', PMfile_use, 'PMstatsfile', ...
                     PMstatsfile_use, 'custom_colors', custom_colors3{3,2},'ax_handle', h,...
-                    'neurons_use', neuron_filter6{3,2});
+                    'neurons_use', neuron_filter6{3,2}, 'dir_use', placeMapDir);
             end
         else
-            draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+            draw_PF_outline(placeMapDir,'PMfile', PMfile_use, 'PMstatsfile', ...
                 PMstatsfile_use, 'custom_colors', custom_colors3{j,k},'ax_handle', h,...
-                'neurons_use', neuron_filter6{j,k});
+                'neurons_use', neuron_filter6{j,k}, 'dir_use', placeMapDir);
         end
         hold off
         title(titles6{j,k});
@@ -415,9 +415,9 @@ if qc
            PMfile_use = ['PlaceMapsv2_' full_plot_type6{k,side_use} '.mat'];
            PMstatsfile_use = ['PFstatsv2_' full_plot_type6{k,side_use} '.mat'];
            h = subplot(1,2,k);
-           draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
+           draw_PF_outline(placeMapDir,'PMfile', PMfile_use, 'PMstatsfile', ...
                PMstatsfile_use, 'custom_colors', custom_colors3{3,side_use},'ax_handle', h,...
-               'neurons_use', neuron_filter6{3,side_use}(j));
+               'neurons_use', neuron_filter6{3,side_use}(j), 'dir_use', placeMapDir);
            title(['Neuron ' num2str(neuron_filter6{3,side_use}(j))]);
            
        end
@@ -440,33 +440,34 @@ stable_thresh = 0.5; % correlation AND overlap criteria
 figure(107)
 h = gca;
     
+sesh_use=placeMapDir;
 % Plot left study in half color
 PMfile_use = ['PlaceMapsv2_' full_plot_type6{1,1} '.mat'];
 PMstatsfile_use = ['PFstatsv2_' full_plot_type6{1,1} '.mat'];
 colors_use = draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
     PMstatsfile_use, 'ax_handle', h,'neurons_use', neuron_filter6{3,1},...
-    'alpha_use',0.5);
+    'alpha_use',0.5, 'dir_use', placeMapDir);
 
 % Plot left test in half color
 PMfile_use = ['PlaceMapsv2_' full_plot_type6{2,1} '.mat'];
 PMstatsfile_use = ['PFstatsv2_' full_plot_type6{2,1} '.mat'];
 draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
     PMstatsfile_use, 'custom_colors', colors_use,'ax_handle', h,...
-    'neurons_use', neuron_filter6{3,1}, 'alpha_use', 0.5);
+    'neurons_use', neuron_filter6{3,1}, 'alpha_use', 0.5, 'dir_use', placeMapDir);
 
 % Plot right study in half color
 PMfile_use = ['PlaceMapsv2_' full_plot_type6{1,2} '.mat'];
 PMstatsfile_use = ['PFstatsv2_' full_plot_type6{1,2} '.mat'];
 draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
     PMstatsfile_use, 'custom_colors', colors_use,'ax_handle', h,...
-    'neurons_use', neuron_filter6{3,2}, 'alpha_use', 1);
+    'neurons_use', neuron_filter6{3,2}, 'alpha_use', 1, 'dir_use', placeMapDir);
 
 % Plot right test in half color
 PMfile_use = ['PlaceMapsv2_' full_plot_type6{2,2} '.mat'];
 PMstatsfile_use = ['PFstatsv2_' full_plot_type6{2,2} '.mat'];
 draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
     PMstatsfile_use, 'custom_colors', colors_use,'ax_handle', h,...
-    'neurons_use', neuron_filter6{3,2}, 'alpha_use', 1);
+    'neurons_use', neuron_filter6{3,2}, 'alpha_use', 1, 'dir_use', placeMapDir);
 
 title(['Stable neurons (corr > ' num2str(stable_thresh) ' on either L or R trials)'])
 
@@ -488,28 +489,28 @@ PMfile_use = ['PlaceMapsv2_' full_plot_type6{1,1} '.mat'];
 PMstatsfile_use = ['PFstatsv2_' full_plot_type6{1,1} '.mat'];
 colors_use = draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
     PMstatsfile_use, 'ax_handle', h,'neurons_use', neuron_filter7,...
-    'alpha_use',0.5);
+    'alpha_use',0.5, 'dir_use', placeMapDir);
 
 % Plot left test in half color
 PMfile_use = ['PlaceMapsv2_' full_plot_type6{2,1} '.mat'];
 PMstatsfile_use = ['PFstatsv2_' full_plot_type6{2,1} '.mat'];
 draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
     PMstatsfile_use, 'custom_colors', colors_use,'ax_handle', h,...
-    'neurons_use', neuron_filter7, 'alpha_use', 0.5);
+    'neurons_use', neuron_filter7, 'alpha_use', 0.5, 'dir_use', placeMapDir);
 
 % Plot right study in half color
 PMfile_use = ['PlaceMapsv2_' full_plot_type6{1,2} '.mat'];
 PMstatsfile_use = ['PFstatsv2_' full_plot_type6{1,2} '.mat'];
 draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
     PMstatsfile_use, 'custom_colors', colors_use,'ax_handle', h,...
-    'neurons_use', neuron_filter7, 'alpha_use', 1);
+    'neurons_use', neuron_filter7, 'alpha_use', 1, 'dir_use', placeMapDir);
 
 % Plot right test in half color
 PMfile_use = ['PlaceMapsv2_' full_plot_type6{2,2} '.mat'];
 PMstatsfile_use = ['PFstatsv2_' full_plot_type6{2,2} '.mat'];
 draw_PF_outline(sesh_use,'PMfile', PMfile_use, 'PMstatsfile', ...
     PMstatsfile_use, 'custom_colors', colors_use,'ax_handle', h,...
-    'neurons_use', neuron_filter7, 'alpha_use', 1);
+    'neurons_use', neuron_filter7, 'alpha_use', 1, 'dir_use', placeMapDir);
 
 title(['Stable neurons (corr > ' num2str(stable_thresh) ')'])
 
