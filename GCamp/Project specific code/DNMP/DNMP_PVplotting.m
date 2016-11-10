@@ -143,43 +143,43 @@ title('Free Even v Free Odd epochs')
 %% Try another tactice - make TP density maps for each condition
 cm = colormap('jet');
 
-figure(30)
+figure(32)
 load('PlaceMapsv2_forced_left.mat')
 PFdens_map_forced_l = make_PFdens_map(TMap_gauss(good_ind),RunOccMap);
 subplot(2,2,1)
 imagesc_nan(PFdens_map_forced_l,cm,[1 1 1])
-title('Transient Probabilty Density - Left Forced')
+title('Transient Density - Left Forced')
 colorbar
 
 load('PlaceMapsv2_free_left.mat')
 PFdens_map_free_l = make_PFdens_map(TMap_gauss(good_ind),RunOccMap);
 subplot(2,2,3)
 imagesc_nan(PFdens_map_free_l,cm,[1 1 1])
-title('Transient Probabilty Density - Left Free')
+title('Transient Density - Left Free')
 colorbar
 
 load('PlaceMapsv2_forced_right.mat')
 PFdens_map_forced_r = make_PFdens_map(TMap_gauss(good_ind),RunOccMap);
 subplot(2,2,2)
 imagesc_nan(PFdens_map_forced_r,cm,[1 1 1])
-title('Transient Probabilty Density - Right Forced')
+title('Transient Density - Right Forced')
 colorbar
 
 load('PlaceMapsv2_free_right.mat')
 PFdens_map_free_r = make_PFdens_map(TMap_gauss(good_ind),RunOccMap);
 subplot(2,2,4)
 imagesc_nan(PFdens_map_free_r,cm,[1 1 1])
-title('Transient Probabilty Density - Right Free')
+title('Transient Density - Right Free')
 colorbar
 
-figure(31)
+figure(33)
 subplot(1,2,1)
 load('PlaceMapsv2_forced.mat')
 PFdens_map_forced = make_PFdens_map(TMap_gauss(good_ind),RunOccMap);
 imagesc_nan(PFdens_map_forced,cm,[1 1 1]);
 h = colorbar;
 set(h,'Limits',[0 0.8])
-title('Transient Probability Density - Forced')
+title('Transient Density - Forced')
 
 load('PlaceMapsv2_free.mat')
 subplot(1,2,2)
@@ -187,4 +187,4 @@ PFdens_map_free = make_PFdens_map(TMap_gauss(good_ind),RunOccMap);
 imagesc_nan(PFdens_map_free,cm,[1 1 1]);
 h = colorbar;
 set(h,'Limits',[0 0.8])
-title('Transient Probability Density - Forced')
+title('Transient Density - Free')
