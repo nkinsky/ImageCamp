@@ -1,4 +1,4 @@
-function [h, hcb] = imagesc_nan(a,cm,nanclr,CLim)
+function [h, cm_out] = imagesc_nan(a,cm,nanclr,CLim)
 % function [h, hcb] = imagesc_nan(a,cm,nanclr)
 %  Plots just like imagesc, but with any nans labeled as nanclr
 %
@@ -36,18 +36,43 @@ dmap=(amax-amin)/n;
 %# standard imagesc
 him = imagesc(a);
 %# add nan color to colormap
-colormap([nanclr; repmat(cm(1,:),4,1); cm]);
+if amin ~= amax % Scale normally if you have a range of values
+    cm_out = colormap([nanclr; repmat(cm(1,:),4,1); cm]);
+elseif amin == amax % Set new colormap to min value in cm and nanclr if there is only one unique non-NaN value
+    cm_out = colormap([nanclr; cm(1,:)]);
+    
+end
 %# changing color limits
 try
-    caxis([amin-dmap amax]);
+    if amin ~= amax
+        caxis([amin-dmap amax]);
+    elseif amin == amax
+        caxis([amin-2*eps amax]);
+        
+        % Now do a bunch of unnecessarily complicated stuff to make sure future
+        % caxis calls don't override the above
+        cdata_temp = false(size(him.CData));
+        cdata_temp(~isnan(him.CData(:))) = true;
+        set(him,'CData',cdata_temp,'CDataMapping','direct');
+    end
 catch
     % Skip this step if it fails
 end
+
+% If all non-NaN values are zero, make zero come out at the base value of your
+% colormap... this is a hack for sure
+if nansum(a(:)) == 0
+    set(gca,'CLim',[-1, 50])
+end
+
+
 %# place a colorbar
 % hcb = colorbar;
 hcb = '';
 %# change Y limit for colorbar to avoid showing NaN color
 % ylim(hcb,[amin amax])
+
+%keyboard
 
 if nargout > 0
     h = him;

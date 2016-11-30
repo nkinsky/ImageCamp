@@ -101,6 +101,7 @@ for j = active_fields_use'
     try
         temp(tp) = 1;
     catch
+        disp('Error catching in draw_PF_outline');
         keyboard;
     end
     % plot PF outline (using correct color)

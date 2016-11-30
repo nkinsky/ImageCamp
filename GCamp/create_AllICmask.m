@@ -5,7 +5,7 @@ function [ All_ICmask ] = create_AllICmask( IC_cell )
 
 
 All_ICmask = zeros(size(IC_cell{1}));
-for j = 1:size(IC_cell,2)
+for j = 1:length(IC_cell)
 %     All_ICmask = All_ICmask + IC_cell{j};
     All_ICmask = All_ICmask | IC_cell{j};
 end
