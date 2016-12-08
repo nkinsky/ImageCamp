@@ -140,35 +140,38 @@ subplot(2,2,2)
 plot(PV_free_odd,PV_free_even,'*')
 title('Free Even v Free Odd epochs')
 
-%% Try another tactice - make TP density maps for each condition
+%% Try another tactic - make TP density maps for each condition
+rot_degrees = -90;
+rot_amt = rot_degrees/90;
 cm = colormap('jet');
+good_ind = neurons_use_filter;
 
-figure(32)
+figure(30)
 load('PlaceMapsv2_forced_left.mat')
 PFdens_map_forced_l = make_PFdens_map(TMap_gauss(good_ind),RunOccMap);
 subplot(2,2,1)
-imagesc_nan(PFdens_map_forced_l,cm,[1 1 1])
+imagesc_nan(rot90(PFdens_map_forced_l,rot_amt),cm,[1 1 1])
 title('Transient Density - Left Forced')
 colorbar
 
 load('PlaceMapsv2_free_left.mat')
 PFdens_map_free_l = make_PFdens_map(TMap_gauss(good_ind),RunOccMap);
 subplot(2,2,3)
-imagesc_nan(PFdens_map_free_l,cm,[1 1 1])
+imagesc_nan(rot90(PFdens_map_free_l,rot_amt),cm,[1 1 1])
 title('Transient Density - Left Free')
 colorbar
 
 load('PlaceMapsv2_forced_right.mat')
 PFdens_map_forced_r = make_PFdens_map(TMap_gauss(good_ind),RunOccMap);
 subplot(2,2,2)
-imagesc_nan(PFdens_map_forced_r,cm,[1 1 1])
+imagesc_nan(rot90(PFdens_map_forced_r,rot_amt),cm,[1 1 1])
 title('Transient Density - Right Forced')
 colorbar
 
 load('PlaceMapsv2_free_right.mat')
 PFdens_map_free_r = make_PFdens_map(TMap_gauss(good_ind),RunOccMap);
 subplot(2,2,4)
-imagesc_nan(PFdens_map_free_r,cm,[1 1 1])
+imagesc_nan(rot90(PFdens_map_free_r,rot_amt),cm,[1 1 1])
 title('Transient Density - Right Free')
 colorbar
 
@@ -176,7 +179,7 @@ figure(33)
 subplot(1,2,1)
 load('PlaceMapsv2_forced.mat')
 PFdens_map_forced = make_PFdens_map(TMap_gauss(good_ind),RunOccMap);
-imagesc_nan(PFdens_map_forced,cm,[1 1 1]);
+imagesc_nan(rot90(PFdens_map_forced,rot_amt),cm,[1 1 1]);
 h = colorbar;
 set(h,'Limits',[0 0.8])
 title('Transient Density - Forced')
@@ -184,7 +187,7 @@ title('Transient Density - Forced')
 load('PlaceMapsv2_free.mat')
 subplot(1,2,2)
 PFdens_map_free = make_PFdens_map(TMap_gauss(good_ind),RunOccMap);
-imagesc_nan(PFdens_map_free,cm,[1 1 1]);
+imagesc_nan(rot90(PFdens_map_free,rot_amt),cm,[1 1 1]);
 h = colorbar;
 set(h,'Limits',[0 0.8])
-title('Transient Density - Free')
+title('Transient Density - Forced')

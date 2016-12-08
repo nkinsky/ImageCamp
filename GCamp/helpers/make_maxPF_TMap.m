@@ -10,9 +10,14 @@ num_PFs = length(MaxPF);
 
 TMap_maxPF = cell(num_PFs,1);
 for j = 1:num_PFs
-   temp = zeros(size(TMap{1}));
-   temp(PFpixels{j,MaxPF(j)}) = 1;
-   TMap_maxPF{j} = temp.*TMap{j};
+    try
+        temp = zeros(size(TMap{1}));
+        temp(PFpixels{j,MaxPF(j)}) = 1;
+        TMap_maxPF{j} = temp.*TMap{j};
+    catch
+        disp('error catching in make_maxPF_TMap')
+        keyboard
+    end
 end
 
 end

@@ -6,14 +6,24 @@ function [ OccMap_smooth, TMap_nan ] = make_nan_TMap( OccMap, TMap, varargin )
 %   occupancy, TMap_nan is the same as TMap but with nans where 
 %   OccMap_smooth = 0.
 %
-%   varargin: 'perform_smooth': 1 = perform smoothing of OccMap, 0 = do not
-%   smooth OccMap (may need to do if you have large bin sizes).  Default =
-%   1.
+%   varargin: 
+%       'perform_smooth': 1 = perform smoothing of OccMap, 0 = do not
+%       smooth OccMap (may need to do if you have large bin sizes).  Default =
+%       1.
+%
+%       'make_allnan_zero': 1 (default) = make TMaps that are all NaN (e.g. that did not
+%       fire a transient while the rodent was above the speed threshold)
+%       zero wherever the rodent occupied a pixel.  0 = keep all pixels as
+%       NaN - will show up as all white when using imagesc_nan
 
 perform_smooth = 0; % default
+make_allnan_zero = 1; % default
 for j = 1:length(varargin)
     if strcmpi('perform_smooth',varargin{j})
         perform_smooth = varargin{j+1};
+    end
+    if strcmpi('make_allnan_zero',varargin{j})
+        make_allnan_zero = varargin{j+1};
     end
 end
 
