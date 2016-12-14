@@ -1233,6 +1233,8 @@ comp_get = {'remap_34','remap_34_sq','remap_34_circ',...
     'remap_37','remap_37_sq','remap_37_circ',...
     'remap_56','remap_56_sq','remap_56_circ'};
 
+comp_get2 = {'before_5','after_6'};
+
 % fields_get = 
 
 for j = 1:num_animals
@@ -1287,6 +1289,22 @@ for j = 1:4
     legend('Local','Distal');
     set(gca,'XTick',[1 2 3],'XTickLabel',{'Square','Circle','Combined'})
 end
+
+figure(801)
+for j = 1:2
+    subplot(2,1,j)
+    h = bar([remap_comb.(comp_get2{k(j)}).local_stat2.mean, remap_comb.(comp_ge2{k(j)}).distal_stat2.mean]);
+    hold on
+    errorbar(h(1).XData + h(1).XOffset, ...
+        [remap_comb.(comp_get2{k(j)}).local_stat2.mean], [remap_comb.(comp_get2{k(j)}).local_stat2.sem],'k.')
+    errorbar(h(2).XData + h(2).XOffset, ...
+        [remap_comb.(comp_get2{k(j)}).distal_stat2.mean], [remap_comb.(comp_get2{k(j)}).distal_stat2.sem],'k.')
+    hold off
+    title(strrep(comp_get{k(j)},'_','\_'))
+    legend('Local','Distal');
+%     set(gca,'XTick',[1 2 3],'XTickLabel',{'Square','Circle','Combined'})
+end
+
 
 %% Create Place-field density maps - move to top eventually...
 
