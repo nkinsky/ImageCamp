@@ -2,7 +2,7 @@
 
 plot_pval = false;
 
-sesh = MD(180);
+sesh = MD(293);
 rot_degrees = -90; % How much to rotate the TMaps
 rot_amt = rot_degrees/90;
 IChack = false;

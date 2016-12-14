@@ -144,7 +144,6 @@ title('Free Even v Free Odd epochs')
 rot_degrees = -90;
 rot_amt = rot_degrees/90;
 cm = colormap('jet');
-
 good_ind = neurons_use_filter;
 
 figure(30)
@@ -176,7 +175,7 @@ imagesc_nan(rot90(PFdens_map_free_r,rot_amt),cm,[1 1 1])
 title('Transient Density - Right Free')
 colorbar
 
-figure(31)
+figure(33)
 subplot(1,2,1)
 load('PlaceMapsv2_forced.mat')
 PFdens_map_forced = make_PFdens_map(TMap_gauss(good_ind),RunOccMap);
