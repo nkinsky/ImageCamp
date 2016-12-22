@@ -49,7 +49,8 @@ try
     dx = diff(x);
     dy = diff(y);
     speed = hypot(dx,dy)*SR;
-    freeze_log = speed < speed_thresh;
+    smspeed = convtrim(speed,ones(1,2*SR))./(2*SR); % Attempt to smooth a bit
+    freeze_log = smspeed < speed_thresh;
     freeze_ratio = sum(freeze_log)/length(freeze_log);
 catch
     freeze_ratio = nan;
