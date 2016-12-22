@@ -1233,6 +1233,8 @@ comp_get = {'remap_34','remap_34_sq','remap_34_circ',...
     'remap_37','remap_37_sq','remap_37_circ',...
     'remap_56','remap_56_sq','remap_56_circ'};
 
+comp_get2 = {'before_5','after_6'};
+
 % fields_get = 
 
 for j = 1:num_animals
@@ -1287,6 +1289,22 @@ for j = 1:4
     legend('Local','Distal');
     set(gca,'XTick',[1 2 3],'XTickLabel',{'Square','Circle','Combined'})
 end
+
+figure(801)
+for j = 1:2
+    subplot(2,1,j)
+    h = bar([remap_comb.(comp_get2{k(j)}).local_stat2.mean, remap_comb.(comp_ge2{k(j)}).distal_stat2.mean]);
+    hold on
+    errorbar(h(1).XData + h(1).XOffset, ...
+        [remap_comb.(comp_get2{k(j)}).local_stat2.mean], [remap_comb.(comp_get2{k(j)}).local_stat2.sem],'k.')
+    errorbar(h(2).XData + h(2).XOffset, ...
+        [remap_comb.(comp_get2{k(j)}).distal_stat2.mean], [remap_comb.(comp_get2{k(j)}).distal_stat2.sem],'k.')
+    hold off
+    title(strrep(comp_get{k(j)},'_','\_'))
+    legend('Local','Distal');
+%     set(gca,'XTick',[1 2 3],'XTickLabel',{'Square','Circle','Combined'})
+end
+
 
 %% Create Place-field density maps - move to top eventually...
 
@@ -1433,11 +1451,36 @@ occ_grid_sum_comb = mean(occ_grid_sum_all,6);
 
 %% Attempts to combine PFdensity plots for ALL mice into one.
 k =2; ll = 3;
-temp = Mouse(1).PFdens_map{k,ll};
-size_use = size(temp);
-for j = 2:num_animals
-    temp = cat(3,temp,resize(Mouse(j).PFdens_map{k,ll},size_use));
+
+PFdens_comb = cell(2,3);
+
+for k = 1:2
+    temp = nan(size(Mouse(1).PFdens_map{k,ll}));
+    temp2 = temp;
+    temp3 = temp;
+    size_use = size(temp);
+    for j = 1:3
+        % Merge all before sessions
+        for ll = 1:4
+            temp = cat(3,temp,resize(Mouse(j).PFdens_map{k,ll},size_use));
+        end
+        
+        % Merge all during sessions
+        for ll = 5:6
+            temp2 = cat(3,temp2,resize(Mouse(j).PFdens_map{k,ll},size_use));
+        end
+        
+        % Merge all after sessions
+        for ll = 7:8
+            temp3 = cat(3,temp3,resize(Mouse(j).PFdens_map{k,ll},size_use));
+        end
+        
+    end
+    PFdens_comb{k,1} = temp;
+    PFdens_comb{k,2} = temp2;
+    PFdens_comb{k,3} = temp3;
 end
+
 
 figure(1002)
 for j = 1:num_animals

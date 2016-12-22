@@ -19,7 +19,7 @@ twoenv_reference; % Run to get MD database info
 % Enter sessions to look at here
 sessions_use_cell = {G30_botharenas,G31_botharenas,G45_botharenas,G48_botharenas};
 
-for zz = 1:length(sessions_use_cell)
+for zz = 1:length(sessions_use_cell)-1
     %% Parameters
     PF_thresh = 0.9;
     SR = 20; % sampling rate - shouldn't change from 20 most likely
@@ -319,6 +319,10 @@ for zz = 1:length(sessions_use_cell)
     FR_oct.during = nanmean(FR_all_sessions(:,during_oct),2);
     FR_square.after = nanmean(FR_all_sessions(:,after_square),2);
     FR_oct.after = nanmean(FR_all_sessions(:,after_oct),2);
+    for dd = 1:length(square_sesh)
+        FR_square.sesh{dd} = nanmean(FR_all_sessions(:,square_sesh(dd)),2);
+        FR_oct.sesh{dd} = nanmean(FR_all_sessions(:,oct_sesh(dd)),2);
+    end
     
     diff_all = FR_square.all - FR_oct.all;
     diff_before = FR_square.before - FR_oct.before;
@@ -329,6 +333,8 @@ for zz = 1:length(sessions_use_cell)
     discr_before = (FR_square.before - FR_oct.before)./(FR_square.before + FR_oct.before);
     discr_during = (FR_square.during - FR_oct.during)./(FR_square.during + FR_oct.during);
     discr_after = (FR_square.after - FR_oct.after)./(FR_square.after + FR_oct.after);
+    discr_1 = (FR_square.sesh{2} - FR_oct.sesh{1})./(FR_square.sesh{2} + FR_oct.sesh{1});
+    discr_2 = (FR_oct.sesh{4} - FR_square.sesh{3})./(FR_oct.sesh{4} + FR_square.sesh{3});
     
     discr_by_sesh = nan(size(FR_all_sessions,1),8);
     for j = 1:8
@@ -626,6 +632,9 @@ for zz = 1:length(sessions_use_cell)
     Mouse(zz).discr_before = discr_before;
     Mouse(zz).discr_during = discr_during;
     Mouse(zz).discr_after = discr_after;
+    Mouse(zz).discr_by_sesh = discr_by_sesh;
+    Mouse(zz).discr_1 = discr_1;
+    Mouse(zz).discr_2 = discr_2;
     Mouse(zz).PV = PV;
     Mouse(zz).PV_corr = PV_corr;
     Mouse(zz).PV_corr_shuffle = PV_corr_shuffle;
@@ -641,7 +650,7 @@ for zz = 1:length(sessions_use_cell)
 end % End loop through each mouse
 
 % Aggregate into one mega-variable
-for zz = 1:length(sessions_use_cell)
+for zz = 1:length(sessions_use_cell)-1
     
     if zz == 1
         All.min_dist_before = Mouse(1).min_dist_before;
@@ -725,7 +734,7 @@ figure(345);
 % xlabel('Discrimination Ratio')
 % legend('Before', 'During', 'After'); 
 % title('All Mice Combined');
-for j = 1:4; 
+for j = 1:3; 
     subplot(2,3,j+1); 
     ecdf(abs(Mouse(j).discr_before)); hold on; 
     ecdf(abs(Mouse(j).discr_during)); 
@@ -748,7 +757,7 @@ title('All Mice Combined');
 
 % Same as above but for discrimination ratios
 figure(347)
-for j = 1:4; 
+for j = 1:4 
     
     discr_ratio_proportion = [sum(abs(Mouse(j).discr_before) == 1)/sum(~isnan(abs(Mouse(j).discr_before))),...
         sum(abs(Mouse(j).discr_during) == 1)/sum(~isnan(abs(Mouse(j).discr_during))), ...
