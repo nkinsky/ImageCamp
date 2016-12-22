@@ -1,4 +1,4 @@
-function [MD, session_ref] = MakeMouseSessionList(userstr)
+function [MD, session_ref] = MakeMouseSessionList_FC(userstr)
 % this function makes a list of the location of all sessions on disk
 % session_ref: gives you the start and end indices of session types, and currently are:
 %   'G31_2env', 'G30_alternation'
@@ -584,7 +584,7 @@ if (strcmp(userstr,'Natlaptop'))
 end
 MD(i).Notes = [];
 
-%% Start G41
+%% Start FC10
 FC10.all(1) = i+1;
 
 i = i+1;
