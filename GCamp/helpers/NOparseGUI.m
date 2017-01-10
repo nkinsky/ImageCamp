@@ -16,7 +16,6 @@ function NOparseGUI( ~,~ )
 
 %%
 global miscVar
-global ParsedFrames
 global videoFig
 global NOVar
 
@@ -34,6 +33,7 @@ title('Frame 1/lots')
 miscVar.upperLimit = miscVar.panelHeight - 120;
 miscVar.buttonStepDown = 40;
 miscVar.buttonLeftEdge = 560;
+miscVar.buttonMiddleEdge = 622;
 miscVar.buttonSecondCol = 705;
 miscVar.buttonWidth = 130;
 miscVar.Gray=[0.94,0.94,0.94];
@@ -43,43 +43,36 @@ miscVar.VideoLoadedFlag=0;
 miscVar.LapsWorkedOn=[];
 
 NOVar.LLframes = [];
-NOVar.URframes = [];          
+NOVar.URframes = [];   
+NOVar.Questionable = [];
 %% Layout for Novel Object
 fcnLoadVideo;
 miscVar.buttonsInUse={'UpperRightButton';'NeitherButton';...
-    'LowerLeftButton'}; 
+    'LowerLeftButton';'QuestionableButton'}; 
 
 videoFig.UpperRightButton = uicontrol('Style','pushbutton','String','UPPER RIGHT OBJECT (9)',...
                              'Position',[miscVar.buttonSecondCol,miscVar.upperLimit, miscVar.buttonWidth,30],...
                              'Callback',{@fcnUpperRightButton});
                          
 videoFig.NeitherButton = uicontrol('Style','pushbutton','String','NEITHER (5)',...
-                             'Position',[miscVar.buttonLeftEdge,miscVar.upperLimit - miscVar.buttonStepDown*1,...
+                             'Position',[miscVar.buttonMiddleEdge,miscVar.upperLimit - miscVar.buttonStepDown*1,...
                              miscVar.buttonWidth,30], 'Callback',{@fcnNeitherButton});
                          
 videoFig.LowerLeftButton = uicontrol('Style','pushbutton','String','LOWER LEFT OBJECT (1)',...
                              'Position',[miscVar.buttonLeftEdge,miscVar.upperLimit - miscVar.buttonStepDown*2,...
                              miscVar.buttonWidth,30], 'Callback',{@fcnLowerLeftButton});
-
-headings={'Trial #'; 'Start on maze (start of Forced'; 'Lift barrier (start of free choice)';...
-            'Leave maze'; 'Start in homecage'; 'Leave homecage'; 'Forced Trial Type (L/R)';...
-            'Free Trial Choice (L/R)'; 'Enter Delay'};
-ParsedFrames.LapNumber={headings{1}};        
-ParsedFrames.LapStart={headings{2}}; 
-ParsedFrames.LiftBarrier={headings{3}};
-ParsedFrames.LeaveMaze={headings{4}};
-ParsedFrames.StartHomecage={headings{5}};
-ParsedFrames.LeaveHomecage={headings{6}};
-ParsedFrames.ForcedDir={headings{7}};
-ParsedFrames.FreeDir={headings{8}};
-ParsedFrames.EnterDelay={headings{9}};
-%%
+                         
+videoFig.QuestionableButton = uicontrol('Style','pushbutton','String','QUESTIONABLE',...
+                             'Position',[miscVar.buttonMiddleEdge,miscVar.upperLimit - miscVar.buttonStepDown*3,...
+                             miscVar.buttonWidth,30], 'Callback',{@fcnQuestionableButton});
+                         
+%% Other buttons
                          
 videoFig.LoadVideoButton = uicontrol('Style','pushbutton','String','LOAD VIDEO',...
                              'Position',[miscVar.buttonLeftEdge,miscVar.upperLimit - miscVar.buttonStepDown*6,...
                              miscVar.buttonWidth,30],'Callback',{@fcnLoadVideo}); 
                  
-videoFig.JumpFrameButton = uicontrol('Style','pushbutton','String','JUMP TO FRAME',...
+videoFig.JumpFrameButton = uicontrol('Style','pushbutton','String','JUMP TO TIME',...
                              'Position',[miscVar.buttonLeftEdge,miscVar.upperLimit - miscVar.buttonStepDown*7,...
                              miscVar.buttonWidth,30], 'Callback',{@fcnJumpFrameButton});
 
@@ -110,6 +103,14 @@ if miscVar.VideoLoadedFlag==1
     updatebuttoncolor
 end
 end
+
+function fcnQuestionableButton(~,~)
+global miscVar
+if miscVar.VideoLoadedFlag==1
+    fcnQuestionableTag
+    updatebuttoncolor
+end
+end
 %%
 function fcnJumpFrameButton(~,~)
 global videoFig
@@ -132,6 +133,7 @@ if miscVar.VideoLoadedFlag==1
                     miscVar.frameNum = miscVar.frameNum + 1;
                     videoFig.plotted = imagesc(miscVar.currentFrame);
                     title(['Time ' num2str(round(miscVar.frameNum/30)) ' / ' num2str(round(miscVar.totalFrames/30)) ' seconds'])
+                    fcnSaveNOVar
                 else   
                     msgbox('Time must in range','Error','error')
                 end
@@ -162,6 +164,7 @@ try
     title(['Time ' num2str(round(miscVar.frameNum/30)) ' / ' num2str(round(miscVar.totalFrames/30)) ' seconds'])
     miscVar.VideoLoadedFlag=1;
     videoFig.Name=NOVar.FileName;
+    NOVar.LastFrame = 1; % Last frame viewed tracker
     
     % Check for existing NOtracking in workspace, prompt to load it 
     if exist(fullfile(NOVar.PathName, 'NOtracking.mat'),'file')
@@ -202,9 +205,10 @@ switch e.Key
             videoFig.plotted = imagesc(miscVar.currentFrame);
             updatetitletime
             updatebuttoncolor
+            fcnSaveNOVar
         end
     case 'f' %Step forward 30  
-        if video.currentTime+30 <= miscVar.totalFrames
+        if video.currentTime+1 <= miscVar.totalFrames/30
             miscVar.frameNum = miscVar.frameNum + 29;
             video.CurrentTime = miscVar.frameNum/video.FrameRate;
             miscVar.currentFrame = readFrame(video);
@@ -212,6 +216,7 @@ switch e.Key
             videoFig.plotted = imagesc(miscVar.currentFrame);
             updatetitletime
             updatebuttoncolor
+            fcnSaveNOVar
         end
 
     case 'numpad1' % log framenum as LL
@@ -235,7 +240,7 @@ end
 function updatetitletime(~,~)
 global miscVar
 
-title(['Time ' num2str(round(miscVar.frameNum/30)) ' / ' num2str(round(miscVar.totalFrames/30)) ' seconds'])
+title(['Time ' num2str(round(miscVar.frameNum/30)) ' / ' num2str(floor(miscVar.totalFrames/30)) ' seconds'])
 end
 
 %% Refresh buttons color
@@ -262,6 +267,11 @@ elseif ~LLactive && ~URactive
     videoFig.NeitherButton.BackgroundColor=miscVar.Red;
 elseif LLactive && URactive
     error('Something wrong - mouse appears to be exploring both objects at the same time')
+end
+
+% Tag as questionable if desired
+if any(miscVar.frameNum == NOVar.Questionable)
+    videoFig.QuestionableButton.BackgroundColor=miscVar.Red;
 end
 
 end
@@ -329,15 +339,41 @@ fcnSaveNOVar
 
 end
 
+%% Tag as questionable
+function fcnQuestionableTag(~,~)
+global NOVar
+global miscVar
+
+qbool = miscVar.frameNum == NOVar.Questionable;
+if any(qbool) % If already tagged, remove it
+    NOVar.Questionable = NOVar.Questionable(~qbool);
+else % Add it if not tagged
+    NOVar.Questionable = [NOVar.Questionable, miscVar.frameNum];
+end
+   
+end
+
 %% Save NOVar to workspace as non-global variable
 function fcnSaveNOVar(~,~)
 global NOVar
+global miscVar
 NOtracking.LLframes = NOVar.LLframes;
 NOtracking.URframes = NOVar.URframes;
 NOtracking.nUR = NOVar.nUR;
 NOtracking.nLL = NOVar.nLL;
 NOtracking.PathName = NOVar.PathName;
 NOtracking.FileName = NOVar.FileName;
+NOtracking.Questionable = NOVar.Questionable;
+
+% Update frame viewed
+NOVar.LastFrame = max([NOVar.LastFrame,miscVar.frameNum]);
+NOtracking.LastFrame = NOVar.LastFrame;
+time_use = round(NOtracking.LastFrame/30);
+if time_use < floor(miscVar.totalFrames/30)
+    xlabel('YOU STILL HAVE FRAMES LEFT TO VIEW','Color','Red')
+else
+    xlabel('You have viewed all frames','Color','Black')
+end
 
 save(fullfile(NOtracking.PathName,'NOtracking.mat'),'NOtracking');
 
