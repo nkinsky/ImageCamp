@@ -19,8 +19,7 @@ global miscVar
 global videoFig
 global NOVar
 
-msgbox({'Notes on use:';' Q/R - step back/forward 10 seconds';...
-        ' A/F - step back/forward 1 second'; ' numpad1 = mouse exploring lower-left object'; ...
+msgbox({'Notes on use:'; ' A/F - step back/forward 1 second'; ' numpad1 = mouse exploring lower-left object'; ...
         ' numpad9 = mouse exploring upper-right object '; ' numpad5 = mouse NOT exploring either object'; ...
         ' (use to fix mistaken numpad9 or numpad1 push'; ' ';...
         'Click off of button for keyboard!'})
@@ -41,9 +40,15 @@ miscVar.Red=[1,0.5,0.5];
 miscVar.Green = [0.5 1 0.5];
 miscVar.VideoLoadedFlag=0;
 miscVar.LapsWorkedOn=[];
+miscVar.xLL = [];
+miscVar.yLL = [];
+miscVar.xUR = [];
+miscVar.yUR = [];
 
 NOVar.LLframes = [];
-NOVar.URframes = [];   
+NOVar.URframes = [];  
+NOVar.nLL = 0;
+NOVar.nUR = 0;
 NOVar.Questionable = [];
 %% Layout for Novel Object
 fcnLoadVideo;
@@ -75,6 +80,16 @@ videoFig.LoadVideoButton = uicontrol('Style','pushbutton','String','LOAD VIDEO',
 videoFig.JumpFrameButton = uicontrol('Style','pushbutton','String','JUMP TO TIME',...
                              'Position',[miscVar.buttonLeftEdge,miscVar.upperLimit - miscVar.buttonStepDown*7,...
                              miscVar.buttonWidth,30], 'Callback',{@fcnJumpFrameButton});
+
+videoFig.DrawLLoutlineButton = uicontrol('Style','pushbutton','String','DRAW LL outline',...
+                             'Position',[miscVar.buttonLeftEdge,miscVar.upperLimit - miscVar.buttonStepDown*5,...
+                             miscVar.buttonWidth,30], 'Callback',{@fcnDrawLLoutline});
+videoFig.DrawLLoutlineButton.BackgroundColor=miscVar.Green;
+
+videoFig.DrawURoutlineButton = uicontrol('Style','pushbutton','String','DRAW UR outline',...
+                             'Position',[miscVar.buttonSecondCol,miscVar.upperLimit - miscVar.buttonStepDown*5,...
+                             miscVar.buttonWidth,30], 'Callback',{@fcnDrawURoutline});
+videoFig.DrawURoutlineButton.BackgroundColor=miscVar.Green;
 
 end
 
@@ -111,6 +126,49 @@ if miscVar.VideoLoadedFlag==1
     updatebuttoncolor
 end
 end
+%% Object Outline Functions
+function fcnDrawLLoutline(~,~)
+global miscVar
+global videoFig
+if miscVar.VideoLoadedFlag==1
+    [~, xi, yi] = roipoly;
+    [miscVar.xLL, miscVar.yLL] = dilate_shape(xi,yi,12);
+    videoFig.DrawLLoutlineButton.BackgroundColor=miscVar.Gray;
+    fcnRefreshOutlines
+end
+end
+
+function fcnDrawURoutline(~,~)
+global miscVar
+global videoFig
+if miscVar.VideoLoadedFlag==1
+    [~, xi, yi] = roipoly;
+    [miscVar.xUR, miscVar.yUR] = dilate_shape(xi,yi,12);
+    videoFig.DrawURoutlineButton.BackgroundColor=miscVar.Gray;
+    fcnRefreshOutlines
+end
+end
+
+function fcnRefreshOutlines(~,~)
+global miscVar
+global videoFig
+
+figure(videoFig.videoPanel);
+hold on
+
+% Update LL object
+if ~isempty(miscVar.xLL) && ~isempty(miscVar.yLL)
+    plot(miscVar.xLL, miscVar.yLL,'r');
+end
+
+%Update UR object
+if ~isempty(miscVar.xUR) && ~isempty(miscVar.yUR)
+    plot(miscVar.xUR, miscVar.yUR,'r');
+end
+
+hold off
+
+end
 %%
 function fcnJumpFrameButton(~,~)
 global videoFig
@@ -128,7 +186,7 @@ if miscVar.VideoLoadedFlag==1
                 jumpFrame = jumpSec*30+1;
                 if jumpFrame>0 && jumpFrame <=miscVar.totalFrames
                     miscVar.frameNum = jumpFrame-1;
-                    video.CurrentTime = miscVar.frameNum/video.FrameRate;
+                    miscVar.currentTime = miscVar.frameNum/video.FrameRate;
                     miscVar.currentFrame = readFrame(video);
                     miscVar.frameNum = miscVar.frameNum + 1;
                     videoFig.plotted = imagesc(miscVar.currentFrame);
@@ -173,7 +231,19 @@ try
             use_existing = input('Existing NOVar.mat file found.  Do you wish use? (y/n - Note that ''n'' will overwrite existing file): ', 's');
             if strcmpi(use_existing,'y')
                 load(fullfile(NOVar.PathName, 'NOtracking.mat'));
-                NOVar = NOtracking;
+                NOVar = NOtracking; % load saved NOvar variable
+                
+                % Re-draw outlines if necessary
+                miscVar.xLL = NOtracking.xLL;
+                miscVar.yLL = NOtracking.yLL;
+                miscVar.xUR = NOtracking.xUR;
+                miscVar.yUR = NOtracking.yUR;
+                fcnRefreshOutlines;
+                
+%                 % Load last-frame visited
+%                 miscVar.currentFrame = NOtracking.currentFrame;
+%                 videoFig.plotted = imagesc(miscVar.currentFrame);
+                
             elseif strcmpi(use_existing,'n')
                 save(fullfile(NOVar.PathName, 'NOtracking_old.mat'),'temp');
             end
@@ -196,24 +266,26 @@ global video
 %e.Key
 
 switch e.Key
-    case 'a' %Step back 30
-        if video.currentTime > 30/video.FrameRate
-            miscVar.frameNum = miscVar.frameNum - 31;
-            video.CurrentTime = miscVar.frameNum/video.FrameRate;
+    case 'a' %Step back 30/15
+        if video.currentTime > 15/video.FrameRate % video.currentTime > 30/video.FrameRate
+            miscVar.frameNum = miscVar.frameNum - 16; % miscVar.frameNum = miscVar.frameNum - 31;
+            video.currentTime = miscVar.frameNum/video.FrameRate;
             miscVar.currentFrame = readFrame(video);
             miscVar.frameNum = miscVar.frameNum + 1;
             videoFig.plotted = imagesc(miscVar.currentFrame);
+            fcnRefreshOutlines
             updatetitletime
             updatebuttoncolor
             fcnSaveNOVar
         end
-    case 'f' %Step forward 30  
-        if video.currentTime+1 <= miscVar.totalFrames/30
-            miscVar.frameNum = miscVar.frameNum + 29;
-            video.CurrentTime = miscVar.frameNum/video.FrameRate;
+    case 'f' %Step forward 30/15  
+        if video.currentTime+1 <= miscVar.totalFrames/30 % video.currentTime+1 <= miscVar.totalFrames/30
+            miscVar.frameNum = miscVar.frameNum + 14; % miscVar.frameNum = miscVar.frameNum + 29;
+            video.currentTime = miscVar.frameNum/video.FrameRate;
             miscVar.currentFrame = readFrame(video);
             miscVar.frameNum = miscVar.frameNum + 1;
             videoFig.plotted = imagesc(miscVar.currentFrame);
+            fcnRefreshOutlines
             updatetitletime
             updatebuttoncolor
             fcnSaveNOVar
@@ -230,7 +302,11 @@ switch e.Key
     case 'numpad5' % remove framenum from LL or UR
         fcnNeither
         updatebuttoncolor
-
+        
+    case 'q' % Tag as questionable
+        fcnQuestionableTag
+        updatebuttoncolor
+        
     case 'space'    
         disp('Fake player start/stop')
 end
@@ -240,7 +316,8 @@ end
 function updatetitletime(~,~)
 global miscVar
 
-title(['Time ' num2str(round(miscVar.frameNum/30)) ' / ' num2str(floor(miscVar.totalFrames/30)) ' seconds'])
+title(['Time ' num2str(round(miscVar.frameNum/30,1)) ' / ' num2str(round(miscVar.totalFrames/30,1)) ' seconds'])
+% title(['Time ' num2str(round(miscVar.frameNum/30)) ' / ' num2str(floor(miscVar.totalFrames/30)) ' seconds'])
 end
 
 %% Refresh buttons color
@@ -364,6 +441,11 @@ NOtracking.nLL = NOVar.nLL;
 NOtracking.PathName = NOVar.PathName;
 NOtracking.FileName = NOVar.FileName;
 NOtracking.Questionable = NOVar.Questionable;
+NOtracking.xLL = miscVar.xLL;
+NOtracking.yLL = miscVar.yLL;
+NOtracking.xUR = miscVar.xUR;
+NOtracking.yUR = miscVar.yUR;
+NOtracking.currentFrame = miscVar.currentFrame;
 
 % Update frame viewed
 NOVar.LastFrame = max([NOVar.LastFrame,miscVar.frameNum]);
