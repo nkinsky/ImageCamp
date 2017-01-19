@@ -1,9 +1,8 @@
-function [ neuron_centroid, centroid_dist, neuron_axisratio, ratio_diff, ...
-    neuron_orientation, orientation_diff ] = dist_bw_reg_sessions( BinBlobs_reg, shuffle )
-%[ neuron_centroid, centroid_dist, neuron_axisratio, ratio_diff, neuron_orientation, ...
-% orientation_diff ] = dist_bw_reg_sessions( BinBlobs_reg, shuffle )
-%   Calculate neuron centroid and distance to same centroid in each
-%   registered session.
+function [ centroid, centroid_dist, axisratio, ratio_diff, ...
+    orientation, orientation_diff, avg_corr ] = dist_bw_reg_sessions( ROI_reg, varargin)
+%[ centroid, centroid_dist, axisratio, ratio_diff, orientation, ...
+% orientation_diff, ROI_corr ] = dist_bw_reg_sessions( ROI_reg, ... )
+%   Calculate neuron centroid and distance to between sessions
 % 
 %   Use in conjunction with map_ROIs function, e.g.:
 %
@@ -12,85 +11,118 @@ function [ neuron_centroid, centroid_dist, neuron_axisratio, ratio_diff, ...
 %   dist_bw_reg_sessions ({NeuronROI_base(valid_neurons), mapped_ROIs(valid_neurons)},0);
 %
 % INPUTS
-%   BinBlobs_reg: of the form BinBlobs{session_number}{neuron_number},
+%   ROI_reg: of the form BinBlobs{session_number}{neuron_number},
 %   where each entry is the neuron mask that HAS BEEN REGISTERED back to
 %   the base session
 %
-%   shuffle(optional): 1 = shuffle BinBlobs_reg randomly for each session
+%   'avg_corr' (optional): calculate avg_corr (see below).  Must be
+%   followed by AvgROI (see MakeAvgROI function).
+%
+%   'shuffle' (optional): 1 = shuffle BinBlobs_reg randomly for each session
 %   when calculating centroid_dist, ratio_diff, and orientation_diff
 %   to get shuffled distributions of distances/differences.  0 = no shuffle (default)
 %
+%   'suppress_bar' (optional): suppress progress bar output to screen  
+%
 % OUTPUTS
-%   neuron_centroid: same form as BinBlobs_reg, with x and y coordinates of
-%   the neurons mask centroid
+%   centroid: same form as ROI_reg, with x and y coordinates of
+%   the neuron ROI centroids
 %
 %   centroid_dist: a num_sessions - 1 x num_sessions x num_neurons array
 %   with the distances between neuron centroids
+%
+%   orientation: the orientation, in degrees of the each neuron
+%   ROI's major axis. Same form as ROI_reg
 %   
-%   neuron_axisratio: ratio of minor to major axis for each neuron mask.
-%   Form = 
+%   orientation_diff: difference between neuron orientations. Same format as 
+%   centroid_dist.
+%
+%   axisratio: ratio of major axis length to minor axis length for neuron
+%   ROI.  Sam form as ROI_reg.
+%
+%   avg_corr (optional): correlation between average ROI pixel activations.  Same
+%   format as centroid_dist.
 
-if nargin < 2
-    shuffle = 0;
-end
+%% Parse inputs
+p = inputParser;
+p.addRequired('ROI_reg', @iscell);
+p.addParameter('avg_corr',[],@iscell);
+p.addParameter('shuffle',0, @(a) isnumeric(a) && (a == 0 || a == 1) || ...
+    islogical(a));
+p.addParameter('suppress_bar', false, @(a) islogical(a) || (a == 0 || a == 1));
+p.parse(ROI_reg,varargin{:});
 
-num_sessions = length(BinBlobs_reg);
-num_neurons = length(BinBlobs_reg{1});
+AvgROI = p.Results.avg_corr;
+shuffle = p.Results.shuffle;
+suppress_bar = p.Results.suppress_bar;
+
+corr_flag = iscell(AvgROI); % Set flag to calculate average correlations if entered
+%% Define things
+num_sessions = length(ROI_reg);
+num_neurons = length(ROI_reg{1});
 
 %% Get centroids, axis ratios, and orientations for each neuron
-try
-    for j = 1:num_sessions
-        for k = 1: num_neurons
-            stats_temp = regionprops(BinBlobs_reg{j}{k},'Centroid','MajorAxisLength','MinorAxisLength','Orientation');
-            if length(stats_temp) ~= 1
-                
+
+centroid = cell(num_sessions,1);
+axisratio = cell(num_sessions,1);
+orientation = cell(num_sessions,1);
+for j = 1:num_sessions
+    for k = 1: num_neurons
+        stats_temp = regionprops(ROI_reg{j}{k},'Centroid','MajorAxisLength','MinorAxisLength','Orientation');
+        if length(stats_temp) ~= 1
+            
+            if ~suppress_bar
                 disp(['Multiple or Zero Neuron ROIs detected for Session ' num2str(j) ' Neuron ' num2str(k) '. Skipping'])
-                neuron_centroid{j}{k} = [nan nan];
-                neuron_axisratio{j}(k) = nan;
-                neuron_orientation{j}(k) = nan;
-                
-                continue
-                
             end
-            neuron_centroid{j}{k} = stats_temp.Centroid;
-            neuron_axisratio{j}(k) = stats_temp.MinorAxisLength/stats_temp.MajorAxisLength;
-            neuron_orientation{j}(k) = stats_temp.Orientation;
+            centroid{j}{k} = [nan nan];
+            axisratio{j}(k) = nan;
+            orientation{j}(k) = nan;
+            
+            continue
+            
         end
-        
+        centroid{j}{k} = stats_temp.Centroid;
+        axisratio{j}(k) = stats_temp.MinorAxisLength/stats_temp.MajorAxisLength;
+        orientation{j}(k) = stats_temp.Orientation;
     end
     
-catch
-    disp('error catching in dist_bw_reg_sessions')
-    keyboard
 end
+
 
 %% Calculate difference in centers-of-mass, axis ratio, and orientation
-centroid_dist = nan(num_sessions-1, num_sessions, num_neurons);
-ratio_diff = nan(num_sessions-1, num_sessions, num_neurons);
-orientation_diff = nan(num_sessions-1, num_sessions, num_neurons);
-for k = 1:num_sessions-1
-    for ll = k+1:num_sessions
-        if shuffle == 1
-            neuron_index_use = randperm(num_neurons);
-        elseif shuffle == 0
-            neuron_index_use = 1:num_neurons;
-        end
-        for j = 1:num_neurons
-%             centroid_dist(k,ll,j) = pdist([neuron_centroid{k}{j}; ...
-%                 neuron_centroid{ll}{neuron_index_use(j)}]);
-            centroid_dist(k,ll,j) = sqrt((neuron_centroid{k}{j}(1) - neuron_centroid{ll}{neuron_index_use(j)}(1))^2 ...
-                + (neuron_centroid{k}{j}(2) - neuron_centroid{ll}{neuron_index_use(j)}(2))^2);
-        end
-        try
-            ratio_diff(k,ll,:) = neuron_axisratio{ll}(neuron_index_use) - neuron_axisratio{k};
-            orientation_diff(k,ll,:) = neuron_orientation{ll}(neuron_index_use) - neuron_orientation{k};
-        catch
-            keyboard
-        end
-        
-    end
+centroid_dist = nan(num_neurons, 1);
+ratio_diff = nan(num_neurons, 1);
+orientation_diff = nan(num_neurons, 1);
+avg_corr = nan(num_neurons, 1);
+if shuffle
+    neuron_index_use = randperm(num_neurons);
+elseif ~shuffle
+    neuron_index_use = 1:num_neurons;
 end
 
+% Set-up screen output
+if ~suppress_bar
+    pp = ProgressBar(num_neurons);
+end
+
+for j = 1:num_neurons
+    centroid_dist(j) = sqrt((centroid{1}{j}(1) - centroid{2}{neuron_index_use(j)}(1))^2 ...
+        + (centroid{1}{j}(2) - centroid{2}{neuron_index_use(j)}(2))^2);
+    if corr_flag
+        avg_corr(j) = corr(AvgROI{1}{j}(:), AvgROI{2}{neuron_index_use(j)}(:), ...
+            'type','Spearman');
+    end
+    
+    if ~suppress_bar; pp.progress; end
+    
+end
+
+if ~suppress_bar; pp.stop; end
+
+if num_neurons > 0
+    ratio_diff(:) = axisratio{2}(neuron_index_use) - axisratio{1};
+    orientation_diff(:) = orientation{2}(neuron_index_use) - orientation{1};
+end
 
 end
 
