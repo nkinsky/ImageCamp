@@ -1,6 +1,7 @@
 function [ neuron_id ] = get_neuron_from_ROI(NeuronImage, axes_handle, varargin )
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+% neuron_id = get_neuron_from_ROI(NeuronImage, axes_handle, varargin )
+%
+%   Get the neuron number by clicking on it.
 
 NumNeurons = length(NeuronImage);
 
@@ -36,6 +37,7 @@ catch
             centroids = [centroids; temp(ii).Centroid];
         end
     end
+end
 
 % Get location of neuron centroid from user input
 if ~alt_xy
@@ -51,6 +53,7 @@ xy_diff = centroids - repmat([x,y],NumNeurons,1);
 dist_all = sqrt(xy_diff(:,1).^2 + xy_diff(:,2).^2);
 
 [~, neuron_id] = min(dist_all);
+disp(['You clicked on neuron ' num2str(neuron_id)]);
 
 % Check
 if ~isempty(axes_handle)
