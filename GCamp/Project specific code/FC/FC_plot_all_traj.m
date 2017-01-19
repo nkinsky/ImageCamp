@@ -44,14 +44,15 @@ for j = 1:num_rows
             
             % Change Directory, load appropriate position data, and plot
             % trajectory
-            ChangeDirectory(MD(i).Animal,MD(i).Date,MD(i).Session);
+            clear dirstr
             try
-                load('Pos.mat','xpos_interp','ypos_interp');
+                dirstr = ChangeDirectory(MD(i).Animal,MD(i).Date,MD(i).Session,0);
+                load(fullfile(dirstr,'Pos.mat'),'xpos_interp','ypos_interp');
                 x_use = xpos_interp; y_use = ypos_interp;
                 plot_flag = true;
             catch
                 try
-                load('Pos_temp.mat','Xpix','Ypix')
+                load(fullfile(dirstr,'Pos_temp.mat'),'Xpix','Ypix')
                 x_use = Xpix; y_use = Ypix;
                 disp(['Could not locate Pos.mat for ' MD(i).Env ' session. Using Pos_temp.mat'])
                 plot_flag = true;
@@ -77,6 +78,8 @@ if bar_flag == true
         h = subplot(num_rows_plot, num_cols,num_cols*(num_rows_plot-1)+k);
         FC_plot_freezing( sesh_org{1,k}, sesh_org{2,k}, speed_thresh, h)
         %%% pick up here
+    end
+    
 end
 
 end
