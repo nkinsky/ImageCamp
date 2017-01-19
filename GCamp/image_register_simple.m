@@ -300,7 +300,7 @@ end
 disp('Calculating Distances between cells')
 cm_dist = 100*ones(size(sesh(1).cms,2),size(sesh(2).cms,2)); % Set all values to arbitrarily large distances to start.
 p = ProgressBar(size(sesh(1).cms,2));
-for j = 1:size(sesh(1).cms,2); % Cycle through all base session neurons
+for j = 1:size(sesh(1).cms,2) % Cycle through all base session neurons
     if ~isempty(sesh(1).cms(j).x)
         pos_cm(:,1) = [sesh(1).cms(j).x ; sesh(1).cms(j).y];
         for m = 1:size(sesh(2).cms,2) % get distances to all registration session neurons
@@ -359,7 +359,7 @@ disp('Sorting out multiple base session cells mapping to the same cell in the se
 % Initialize same_neuron variable
 same_neuron = zeros(size(sesh(1).NeuronImage_reg,2),size(sesh(2).NeuronImage_reg,2));
 neuron_id_nan = neuron_id;
-for j = 1:size(sesh(2).NeuronImage_reg,2);
+for j = 1:size(sesh(2).NeuronImage_reg,2)
     % Find cases where more than one neuron in the 1st session maps to
     % the same neuron in the second session
     try % Debugging!

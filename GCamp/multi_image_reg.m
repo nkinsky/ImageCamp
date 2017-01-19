@@ -292,7 +292,7 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
         id_temp = neuron_map.neuron_id;
         n = size(AllMasks,2) + 1;
         load(unique_filename{this_session})
-        for kk = 1:length(is_new_cell);
+        for kk = 1:length(is_new_cell)
             % Add in new neurons to bottom of id_temp
             id_temp{n,1} = is_new_cell(kk);
             % Register mask and mean mask for each neuron to base session
