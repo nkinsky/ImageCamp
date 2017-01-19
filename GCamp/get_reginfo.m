@@ -6,7 +6,7 @@ function [tform_struct ] = get_reginfo( base_folder, reg_folder, RegistrationInf
 
 % Get
 try
-for k = 1:size(RegistrationInfoX,2);
+for k = 1:size(RegistrationInfoX,2)
     if ~isempty(base_folder)
         temp_base(k) = strcmpi(fullfile(base_folder, 'ICmovie_min_proj.tif'), ...
             RegistrationInfoX(k).base_file);
