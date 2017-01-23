@@ -24,7 +24,7 @@ function [ reg_stats ] = neuron_reg_qc( base_struct, reg_struct, varargin )
 %   OUTPUTS:
 %
 %   reg_stats: a data structure containing centroid_dist, ratio_diff,
-%   orientation_diff, and avg_corr from dist_bw_reg_sessions
+%   orientation_diff, avg_corr, and centroid_angle from dist_bw_reg_sessions
 
 %% Parse Inputs
 p = inputParser;
@@ -35,12 +35,15 @@ p.addParameter('shuffle', 0, @(a) isnumeric(a));
 p.addParameter('shift', false, @isnumeric);
 p.addParameter('plot', false, @(a) islogical(a) || (isnumeric(a) && ...
     a == 0 || a == 1) || ishandle(a));
+p.addParameter('shift_dist',4, @(a) isnumeric(a) && a > 0 );
+p.addParameter('batch_mode',0, @(a) a == 0 || a == 1);
 p.parse(base_struct, reg_struct, varargin{:});
 
 name_append = p.Results.name_append;
 num_shuffles = p.Results.shuffle;
 num_shifts = p.Results.shift;
-
+shift_dist = p.Results.shift_dist;
+batch_mode = p.Results.batch_mode;
 % Parse out where to plot if specified
 if ~ishandle(p.Results.plot)
     plot_flag = p.Results.plot;
@@ -56,11 +59,19 @@ end
 reg_path = ChangeDirectory_NK(reg_struct,0);
 base_path = ChangeDirectory_NK(base_struct,0);
 
+reg_stats.base = base_struct;
+reg_stats.reg = reg_struct;
+
 % Load neuron ROI info
-load(fullfile(base_path,'FinalOutput.mat'),'NeuronImage','NeuronAvg');
+if batch_mode == 0
+    load(fullfile(base_path,'FinalOutput.mat'),'NeuronImage','NeuronAvg');
+elseif batch_mode == 1
+    load(fullfile(base_path,['Reg_NeuronIDs_updatemasks0' name_append '.mat']));
+end
 ROI_base = NeuronImage;
 ROIavg_base = MakeAvgROI(NeuronImage,NeuronAvg);
 load(fullfile(reg_path,'FinalOutput.mat'),'NeuronImage','NeuronAvg');
+
 
 % Get registration between sessions
 neuron_map = neuron_register(base_struct.Animal, base_struct.Date, ...
@@ -81,7 +92,7 @@ ROIavg_reg = cellfun(@(a) imwarp_quick(a,reginfo),ROIavg,'UniformOutput',0);
 disp(['Calculating Neuron Registration Metrics for ' base_struct.Animal ' ' ...
     base_struct.Date ' session ' num2str(base_struct.Session) ' to ' ...
     reg_struct.Date ' session ' num2str(reg_struct.Session)])
-[~, reg_stats.cent_d, ~, ~, ~, reg_stats.orient_diff, reg_stats.avg_corr] = ...
+[~, reg_stats.cent_d, ~, ~, ~, reg_stats.orient_diff, reg_stats.avg_corr, reg_stats.cent_angle] = ...
     dist_bw_reg_sessions ({ROI_base(valid_neurons), mapped_ROIs(valid_neurons)},...
     'avg_corr', {ROIavg_base(valid_neurons), mapped_ROIavg(valid_neurons)});
 
@@ -110,59 +121,47 @@ reg_stats.shuffle.orient_diff = orient_diff_shuf;
 reg_stats.shuffle.avg_corr = avg_corr_shuf;
 %% Do shift if specified
 
-angle_range = 0;
-dist_range = 10;
+rot_angle_range = 0; % Rotation angle - suggest keeping at zero
 
 reg_stats.shift.cent_d = [];
 reg_stats.shift.orient_diff = [];
 reg_stats.shift.avg_corr = [];
+reg_stats.shift.cent_angle = [];
 if num_shifts > 0
     disp('Calculating intentionally shifted registration metrics (4-pixel offset)')
     pp = ProgressBar(num_shifts);
+    n = 1; % Set shift counter
     for j = 1:num_shifts
     
-        jitter_mat = make_jitter_mat(dist_range, angle_range);
+        jitter_mat = make_jitter_mat(shift_dist, rot_angle_range, num_shifts, n);
+        n = n +1;
         
         % Get registration between sessions
         neuron_map = neuron_register(base_struct.Animal, base_struct.Date, ...
             base_struct.Session, base_struct.Date, base_struct.Session, ...
             'add_jitter', jitter_mat, 'min_thresh', 3 , ...
             'save_on', false, 'suppress_output', true);
-%         neuron_map = neuron_register(base_struct.Animal, base_struct.Date, ...
-%             base_struct.Session, base_struct.Date, base_struct.Session, ...
-%             'add_jitter', jitter_mat, 'min_thresh', max(dist_range)+1 , ...
-%             'save_on', false, 'suppress_output', true);
-%         neuron_map = neuron_register(base_struct.Animal, base_struct.Date, ...
-%             base_struct.Session, reg_struct.Date, reg_struct.Session, ...
-%             'add_jitter', jitter_mat, 'min_thresh', max(dist_range)+1 , ...
-%             'save_on', false, 'suppress_output', true);
-%         
+
         % Register neuron ROIs and AvgROIs to base_session
         [reginfo, ~] = image_registerX(base_struct.Animal, ...
             base_struct.Date, base_struct.Session, base_struct.Date, ...
             base_struct.Session, 'suppress_output', true); % Get transform between sessions
-%         [reginfo, ~] = image_registerX(base_struct.Animal, ...
-%             base_struct.Date, reg_struct.Session, reg_struct.Date, ...
-%             base_struct.Session, 'suppress_output', true); % Get transform between sessions
         
         reginfo.tform.T = reginfo.tform.T*jitter_mat;
         ROI_reg = cellfun(@(a) imwarp_quick(a,reginfo), ROI_base,'UniformOutput',0);
         ROIavg_reg = cellfun(@(a) imwarp_quick(a,reginfo), ROIavg_base,'UniformOutput',0);
-%         load(fullfile(reg_path,'FinalOutput.mat'),'NeuronImage','NeuronAvg');
-%         ROI_reg = cellfun(@(a) imwarp_quick(a,reginfo), NeuronImage,'UniformOutput',0);
-%         ROIavg_reg = cellfun(@(a) imwarp_quick(a,reginfo), ...
-%             MakeAvgROI(NeuronImage,NeuronAvg),'UniformOutput',0);
-        
+
         % Calculate metrics in dist_bw_reg_sessions
         [ mapped_ROIs, valid_neurons ] = map_ROIs( neuron_map.neuron_id, ROI_reg );
         [ mapped_ROIavg, ~] = map_ROIs( neuron_map.neuron_id, ROIavg_reg );
-        [~, temp3, ~, ~, ~, temp2, temp] = dist_bw_reg_sessions (...
+        [~, temp3, ~, ~, ~, temp2, temp, temp4] = dist_bw_reg_sessions (...
             {ROI_base(valid_neurons), mapped_ROIs(valid_neurons)},...
             'avg_corr', {ROIavg_base(valid_neurons), mapped_ROIavg(valid_neurons)},...
             'suppress_bar', true);
         reg_stats.shift.avg_corr = [reg_stats.shift.avg_corr; temp];
         reg_stats.shift.orient_diff = [reg_stats.shift.orient_diff; temp2];
         reg_stats.shift.cent_d = [reg_stats.shift.cent_d; temp3];
+        reg_stats.shift.cent_angle = [reg_stats.shift.cent_angle; temp4];
         pp.progress;
         
         % de-bugging code here - un-comment to see how neurons map for each
@@ -242,19 +241,17 @@ end
 end
 
 %% Shift/shuffle sub-function
-function [jitter_mat] = make_jitter_mat(dist_range, angle_range)
-    % Offsets transform by a random rotation and random offset within the
-    % angle range and distance range specified
-   alpha = 0:5:355; % offset can be at 15 degree increments
-   num_dist = length(dist_range);
+function [jitter_mat] = make_jitter_mat(offset_dist, angle_range, num_shifts, counter)
+    % Creates a matrix to offset the image by offset_dist at angle
+    % alpha_use (see below) and rotate it by angle_range.
+   alpha = 0:360/num_shifts:360-360/num_shifts; % direction of shift can be at 5 degree increments
    num_angles = length(angle_range);
-   dist_use = dist_range(randperm(num_dist,1));
-   angle_use = angle_range(randperm(num_angles,1));
-   alpha_use = alpha(randperm(length(alpha),1));
+   angle_use = angle_range(randperm(num_angles,1)); % Shoose rotation angle 
+   alpha_use = alpha(counter); % Pick next shift angle
    
    jitter_mat = [cosd(angle_use) -sind(angle_use) 0; ...
                 sind(angle_use) cosd(angle_use) 0; ...
-                dist_use*cosd(alpha_use) dist_use*sind(alpha_use) 1];
+                offset_dist*cosd(alpha_use) offset_dist*sind(alpha_use) 1];
         
 end
 
