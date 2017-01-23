@@ -1,5 +1,5 @@
 function [ centroid, centroid_dist, axisratio, ratio_diff, ...
-    orientation, orientation_diff, avg_corr ] = dist_bw_reg_sessions( ROI_reg, varargin)
+    orientation, orientation_diff, avg_corr, centroid_angle ] = dist_bw_reg_sessions( ROI_reg, varargin)
 %[ centroid, centroid_dist, axisratio, ratio_diff, orientation, ...
 % orientation_diff, ROI_corr ] = dist_bw_reg_sessions( ROI_reg, ... )
 %   Calculate neuron centroid and distance to between sessions
@@ -91,6 +91,7 @@ end
 
 %% Calculate difference in centers-of-mass, axis ratio, and orientation
 centroid_dist = nan(num_neurons, 1);
+centroid_angle = nan(num_neurons, 1);
 ratio_diff = nan(num_neurons, 1);
 orientation_diff = nan(num_neurons, 1);
 avg_corr = nan(num_neurons, 1);
@@ -108,6 +109,9 @@ end
 for j = 1:num_neurons
     centroid_dist(j) = sqrt((centroid{1}{j}(1) - centroid{2}{neuron_index_use(j)}(1))^2 ...
         + (centroid{1}{j}(2) - centroid{2}{neuron_index_use(j)}(2))^2);
+    centroid_angle(j) = atan2(centroid{2}{neuron_index_use(j)}(2) - centroid{1}{j}(2), ...
+        centroid{2}{neuron_index_use(j)}(1) - centroid{1}{j}(1));
+        
     if corr_flag
         avg_corr(j) = corr(AvgROI{1}{j}(:), AvgROI{2}{neuron_index_use(j)}(:), ...
             'type','Spearman');
