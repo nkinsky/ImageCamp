@@ -80,6 +80,15 @@ videoFig.LoadVideoButton = uicontrol('Style','pushbutton','String','LOAD VIDEO',
 videoFig.JumpFrameButton = uicontrol('Style','pushbutton','String','JUMP TO TIME',...
                              'Position',[miscVar.buttonLeftEdge,miscVar.upperLimit - miscVar.buttonStepDown*7,...
                              miscVar.buttonWidth,30], 'Callback',{@fcnJumpFrameButton});
+                         
+videoFig.SaveTempFileButton = uicontrol('Style','pushbutton','String','SAVE TEMP FILE',...
+                             'Position',[miscVar.buttonSecondCol,miscVar.upperLimit - miscVar.buttonStepDown*6,...
+                             miscVar.buttonWidth,30],'Callback',{@fcnSaveTempFile}); 
+                 
+videoFig.SaveFinalFileButton = uicontrol('Style','pushbutton','String','SAVE FINAL FILE',...
+                             'Position',[miscVar.buttonSecondCol,miscVar.upperLimit - miscVar.buttonStepDown*7,...
+                             miscVar.buttonWidth,30], 'Callback',{@fcnSaveFinalFile});
+                         
 
 videoFig.DrawLLoutlineButton = uicontrol('Style','pushbutton','String','DRAW LL outline',...
                              'Position',[miscVar.buttonLeftEdge,miscVar.upperLimit - miscVar.buttonStepDown*5,...
@@ -201,6 +210,32 @@ if miscVar.VideoLoadedFlag==1
     end 
 end    
 end
+%%
+function fcnJumpLastFrame(~,~)
+global videoFig
+global miscVar
+global video
+global NOVar
+
+if miscVar.VideoLoadedFlag==1
+    try
+        jumpFrame = NOVar.LastFrame;
+        if jumpFrame>0 && jumpFrame <=miscVar.totalFrames
+            miscVar.frameNum = jumpFrame-1;
+            miscVar.currentTime = miscVar.frameNum/video.FrameRate;
+            miscVar.currentFrame = readFrame(video);
+            miscVar.frameNum = miscVar.frameNum + 1;
+            videoFig.plotted = imagesc(miscVar.currentFrame);
+            title(['Time ' num2str(round(miscVar.frameNum/30)) ' / ' num2str(round(miscVar.totalFrames/30)) ' seconds'])
+            fcnSaveNOVar
+        else
+            msgbox('Error jumping to last frame accessed','Error','error')
+        end
+    catch
+        msgbox('Why would you even?')
+    end 
+end    
+end
 
 %%
 function fcnLoadVideo(~,~)
@@ -240,9 +275,8 @@ try
                 miscVar.yUR = NOtracking.yUR;
                 fcnRefreshOutlines;
                 
-%                 % Load last-frame visited
-%                 miscVar.currentFrame = NOtracking.currentFrame;
-%                 videoFig.plotted = imagesc(miscVar.currentFrame);
+                % Load last frame visited
+                fcnJumpLastFrame;
                 
             elseif strcmpi(use_existing,'n')
                 save(fullfile(NOVar.PathName, 'NOtracking_old.mat'),'temp');
@@ -432,6 +466,39 @@ end
 
 %% Save NOVar to workspace as non-global variable
 function fcnSaveNOVar(~,~)
+global miscVar
+
+NOtracking = fcnUpdateNOVar;
+
+time_use = round(NOtracking.LastFrame/30);
+if time_use < floor(miscVar.totalFrames/30)
+    xlabel('YOU STILL HAVE FRAMES LEFT TO VIEW','Color','Red')
+else
+    xlabel('You have viewed all frames','Color','Black')
+end
+
+save(fullfile(NOtracking.PathName,'NOtracking.mat'),'NOtracking');
+
+end
+
+%% Save Temp Video - saves a file that is NOT overwritten if NOvar.mat is re-used and has date/time-stamp
+function fcnSaveTempFile(~,~)
+
+NOtracking = fcnUpdateNOVar;
+save(fullfile(NOtracking.PathName,['NOtracking' datestr(now,30) '.mat']),'NOtracking');
+
+end
+
+%% Save Final Video - saves a final NOtracking file when finished.  Only overwritten when button is pushed.
+function fcnSaveFinalFile(~,~)
+
+NOtracking = fcnUpdateNOVar;
+save(fullfile(NOtracking.PathName,'NOtracking_final.mat'),'NOtracking');
+
+end
+
+%% Update NOVar variable
+function [NOtracking] = fcnUpdateNOVar(~,~)
 global NOVar
 global miscVar
 NOtracking.LLframes = NOVar.LLframes;
@@ -450,14 +517,4 @@ NOtracking.currentFrame = miscVar.currentFrame;
 % Update frame viewed
 NOVar.LastFrame = max([NOVar.LastFrame,miscVar.frameNum]);
 NOtracking.LastFrame = NOVar.LastFrame;
-time_use = round(NOtracking.LastFrame/30);
-if time_use < floor(miscVar.totalFrames/30)
-    xlabel('YOU STILL HAVE FRAMES LEFT TO VIEW','Color','Red')
-else
-    xlabel('You have viewed all frames','Color','Black')
 end
-
-save(fullfile(NOtracking.PathName,'NOtracking.mat'),'NOtracking');
-
-end
-
