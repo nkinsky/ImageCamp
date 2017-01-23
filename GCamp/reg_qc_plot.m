@@ -8,7 +8,7 @@ p.addRequired('centroid_dist', @isnumeric)
 p.addRequired('orient_diff', @isnumeric)
 p.addRequired('avg_corr', @isnumeric)
 p.addOptional('h', 0, @ishandle)
-p.addParameter('plot_shuf', 0, @(a) isnumeric(a) || a == 0 || a == 1);
+p.addParameter('plot_shuf', 0, @(a) isnumeric(a) || a == 0 || a == 1 || a == 2); % 0 = normal, 1 = shuffled, 2 = shifted
 p.parse(centroid_dist, orient_diff, avg_corr, varargin{:});
 
 h = p.Results.h;
@@ -55,7 +55,7 @@ function [] = plotfun(a, shuf)
 
 if shuf == 0
     ecdf(a);
-elseif shuf == 1
+elseif shuf == 1 || shuf == 2
     [f, x] = ecdf(a);
     hs2 = stairs(x,f);
     set(hs2,'LineStyle','--')
