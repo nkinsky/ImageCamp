@@ -138,7 +138,7 @@ G48_botharenas = G48_botharenas([1 2 9 10 11 12 3 4 5 13 14 6 7 8 15 16]);
 G48_both_manual_limits = [0 0 0 0 0 0 0 0 1 1 1 1 1 0 0 0]; %%% Is this correct?  Manual limits on 1st square session?
 
 %% Check script
-sesh_check = G30_oct;
+sesh_check = G48_square;
 fo_exist = [];
 min_exist = [];
 pf_exist = [];
