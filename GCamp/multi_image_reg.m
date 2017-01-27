@@ -68,90 +68,58 @@ function [Reg_NeuronIDs] = multi_image_reg(base_struct, reg_struct, varargin)
 %               session.
 %               crappy: Neurons that map onto a neuron that another neuron
 %               is mapping to. 
-%
-%  Version Tracking - Current version is 0.85.
-%  0.8: only tracks neurons that correspond to neurons from the 1st session.
-%  Does NOT include capability to map new cells from the 2nd session onto
-%  subsequent sessions (yet!).
-%
-%  0.85: Save all NeuronImage masks as you progress (i.e. add in masks
-%  of new neurons found in subsequent sessions).  Test by registering two
-%  sessions each directly to the base session (e.g. 1-2 and 1-3), then
-%  comparing the 1-3 mapping you get when you register through session 2
-%  (e.g. 1-2 and 2-3). Results - ~5% of cells don't pass the test, the rest do, with
-%  the exception of those that have multiple maps.
-%  Currently anytime a cell has multiple cells mapping
-%  to it from another session it will not be included in future analyses!
-%
-%  For 0.9: take care of multiple mapping cells by letting arbitrarily
-%  assining the 2nd session cell to have the first of multiple cells from
-%  the base session register to it.
     
+    
+%% Check for varargins
 
-%% Get base path & number of sessions
+p = inputParser;
+p.addRequired('base_struct', @(a) isstruct(a) && length(a) == 1);
+p.addRequired('reg_struct', @(a) isstruct(a) && length(a) >= 0);
 
-    if isempty(base_struct)
-        [~, base_path] = uigetfile('*.tif', 'Pick base file : ');
-        
-        % Pull legit animal name, date, and session based on working folder
-        % location
-        [ base_struct(1).Animal, base_struct(1).Date,...
-            base_struct(1).Session ] = ChangeDirectorybackwards( base_path );
-    elseif ~isempty(base_struct)
-        currdir = cd;
-        base_path = ChangeDirectory(base_struct.Animal, base_struct.Date, ...
-            base_struct.Session);
-        cd(currdir);
-    end
-    
-    if isempty(reg_struct)
-        num_sessions = input('How many sessions do you wish to register? ');
-    else
-        num_sessions = length(reg_struct);
-    end
-    
-    %% Check for varargins
-    check_neuron_mapping = zeros(1,num_sessions); % Default varlue
-    update_masks = 0; % Default value
-    use_neuron_masks = 0; % default
-    name_append = '';
-    name_append_j = '';
-    name_append_alt = '';
-    name_append_mask = '';
-    alt_reg_tform = []; 
-    for j = 1:length(varargin)
-        if strcmpi('check_neuron_mapping',varargin{j})
-            check_neuron_mapping = varargin{j+1};
-        end
-        if strcmpi('update_masks',varargin{j})
-            update_masks = varargin{j+1};
-        end   
-        if strcmpi('use_neuron_masks',varargin{j})
-            use_neuron_masks = varargin{j+1};
-            if use_neuron_masks == 1
-                name_append_mask = '_regbyneurons';
-            end
-        end
-        if strcmpi('use_alternate_reg',varargin{j})
-            alt_reg_tform = varargin{j+1};
-            name_append_alt = varargin{j+2};
-        end
-        if strcmpi('add_jitter',varargin{j})
-            jitter_mat = varargin{j+1};
-            name_append_j = varargin{j+2};
-        end
-        if strcmpi('name_append',varargin{j})
-            name_append = varargin{j+1};
-        end
-    end
-    
-    % Name to append to RegInfo file if the applied transform has been
-    % modified from normal
-    name_append_reginfo = [name_append_mask name_append_alt name_append_j]; 
+p.addParameter('check_neuron_mapping', 0, @(a) a == 0 || a == 1);
 
-    if length(check_neuron_mapping) == 1 && length(check_neuron_mapping) < num_sessions
-        check_neuron_mapping = ones(1,num_sessions)*check_neuron_mapping;
+
+check_neuron_mapping = zeros(1,num_sessions); % Default varlue
+update_masks = 0; % Default value
+use_neuron_masks = 0; % default
+name_append = '';
+name_append_j = '';
+name_append_alt = '';
+name_append_mask = '';
+alt_reg_tform = [];
+for j = 1:length(varargin)
+    if strcmpi('check_neuron_mapping',varargin{j})
+        check_neuron_mapping = varargin{j+1};
     end
+    if strcmpi('update_masks',varargin{j})
+        update_masks = varargin{j+1};
+    end
+    if strcmpi('use_neuron_masks',varargin{j})
+        use_neuron_masks = varargin{j+1};
+        if use_neuron_masks == 1
+            name_append_mask = '_regbyneurons';
+        end
+    end
+    if strcmpi('use_alternate_reg',varargin{j})
+        alt_reg_tform = varargin{j+1};
+        name_append_alt = varargin{j+2};
+    end
+    if strcmpi('add_jitter',varargin{j})
+        jitter_mat = varargin{j+1};
+        name_append_j = varargin{j+2};
+    end
+    if strcmpi('name_append',varargin{j})
+        name_append = varargin{j+1};
+    end
+end
+
+% Name to append to RegInfo file if the applied transform has been
+% modified from normal
+name_append_reginfo = [name_append_mask name_append_alt name_append_j];
+
+if length(check_neuron_mapping) == 1 && length(check_neuron_mapping) < num_sessions
+    check_neuron_mapping = ones(1,num_sessions)*check_neuron_mapping;
+end
 %% Do the registrations. 
     %Preallocate.
     reg_filename = cell(1,num_sessions);

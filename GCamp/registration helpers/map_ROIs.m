@@ -39,7 +39,7 @@ if iscell(neuron_map)
     valid_neurons = find(cellfun(@(a) ~isempty(a) && ~isnan(a), neuron_map));
     sesh2_neurons = cell2mat(neuron_map(valid_neurons));
 elseif isnumeric(neuron_map)
-    valid_neurons = find(neuron_map ~= 0);
+    valid_neurons = find(neuron_map ~= 0 & ~isnan(neuron_map));
     sesh2_neurons = neuron_map(valid_neurons);
 end
 

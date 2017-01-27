@@ -26,6 +26,10 @@ function [ reg_stats ] = neuron_reg_qc( base_struct, reg_struct, varargin )
 %   reg_stats: a data structure containing centroid_dist, ratio_diff,
 %   orientation_diff, avg_corr, and centroid_angle from dist_bw_reg_sessions
 
+%% NK to-do
+% Make if shift 5 and 10 pixels in all 8 cardinal directions and plot those
+% two as a reference (as an option?).  Orient_diff only!
+
 %% Parse Inputs
 p = inputParser;
 p.addRequired('base_struct', @(a) isstruct(a) && length(a) == 1);
