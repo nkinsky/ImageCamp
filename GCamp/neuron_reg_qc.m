@@ -62,22 +62,33 @@ base_path = ChangeDirectory_NK(base_struct,0);
 reg_stats.base = base_struct;
 reg_stats.reg = reg_struct;
 
-% Load neuron ROI info
+% Load neuron ROI info, get registration info between sessions
 if batch_mode == 0
     load(fullfile(base_path,'FinalOutput.mat'),'NeuronImage','NeuronAvg');
-elseif batch_mode == 1
-    load(fullfile(base_path,['Reg_NeuronIDs_updatemasks0' name_append '.mat']));
-end
-ROI_base = NeuronImage;
-ROIavg_base = MakeAvgROI(NeuronImage,NeuronAvg);
-load(fullfile(reg_path,'FinalOutput.mat'),'NeuronImage','NeuronAvg');
-
-
-% Get registration between sessions
-neuron_map = neuron_register(base_struct.Animal, base_struct.Date, ...
+    ROI_base = NeuronImage;
+    ROIavg_base = MakeAvgROI(NeuronImage,NeuronAvg);
+    
+    neuron_map = neuron_register(base_struct.Animal, base_struct.Date, ...
     base_struct.Session, reg_struct.Date, reg_struct.Session, ...
     'name_append', name_append, 'suppress_output', true);
-  
+    map_use = neuron_map.neuron_id;
+
+elseif batch_mode == 1 % Check registration to ALL ROIs.
+    load(fullfile(base_path,['Reg_NeuronIDs_updatemasks0' name_append '.mat']));
+    ROI_base = Reg_NeuronIDs(1).AllMasks;
+    ROIavg_base = Reg_NeuronIDs(1).AllMasksMean;
+    
+    load(fullfile(base_path,'batch_session_map'));
+    batch_session_map = fix_batch_session_map( batch_session_map); % Fix it if pre-bugfix
+    reg_index_use = get_index(batch_session_map.session, reg_struct);
+    last_row = find(batch_session_map.map(:,reg_index_use+1) ...
+        == min(Reg_NeuronIDs(reg_index_use-1).new_neurons)) - 1; % All neuron masks after this are from the registration itself
+    map_use = batch_session_map.map(1:last_row, reg_index_use + 1);
+    
+end
+
+load(fullfile(reg_path,'FinalOutput.mat'),'NeuronImage','NeuronAvg');
+
 % Register neuron ROIs and AvgROIs to base_session
 [reginfo, ~] = image_registerX(base_struct.Animal, ...
     base_struct.Date, base_struct.Session, reg_struct.Date, ...
@@ -87,8 +98,8 @@ ROIavg = MakeAvgROI(NeuronImage,NeuronAvg);
 ROIavg_reg = cellfun(@(a) imwarp_quick(a,reginfo),ROIavg,'UniformOutput',0);
 
 % Calculate metrics in dist_bw_reg_sessions
-[ mapped_ROIs, valid_neurons ] = map_ROIs( neuron_map.neuron_id, ROI_reg );
-[ mapped_ROIavg, ~] = map_ROIs( neuron_map.neuron_id, ROIavg_reg );
+[ mapped_ROIs, valid_neurons ] = map_ROIs( map_use, ROI_reg );
+[ mapped_ROIavg, ~] = map_ROIs( map_use, ROIavg_reg );
 disp(['Calculating Neuron Registration Metrics for ' base_struct.Animal ' ' ...
     base_struct.Date ' session ' num2str(base_struct.Session) ' to ' ...
     reg_struct.Date ' session ' num2str(reg_struct.Session)])
@@ -141,6 +152,7 @@ if num_shifts > 0
             base_struct.Session, base_struct.Date, base_struct.Session, ...
             'add_jitter', jitter_mat, 'min_thresh', 3 , ...
             'save_on', false, 'suppress_output', true);
+        map_use = neuron_map.neuron_id;
 
         % Register neuron ROIs and AvgROIs to base_session
         [reginfo, ~] = image_registerX(base_struct.Animal, ...
@@ -152,8 +164,8 @@ if num_shifts > 0
         ROIavg_reg = cellfun(@(a) imwarp_quick(a,reginfo), ROIavg_base,'UniformOutput',0);
 
         % Calculate metrics in dist_bw_reg_sessions
-        [ mapped_ROIs, valid_neurons ] = map_ROIs( neuron_map.neuron_id, ROI_reg );
-        [ mapped_ROIavg, ~] = map_ROIs( neuron_map.neuron_id, ROIavg_reg );
+        [ mapped_ROIs, valid_neurons ] = map_ROIs( map_use, ROI_reg );
+        [ mapped_ROIavg, ~] = map_ROIs( map_use, ROIavg_reg );
         [~, temp3, ~, ~, ~, temp2, temp, temp4] = dist_bw_reg_sessions (...
             {ROI_base(valid_neurons), mapped_ROIs(valid_neurons)},...
             'avg_corr', {ROIavg_base(valid_neurons), mapped_ROIavg(valid_neurons)},...
@@ -255,4 +267,17 @@ function [jitter_mat] = make_jitter_mat(offset_dist, angle_range, num_shifts, co
         
 end
 
+%% Get session index in batch_map
+function [reg_index] = get_index(session_list, session_to_match)
+animal_list = {session_list(:).Animal};
+date_list = {session_list(:).Date};
+sesh_list = {session_list(:).Session};
+
+animal_log = strcmpi(animal_list, session_to_match.Animal);
+date_log = strcmpi(date_list, session_to_match.Date);
+sesh_log = cellfun(@(a) a == session_to_match.Session, sesh_list);
+
+reg_index = find(animal_log & date_log & sesh_log);
+    
+end
 
