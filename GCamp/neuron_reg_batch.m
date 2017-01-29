@@ -195,4 +195,8 @@ save_name = ['batch_session_map' name_append '.mat'];
 
 save(fullfile(base_dir,save_name),'batch_session_map')
 
+%% Step 5: Plot out quality control plots
+
+reg_qc_plot_batch(base_struct, reg_struct, 'batch_mode', 1);
+
 end

@@ -23,13 +23,8 @@ sesh1_neurons = neuron_range{1}(1):neuron_range{1}(2);
 map_sesh1_sesh2 = zeros(neuron_range{1}(2),1);
 for j = 1:length(sesh1_neurons)
     find_neuron1 = find(j == map{1}); % Find index for 1st session neuron
-    try
     if find_neuron1 ~= 0
         map_sesh1_sesh2(j) = map{2}(find_neuron1);
     end
-    catch
-        keyboard
-    end
-
 end
 

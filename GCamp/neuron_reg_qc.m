@@ -40,7 +40,7 @@ p.addParameter('shift', false, @isnumeric);
 p.addParameter('plot', false, @(a) islogical(a) || (isnumeric(a) && ...
     a == 0 || a == 1) || ishandle(a));
 p.addParameter('shift_dist',4, @(a) isnumeric(a) && a > 0 );
-p.addParameter('batch_mode',0, @(a) a == 0 || a == 1);
+p.addParameter('batch_mode',0, @(a) a == 0 || a == 1 || a == 2);
 p.parse(base_struct, reg_struct, varargin{:});
 
 name_append = p.Results.name_append;
@@ -67,17 +67,24 @@ reg_stats.base = base_struct;
 reg_stats.reg = reg_struct;
 
 % Load neuron ROI info, get registration info between sessions
-if batch_mode == 0
+if batch_mode == 0 || batch_mode == 1
     load(fullfile(base_path,'FinalOutput.mat'),'NeuronImage','NeuronAvg');
     ROI_base = NeuronImage;
     ROIavg_base = MakeAvgROI(NeuronImage,NeuronAvg);
     
-    neuron_map = neuron_register(base_struct.Animal, base_struct.Date, ...
-    base_struct.Session, reg_struct.Date, reg_struct.Session, ...
-    'name_append', name_append, 'suppress_output', true);
-    map_use = neuron_map.neuron_id;
+    if batch_mode == 0 % Use direct registration between sessions (good unless you are mapping multiple sessions)
+        neuron_map = neuron_register(base_struct.Animal, base_struct.Date, ...
+            base_struct.Session, reg_struct.Date, reg_struct.Session, ...
+            'name_append', name_append, 'suppress_output', true);
+        map_use = neuron_map.neuron_id;
+    elseif batch_mode == 1 % Use final vetted map from neuron_reg_batch (better, conservative)
+        load(fullfile(base_path,'batch_session_map.mat')); % Load batch map
+        batch_session_map = fix_batch_session_map( batch_session_map);  % Fix it if pre-bugfix
+        reg_index_use = get_index(batch_session_map.session, reg_struct);
+        map_use = get_neuronmap_from_batchmap(batch_session_map.map, 1, reg_index_use);
+    end
 
-elseif batch_mode == 1 % Check registration to ALL ROIs.
+elseif batch_mode == 2 % Check registration to ALL ROIs (including those appended from each session, less conservative).
     load(fullfile(base_path,['Reg_NeuronIDs_updatemasks0' name_append '.mat']));
     ROI_base = Reg_NeuronIDs(1).AllMasks;
     ROIavg_base = Reg_NeuronIDs(1).AllMasksMean;
