@@ -1,7 +1,7 @@
 function [ ] = get_grin_diam( image_file )
 % Function to get diameter of grin lens in
 
-keyboard
+% keyboard
 
 pixel_move = 10;
 %% Load Files
@@ -73,11 +73,13 @@ while ~strcmpi(ok,'y')
 %     xc = coords(1); yc = coords(2); rad = coords(3);
 end
 
-[filepath filename ext] = fileparts(image_file);
+[filepath, filename, ext] = fileparts(image_file);
+if isempty(filepath)
+    filepath = pwd; % Assume current directory if filepath comes up empty
+end
 d = date;
 
 save( [filepath '\GrinRadiusData.mat'], 'filepath', 'filename', 'd','xc', 'yc', 'rad')
 
-keyboard
 end
 
