@@ -139,9 +139,9 @@ G48_both_manual_limits = [0 0 0 0 0 0 0 0 1 1 1 1 1 0 0 0]; %%% Is this correct?
 
 %% Check script
 sesh_check = G48_square;
-fo_exist = [];
-min_exist = [];
-pf_exist = [];
+fo_exist = false(1,length(sesh_check));
+min_exist = false(1,length(sesh_check));
+pf_exist = false(1,length(sesh_check));
 for j = 1:length(sesh_check) 
     dirstr = ChangeDirectory(sesh_check(j).Animal, sesh_check(j).Date, ...
         sesh_check(j).Session,0); 
