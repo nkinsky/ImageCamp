@@ -136,6 +136,26 @@ ROIavg = MakeAvgROI(NeuronImage,NeuronAvg);
 base_masks = NeuronImage;
 base_masks_mean = ROIavg;
 
+% Pre-allocate
+Reg_NeuronIDs(num_sessions).mouse = [];
+Reg_NeuronIDs(num_sessions).base_date = [];
+Reg_NeuronIDs(num_sessions).base_session = [];
+Reg_NeuronIDs(num_sessions).base_path = [];
+Reg_NeuronIDs(num_sessions).base_cms = [];
+Reg_NeuronIDs(num_sessions).reg_date = [];
+Reg_NeuronIDs(num_sessions).reg_session = [];
+Reg_NeuronIDs(num_sessions).reg_path = [];
+Reg_NeuronIDs(num_sessions).reg_cms = [];
+Reg_NeuronIDs(num_sessions).AllMasks = [];
+Reg_NeuronIDs(num_sessions).AllMasksMean = [];
+Reg_NeuronIDs(num_sessions).neuron_id = [];
+Reg_NeuronIDs(num_sessions).new_neurons = [];
+Reg_NeuronIDs(num_sessions).multiple_maps = [];
+Reg_NeuronIDs(num_sessions).same_neuron = [];
+Reg_NeuronIDs(num_sessions).num_bad_cells = [];
+Reg_NeuronIDs(num_sessions).update_masks = [];
+Reg_NeuronIDs(num_sessions).use_neuron_masks = [];
+
 for this_session = 1:num_sessions
     %Display.
     disp(['Registering ', mouse ' ' reg_struct(this_session).Date, ' session ' ...
@@ -255,7 +275,7 @@ for this_session = 1:num_sessions
     save (reg_filename, 'Reg_NeuronIDs','-v7.3');
 end
 
-%% Bulid cell_map from Reg_NeuronIDs and save it
+%% Build cell_map from Reg_NeuronIDs and save it
 all_session_map = build_multisesh_mapping(Reg_NeuronIDs);
 Reg_NeuronIDs(1).all_session_map = all_session_map;
 
