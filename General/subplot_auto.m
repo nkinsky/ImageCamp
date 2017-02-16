@@ -12,7 +12,9 @@ function [h] = subplot_auto( n_total, n )
 % 
 % Example: subplot_auto(3,2) is the same as subplot(2,2,3);
 
-if n_total <= 2
+if n_total == 1
+    h = subplot(1,1,n);
+elseif n_total <= 2
     h = subplot(1,2,n);
 elseif n_total <= 4
     h = subplot(2,2,n);
@@ -22,6 +24,8 @@ elseif n_total <= 16
     h = subplot(4,4,n);
 elseif n_total <= 25
     h = subplot(5,5,n);
+elseif n_total <= 36
+    h = subplot(6,6,n);
 else
     disp('You really want to have more than 25 subplots in a figure?')
 end
