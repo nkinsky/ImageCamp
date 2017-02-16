@@ -83,7 +83,7 @@ G31_oct(8).Date = '12_22_2014'; G31_oct(8).Session = 2;
 G31_manual_limits = [0 0 0 0 1 1 0 0];
 G31_botharenas = cat(2,G31_square, G31_oct);
 G31_botharenas = G31_botharenas([1 2 9 10 11 12 3 4 5 13 14 6 7 8 15 16]);
-G31_both_manual_limits = [0 0 0 0 0 0 0 0 1 1 1 1 0 0 0 0];
+G31_both_manual_limits = [0 0 0 1 0 0 0 0 1 1 1 1 0 0 0 0]; 
 
 %% G45
 G45_square(1).Date = '08_28_2015'; G45_square(1).Session = 1;
@@ -136,6 +136,8 @@ G48_manual_limits = [0 0 0 0 1 1 0 0];
 G48_botharenas = cat(2,G48_square, G48_oct);
 G48_botharenas = G48_botharenas([1 2 9 10 11 12 3 4 5 13 14 6 7 8 15 16]);
 G48_both_manual_limits = [0 0 0 0 0 0 0 0 1 1 1 1 1 0 0 0]; %%% Is this correct?  Manual limits on 1st square session?
+%% All sessions
+all_sessions = cat(2,G30_botharenas, G31_botharenas, G45_botharenas, G48_botharenas);
 
 %% Check script
 sesh_check = G48_square;
