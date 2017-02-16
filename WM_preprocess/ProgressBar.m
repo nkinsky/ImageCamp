@@ -48,7 +48,7 @@ classdef ProgressBar < handle
     
             obj.width = 50; % Width of progress bar
 
-            obj.fname = ['progressbar_' num2str(randi(10000)) '.txt'];
+            obj.fname = fullfile(pwd,['progressbar_' num2str(randi(10000)) '.txt']);
             while exist(obj.fname,'file')
                 obj.fname = ['progressbar_' num2str(randi(10000)) '.txt'];
             end

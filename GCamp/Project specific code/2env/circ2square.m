@@ -42,7 +42,7 @@ theta = atan2(ycent,xcent);
 % Get square radius
 R_s = zeros(size(theta));
 for j = 1:length(theta)
-    if theta(j) < -3*pi/4 || (-pi/4 < theta(j) & theta(j) < pi/4) || (3*pi/4 < theta(j) & theta(j) < 5*pi/4)
+    if theta(j) < -3*pi/4 || (-pi/4 < theta(j) && theta(j) < pi/4) || (3*pi/4 < theta(j) && theta(j) < 5*pi/4)
         R_s(j) = ks*sqrt(1 + tan(theta(j))^2);
     else
         R_s(j) = ks*sqrt(1 + 1/tan(theta(j))^2);

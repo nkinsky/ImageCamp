@@ -7,6 +7,9 @@ function [ rot_to_corr_to_std ] = get_rot_from_db(db_struct )
 %   (corresponding to a -90 degree rotation), the applied rotation to get
 %   back to standard (rot_to_corr_to_std) would be 90.
 
+% Complete partial db_struct
+[~, db_struct] = ChangeDirectory(db_struct(1).Animal, db_struct(1).Date, db_struct(1).Session,0);
+
 if regexpi(db_struct(1).Notes,'90CW')
     rot_to_corr_to_std = 90;
 elseif regexpi(db_struct(1).Notes,'90CCW')

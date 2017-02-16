@@ -78,7 +78,7 @@ if batch_mode == 0 || batch_mode == 1
             'name_append', name_append, 'suppress_output', true);
         map_use = neuron_map.neuron_id;
     elseif batch_mode == 1 % Use final vetted map from neuron_reg_batch (better, conservative)
-        load(fullfile(base_path,'batch_session_map.mat')); % Load batch map
+        load(fullfile(base_path,['batch_session_map' name_append '.mat'])); % Load batch map
         batch_session_map = fix_batch_session_map( batch_session_map);  % Fix it if pre-bugfix
         reg_index_use = get_index(batch_session_map.session, reg_struct);
         map_use = get_neuronmap_from_batchmap(batch_session_map.map, 1, reg_index_use);

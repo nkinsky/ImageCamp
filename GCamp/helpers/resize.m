@@ -53,7 +53,7 @@ function x = resize(x,newsiz)
 %   website: <a
 %   href="matlab:web('http://www.biomecardio.com')">www.BiomeCardio.com</a>
 
-error(nargchk(2,2,nargin));
+narginchk(2,2);
 
 siz = size(x);
 N = prod(siz);

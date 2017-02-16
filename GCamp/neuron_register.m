@@ -54,8 +54,8 @@ function [ neuron_map] = neuron_register( mouse_name, base_date, base_session, r
 %       session, and each value is the neuron number in the 2nd session
 %       that maps to the neurons in the 1st session.  An empty cell means
 %       that no neuron from the 2nd session maps to that neuron from the 1st
-%       session.  A value of NaN means that more than one neuron from the
-%       second session is within min_thresh of the 1st session neuron
+%       session.  A value of NaN means that the closest neuron within the
+%       min_thresh distance has already been mapped to another neuron.
 %
 %       .same_neuron: n x m logical, where the a value of 1 indicates that
 %       more than one neuron from the second session maps to a cell in the
@@ -114,7 +114,7 @@ suppress_output = p.Results.suppress_output;
 %% 2: Perform Image Registration
 [RegistrationInfoX, ~] = image_registerX(mouse_name, base_date, base_session, ...
     reg_date, reg_session, manual_reg_enable,'use_neuron_masks',use_neuron_masks,...
-    'suppress_output', suppress_output);
+    'suppress_output', suppress_output,'name_append',name_append);
 
 % 2A:Adjust Image Registration for alternate tform
 % save_alt = 0;
