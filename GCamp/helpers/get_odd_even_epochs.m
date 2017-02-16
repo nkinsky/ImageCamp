@@ -10,7 +10,7 @@ end
 epochs = find_epochs(frames);
 
 odd_epoch_frames = []; even_epoch_frames = []; 
-for j = 1:size(epochs,1); 
+for j = 1:size(epochs,1) 
     if mod(j,2) == 1
         odd_epoch_frames = [odd_epoch_frames epochs(j,1):epochs(j,2)]; 
     elseif mod(j,2) == 0 
