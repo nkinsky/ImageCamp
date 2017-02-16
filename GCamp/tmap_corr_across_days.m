@@ -48,6 +48,9 @@ function [corr_matrix, pop_corr_struct, min_dist_matrix, vec_diff_matrix, pass_t
 %           the number of times you wish to calculate correlations between
 %           sessions with the 2nd session shuffled.
 %
+%           'version_use: default = 'T4' (Finaloutput.mat and Placefields.mat).
+%           Also supports T2 (ProcOut.mat & PlaceMaps.mat)
+%
 %   OUTPUTS:
 %
 %       corr_matrix: an n x n x num_neurons matrix where n = the total number of
@@ -66,40 +69,30 @@ SR = 20; %fps
 PF_thresh = 0.9;
 
 %% Get varargins
-rotate_to_std = 0; % default
-population_corr = 0; % default
-trans_rate_thresh = 0; % default
-plot_confusion_matrix = 0; % default
-pval_thresh = 0; % default
-archive_name_append = [];
-within_session = 0; % default
-num_shuffles = 0;
-for j = 1:length(varargin)
-   if strcmpi(varargin{j},'rotate_to_std')
-       rotate_to_std = varargin{j+1};
-   end
-   if strcmpi(varargin{j},'population_corr')
-       population_corr = varargin{j+1};
-   end
-   if strcmpi(varargin{j},'trans_rate_thresh')
-       trans_rate_thresh = varargin{j+1};
-   end
-   if strcmpi(varargin{j},'pval_thresh')
-       pval_thresh = varargin{j+1};
-   end
-   if strcmpi(varargin{j},'plot_confusion_matrix')
-       plot_confusion_matrix = varargin{j+1};
-   end
-   if strcmpi(varargin{j},'archive_name_append')
-       archive_name_append = varargin{j+1};
-   end
-   if strcmpi(varargin{j},'within_session')
-       within_session = varargin{j+1};
-   end
-   if strcmpi(varargin{j},'num_shuffles')
-       num_shuffles = varargin{j+1};
-   end
-end
+
+p = inputParser;
+
+p.addRequired('working_dir', @ischar);
+p.addParameter('rotate_to_std', 0, @(a) islogical(a) || a == 0 || a == 1);
+p.addParameter('population_corr', 0, @(a) islogical(a) || a == 0 || a == 1);
+p.addParameter('trans_rate_thresh', 0, @(a) a >= 0);
+p.addParameter('pval_thresh', 0, @(a) a >= 0);
+p.addParameter('plot_confusion_matrix', 0, @(a) islogical(a) || a == 0 || a == 1);
+p.addParameter('archive_name_append', '', @ischar);
+p.addParameter('within_session', 0, @(a) islogical(a) || a == 0 || a == 1);
+p.addParameter('num_shuffles', 0, @(a) a >= 0 && round(a,0) == a);
+p.addParameter('version_use', 'T2', @(a) ischar(a) && length(a) == 2);
+
+p.parse(working_dir, varargin{:});
+rotate_to_std = p.Results.rotate_to_std;
+population_corr = p.Results.population_corr;
+trans_rate_thresh = p.Results.trans_rate_thresh;
+pval_thresh = p.Results.pval_thresh;
+plot_confusion_matrix = p.Results.plot_confusion_matrix;
+archive_name_append = p.Results.archive_name_append;
+within_session = p.Results.within_session;
+num_shuffles = p.Results.num_shuffles;
+version_use = p.Results.version_use;
 
 %% Get working directory
 orig_dir = cd; % Get original directory
@@ -109,7 +102,6 @@ end
 %% 1) Load both Reg_NeuronID files (updatemasks = 0 and updatemasks = 1).
 disp('Loading Reg_NeuronIDs and batch_session_map')
 
-% load(fullfile(working_dir,'Reg_NeuronIDs_updatemasks0.mat')) % Load Masks - is this even necessary?
 load(fullfile(working_dir,'batch_session_map.mat'));
 
 num_neurons = size(batch_session_map(1).map,1);
@@ -118,37 +110,74 @@ num_sessions = length(batch_session_map(1).session);
 %% 2) Get base directory and directories of all the subsequent registered sessions, ...
 % & load up the TMaps for each of these sessions
 
-Animal = batch_session_map(1).session(1).mouse;
+batch_session_map = fix_batch_session_map(batch_session_map);
+Animal = batch_session_map(1).session(1).Animal;
 sesh = batch_session_map(1).session;
 
-disp('Loading TMaps for each session and calculating PF centroids')
-for j = 1:num_sessions
-   ChangeDirectory(Animal, sesh(j).date,...
-       sesh(j).session);
-   if rotate_to_std == 0
-       load(['PlaceMaps' archive_name_append '.mat'],'TMap_gauss','pval');
-   elseif rotate_to_std == 1
-       load(['PlaceMaps_rot_to_std' archive_name_append '.mat'],'TMap_gauss','pval');
-   end
-   sesh(j).TMap = TMap_gauss;
-   if within_session == 1
-       if rotate_to_std == 0
-           load(['PlaceMaps' archive_name_append '.mat'],'TMap_half');
-       elseif rotate_to_std == 1
-           load(['PlaceMaps_rot_to_std' archive_name_append '.mat'],'TMap_half');
-       end
-       sesh(j).TMap_half = TMap_half;
-   end
-   sesh(j).pval_use = 1-pval;
-   sesh(j).pval_pass = sesh(j).pval_use <= pval_thresh;
-   
-   % Get transient rates and those that pass the threshold
-   load('ProcOut.mat','NumTransients','NumFrames');
-   sesh(j).trans_rate = NumTransients/(NumFrames/SR);
-   sesh(j).trans_rate_pass = sesh(j).trans_rate >= trans_rate_thresh;
-   
-   % Get Place Field centroid locations for each session
-   [~, sesh(j).PF_centroid] = get_PF_centroid(sesh(j).TMap,PF_thresh);
+disp(['Loading TMaps for each session and calculating PF centroids for ' version_use ' data'])
+if strcmpi(version_use,'T2')
+    for j = 1:num_sessions
+        ChangeDirectory(Animal, sesh(j).date,...
+            sesh(j).session);
+        if rotate_to_std == 0
+            load(['PlaceMaps' archive_name_append '.mat'],'TMap_gauss','pval');
+        elseif rotate_to_std == 1
+            load(['PlaceMaps_rot_to_std' archive_name_append '.mat'],'TMap_gauss','pval');
+        end
+        sesh(j).TMap = TMap_gauss;
+        if within_session == 1
+            if rotate_to_std == 0
+                load(['PlaceMaps' archive_name_append '.mat'],'TMap_half');
+            elseif rotate_to_std == 1
+                load(['PlaceMaps_rot_to_std' archive_name_append '.mat'],'TMap_half');
+            end
+            sesh(j).TMap_half = TMap_half;
+        end
+        sesh(j).pval_use = 1-pval;
+        sesh(j).pval_pass = sesh(j).pval_use <= pval_thresh;
+        
+        % Get transient rates and those that pass the threshold
+        load('ProcOut.mat','NumTransients','NumFrames');
+        sesh(j).trans_rate = NumTransients/(NumFrames/SR);
+        sesh(j).trans_rate_pass = sesh(j).trans_rate >= trans_rate_thresh;
+        
+        % Get Place Field centroid locations for each session
+        [~, sesh(j).PF_centroid] = get_PF_centroid(sesh(j).TMap,PF_thresh);
+    end
+    
+elseif strcmpi(version_use,'T4')
+    for j = 1:num_sessions
+        dirstr = ChangeDirectory(Animal, sesh(j).Date, sesh(j).Session, 0);
+        if rotate_to_std == 0
+            load(fullfile(dirstr,['Placefields' archive_name_append '.mat']),'TMap_gauss','pval');
+        elseif rotate_to_std == 1
+            load(fullfile(dirstr,['Placefields_rot_to_std' archive_name_append '.mat']),'TMap_gauss','pval');
+        end
+        sesh(j).TMap = TMap_gauss;
+        sesh(j).pval_use = pval;
+        if within_session == 1
+            if rotate_to_std == 0
+                temp = importdata(fullfile(dirstr,['Placefields' archive_name_append '_half.mat']));
+            elseif rotate_to_std == 1
+                temp = importdata(fullfile(dirstr,['Placefields_rot_to_std' archive_name_append '_half.mat']));
+            end
+            sesh(j).TMap_half(1).TMap_gauss = temp{1}.TMap_gauss;
+            sesh(j).TMap_half(2).TMap_gauss = temp{2}.TMap_gauss;
+            clear temp
+        end
+        
+        sesh(j).pval_pass = sesh(j).pval_use <= pval_thresh;
+        
+        % Get transient rates and those that pass the threshold
+        load(fullfile(dirstr,'FinalOutput.mat'),'PSAbool');
+        NumTransients = get_num_trans(PSAbool);
+        NumFrames = size(PSAbool,2);
+        sesh(j).trans_rate = NumTransients/(NumFrames/SR);
+        sesh(j).trans_rate_pass = sesh(j).trans_rate >= trans_rate_thresh;
+        
+        % Get Place Field centroid locations for each session
+        [~, sesh(j).PF_centroid] = get_PF_centroid(sesh(j).TMap,PF_thresh);
+    end
 end
 
 
@@ -167,7 +196,7 @@ for j = 1:num_neurons
             sesh1_neuron = batch_session_map(1).map(j,k+1);
             sesh2_neuron = batch_session_map(1).map(j,ll+1);
             % Get the correlations only if both neurons are validly mapped
-            if (sesh1_neuron ~= 0) && (sesh2_neuron ~= 0)
+            if (sesh1_neuron ~= 0 && ~isnan(sesh1_neuron)) && (sesh2_neuron ~= 0 && ~isnan(sesh2_neuron))
                 % Check if the neuron passes the threshold test from both
                 % sessions
                 sesh1_thresh_pass = sesh(k).trans_rate_pass(sesh1_neuron) & ...
@@ -176,9 +205,9 @@ for j = 1:num_neurons
                     sesh(ll).pval_pass(sesh2_neuron);
                 try % error catching statement
                     if sesh1_thresh_pass || sesh2_thresh_pass
-                        temp = corrcoef(sesh(k).TMap{sesh1_neuron}(:),...
-                            sesh(ll).TMap{sesh2_neuron}(:));
-                        corr_matrix(k,ll,j) = temp(1,2);
+                        corr_matrix(k,ll,j) = corr(sesh(k).TMap{sesh1_neuron}(:),...
+                            sesh(ll).TMap{sesh2_neuron}(:),'rows','complete','type','Spearman');
+%                         corr_matrix(k,ll,j) = temp(1,2);
                         n = n + 1;
                         pass_thresh(k,ll,j) = 1;
                     else
@@ -200,7 +229,7 @@ for j = 1:num_neurons
     corr_numbers(j) = n;
 end
 
-% ticker = 1;
+%% 3a) Population correlations
 if population_corr == 1
     disp('Getting inter-session population correlations')
 %     p = ProgressBar(num_sessions);
@@ -217,16 +246,19 @@ if population_corr == 1
                 % transient rate and/or information criteria?
                 
                 if (sesh1_neuron ~= 0) && (sesh2_neuron ~= 0) && ...
-                        ~isnan(sum(sesh(k).TMap{sesh1_neuron}(:))) && ~isnan(sum(sesh(ll).TMap{sesh2_neuron}(:)))% ~isempty(sesh1_neuron) && ~isempty(sesh2_neuron) && ~isnan(sesh1_neuron) && ~isnan(sesh2_neuron)
+                        any(sesh(k).TMap{sesh1_neuron}(:)) || any(sesh(ll).TMap{sesh2_neuron}(:))% ~isempty(sesh1_neuron) && ~isempty(sesh2_neuron) && ~isnan(sesh1_neuron) && ~isnan(sesh2_neuron)
                     sesh1_pop = [sesh1_pop; sesh(k).TMap{sesh1_neuron}(:)];
                     sesh2_pop = [sesh2_pop; sesh(ll).TMap{sesh2_neuron}(:)];
                 end
 %                 disp(ticker);
 %                 ticker = ticker + 1;
             end
-            [r_temp, p_temp] = corrcoef(sesh1_pop,sesh2_pop);
-            pop_corr(k,ll) = r_temp(1,2);
-            p_pop_corr(k,ll) = p_temp(1,2);
+            [ pop_corr(k,ll), p_pop_corr(k,ll)] = corr(sesh1_pop, sesh2_pop,...
+                'rows','complete','type','Spearman');
+            
+%             [r_temp, p_temp] = corrcoef(sesh1_pop,sesh2_pop);
+%             pop_corr(k,ll) = r_temp(1,2);
+%             p_pop_corr(k,ll) = p_temp(1,2);
         end
 %         p.progress;
     end
@@ -252,7 +284,7 @@ for k = 1:num_sessions
             % Assign distance comparisons to the appropriate base neuron
             for j = 1:length(temp_dist)
                 neuron_index = neuron_map_base(j);
-                if neuron_index ~= 0;
+                if neuron_index ~= 0 && ~isnan(neuron_index)
                     min_dist_matrix(k,ll,neuron_index) = temp_dist(j);
                     vec_diff_matrix(k,ll).xy(neuron_index,:) = temp_vec.xy(j,:);
                     vec_diff_matrix(k,ll).uv(neuron_index,:) = temp_vec.uv(j,:);
@@ -269,14 +301,17 @@ if within_session == 1
     disp('Calculating within session correlations')
     for j = 1:num_sessions
         % Get neurons that have non-NaN placefields in both halves
-        win_ok = cellfun(@(a,b) sum(isnan(a(:))) == 0 & sum(isnan(b(:))) == 0, ...
+        win_ok = cellfun(@(a,b) any(a(:)) & any(b(:)), ...
             sesh(j).TMap_half(1).TMap_gauss, sesh(j).TMap_half(2).TMap_gauss);
-        win_ok_ind = find(win_ok);
+        win_ok_ind{j} = find(win_ok);
+    end
+    corr_win = nan(num_sessions, max(cellfun(@length, win_ok_ind)));
+    for j = 1:num_sessions
         % Get within session correlations
-        for k = 1:length(win_ok_ind)
-            temp = corrcoef(sesh(j).TMap_half(1).TMap_gauss{win_ok_ind(k)}(:), ...
-                sesh(j).TMap_half(2).TMap_gauss{win_ok_ind(k)}(:));
-            corr_win(j,k) = temp(1,2);
+        for k = 1:length(win_ok_ind{j})
+            corr_win(j,k) = corr(sesh(j).TMap_half(1).TMap_gauss{win_ok_ind{j}(k)}(:), ...
+                sesh(j).TMap_half(2).TMap_gauss{win_ok_ind{j}(k)}(:),...
+                'rows','complete','type','Spearman');
         end
     end
 else
@@ -306,21 +341,26 @@ if num_shuffles >= 1
                     sesh1_neuron = batch_session_map(1).map(ok_ind{1}(j),k+1);
                     sesh2_neuron = batch_session_map(1).map(ok_ind{2}(j),ll+1);
                     map1_2_shuffle(sesh1_neuron) = sesh2_neuron;
-                    temp = corrcoef(sesh(k).TMap{sesh1_neuron}(:),...
-                        sesh(ll).TMap{sesh2_neuron}(:));
-                    corr_shuffle_matrix(n,k,ll,ok_ind{1}(j)) = temp(1,2);
+                    corr_shuffle_matrix(n,k,ll,ok_ind{1}(j)) = corr(...
+                        sesh(k).TMap{sesh1_neuron}(:),...
+                        sesh(ll).TMap{sesh2_neuron}(:),'rows','complete',...
+                        'type','Spearman');
                     
                     %%% Population Vectors
                     if (sesh1_neuron ~= 0) && (sesh2_neuron ~= 0) && ...
-                            ~isnan(sum(sesh(k).TMap{sesh1_neuron}(:))) && ...
-                            ~isnan(sum(sesh(ll).TMap{sesh2_neuron}(:)))% ~isempty(sesh1_neuron) && ~isempty(sesh2_neuron) && ~isnan(sesh1_neuron) && ~isnan(sesh2_neuron)
+                            any(sesh(k).TMap{sesh1_neuron}(:)) && ...
+                            any(sesh(ll).TMap{sesh2_neuron}(:))% ~isempty(sesh1_neuron) && ~isempty(sesh2_neuron) && ~isnan(sesh1_neuron) && ~isnan(sesh2_neuron)
                         sesh1_pop = [sesh1_pop; sesh(k).TMap{sesh1_neuron}(:)];
                         sesh2_pop = [sesh2_pop; sesh(ll).TMap{sesh2_neuron}(:)];
                     end
                 end
                 
                 % Calculate PV correlations
-                pop_corr_shuffle_matrix(n,k,ll) = corr(sesh1_pop,sesh2_pop);
+                try
+                    pop_corr_shuffle_matrix(n,k,ll) = corr(sesh1_pop,sesh2_pop,'type','Spearman');
+                catch
+                    keyboard
+                end
 %                 pop_corr_shuffle_matrix(n,k,ll) = r_temp(1,2);
                 
                 
@@ -331,7 +371,7 @@ if num_shuffles >= 1
                     sesh(ll).PF_centroid, map1_2_shuffle,1);
                 for j = 1:length(temp)
                     neuron_index = neuron_map_base(j);
-                    if neuron_index ~= 0;
+                    if neuron_index ~= 0
                         min_dist_shuffle_matrix(n,k,ll,j) = temp(j);
                     end
                 end
@@ -351,8 +391,8 @@ toc
 
 if plot_confusion_matrix == 1
     
-    for j = 1:size(corr_matrix,1);
-        for k = 1:size(corr_matrix,2);
+    for j = 1:size(corr_matrix,1)
+        for k = 1:size(corr_matrix,2)
             corr_mat_plot(j,k) = nanmean(squeeze(corr_matrix(j,k,:)));
         end
     end
