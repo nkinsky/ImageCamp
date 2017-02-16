@@ -1,7 +1,8 @@
 function [ ] = plot_mapped_neurons( Animal, Base_Date, Base_Session, Reg_Date, Reg_Session)
 % plot_mapped_neurons( Animal, Base_Date, Base_Session, Reg_Date, Reg_Session)
 %   Plots each session's neuron ROIs overlaid on the other.  Good for
-%   identifying good/bad registrations
+%   identifying good/bad registrations.  Same as plot_mapped_neurons2 but
+%   with different inputs.
 
 base_dir = ChangeDirectory(Animal, Base_Date, Base_Session, 0);
 load(fullfile(base_dir,'FinalOutput.mat'),'NeuronImage');
