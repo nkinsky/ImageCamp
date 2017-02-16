@@ -6,8 +6,8 @@ pos_data = importdata(DVT_file);
 time = pos_data(:,2); % time in seconds
 
 %Check for correct Cineplex sampling rate. 
-dt = [0.03; round(diff(time),2)]; 
-bad = dt~=0.03; 
+dt = [0.033; round(diff(time),3)]; % probably should be >= 0.06 - this catches 0.037 and such which aren't really dropped frames
+bad = dt < 0.030 & dt > 0.040; 
 
 nbad = sum(bad);
 bad_id = find(bad);
