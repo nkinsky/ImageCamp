@@ -98,6 +98,14 @@ base_path = ChangeDirectory(base_struct.Animal, base_struct.Date, ...
 if length(check_neuron_mapping) == 1 && length(check_neuron_mapping) < num_sessions
     check_neuron_mapping = ones(1,num_sessions)*check_neuron_mapping;
 end
+
+if length(reg_struct) > 7
+    suppress_output = true;
+    disp('Large number of sessions. Suppressing individual neuron and image registration plots.')
+    disp('MAKE SURE to check later on with plot_mapped_neurons')
+else
+    suppress_output = false;
+end
 %% Do the registrations.
 
 %Preallocate.
@@ -170,7 +178,7 @@ for this_session = 1:num_sessions
         reg_struct(this_session).Session, check_neuron_mapping(this_session),...
         'multi_reg',update_masks_vec(this_session),'use_neuron_masks', use_neuron_masks, ...
         'alt_reg',alt_reg_tform,'add_jitter', ...
-        jitter_mat,'name_append',name_append);
+        jitter_mat,'name_append',name_append, 'suppress_output', suppress_output);
     % First, get all neurons in registered session that have multiple
     % neurons from the base session map to it
     [~, temp] = find(neuron_map.same_neuron);
