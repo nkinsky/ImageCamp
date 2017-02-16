@@ -156,7 +156,7 @@ for i = 2:num_sessions
     
 end
 
-ok_orig2 = test(1).map > 0; % Get all valid neuron mappings to other neurons
+ok_orig2 = test(1).map > 0 & ~isnan(test(1).map); % Get all valid neuron mappings to other neurons
 ok_after2 = trans_test2.*ok_orig2; % Get all valid mappings post-test, excluding neurons that were empty or nan to begin with
 
 trans1_ratio_pass = sum(trans_test1(:))/length(trans_test1);
@@ -168,6 +168,7 @@ trans2_ratio_pass = sum(ok_after2(:))/sum(ok_orig2(:));
 % multiple each element of the map by either a 1 or a 0 if it passes or if
 % it doesn't
 batch_session_map(1).map = trans_test2.*test(1).map; 
+% batch_session_map(1).map(isnan(test(1).map)) = 0; % Send all nans to zeros also
 batch_session_map(1).map(:,1) = [1:size(batch_session_map(1).map,1)]';
 
 % Send all session info to stay with the map
@@ -197,6 +198,6 @@ save(fullfile(base_dir,save_name),'batch_session_map')
 
 %% Step 5: Plot out quality control plots
 
-reg_qc_plot_batch(base_struct, reg_struct, 'batch_mode', 1);
+reg_qc_plot_batch(base_struct, reg_struct, 'batch_mode', 1, 'name_append', name_append);
 
 end
