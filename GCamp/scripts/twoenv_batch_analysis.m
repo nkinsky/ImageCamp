@@ -15,37 +15,33 @@ PV_corr_bins = 5; % Number of bins to use for arenas when calculating PV correla
 
 %% Set up mega-variable - note that working_dir 1 = square sessions and 2 = octagon sessions (REQUIRED)
 [MD, ref] = MakeMouseSessionList('Nat');
+twoenv_reference;
 
 Mouse(1).Name = 'G30';
-Mouse(1).working_dirs{1} = 'J:\GCamp Mice\Working\G30\2env\11_19_2014\1 - 2env square left 201B\Working';
-Mouse(1).working_dirs{2} = 'J:\GCamp Mice\Working\G30\2env\11_20_2014\1 - 2env octagon left\Working';
-Mouse(1).square_base_sesh = MD(ref.G30.two_env(1));
+[Mouse(1).working_dirs{1}, Mouse(1).square_base_sesh] = ChangeDirectory_NK(G30_square(1),0);
+Mouse(1).working_dirs{2} = ChangeDirectory_NK(G30_oct(1),0);
 
 Mouse(2).Name = 'G31';
-Mouse(2).working_dirs{1} = 'J:\GCamp Mice\Working\G31\2env\12_15_2014\1 - 2env square right\Working';
-Mouse(2).working_dirs{2} = 'J:\GCamp Mice\Working\G31\2env\12_16_2014\1 - 2env octagon left\Working';
-Mouse(2).square_base_sesh = MD(ref.G31.two_env(1));
+[Mouse(2).working_dirs{1}, Mouse(2).square_base_sesh] = ChangeDirectory_NK(G31_square(1),0);
+Mouse(2).working_dirs{2} = ChangeDirectory_NK(G31_oct(1),0);
 
 Mouse(3).Name = 'G45';
-Mouse(3).working_dirs{1} = 'J:\GCamp Mice\Working\G45\2env\08_28_2015\1 - square right\Working';
-Mouse(3).working_dirs{2} = 'J:\GCamp Mice\Working\G45\2env\08_29_2015\1 - oct right\Working';
-Mouse(3).square_base_sesh = MD(ref.G45.twoenv(1));
+[Mouse(3).working_dirs{1}, Mouse(3).square_base_sesh] = ChangeDirectory_NK(G45_square(1),0);
+Mouse(3).working_dirs{2} = ChangeDirectory_NK(G45_oct(1),0);
 
 Mouse(4).Name = 'G48';
-Mouse(4).working_dirs{1} = 'E:\GCamp Mice\G48\2env\08_29_2015\1 - square right\Working';
-Mouse(4).working_dirs{2} = 'E:\GCamp Mice\G48\2env\08_30_2015\1 - oct mid\Working';
-Mouse(4).square_base_sesh = MD(ref.G48.twoenv(1));
+[Mouse(4).working_dirs{1}, Mouse(4).square_base_sesh] = ChangeDirectory_NK(G48_square(1),0);
+Mouse(4).working_dirs{2} = ChangeDirectory_NK(G48_oct(1),0);
 
 num_animals = length(Mouse);
 
-for j = 1:num_animals
-    Mouse(j).key = '1,1 = square distal cues aligned, 1,2 = octagon distal cues aligned, 2,1 = square local cues aligned, 2,2 = octagon local cues aligned';
-end
+[Mouse(:).key1] = deal('1,1 = square distal cues aligned, 1,2 = octagon distal cues aligned'); 
+[Mouse(:).key2] = deal('2,1 = square local cues aligned, 2,2 = octagon local cues aligned');
 
 %% Check for already run instances of the above and load to save time
 
-cd(Mouse(1).working_dirs{1});
-[exist_logical, dirstr] = exist_saved_workspace('workspace','trans_rate_thresh',trans_rate_thresh,...
+[exist_logical, dirstr] = exist_saved_workspace(fullfile(Mouse(1).working_dirs{1},'workspace'),...
+        'trans_rate_thresh',trans_rate_thresh,...
         'pval_thresh',pval_thresh,'within_session',within_session,...
         'num_shuffles',num_shuffles,'PV_corr_bins',PV_corr_bins,...
         'num_grids_PFdens',num_grids_PFdens);
@@ -73,11 +69,12 @@ for j = 1:num_animals
                 Mouse(j).vec_diff_matrix{m+1,k}, Mouse(j).pass_count{m+1,k},...
                 Mouse(j).within_corr{m+1,k}, Mouse(j).shuffle_matrix{m+1,k}, Mouse(j).dist_shuffle_matrix{m+1,k},...
                 Mouse(j).pop_corr_shuffle_matrix{m+1,k}] = ...
+                ...
                 tmap_corr_across_days(Mouse(j).working_dirs{k},...
-                'rotate_to_std',m,'population_corr',1,'trans_rate_thresh', ...
-                trans_rate_thresh, 'pval_thresh',pval_thresh,...
-                'archive_name_append',file_append,'within_session',within_session,...
-                'num_shuffles',num_shuffles);
+                'rotate_to_std', m, 'population_corr', 1, 'trans_rate_thresh', ...
+                trans_rate_thresh, 'pval_thresh', pval_thresh,...
+                'archive_name_append', file_append, 'within_session', within_session,...
+                'num_shuffles', num_shuffles, 'version_use', 'T4');
             Mouse(j).pop_corr_matrix{m+1,k} = pop_struct_temp.r;
             disp(['tmap_corr_across_days took ' num2str(toc(tt)) ' seconds to run'])
         end
@@ -94,7 +91,7 @@ for j = 1:num_animals
        batch_map_use = fix_batch_session_map(Mouse(j).batch_session_map(k));
        for ll = 1:8
            dirstr = ChangeDirectory_NK(batch_map_use.session(ll),0); % Get base directory
-           load(fullfile(dirstr,'PlaceMaps_rot_to_std.mat'),'TMap_gauss',...
+           load(fullfile(dirstr,'Placefields_rot_to_std.mat'),'TMap_gauss',...
                'RunOccMap'); % Load TMaps and Occupancy map
            temp = create_PFdensity_map(cellfun(@(a) ...
                make_binary_TMap(a),TMap_gauss,'UniformOutput',0)); % create density map from binary TMaps
@@ -470,8 +467,8 @@ end
 %% Plot stability over time
 
 % Load control data
-[control_dir, ~] = ChangeDirectory('GCamp6f_45','08_05_2015',3,0);
-time_control = load(fullfile(control_dir, 'control_time_data.mat'));
+[control_dir, ~] = ChangeDirectory('GCamp6f_45','08_05_2015',1,0);
+time_control = load(fullfile(control_dir, 'control_time_datav1.mat')); % Note that v1 data is from Tenaspis1 and should be replaced ASAP
 
 % Add in plot of stability for each arena
 corrs_all = [];
@@ -542,7 +539,7 @@ errorbar(days_plot(to_plot),corrs_mean_by_day(to_plot),corrs_sem_by_day(to_plot)
 errorbar(days_plot(to_plot),[tcontrol_mean -1 -1 -1 -1],[tcontrol_sem 0 0 0 0],'g.')
 xlabel('Days between session'); ylabel('Mean correlation')
 title('Stability - Individual Neurons Transient Map Correlations')
-xlim([-0.5 6.5]); ylim([0 0.6]); set(gca,'XTick',[0 1 2 3 4 5 6])
+xlim([-0.5 6.5]); ylim([0 1]); set(gca,'XTick',[0 1 2 3 4 5 6])
 legend('Actual','Shuffled','Continuous Session Control (1st v 2nd half)')
 hold off
 % Population Correlations
@@ -554,7 +551,7 @@ ht1 = errorbar(days_plot(to_plot),PV_corrs_mean_by_day(to_plot),PV_corrs_sem_by_
 ht2 = errorbar(days_plot(to_plot),[tcontrol_PV_corr_mean -1 -1 -1 -1],[tcontrol_PV_corr_sem 0 0 0 0],'g.');
 xlabel('Days between session'); ylabel('Mean correlation')
 title('Stability - Population Vector Correlations')
-xlim([-0.5 6.5]); ylim([-0.1 0.4]); set(gca,'XTick',[0 1 2 3 4 5 6])
+xlim([-0.5 6.5]); ylim([-0.1 0.5]); set(gca,'XTick',[0 1 2 3 4 5 6])
 legend('Actual','Shuffled','Continuous Session Control (1st v 2nd half)')
 hold off
 
@@ -813,7 +810,7 @@ bar_w_err([corrs_mean_by_day(1), local_rot_corrs_all_mean, distal_rot_corrs_all_
     [ corrs_sem_by_day(1), local_rot_corrs_all_sem, distal_rot_corrs_all_sem, shuf_corrs_all_sem;...
     PV_corrs_sem_by_day(1), local_rot_PV_corrs_all_sem, distal_rot_PV_corrs_all_sem, shuf_PV_corrs_all_sem]); %...
 %     nan, local_rot_PV_orig_corrs_all_sem, distal_rot_PV_orig_corrs_all_sem, shuf_PV_orig_all_sem])
-xlim([0 3]); ylim([-0.10 0.5]); 
+xlim([0 3]); ylim([-0.10 1]); 
 set(gca,'XTick',[1 2],'XTickLabel',{'Ind. Neurons','Population'})% ,'Original Population Calc'})
 ylabel('Mean correlations')
 title('Mean TMap Correlations by cue alignment - same day')
@@ -1711,8 +1708,8 @@ end
 %% Save workspace for future easy reference
 
 if exist_logical == 0
-    cd(Mouse(1).working_dirs{1});
-    [savefile_name] = save_workspace_name('workspace');
+%     cd(Mouse(1).working_dirs{1});
+    [savefile_name] = save_workspace_name(fullfile(Mouse(1).working_dirs{1},'workspace'));
     disp(['Saving workspace as ' fullfile(Mouse(1).working_dirs{1},savefile_name)])
     save(savefile_name)
 end

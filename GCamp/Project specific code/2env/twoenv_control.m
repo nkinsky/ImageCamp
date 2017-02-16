@@ -6,8 +6,8 @@
 [MD, ref] = MakeMouseSessionList('Nat');
 
 clear session
-[~, session(1)] = ChangeDirectory('GCamp6f_45','08_05_2015',3,0); %session(1) = MD(114);
-[~, session(2)] = ChangeDirectory('GCamp6f_45','08_05_2015',4,0); %session(2) = MD(115);
+[~, session(1)] = ChangeDirectory('GCamp6f_45','08_05_2015',1,0); %session(1) = MD(114);
+[~, session(2)] = ChangeDirectory('GCamp6f_45','08_05_2015',2,0); %session(2) = MD(115);
 [~, session(3)] = ChangeDirectory('GCamp6f_45','08_11_2015',1,0); %session(3) = MD(119);
 
 %% Run through stuff

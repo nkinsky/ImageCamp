@@ -4,6 +4,15 @@ function [ PV, PV_corrs ] = get_PV_and_corr( session_struct, batch_map, varargin
 %   as 0 in varargins. NumXBins and NumYBins = 5 (default) unless specified in varargin.
 %   'corr_type': default is Spearman, use varargin to change.  Accepts
 %   anything in 'corr' function.
+%
+%   Rather than taking all the placemaps for a given session and
+%   concatenating them together into one long vector, then correlating that
+%   with the same neurons on a subsequent session, this gets the firing
+%   rate of each neuron in a given bin and then correlates each bin's FR
+%   vector with the other session.  spits out a num_sessions x num_session
+%   x num_Xbins x num_Ybins array of correlation values (PV_corrs). Also
+%   spits out the raw population vectors (num_sessions x num_Xbins x
+%   num_Ybins)
 
 %%% NEED TO ADD IN ABILITY TO FILTER OUT NEURONS
 
@@ -17,8 +26,9 @@ NumXBins = 5;
 NumYBins = NumXBins;
 disp_prog_bar = 1;
 calc_half = 0; % Default. 1 = calculate between 1st and 2nd halves - need to load valid indices to use for each in a length = 2 cell following the string 'calc_half'
-use_alf_file = false;
+use_alt_file = false;
 neuron_filter = true(size(batch_map)); % Default = include all neurons. Otherwise, use a logical array that matches the size of batch_map.
+version_use = 'T4'; % default
 for j = 1:length(varargin)
     if strcmpi(varargin{j},'rot_to_std')
         rot_to_std = varargin{j+1};
@@ -60,6 +70,10 @@ for j = 1:length(varargin)
     if strcmpi(varargin{j},'neuron_filter')
        neuron_filter = varargin{j+1};
     end
+    
+    if strcmpi(varargin{j},'version_use')
+        version_use = varargin{j+1};
+    end
 end
 
 %% Load required variables from session_struct
@@ -67,7 +81,7 @@ sesh = session_struct;
 
 % Get appropriate PlaceMap and Pos file to load
 if ~use_alt_file
-    [PM_file, pos_file] = get_PM_name(rot_to_std,use_trans);
+    [PM_file, pos_file] = get_PM_name(rot_to_std, use_trans, version_use);
 elseif use_alt_file
     PM_file = alt_PM_file;
     pos_file = alt_pos_file;
@@ -77,7 +91,12 @@ curr_dir = cd;
 for j = 1:length(session_struct)
    ChangeDirectory(session_struct(j).Animal,session_struct(j).Date,...
        session_struct(j).Session);
-   load(PM_file,'FT','x','y');
+   if strcmpi(version_use,'T2')
+       load(PM_file,'FT','x','y');
+   elseif strcmpi(version_use,'T4')
+       load(PM_file,'PSAbool','x','y')
+       FT = PSAbool;
+   end
    if ~calc_half 
        load(pos_file,'xmin','xmax','ymin','ymax');
    elseif calc_half
@@ -236,23 +255,45 @@ PV_corrs.PV_dist_shuffle_mean = PV_dist_shuffle_mean;
 end
 
 %% Sub-function
-function [map_load, pos_load] = get_PM_name(rot_to_std,use_trans)
-if use_trans == 0
-    if rot_to_std == 1
-        map_load = 'PlaceMaps_rot_to_std.mat';
-        pos_load = 'Pos_align_std_corr.mat';
-    elseif rot_to_std == 0
-        map_load = 'PlaceMaps.mat';
-        pos_load = 'Pos_align.mat';
-    end
-elseif use_trans == 1
-    if rot_to_std == 1
-        map_load = 'PlaceMaps_rot_to_std_trans.mat';
-        pos_load = 'Pos_align_std_corr_trans.mat';
-    elseif rot_to_std == 0
-        map_load = 'PlaceMaps_trans.mat';
-        pos_load = 'Pos_align_trans.mat';
-    end
+function [map_load, pos_load] = get_PM_name(rot_to_std,use_trans,Tversion)
+switch Tversion
+    case 'T2'
+        if use_trans == 0
+            if rot_to_std == 1
+                map_load = 'PlaceMaps_rot_to_std.mat';
+                pos_load = 'Pos_align_std_corr.mat';
+            elseif rot_to_std == 0
+                map_load = 'PlaceMaps.mat';
+                pos_load = 'Pos_align.mat';
+            end
+        elseif use_trans == 1
+            if rot_to_std == 1
+                map_load = 'PlaceMaps_rot_to_std_trans.mat';
+                pos_load = 'Pos_align_std_corr_trans.mat';
+            elseif rot_to_std == 0
+                map_load = 'PlaceMaps_trans.mat';
+                pos_load = 'Pos_align_trans.mat';
+            end
+        end
+    case 'T4'
+        if use_trans == 0
+            if rot_to_std == 1
+                map_load = 'Placefields_rot_to_std.mat';
+                pos_load = 'Pos_align_std_corr.mat';
+            elseif rot_to_std == 0
+                map_load = 'Placefields.mat';
+                pos_load = 'Pos_align.mat';
+            end
+        elseif use_trans == 1
+            if rot_to_std == 1
+                map_load = 'Placefields_rot_to_std_trans.mat';
+                pos_load = 'Pos_align_std_corr_trans.mat';
+            elseif rot_to_std == 0
+                map_load = 'Placefields_trans.mat';
+                pos_load = 'Pos_align_trans.mat';
+            end
+        end
+    otherwise
 end
 end
 
