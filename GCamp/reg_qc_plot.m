@@ -8,6 +8,7 @@ function [ ] = reg_qc_plot(centroid_dist, orient_diff, avg_corr, varargin )
 % NRK - convert pixels into microns
 
 p = inputParser;
+p.KeepUnmatched = true;
 p.addRequired('centroid_dist', @isnumeric)
 p.addRequired('orient_diff', @isnumeric)
 p.addRequired('avg_corr', @isnumeric)
