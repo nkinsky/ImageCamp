@@ -25,8 +25,9 @@ end
 
 % This is sort-of a hack
 figure;
-imagesc(sesh(1).AllNeuronMask + 2*sesh(2).AllNeuronMask); colorbar
-title('1 = session 1, 2 = session 2, red outline = both')
+imagesc(sesh(1).AllNeuronMask + 2*sesh(2).AllNeuronMask); 
+hc = colorbar;
+title('Red outline = same neuron across sessions')
 hold on
 for j = 1:length(neuron_id)
     nid = neuron_id{j};
@@ -38,7 +39,8 @@ for j = 1:length(neuron_id)
 end
 hold off
 
-
+hc.Ticks = [1 2 3]; 
+hc.TickLabels = {'Session 1 only' 'Session 2 only' 'Overlap'};
 
 end
 
