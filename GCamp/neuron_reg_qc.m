@@ -32,6 +32,7 @@ function [ reg_stats ] = neuron_reg_qc( base_struct, reg_struct, varargin )
 
 %% Parse Inputs
 p = inputParser;
+p.KeepUnmatched = true;
 p.addRequired('base_struct', @(a) isstruct(a) && length(a) == 1);
 p.addRequired('reg_struct', @(a) isstruct(a) && length(a) == 1);
 p.addParameter('name_append', '', @ischar); % default = ''
@@ -122,7 +123,7 @@ disp(['Calculating Neuron Registration Metrics for ' base_struct.Animal ' ' ...
 %% Do shuffling if specified
 cent_d_shuf = []; orient_diff_shuf = []; avg_corr_shuf = [];
 if num_shuffles > 0
-    disp('Shuffling...')
+    disp(['Shuffling ' num2str(num_shuffles) ' time(s)...'])
     pp = ProgressBar(num_shuffles);
     for j = 1:num_shuffles
         [~, cent_d_temp, ~, ~, ~, orient_diff_temp, ~] = ...
