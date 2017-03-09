@@ -1,4 +1,4 @@
-function [best_angle] = twoenv_rot_plot_full(sessions, rot_type, varargin)
+function [best_angle] = twoenv_rot_analysis_full(sessions, rot_type, varargin)
 % best_angle = twoenv_rot_analysis(base_session, rot_sessions, rot_type)
 %
 %   Plots rotation "tuning curves" for all sessions versus one another, the
@@ -8,8 +8,6 @@ function [best_angle] = twoenv_rot_plot_full(sessions, rot_type, varargin)
 %   Also spits out the best angle of rotation when compared
 %   to the base_session (i.e. the one that gives the highest correlation)
 %
-%   Should probably just combine with twoenv_batch_rot_analysis and call it
-%   twoenv_plot_rot_full or something similar
 
 %% Parse inputs
 ip = inputParser;
