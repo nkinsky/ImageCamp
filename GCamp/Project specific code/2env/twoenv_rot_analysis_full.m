@@ -72,9 +72,8 @@ hh(1) = figure;
 hh(2) = figure;
 hh(3) = figure;
 % Plot all sessions vs each other
-best_angle = nan(num_sessions, num_sessions);
 if ~trans
-    
+    best_angle = nan(num_sessions, num_sessions);
     p = ProgressBar((num_sessions-1)*num_sessions/2);
     for j = 1:num_sessions-1
         [~, base_rot] = get_rot_from_db(sessions(j));
@@ -86,9 +85,8 @@ if ~trans
             % Plot everything            
             [~, sesh2_rot] = get_rot_from_db(sessions(k));
             distal_rot = sesh2_rot - base_rot;
-            subplot_ind = num_sessions*(j-1)+k;
             best_angle(j,k) = plot_func(corr_mat, shuffle_mat2, rot_array, ...
-                distal_rot, edges, edges2, hh, num_sessions, subplot_ind);
+                distal_rot, edges, edges2, hh, num_sessions, j, k, rot_type);
             
             p.progress;
         end
@@ -96,24 +94,57 @@ if ~trans
     p.stop;
 
 elseif trans
-    disp('circ2square functionality not finished yet')
-    % We want only to plot each square session versus each circle session,
-    % not including square v square and circle v circle.
-    % Would need to get circle and square sessions out of the session_list,
-    % list them, then do a for loop with j = square sessions and k = circle
-    % sessions
-    
-end
 
+    square_ind = get_shape_ind(sessions, 'square');
+    circle_ind = get_shape_ind(sessions, 'octagon');
+    
+    best_angle = nan(num_sessions/2, num_sessions/2);
+    p = ProgressBar((num_sessions/2)^2);
+    ylims = [0 0];
+    for j = 1:length(square_ind)
+        [~, base_rot] = get_rot_from_db(sessions(square_ind(j)));
+        for k = 1:length(circle_ind)
+            
+            [corr_mat, ~, shuffle_mat2] = corr_rot_analysis(sessions(square_ind(j)), ...
+                sessions(circle_ind(k)), batch_session_map, rot_array, num_shuffles, 'trans', trans); % do rotation analysis
+            
+            % Plot everything            
+            [~, sesh2_rot] = get_rot_from_db(sessions(circle_ind(k)));
+            distal_rot = sesh2_rot - base_rot;
+            [best_angle(j,k), corr_lims] = plot_func(corr_mat, shuffle_mat2, rot_array, ...
+                distal_rot, edges, edges2, hh, num_sessions/2, j, k, sessions, rot_type);
+            
+            ylims(1) = min([ylims(1) corr_lims(1)]);
+            ylims(2) = max([ylims(2) corr_lims(2)]);
+            p.progress;
+        end
+    
+    end
+    p.stop;
+    
+    figure(hh(1))
+    ylims = ceil(abs(ylims)).*[-1 1];
+    for j = 1:length(square_ind)
+        for k = 1:length(circle_ind)
+            subplot(num_sessions/2, num_sessions/2,num_sessions/2*(j-1)+k);
+            ylim(ylims)
+        end
+    end
+
+
+end
 
 end
 
 %% plotting sub-function
-function [best_angle] = plot_func(corr_mat, shuffle_mat2, rot_array, distal_rot, ...
-    edges, edges2, fig_h, num_sessions, subplot_ind)
+function [best_angle, corr_lims] = plot_func(corr_mat, shuffle_mat2, rot_array, distal_rot, ...
+    edges, edges2, fig_h, num_sessions, row, col, sesh_use, rot_type)
+
+subplot_ind = (row-1)*num_sessions + col;
 figure(fig_h(1))
 h = subplot(num_sessions, num_sessions, subplot_ind);
 corr_means = nanmean(corr_mat,1);
+corr_lims = [min(corr_means), max(corr_means)];
 plot(rot_array, corr_means) % plot data
 
 hold on
@@ -132,11 +163,18 @@ xlim([0 360])
 ylim([-1 1]) % Need to revise this to go to the max of all the data in the end
 set(h,'XTick',0:90:360);
 hold off
-%         xlabel('Local Cue Mismatch (deg)')
-%         ylabel('Mean Spearman Correlation')
-%         title([mouse_name_title(sessions(k).Date) ' - Session ' num2str(sessions(k).Session) ...
-%             ' (' twoenv_get_shape(sessions(k).Animal, sessions(k).Date, sessions(k).Session) ')'])
-%         legend('Actual', 'Shuffled', 'Distal aligned')
+% xlabel('Local Cue Mismatch (deg)')
+% ylabel('Mean Spearman Correlation')
+if subplot_ind == 1
+    [~, sesh_use] = ChangeDirectory_NK(sesh_use(1),0);
+    title(mouse_name_title(sesh_use(1).Animal))
+else
+    title([num2str(row) ' ' twoenv_get_shape(sesh_use(row).Animal, sesh_use(row).Date, sesh_use(row).Session)...
+        ' - ' num2str(col) ' ' twoenv_get_shape(sesh_use(col).Animal, sesh_use(col).Date, sesh_use(col).Session)]);
+end
+% title([mouse_name_title(sessions(k).Date) ' - Session ' num2str(sessions(k).Session) ...
+%     ' (' twoenv_get_shape(sessions(k).Animal, sessions(k).Date, sessions(k).Session) ')'])
+% legend('Actual', 'Shuffled', 'Distal aligned')
 
 % Get best angle for all neurons together
 [~, best_ind] = max(corr_means);
@@ -154,6 +192,14 @@ figure(fig_h(2))
 subplot(num_sessions, num_sessions, subplot_ind);
 histogram(corr_mat(:, best_ind), edges, 'Normalization', 'probability'); hold on;
 histogram(shuffle_mat2(:,1), edges, 'Normalization', 'probability');
+
+if subplot_ind == 1
+    title(mouse_name_title(sesh_use(1).Animal))
+else
+    title([num2str(row) ' ' twoenv_get_shape(sesh_use(row).Animal, sesh_use(row).Date, sesh_use(row).Session)...
+        ' - ' num2str(col) ' ' twoenv_get_shape(sesh_use(col).Animal, sesh_use(col).Date, sesh_use(col).Session)]);
+end
+
 %         title([mouse_name_title(sessions(k).Date) ' - Session ' num2str(sessions(k).Session) ...
 %             ' (' twoenv_get_shape(sessions(k).Animal, sessions(k).Date, sessions(k).Session) ')'])
 %         xlabel('Spearman Correlation')
@@ -165,12 +211,30 @@ subplot(num_sessions, num_sessions, subplot_ind);
 histogram(best_angle_all, edges2); hold on;
 pshuf = histcounts(best_angle_all_shuf, edges2, 'Normalization', 'probability');
 plot(rot_array, pshuf*length(best_angle_all),'k--')
-%         title([mouse_name_title(sessions(k).Date) ' - Session ' num2str(sessions(k).Session) ...
-%             ' (' twoenv_get_shape(sessions(k).Animal, sessions(k).Date, sessions(k).Session) ')'])
-        xlim([rot_array(1)-mean(diff(rot_array))/2 rot_array(end)+mean(diff(rot_array))/2])
-        set(gca,'XTick',0:90:270);
-%         xlabel('Angle of best correlation (degrees)')
-%         ylabel('Probability (#neurons/total')
-%         legend('Actual','Shuffled')
+xlim([rot_array(1)-mean(diff(rot_array))/2 rot_array(end)+mean(diff(rot_array))/2])
+set(gca,'XTick',0:90:270);
 
+if subplot_ind == 1
+    title(mouse_name_title(sesh_use(1).Animal))
+else
+    title([num2str(row) ' ' twoenv_get_shape(sesh_use(row).Animal, sesh_use(row).Date, sesh_use(row).Session)...
+        ' - ' num2str(col) ' ' twoenv_get_shape(sesh_use(col).Animal, sesh_use(col).Date, sesh_use(col).Session)]);
+end
+% title([mouse_name_title(sessions(k).Date) ' - Session ' num2str(sessions(k).Session) ...
+%     ' (' twoenv_get_shape(sessions(k).Animal, sessions(k).Date, sessions(k).Session) ')'])
+% xlabel('Angle of best correlation (degrees)')
+% ylabel('Probability (#neurons/total')
+% legend('Actual','Shuffled')
+
+end
+
+%% Get indices for each shape
+function [shape_ind] = get_shape_ind(struct_in,shape)
+    
+    shape_log = nan(1,length(struct_in));
+    for ll=1:length(struct_in)
+        [~, struct_full] = ChangeDirectory_NK(struct_in(ll),0);
+        shape_log(ll) = ~isempty(regexpi(struct_full.Env,shape)); 
+    end
+    shape_ind = find(logical(shape_log));
 end
