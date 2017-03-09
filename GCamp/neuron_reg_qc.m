@@ -204,12 +204,12 @@ if plot_flag
     if num_shuffles > 0
 %         plot_metrics(cent_d_shuf, reg_stats.shift.orient_diff, avg_corr_shuf, 1);
         plot_metrics(cent_d_shuf, orient_diff_shuf, avg_corr_shuf, 1);
-        plot_metrics(reg_stats.shift.cent_d, reg_stats.shift.orient_diff, ...
-            reg_stats.shift.avg_corr, 2);
+%         plot_metrics(reg_stats.shift.cent_d, reg_stats.shift.orient_diff, ...
+%             reg_stats.shift.avg_corr, 2);
         subplot(2,2,2);
         legend('Actual','Shuffled')
-        subplot(2,2,3);
-        legend('Actual','Shifted 4 pixels')
+%         subplot(2,2,3);
+%         legend('Actual','Shifted 4 pixels')
         
     end
         
