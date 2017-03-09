@@ -21,12 +21,14 @@ end
 num_sessions = length(sesh_use);
 corr_mat = cell(num_sessions, num_sessions);
 shuffle_mat = cell(num_sessions, num_sessions);
+p = ProgressBar((num_sessions-1)*(num_sessions-2)/2);
 for j = 1:num_sessions-1
     [~, struct1] = ChangeDirectory_NK(sesh_use(j));
    for k = j+1:num_sessions
        [~, struct2] = ChangeDirectory_NK(sesh_use(k));
        
-       % Only perform comparison between two different structures
+       % Only perform comparison between two different structures if
+       % circ2square analysis is indicated.
        if circ2square_flag && (~isempty(regexpi(struct1.Env,'square')) && ~isempty(regexpi(struct2.Env,'square')) || ...
                ~isempty(regexpi(struct1.Env,'octagon')) && ~isempty(regexpi(struct2.Env,'octagon')))
           continue  % Skip to next session if between two same shape sessions 
@@ -41,8 +43,8 @@ for j = 1:num_sessions-1
            batch_session_map, rot_use, 'num_shuffles', num_shuffles, ...
            'trans', circ2square_flag );
        
-       % Don't perform comparison if square-to-square or circ-to-circ
-       
+       p.progress;
        
    end
 end
+p.stop;
