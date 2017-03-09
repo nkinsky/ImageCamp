@@ -61,8 +61,8 @@ for j = 1:length(rot_array)
         TMap2_use = TMap_gauss;
         
     end
-
     corr_mat(:,j) = corr_bw_TMap(TMap1_use, TMap2_use, map_use);
+
 end
 
 shuffle_mat = [];
