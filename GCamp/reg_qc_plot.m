@@ -3,7 +3,8 @@ function [ ] = reg_qc_plot(centroid_dist, orient_diff, avg_corr, varargin )
 %  Plot neuron registration metrics.  Leave empty to omit plots.  h is a
 %  handle to an existing figure (if ommitted it will plot to a new figure).
 %  'multi_sesh' parameter set to true/1 plots all as ecdfs.  Otherwise,
-%  they are plotted as histograms.
+%  they are plotted as histograms.  Low level function for reg_qc_plot2 or
+%  reg_qc_plot_batch.
 
 % NRK - convert pixels into microns
 

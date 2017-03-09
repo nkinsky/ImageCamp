@@ -3,7 +3,11 @@ function [best_angle] = twoenv_rot_analysis(base_session, rot_sessions, rot_type
 %
 %   Plots rotation "tuning curves" for all the rot_sessions vs. the
 %   base_session.  Also spits out the best angle of rotation when compared
-%   to the base_session (i.e. the one that gives the highest correlation)
+%   to the base_session (i.e. the one that gives the highest correlation).
+%
+%   Use this if you want a less dense version of comparisons since it will
+%   show you plots versus only 1 session (the base session).  Might be
+%   better for plotting individual sessions versus one another.
 
 %% Parse inputs
 ip = inputParser;
@@ -64,8 +68,13 @@ end
 
 [~, base_rot] = get_rot_from_db(base_session);
 
+edges = -1:0.05:1; % bin edges for neuron correlation plots
+angle_incr = mean(diff(rot_array));
+edges2 = (rot_array(1)-angle_incr/2):angle_incr:(rot_array(end)+angle_incr/2);
+
 h1 = figure;
 h2 = figure;
+h3 = figure;
 % Plot session 1 vs all others
 best_angle = nan(1, num_sessions);
 p = ProgressBar(length(sesh_use));
@@ -100,13 +109,18 @@ for k = 2:length(sesh_use)
         ' (' twoenv_get_shape(sesh_use(k).Animal, sesh_use(k).Date, sesh_use(k).Session) ')'])
     legend('Actual', 'Shuffled', 'Distal aligned')
     
-    % Get best angle
+    % Get best angle for all neurons together
     [~, best_ind] = max(corr_means);
     best_angle(k) = rot_array(best_ind);
     
+    % Get best angle for each individual cell
+    [~, best_ind2] = max(corr_mat(~isnan(nanmean(corr_mat,2)),:),[],2);
+    [~, best_ind2_shuf] = max(shuffle_mat2(~isnan(nanmean(shuffle_mat2,2)),:),[],2);
+    best_angle_all = rot_array(best_ind2);
+    best_angle_all_shuf = rot_array(best_ind2_shuf);
+    
     % plot each ecdf vs shuffle
     figure(h2)
-    edges = -1:0.05:1;
     subplot_auto(num_sessions,k);
 %     ecdf(corr_mat(:,best_ind)); hold on;
 %     ecdf(shuffle_mat2(:,1));
@@ -117,6 +131,19 @@ for k = 2:length(sesh_use)
     xlabel('Spearman Correlation')
     ylabel('Probability')
     legend('Best Rotation', 'Shuffled')
+    
+    figure(h3);
+    subplot_auto(num_sessions,k);
+    histogram(best_angle_all, edges2, 'Normalization', 'probability'); hold on;
+    pshuf = histcounts(best_angle_all_shuf, edges2, 'Normalization', 'probability');
+    plot(rot_array, pshuf*length(best_angle_all),'k--')
+    title([mouse_name_title(sesh_use(k).Date) ' - Session ' num2str(sesh_use(k).Session) ...
+        ' (' twoenv_get_shape(sesh_use(k).Animal, sesh_use(k).Date, sesh_use(k).Session) ')'])
+    xlim([rot_array(1)-angle_incr 360])
+    set(gca,'XTick',0:90:360);
+    xlabel('Angle of best correlation (degrees)')
+    ylabel('Probability (#neurons/total')
+    legend('Actual','Shuffled')
     
     p.progress;
 end
@@ -140,35 +167,19 @@ if ~trans
     ylabel('Mean Spearman Correlation')
     title(main_title)
     
-    figure(h2)
-    subplot_auto(num_sessions,1);
-    title(main_title)
-    
 elseif trans
     figure(h1)
     subplot_auto(num_sessions,1);
     title(main_title)
     
-    figure(h2)
-    subplot_auto(num_sessions,1);
-    title(main_title)
+end
     
-end
+figure(h2)
+subplot_auto(num_sessions,1);
+title(main_title)
+
+figure(h3)
+subplot_auto(num_sessions,1);
+title(main_title)
 
 end
-
-% %% load batch_session_map
-% function batch_session_map = load_batch_map(base_session, rot_sessions, batch_name)
-% 
-% sesh_all = cat(2, base_session, rot_sessions);
-% 
-% for j = 1:length(sesh_all)
-%     dirstr = ChangeDirectory(sesh_all(j).Animal, sesh_all(j).Date, sesh_all(j).Session, 0);
-%     try
-%         load(fullfile(dirstr,batch_name))
-%         disp(['Loading file ' fullfile(dirstr,batch_name)])
-%     catch
-%         continue
-%     end
-% end
-% end
