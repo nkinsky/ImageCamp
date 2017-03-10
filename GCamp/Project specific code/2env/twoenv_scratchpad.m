@@ -238,3 +238,13 @@ rot_full(rot_full >= 360) = rot_full(rot_full >= 360) - 360;
 batch_align_pos(sesh_use(1), reg_sesh_full,'skip_skew_fix', true, 'rotate_data', rot_full,...
     'manual_limits', man_limits_full, 'name_append', name_append_full, ...
     'suppress_output', true, 'skip_trace_align', true, 'base_adjust', false);
+
+%% Run full rotation analysis on each mouse/comparison type
+sesh_type = {'square', 'circle', 'circ2square'};
+sessions{1} = G30_square;
+sessions{2} = G30_oct;
+sessions{3} = G30_botharenas;
+for j = 1:3
+    twoenv_rot_analysis_full(sessions{j},sesh_type{j})
+end
+
