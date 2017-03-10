@@ -33,9 +33,9 @@ for j = 1:length(sesh_use)
 end
 
 %% Run Placefields_half
-sesh_use = all_sessions;
+sesh_use = G48_square(5);
 
-for j = 63:length(sesh_use)
+for j = 1
     [~, MD_use] = ChangeDirectory_NK(sesh_use(j),0);
     Placefields_half( MD_use, 'half', MD_use.exclude_frames, '_rot_to_std', 'Pos_data','Pos_align_std_corr.mat');
     Placefields_half( MD_use, 'half', MD_use.exclude_frames, '', 'Pos_data','Pos_align.mat');
@@ -238,3 +238,27 @@ rot_full(rot_full >= 360) = rot_full(rot_full >= 360) - 360;
 batch_align_pos(sesh_use(1), reg_sesh_full,'skip_skew_fix', true, 'rotate_data', rot_full,...
     'manual_limits', man_limits_full, 'name_append', name_append_full, ...
     'suppress_output', true, 'skip_trace_align', true, 'base_adjust', false);
+
+%% Get halfway point for each connected sessions
+sesh_use = G48_square(5:6 );
+figure; 
+curr_dir = cd;
+for j = 1:length(sesh_use)
+    [dirstr, MD_use] = ChangeDirectory_NK(sesh_use(j));
+    load(fullfile(dirstr,'FinalOutput.mat'),'PSAbool');
+    x = AlignImagingToTracking(MD_use.Pix2CM,PSAbool,0);
+    plot(x);
+    title([mouse_name_title(MD_use.Animal) ' ' mouse_name_title(MD_use.Date)]);
+    keyboard
+end
+cd(curr_dir)
+
+%% Run PF_half for each mouse on connected days
+sesh_use = G48_square(5:6);
+% half_pts = [13035 12790];
+for j = 1:length(sesh_use)
+    [dirstr, MD_use] = ChangeDirectory_NK(sesh_use(j));
+    Placefields_half( MD_use, 'half', MD_use.exclude_frames, '','half_custom',...
+        MD_use.half, 'Pos_data','Pos_align_rot0.mat');
+end
+
