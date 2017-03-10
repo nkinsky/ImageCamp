@@ -262,3 +262,12 @@ for j = 1:length(sesh_use)
         MD_use.half, 'Pos_data','Pos_align_rot0.mat');
 end
 
+%% Run full rotation analysis on each mouse/comparison type
+sesh_type = {'square', 'circle', 'circ2square'};
+sessions{1} = G30_square;
+sessions{2} = G30_oct;
+sessions{3} = G30_botharenas;
+for j = 1:3
+    twoenv_rot_analysis_full(sessions{j},sesh_type{j})
+end
+

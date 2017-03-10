@@ -1,5 +1,5 @@
 function [best_angle] = twoenv_rot_analysis_full(sessions, rot_type, varargin)
-% best_angle = twoenv_rot_analysis(base_session, rot_sessions, rot_type)
+% best_angle = twoenv_rot_analysis(sessions, rot_type, ...)
 %
 %   Plots rotation "tuning curves" for all sessions versus one another, the
 %   histogram of TMap correlations at the best rotation, and a histogram of
