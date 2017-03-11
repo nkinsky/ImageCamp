@@ -1667,6 +1667,7 @@ elseif strcmpi(userstr,'Natlaptop')
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'Standard, square';
+MD(i).half = 12750;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_45';
@@ -1681,6 +1682,7 @@ elseif strcmpi(userstr,'Natlaptop')
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'Standard, octagon';
+MD(i).half = 12750;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_45';
@@ -1708,6 +1710,7 @@ elseif strcmpi(userstr,'Natlaptop')
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'Rotated 180, Octagon';
+MD(i).half = 13015;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_45';
@@ -1722,6 +1725,7 @@ elseif strcmpi(userstr,'Natlaptop')
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'Rotated 180, Square';
+MD(i).half = 13015;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_45';
@@ -2307,6 +2311,7 @@ elseif strcmpi(userstr,'Natlaptop')
 end
 MD(i).Notes = '2env standard - square';
 MD(i).Pix2CM = 0.0874;
+MD(i).half = 13035;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_48';
@@ -2321,6 +2326,7 @@ elseif strcmpi(userstr,'Natlaptop')
 end
 MD(i).Notes = '2env standard - octagon';
 MD(i).Pix2CM = 0.0874;
+MD(i).half = 13035;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_48';
@@ -2335,6 +2341,7 @@ elseif strcmpi(userstr,'Natlaptop')
 end
 MD(i).Notes = '2env - Octagon Rotated 180';
 MD(i).Pix2CM = 0.0874;
+MD(i).half = 12790;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_48';
@@ -2349,6 +2356,7 @@ elseif strcmpi(userstr,'Natlaptop')
 end
 MD(i).Notes = '2env - Square Rotated 180';
 MD(i).Pix2CM = 0.0874;
+MD(i).half = 12790;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_48';

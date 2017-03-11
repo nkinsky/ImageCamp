@@ -34,27 +34,35 @@ stay_in = true;
 while stay_in
     for k = 1:2
         for ll = 1:2
-            subplot(3,2,2*(k-1)+ll)
+            subplot(2,4,4*(k-1)+ll)
             imagesc_nan(rot90(TMap{k,ll}{j},1),cm,[1 1 1]);
             title(['Neuron ' num2str(j) ' - Half # ' num2str(k)])
             xlabel(['p = ' num2str(pval{k,ll}(j))])
         end
     end
     
-    subplot(3,2,5:6)
-    active = pos_data{1}.PSAbool(j,:);
-    plot(pos_data{1}.x_adj_cm, pos_data{1}.y_adj_cm, 'k',...
-        pos_data{1}.x_adj_cm(active), pos_data{1}.y_adj_cm(active),'r.');
-    axis tight
-    axis off
+%     subplot(3,2,5:6)
+%     active = pos_data{1}.PSAbool(j,:);
+%     plot(pos_data{1}.x_adj_cm, pos_data{1}.y_adj_cm, 'k',...
+%         pos_data{1}.x_adj_cm(active), pos_data{1}.y_adj_cm(active),'r*');
+%     axis tight
+%     axis off
     
-%     for ll = 1:2
-%         subplot(3,2,4+ll)
-%         active = pos_data{ll}.PSAbool(j,:);
-%         plot(pos_data{ll}.x_adj_cm, pos_data{ll}.y_adj_cm, 'k',...
-%             pos_data{ll}.x_adj_cm(active), pos_data{ll}.y_adj_cm(active),'r.');
-%         axis off
-%     end
+% This is a hack - need to plot actual spiking data from Placefields_half
+    num_frames = size(pos_data{1}.PSAbool,2);
+    half{1} = false(1,num_frames); half{2} = false(1,num_frames);
+    half{1}(1:round(num_frames/2)) = true;
+    half{2}((round(num_frames/2))+1:end) = true;
+    %%
+    for k = 1:2
+        subplot(2,4,4*(k-1)+[3 4])
+        active = pos_data{1}.PSAbool(j,:) & half{k};
+        plot(pos_data{1}.x_adj_cm, pos_data{1}.y_adj_cm, 'k',...
+            pos_data{1}.x_adj_cm(active), pos_data{1}.y_adj_cm(active),'r*');
+        axis tight
+        axis off
+    end
     [ j, stay_in] = LR_cycle( j,[1 num_PFs]);
+    %%
 end
 
