@@ -240,11 +240,14 @@ batch_align_pos(sesh_use(1), reg_sesh_full,'skip_skew_fix', true, 'rotate_data',
     'suppress_output', true, 'skip_trace_align', true, 'base_adjust', false);
 
 %% Run full rotation analysis on each mouse/comparison type
+close all
+
 sesh_type = {'square', 'circle', 'circ2square'};
-sessions{1} = G30_square;
-sessions{2} = G30_oct;
-sessions{3} = G30_botharenas;
+save_dir = 'J:\GCamp Mice\Working\2env plots figures variables\full rotation analysis plots';
+sessions{1} = G48_square;
+sessions{2} = G48_oct;
+sessions{3} = G48_botharenas;
 for j = 1:3
-    twoenv_rot_analysis_full(sessions{j},sesh_type{j})
+    twoenv_rot_analysis_full(sessions{j}, sesh_type{j}, 'save_dir', save_dir);
 end
 
