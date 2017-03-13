@@ -254,8 +254,7 @@ end
 cd(curr_dir)
 
 %% Run PF_half for each mouse on connected days
-sesh_use = G48_square(5:6);
-% half_pts = [13035 12790];
+sesh_use = cat(2,G45_square(5:6), G45_oct(5:6));
 for j = 1:length(sesh_use)
     [dirstr, MD_use] = ChangeDirectory_NK(sesh_use(j));
     Placefields_half( MD_use, 'half', MD_use.exclude_frames, '','half_custom',...
@@ -271,3 +270,4 @@ for j = 1:3
     twoenv_rot_analysis_full(sessions{j},sesh_type{j})
 end
 
+asdf
