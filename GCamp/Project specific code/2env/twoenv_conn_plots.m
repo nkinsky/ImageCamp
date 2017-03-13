@@ -1,4 +1,4 @@
-function [] = twoenv_conn_plots( sessions)
+    function [] = twoenv_conn_plots( sessions)
 % twoenv_conn_plots( session,... )
 %   Scrolls through plots from each connected session. sessions variable
 %   must contain info for 1st session then 2nd session in connected
@@ -13,14 +13,15 @@ function [] = twoenv_conn_plots( sessions)
 disp('Loading files')
 for j = 1:2
    dirstr = ChangeDirectory_NK(sessions(j),0);
-   PF_temp = importdata(fullfile(dirstr,'Placefields_half.mat'));
+   PF_temp = importdata(fullfile(dirstr,'Placefields_half.mat'),'Placefields_halves');
    pos_data{j} = load(fullfile(dirstr,'Pos_align_rot0.mat'),'x_adj_cm','y_adj_cm','PSAbool');
    for k = 1:2
-      TMap{k,j} = PF_temp{k}.TMap_gauss;
-      pval{k,j} = PF_temp{k}.pval;
+      TMap{k,j} = PF_temp.Placefields_halves{k}.TMap_gauss;
+      pval{k,j} = PF_temp.Placefields_halves{k}.pval;
    end
    
 end
+Placefields_halves = PF_temp.Placefields_halves;
 
 num_PFs = length(TMap{1,1});
 
@@ -56,9 +57,14 @@ while stay_in
     %%
     for k = 1:2
         subplot(2,4,4*(k-1)+[3 4])
-        active = pos_data{1}.PSAbool(j,:) & half{k};
-        plot(pos_data{1}.x_adj_cm, pos_data{1}.y_adj_cm, 'k',...
-            pos_data{1}.x_adj_cm(active), pos_data{1}.y_adj_cm(active),'r*');
+%         active = pos_data{1}.PSAbool(j,:) & half{k};
+%         plot(pos_data{1}.x_adj_cm, pos_data{1}.y_adj_cm, 'k',...
+%             pos_data{1}.x_adj_cm(active), pos_data{1}.y_adj_cm(active),'r*');
+
+        % Perhaps this is better?
+        active = Placefields_halves{k}.PSAbool(j,:);
+        plot(Placefields_halves{k}.x,Placefields_halves{k}.y, 'k',...
+            Placefields_halves{k}.x(active), Placefields_halves{k}.y(active),'r*')
         axis tight
         axis off
     end
