@@ -392,9 +392,9 @@ for j = 1:size(sesh(2).NeuronImage_reg,2)
         end
         
         % Sort out neurons with best/worst match and map to best match
-        if length(best_match) == 1 % Only choose the cell with the most overlap if it is truly the most
+        if length(best_match) == 1 % Only choose the cell with the highest correlation
             neuron_id{same_ind(best_match)} = j;
-        elseif length(best_match) > 1 % send all to nans if more than one neuron is completely inside the other
+        elseif length(best_match) > 1 % send all to nans if more than one neuron has the same highest correlation
             for m = 1: length(best_match)
                 neuron_id{same_ind(best_match(m))} = nan;
             end
@@ -534,7 +534,7 @@ end
     
 %% Find how many cells don't map onto the second session. 
 nonmapped = sum(cellfun(@isempty, neuron_id));          %Cells that disappeared/appeared over the two sessions.
-crappy = sum(cellfun(@sum,cellfun(@isnan,neuron_id,'UniformOutput',false)));    %Multiple of these cells in session 1 map onto session 2.
+crappy = sum(cellfun(@sum,cellfun(@isnan,neuron_id,'UniformOutput',false)));    %Multiple of these cells in session 1 map onto session 2. Not necessarily crappy, just densedly packed.
 
 num_bad_cells.nonmapped = nonmapped;
 num_bad_cells.crappy = crappy;                          %Number of cells that didn't make the cut.
