@@ -55,7 +55,7 @@ p = ProgressBar(length(sesh_type)*num_animals);
 for j = 1:num_animals
     for k = 1:length(sesh_type)
         circ2square_flag = strcmpi(sesh_type{k},'circ2square');
-        [corr_mat, shuffle_mat] = twoenv_batch_rot_analysis(Mouse(j).sesh.(sesh_type{k}),...
+        [corr_mat, shuffle_mat] = twoenv_best_rot_analysis(Mouse(j).sesh.(sesh_type{k}),...
             Mouse(j).best_angle.(sesh_type{k}), circ2square_flag);
         Mouse(j).corr_mat.(sesh_type{k}) = corr_mat;
         Mouse(j).shuffle_mat.(sesh_type{k}) = shuffle_mat;
@@ -104,6 +104,7 @@ for j = 1:num_animals
     end
 end
 
+%% Plot mean correlations vs days for each comparison type
 for k = 1:length(sesh_type)
     figure
     days_diff_use = days_diff.(sesh_type{k});

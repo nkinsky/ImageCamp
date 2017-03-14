@@ -240,7 +240,7 @@ batch_align_pos(sesh_use(1), reg_sesh_full,'skip_skew_fix', true, 'rotate_data',
     'suppress_output', true, 'skip_trace_align', true, 'base_adjust', false);
 
 %% Get halfway point for each connected sessions
-sesh_use = G48_square(5:6 );
+sesh_use = G31_square(5:6 );
 figure; 
 curr_dir = cd;
 for j = 1:length(sesh_use)
@@ -254,7 +254,8 @@ end
 cd(curr_dir)
 
 %% Run PF_half for each mouse on connected days
-sesh_use = cat(2,G45_square(5:6), G45_oct(5:6));
+sesh_use = cat(2,G30_square(5:6),G30_oct(5:6),G31_square(5:6),G31_oct(5:6));
+
 for j = 1:length(sesh_use)
     [dirstr, MD_use] = ChangeDirectory_NK(sesh_use(j));
     Placefields_half( MD_use, 'half', MD_use.exclude_frames, '','half_custom',...
@@ -262,12 +263,15 @@ for j = 1:length(sesh_use)
 end
 
 %% Run full rotation analysis on each mouse/comparison type
+close all
+
 sesh_type = {'square', 'circle', 'circ2square'};
-sessions{1} = G30_square;
-sessions{2} = G30_oct;
-sessions{3} = G30_botharenas;
+save_dir = 'J:\GCamp Mice\Working\2env plots figures variables\full rotation analysis plots';
+sessions{1} = G48_square;
+sessions{2} = G48_oct;
+sessions{3} = G48_botharenas;
 for j = 1:3
-    twoenv_rot_analysis_full(sessions{j},sesh_type{j})
+    twoenv_rot_analysis_full(sessions{j}, sesh_type{j}, 'save_dir', save_dir);
 end
 
 asdf

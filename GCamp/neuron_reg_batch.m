@@ -169,7 +169,10 @@ trans2_ratio_pass = sum(ok_after2(:))/sum(ok_orig2(:));
 % it doesn't
 batch_session_map(1).map = trans_test2.*test(1).map; 
 % batch_session_map(1).map(isnan(test(1).map)) = 0; % Send all nans to zeros also
-batch_session_map(1).map(:,1) = [1:size(batch_session_map(1).map,1)]';
+batch_session_map(1).map(:,1) = (1:size(batch_session_map(1).map,1))'; % Fix first column
+% NRK start here - check why I am doing the above and comment WHY, and then
+% batch_session_map(1).map(trans_test2 == 0) = nan; % Should work I think
+keyboard
 
 % Send all session info to stay with the map
 [batch_session_map(1).session(1).Animal] = ...

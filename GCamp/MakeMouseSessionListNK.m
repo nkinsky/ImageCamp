@@ -395,6 +395,7 @@ if (strcmp(userstr,'Nat'))
 end
 MD(i).Notes = 'Mid, Standard';
 MD(i).Pix2CM = 0.136;
+MD(i).half = 12645;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -407,6 +408,8 @@ if (strcmp(userstr,'Nat'))
 end
 MD(i).Notes = 'Mid, Standard';
 MD(i).Pix2CM = 0.136;
+MD(i).half = 12645;
+
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -420,6 +423,8 @@ end
 MD(i).Notes = 'Rotated 180 - Note that we lose basically half our data here because of the dropped frames, resulting in lower info scores, pvalues, etc.';
 MD(i).exclude_frames = 13134:18969;
 MD(i).Pix2CM = 0.136;
+MD(i).half = 12655;
+
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -433,6 +438,8 @@ end
 MD(i).Notes = 'Rotated 180';
 MD(i).exclude_frames = 13134:18969;
 MD(i).Pix2CM = 0.136;
+MD(i).half = 12655;
+
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -1019,6 +1026,7 @@ if (strcmp(userstr,'Nat'))
 end
 MD(i).Notes = 'Mid - Standard';
 MD(i).Pix2CM = 0.136;
+MD(i).half = 13460;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -1031,6 +1039,7 @@ if (strcmp(userstr,'Nat'))
 end
 MD(i).Notes = 'Mid - Standard';
 MD(i).Pix2CM = 0.136;
+MD(i).half = 13460;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -1043,6 +1052,7 @@ if (strcmp(userstr,'Nat'))
 end
 MD(i).Notes = 'Mid, Rotated 180';
 MD(i).Pix2CM = 0.136;
+MD(i).half = 13152;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -1055,6 +1065,7 @@ if (strcmp(userstr,'Nat'))
 end
 MD(i).Notes = 'Mid, Rotated 180';
 MD(i).Pix2CM = 0.136;
+MD(i).half = 13152;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
