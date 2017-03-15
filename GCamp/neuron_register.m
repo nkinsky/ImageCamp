@@ -112,7 +112,7 @@ min_thresh = p.Results.min_thresh;
 save_on = p.Results.save_on;
 suppress_output = p.Results.suppress_output;
 %% 2: Perform Image Registration
-[RegistrationInfoX, ~] = image_registerX(mouse_name, base_date, base_session, ...
+[RegistrationInfoX, imreg_unique_filename] = image_registerX(mouse_name, base_date, base_session, ...
     reg_date, reg_session, manual_reg_enable,'use_neuron_masks',use_neuron_masks,...
     'suppress_output', suppress_output,'name_append',name_append);
 
@@ -121,7 +121,9 @@ suppress_output = p.Results.suppress_output;
 if ~isempty(alt_reg_tform)
     disp('Using user-specified transform for registration');
     RegistrationInfoX.tform.T = alt_reg_tform;
+    save(imreg_unique_filename,'RegistrationInfoX');
 %     save_alt = 1;
+%     save_on = false;
 end
 
 % 2B: Adjust Image registration to add "jitter"
