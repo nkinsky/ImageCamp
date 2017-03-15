@@ -10,10 +10,10 @@ function [ FR_vector_master] = assign_FR( FR_vector_session, map_use )
 
 % map_use = batch_map(:,j+1);
 %%
-nan_neurons = find(isnan(map_use));
+nan_neurons = isnan(map_use);
 
 temp = unique(map_use); % Get numbers of all neurons properly mapped in this session
-map_unique = temp(~isnan(temp) & temp ~= 0);
+map_unique = temp(~isnan(temp) & temp ~= 0); 
 
 temp_FR = zeros(size(map_use,1),1);
 %%
@@ -23,7 +23,7 @@ for k = 1:length(map_unique) % 1:max(map_use)
 end
 
 % Put nans wherever the neuron is not properly mapped
-temp_FR(nan_neurons) = nan(length(nan_neurons),1);
+temp_FR(nan_neurons) = nan;
 
 FR_vector_master = temp_FR;
 
