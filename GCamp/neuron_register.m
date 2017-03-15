@@ -55,7 +55,8 @@ function [ neuron_map] = neuron_register( mouse_name, base_date, base_session, r
 %       that maps to the neurons in the 1st session.  An empty cell means
 %       that no neuron from the 2nd session maps to that neuron from the 1st
 %       session.  A value of NaN means that the closest neuron within the
-%       min_thresh distance has already been mapped to another neuron.
+%       min_thresh distance has already been mapped to another neuron (i.e.
+%       it is in a densely packed area)
 %
 %       .same_neuron: n x m logical, where the a value of 1 indicates that
 %       more than one neuron from the second session maps to a cell in the
