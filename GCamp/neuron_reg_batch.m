@@ -30,7 +30,10 @@ function [ batch_session_map ] = neuron_reg_batch(base_struct, reg_struct, varar
 %       batch_session_map:
 %           .map: rows are neuron number, columns contain the neuron from
 %           each session that maps to that neuron.  1st column is the overall
-%           index, 2nd row is the 1st registered session, ...
+%           index, 2nd row is the 1st registered session, etc.  zeros mean
+%           that that neuron is not active on that day.  NaN means that
+%           that neuron does not pass the transitive test for that session
+%           and should be excluded from any analysis for that day.
 %   
 %           .session: record of each session
 %
@@ -39,7 +42,8 @@ function [ batch_session_map ] = neuron_reg_batch(base_struct, reg_struct, varar
 %           match for ALL subsequent sessions.  Strict (2) = toss only the 
 %           neuron mappings from a given session that don't match (e.g. if
 %           session 1, 3, and 5 are the same between the two registrations, 
-%           keep those mappings and toss session 2 and 4 mappings)
+%           keep those mappings and toss session 2 and 4 mappings).  While
+%           1 is tabulated, only 2 is currently used.
 %
 %
 %% Parse Inputs
@@ -167,12 +171,16 @@ trans2_ratio_pass = sum(ok_after2(:))/sum(ok_orig2(:));
 
 % multiple each element of the map by either a 1 or a 0 if it passes or if
 % it doesn't
-batch_session_map(1).map = trans_test2.*test(1).map; 
-% batch_session_map(1).map(isnan(test(1).map)) = 0; % Send all nans to zeros also
-batch_session_map(1).map(:,1) = (1:size(batch_session_map(1).map,1))'; % Fix first column
-% NRK start here - check why I am doing the above and comment WHY, and then
-% batch_session_map(1).map(trans_test2 == 0) = nan; % Should work I think
-keyboard
+map_temp = test(1).map;
+map_temp(isnan(map_temp)) = 0; % Send all nans (neurons within the distance threshold that don't map to that neuron) to zero
+map_temp(~trans_test2) = nan; % Sens all neurons that don't pass the transitive test to NaN - should be excluded from future comparisons
+map_temp(:,1) = (1:size(map_temp,1))'; % Fix first column
+batch_session_map(1).map = map_temp;
+
+%%% Old code to be left in place until above is vetted
+% batch_session_map(1).map = (nan*trans_test2).*test(1).map; 
+% % batch_session_map(1).map(isnan(test(1).map)) = 0; % Send all nans to zeros also
+% batch_session_map(1).map(:,1) = (1:size(batch_session_map(1).map,1))'; % Fix first column
 
 % Send all session info to stay with the map
 [batch_session_map(1).session(1).Animal] = ...
