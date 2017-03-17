@@ -1,4 +1,4 @@
-function [best_angle] = twoenv_rot_analysis_full(sessions, rot_type, varargin)
+function [best_angle, best_angle_all] = twoenv_rot_analysis_full(sessions, rot_type, varargin)
 % best_angle = twoenv_rot_analysis(sessions, rot_type, ...)
 %
 %   Plots rotation "tuning curves" for all sessions versus one another, the
@@ -77,6 +77,7 @@ ylims = [0 0];
 % Plot all sessions vs each other
 if ~trans
     best_angle = nan(num_sessions, num_sessions);
+    best_angle_all = cell(num_sessions, num_sessions);
     p = ProgressBar((num_sessions-1)*num_sessions/2);
     for j = 1:num_sessions-1
         [~, base_rot] = get_rot_from_db(sessions(j));
@@ -89,7 +90,7 @@ if ~trans
             [~, sesh2_rot] = get_rot_from_db(sessions(k));
             distal_rot = sesh2_rot - base_rot;
             subplot_ind = (j-1)*num_sessions + k;
-            [best_angle(j,k), corr_lims] = plot_func(corr_mat, shuffle_mat2, rot_array, ...
+            [best_angle(j,k), best_angle_all{j,k}, corr_lims] = plot_func(corr_mat, shuffle_mat2, rot_array, ...
                 distal_rot, edges, edges2, hh, num_sessions, subplot_ind, j, k, j, k, sessions, rot_type);
             
             ylims(1) = min([ylims(1) corr_lims(1)]);
@@ -116,6 +117,7 @@ elseif trans
     circle_ind = get_shape_ind(sessions, 'octagon');
     
     best_angle = nan(num_sessions/2, num_sessions/2);
+    best_angle_all = cell(num_sessions/2, num_session/2);
     p = ProgressBar((num_sessions/2)^2);
     for j = 1:length(square_ind)
         [~, base_rot] = get_rot_from_db(sessions(square_ind(j)));
@@ -128,7 +130,7 @@ elseif trans
             [~, sesh2_rot] = get_rot_from_db(sessions(circle_ind(k)));
             distal_rot = sesh2_rot - base_rot;
             subplot_ind = (j-1)*num_sessions/2 + k;
-            [best_angle(j,k), corr_lims] = plot_func(corr_mat, shuffle_mat2, rot_array, ...
+            [best_angle(j,k), best_angle_all{j,k}, corr_lims] = plot_func(corr_mat, shuffle_mat2, rot_array, ...
                 distal_rot, edges, edges2, hh, num_sessions/2, subplot_ind, ...
                 square_ind(j), circle_ind(k), j, k, sessions, rot_type);
             
@@ -152,10 +154,6 @@ elseif trans
     
 end
 
-
-
-
-
 if ~isempty(save_dir)
     ext_type = '.png';
     file_name = {[sessions(1).Animal ' - ' rot_type ' - Population Rotation Analysis' ext_type],...
@@ -171,7 +169,7 @@ end
 end
 
 %% plotting sub-function
-function [best_angle, corr_lims] = plot_func(corr_mat, shuffle_mat2, rot_array, distal_rot, ...
+function [best_angle, best_angle_all2, corr_lims] = plot_func(corr_mat, shuffle_mat2, rot_array, distal_rot, ...
     edges, edges2, fig_h, num_sessions, subplot_ind, sesh1_ind, sesh2_ind, row, col, sesh_use, rot_type)
 
 figure(fig_h(1))
@@ -210,6 +208,8 @@ best_angle = rot_array(best_ind);
 [~, best_ind2] = max(corr_mat(~isnan(nanmean(corr_mat,2)),:),[],2);
 [~, best_ind2_shuf] = max(shuffle_mat2(~isnan(nanmean(shuffle_mat2,2)),:),[],2);
 best_angle_all = rot_array(best_ind2);
+best_angle_all2 = nan(size(corr_mat,1),1);
+best_angle_all2(~isnan(nanmean(corr_mat,2))) = best_angle_all; % Keep these in the same neuron location as session1
 best_angle_all_shuf = rot_array(best_ind2_shuf);
 
 % plot histogram breakdown of correlation values at best rotation
