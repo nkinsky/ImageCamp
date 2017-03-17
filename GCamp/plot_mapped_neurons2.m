@@ -6,8 +6,9 @@ function [ ] = plot_mapped_neurons2( ROIbase, ROIreg_mapped, neuron_id)
 
 figure;
 
-imagesc(create_AllICmask(ROIbase) + 2*create_AllICmask(ROIreg_mapped)); colorbar
-title('1 = session 1, 2 = session 2, red outline = both')
+imagesc(create_AllICmask(ROIbase) + 2*create_AllICmask(ROIreg_mapped)); 
+hc = colorbar;
+title('Red outline = same neuron across sessions')
 hold on
 for j = 1:length(neuron_id)
     nid = neuron_id{j};
@@ -18,6 +19,9 @@ for j = 1:length(neuron_id)
     end
 end
 hold off
+
+hc.Ticks = [1 2 3]; 
+hc.TickLabels = {'Session 1 only' 'Session 2 only' 'Overlap'};
 
 end
 

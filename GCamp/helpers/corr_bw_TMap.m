@@ -11,7 +11,7 @@ if nargin < 4
 end
 
 neurons_use = find(include_index);
-num_neurons = length(TMap1);
+num_neurons = min(length(TMap1),length(neuron_map));
 
 corr_matrix = nan(length(TMap1),1);
 for j = 1:num_neurons
@@ -23,6 +23,8 @@ for j = 1:num_neurons
         corr_matrix(j,1) = corr(TMap1{sesh1_neuron}(:),...
             TMap2{sesh2_neuron}(:),'rows','complete','type','Spearman');
     end
+end
+
 end
 
 

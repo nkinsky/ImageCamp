@@ -32,6 +32,7 @@ function [ reg_stats ] = neuron_reg_qc( base_struct, reg_struct, varargin )
 
 %% Parse Inputs
 p = inputParser;
+p.KeepUnmatched = true;
 p.addRequired('base_struct', @(a) isstruct(a) && length(a) == 1);
 p.addRequired('reg_struct', @(a) isstruct(a) && length(a) == 1);
 p.addParameter('name_append', '', @ischar); % default = ''
@@ -79,7 +80,7 @@ if batch_mode == 0 || batch_mode == 1
         map_use = neuron_map.neuron_id;
     elseif batch_mode == 1 % Use final vetted map from neuron_reg_batch (better, conservative)
         load(fullfile(base_path,['batch_session_map' name_append '.mat'])); % Load batch map
-        batch_session_map = fix_batch_session_map( batch_session_map);  % Fix it if pre-bugfix
+        batch_session_map = fix_batch_session_map(batch_session_map);  % Fix it if pre-bugfix
         reg_index_use = get_index(batch_session_map.session, reg_struct);
         map_use = get_neuronmap_from_batchmap(batch_session_map.map, 1, reg_index_use);
     end
@@ -103,7 +104,7 @@ load(fullfile(reg_path,'FinalOutput.mat'),'NeuronImage','NeuronAvg');
 % Register neuron ROIs and AvgROIs to base_session
 [reginfo, ~] = image_registerX(base_struct.Animal, ...
     base_struct.Date, base_struct.Session, reg_struct.Date, ...
-    reg_struct.Session, 'suppress_output', true); % Get transform between sessions
+    reg_struct.Session, 'suppress_output', true, 'name_append', name_append); % Get transform between sessions
 ROI_reg = cellfun(@(a) imwarp_quick(a,reginfo),NeuronImage,'UniformOutput',0);
 ROIavg = MakeAvgROI(NeuronImage,NeuronAvg);
 ROIavg_reg = cellfun(@(a) imwarp_quick(a,reginfo),ROIavg,'UniformOutput',0);
@@ -122,7 +123,7 @@ disp(['Calculating Neuron Registration Metrics for ' base_struct.Animal ' ' ...
 %% Do shuffling if specified
 cent_d_shuf = []; orient_diff_shuf = []; avg_corr_shuf = [];
 if num_shuffles > 0
-    disp('Shuffling...')
+    disp(['Shuffling ' num2str(num_shuffles) ' time(s)...'])
     pp = ProgressBar(num_shuffles);
     for j = 1:num_shuffles
         [~, cent_d_temp, ~, ~, ~, orient_diff_temp, ~] = ...
@@ -203,12 +204,12 @@ if plot_flag
     if num_shuffles > 0
 %         plot_metrics(cent_d_shuf, reg_stats.shift.orient_diff, avg_corr_shuf, 1);
         plot_metrics(cent_d_shuf, orient_diff_shuf, avg_corr_shuf, 1);
-        plot_metrics(reg_stats.shift.cent_d, reg_stats.shift.orient_diff, ...
-            reg_stats.shift.avg_corr, 2);
+%         plot_metrics(reg_stats.shift.cent_d, reg_stats.shift.orient_diff, ...
+%             reg_stats.shift.avg_corr, 2);
         subplot(2,2,2);
         legend('Actual','Shuffled')
-        subplot(2,2,3);
-        legend('Actual','Shifted 4 pixels')
+%         subplot(2,2,3);
+%         legend('Actual','Shifted 4 pixels')
         
     end
         

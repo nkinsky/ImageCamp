@@ -1,5 +1,5 @@
 function [reg_stats] = reg_qc_plot_batch(base, reg, varargin)
-% reg_stats = reg_qc_plot_batch(base, reg, num_shuffles, num_shifts, shift_dist)
+% reg_stats = reg_qc_plot_batch(base, reg, num_shuffles (opt), num_shifts(opt), shift_dist(opt), ...)
 % Default is 100 shuffles, 10 shifts, and 4 pixel shift
 %%% NRK 1) need to update this for including batch map with ALL masks
 %%% included!!!
@@ -13,10 +13,10 @@ p = inputParser;
 p.addRequired('base', @isstruct);
 p.addRequired('reg', @isstruct);
 p.addOptional('num_shuffles', 100, @(a) isnumeric(a) && round(a) == a && a > 0);
-p.addOptional('num_shifts', 0, @(a) isnumeric(a) && round(a) == a && a > 0);
+p.addOptional('num_shifts', 0, @(a) isnumeric(a) && round(a) == a && a >= 0);
 p.addOptional('shift_dist', 4, @(a) isnumeric(a) && a > 0);
 p.addParameter('batch_mode',0, @(a) a == 0 || a == 1 || a == 2);
-p.addParameter('name_append','',@ischar);
+p.addParameter('name_append','',@(a) ischar(a) || iscell(a) && (length(a) == 1 || length(a) == length(reg)));
 p.parse(base, reg, varargin{:});
 
 num_shuffles = p.Results.num_shuffles;
@@ -31,31 +31,47 @@ else
     multi_sesh = 0;
 end
 
+if ischar(name_append)
+    temp = name_append;
+    clear name_append
+    name_append = cell(1, 1+length(reg));
+    [name_append{:}] = deal(temp);
+end
+
 %% Plot
 
 h = figure;
 
 reg_stats = cell(length(reg),1);
 legend_text = cell(1, length(reg));
-for j = 1:length(reg)-1
+
+reg_stats{1} = neuron_reg_qc(base, reg(1), 'batch_mode', batch_mode, ...
+    'shuffle', num_shuffles, 'shift', num_shifts, 'shift_dist', shift_dist, ...'
+    'name_append', name_append{1}); % If the last registration is bad you can get a bad shuffled distribution here...
+legend_text{1} = [mouse_name_title(reg(1).Date) ' - #' num2str(reg(1).Session)];
+reg_qc_plot(reg_stats{1}.cent_d, reg_stats{1}.orient_diff, ...
+        reg_stats{1}.avg_corr, h, 'multi_sesh', multi_sesh);
+
+for j = 2:length(reg)
     
     reg_stats{j} = neuron_reg_qc(base, reg(j), 'batch_mode', batch_mode,...
-        'name_append', name_append);
+        'name_append', name_append{j});
     reg_qc_plot(reg_stats{j}.cent_d, reg_stats{j}.orient_diff, ...
         reg_stats{j}.avg_corr, h, 'multi_sesh', 1);
     legend_text{j} = [mouse_name_title(reg(j).Date) ' - #' num2str(reg(j).Session)];
     reg_stats{j}.session = reg(j);
 end
-reg_stats{length(reg)} = neuron_reg_qc(base, reg(end), 'batch_mode', batch_mode, ...
-    'shuffle', num_shuffles, 'shift', num_shifts, 'shift_dist', shift_dist, ...'
-    'name_append', name_append);
-legend_text{length(reg)} = [mouse_name_title(reg(end).Date) ' - #' num2str(reg(end).Session)];
-reg_qc_plot(reg_stats{end}.cent_d, reg_stats{end}.orient_diff, ...
-        reg_stats{end}.avg_corr, h, 'multi_sesh', multi_sesh);
+
+% reg_stats{length(reg)} = neuron_reg_qc(base, reg(end), 'batch_mode', batch_mode, ...
+%     'shuffle', num_shuffles, 'shift', num_shifts, 'shift_dist', shift_dist, ...'
+%     'name_append', name_append); % If the last registration is bad you can get a bad shuffled distribution here...
+% legend_text{length(reg)} = [mouse_name_title(reg(end).Date) ' - #' num2str(reg(end).Session)];
+% reg_qc_plot(reg_stats{end}.cent_d, reg_stats{end}.orient_diff, ...
+%         reg_stats{end}.avg_corr, h, 'multi_sesh', multi_sesh);
     
-reg_qc_plot(reg_stats{end}.shift.cent_d, reg_stats{end}.shift.orient_diff, ...
-    reg_stats{end}.shift.avg_corr, h, 'plot_shuf', 1);
-reg_qc_plot([], reg_stats{end}.shuffle.orient_diff, [], h, 'plot_shuf', 1);
+reg_qc_plot(reg_stats{1}.shift.cent_d, reg_stats{1}.shift.orient_diff, ...
+    reg_stats{1}.shift.avg_corr, h, 'plot_shuf', 1);
+reg_qc_plot([], reg_stats{1}.shuffle.orient_diff, [], h, 'plot_shuf', 1);
 
 for j=1:4
     subplot(2,2,j)

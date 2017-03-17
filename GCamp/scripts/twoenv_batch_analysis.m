@@ -524,7 +524,7 @@ tcontrol_corrs = arrayfun(@(a) nanmean(a.corrs_half(a.pval > 0.95)), time_contro
 tcontrol_mean = mean(tcontrol_corrs);
 tcontrol_sem = std(tcontrol_corrs)/length(tcontrol_corrs);
 
-tcontrol_PV_corrs = arrayfun(@(a) nanmean(a.PVcorr(:)),session);
+tcontrol_PV_corrs = arrayfun(@(a) nanmean(a.PVcorr(:)),time_control(1).session);
 tcontrol_PV_corr_mean = mean(tcontrol_PV_corrs);
 tcontrol_PV_corr_sem = std(tcontrol_PV_corrs)/length(tcontrol_PV_corrs);
 
@@ -1456,7 +1456,7 @@ for k = 1:2
     temp2 = temp;
     temp3 = temp;
     size_use = size(temp);
-    for j = 1:3
+    for j = 1:num_animals
         % Merge all before sessions
         for ll = 1:4
             temp = cat(3,temp,resize(Mouse(j).PFdens_map{k,ll},size_use));
@@ -1496,6 +1496,15 @@ figure(1002)
 subplot(2,5,10)
 imagesc_nan(nanmean(temp(:,:,1:3),3),cm,[1 1 1])
 title('Resized and combining mice 1-3')
+
+%%
+figure(1003)
+for k = 1:2
+    for ll = 1:3
+        subplot(2,3,3*(k-1)+ll)
+        imagesc_nan(nanmean(PFdens_comb{k,ll},3), cm, [1 1 1])
+    end
+end
 
 %% PF density plots
 figure(930)

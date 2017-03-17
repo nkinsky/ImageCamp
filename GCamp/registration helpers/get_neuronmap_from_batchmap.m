@@ -4,14 +4,14 @@ function [ map_sesh1_sesh2 ] = get_neuronmap_from_batchmap( batch_map, sesh1_ind
 %  it
 
 %% Set up everything
-index{1} = sesh1_index;
-index{2} = sesh2_index;
+index = [sesh1_index, sesh2_index];
 
 % Get range of neurons to work with
 neuron_range = cell(1,2);
+map = cell(1,2);
 for j = 1:2
     
-    map{j} = batch_map(:,1+index{j});
+    map{j} = batch_map(:,1+index(j));
     valid_indices = map{j}(:) ~= 0;
     neuron_range{j} = [min(map{j}(valid_indices)) ...
         max(map{j}(valid_indices))];
@@ -26,5 +26,7 @@ for j = 1:length(sesh1_neurons)
     if find_neuron1 ~= 0
         map_sesh1_sesh2(j) = map{2}(find_neuron1);
     end
+end
+
 end
 

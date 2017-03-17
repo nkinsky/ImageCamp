@@ -58,6 +58,18 @@ G30_botharenas = cat(2,G30_square, G30_oct);
 G30_botharenas = G30_botharenas([1 2 9 10 11 12 3 4 5 13 14 6 7 8 15 16]);
 G30_both_manual_limits = [0 0 0 0 0 0 0 0 1 1 1 1 0 0 0 0];
 
+% Note that 0 = local cues aligned
+G30_square_best_angle = [0 0 270 0 0 270 0 180]; % Note only session 6 looks sketchy/global remappery (still probably legit though)
+G30_circle_best_angle = [0 165 0 0 60 285 150 150]; % All good except session 5 - global remapping?
+G30_circ2square_best_angle = [300 105 300 315 30 240 105 90]; % Note all but session 5 have good mapping between circle and square
+G30_both_best_angle = [0 0 300 105 300 315 270 0 0 30 240 270 0 180 105 90];
+
+% Hack to quantify global remapping!!! - Need to run kstest2 between each
+% session with a Bonferroni correction for 7(8)
+% (square/circle(circ2square)) between correlations and shuffled
+% correlations
+G30_square_global_remap = [0 0 0 0 0 1 0 0];
+G30_circle_global_remap = [0 0 0 0 1 0 0 0];
 
 %% G31
 G31_square(1).Date = '12_15_2014'; G31_square(1).Session = 1;
@@ -85,6 +97,10 @@ G31_botharenas = cat(2,G31_square, G31_oct);
 G31_botharenas = G31_botharenas([1 2 9 10 11 12 3 4 5 13 14 6 7 8 15 16]);
 G31_both_manual_limits = [0 0 0 1 0 0 0 0 1 1 1 1 0 0 0 0]; 
 
+G31_square_best_angle = [0 0 0 0 0 180 0 0]; % Session 8 (and maybe 7) might be remappers, though it may just be the low number of cells...
+G31_circle_best_angle = [0 0 0 0 0 180 0 15]; % Session 6 appears to be a global remapping 
+G31_circ2square_best_angle = [15 30 15 30 30 225 0 15]; % Note that only sessions 3 and 4 appear to have circ2square mapping - very low numbers of cells active between the two environments...
+G31_both_best_angle = [0 0 15 30 15 30 0 0 0 30 225 180 0 0 0 15];
 %% G45
 G45_square(1).Date = '08_28_2015'; G45_square(1).Session = 1;
 G45_square(2).Date = '08_28_2015'; G45_square(2).Session = 2;
@@ -111,6 +127,11 @@ G45_botharenas = cat(2,G45_square, G45_oct);
 G45_botharenas = G45_botharenas([1 2 9 10 11 12 3 4 5 13 14 6 7 8 15 16]);
 G45_both_manual_limits = [0 0 0 0 0 0 0 0 1 1 1 1 0 0 0 0];
 
+G45_square_best_angle = [0 180 0 0 0 0 270 0];
+G45_circle_best_angle = [0 15 0 0 15 15 345 330];
+G45_circ2square_best_angle = [0 15 0 345 0 0 345 330]; % All sessions have mapping between arenas
+G45_both_best_angle = [0 180 0 15 0 345 0 0 0 0 0 0 270 0 345 330];
+
 %% G48
 G48_square(1).Date = '08_29_2015'; G48_square(1).Session = 1;
 G48_square(2).Date = '08_29_2015'; G48_square(2).Session = 2;
@@ -136,8 +157,16 @@ G48_manual_limits = [0 0 0 0 1 1 0 0];
 G48_botharenas = cat(2,G48_square, G48_oct);
 G48_botharenas = G48_botharenas([1 2 9 10 11 12 3 4 5 13 14 6 7 8 15 16]);
 G48_both_manual_limits = [0 0 0 0 0 0 0 0 1 1 1 1 1 0 0 0]; %%% Is this correct?  Manual limits on 1st square session?
+
+G48_square_best_angle = [0 180 0 0 90 90 180 90]; % All look good
+G48_circle_best_angle = [0 120 105 15 0 330 0 45]; % Session 3 and 4 appear to be global remappers
+G48_circ2square_best_angle = [105 240 240 90 90 75 90 150]; % Note that sessions 3,4, and 7 appear sketchy (no mapping between arenas)
+G48_both_best_angle = [0 180 105 240 240 90 0 0 90 90 75 90 180 90 90 150];
 %% All sessions
 all_sessions = cat(2,G30_botharenas, G31_botharenas, G45_botharenas, G48_botharenas);
+square_days = [ 1 1 4 4 5 6 7 7];
+circle_days = [2 2 3 3 5 6 8 8];
+all_days = [1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8];
 
 %% Check script
 sesh_check = G48_square;

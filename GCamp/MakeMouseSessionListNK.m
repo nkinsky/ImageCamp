@@ -1,7 +1,6 @@
-function [MD, session_ref] = MakeMouseSessionList(userstr)
+function [MD, session_ref] = MakeMouseSessionListNK(userstr)
 % this function makes a list of the location of all sessions on disk
-% session_ref: gives you the start and end indices of session types, and currently are:
-%   'G31_2env', 'G30_alternation'
+% session_ref: gives you the start and end indices of session types
 
 CurrDir = pwd;
 
@@ -299,7 +298,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G31\2env\12_15_2014\1 - 2env square right\Working';
 end
 MD(i).Notes = 'Right';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -311,7 +310,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G31\2env\12_15_2014\2 - 2env square left 90CCW\Working';
 end
 MD(i).Notes = 'Left, Rotated 90CCW';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -323,7 +322,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G31\2env\12_16_2014\1 - 2env octagon left\Working';
 end
 MD(i).Notes = 'Left';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -335,7 +334,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G31\2env\12_16_2014\2 - 2env octagon right 90CCW\Working';
 end
 MD(i).Notes = 'Right, Rotated 90CCW - TONS of dropped frames in 2nd session - see .mat file.  Because they are mostly intermittent the traces still look ok.';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -347,7 +346,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G31\2env\12_17_2014\1 - octagon right\Working';
 end
 MD(i).Notes = 'Right';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -359,7 +358,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G31\2env\12_17_2014\2 - octagon mid 90CW\Working';
 end
 MD(i).Notes = 'Mid, Rotated 90CW';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -371,7 +370,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G31\2env\12_18_2014\1 - 2env square right\Working';
 end
 MD(i).Notes = 'Right';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -383,7 +382,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G31\2env\12_18_2014\2 - 2env square mid 90CW\Working';
 end
 MD(i).Notes = 'Mid, Rotated 90CW';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -395,7 +394,8 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G31\2env\12_19_2014\2env standard\Working\square';
 end
 MD(i).Notes = 'Mid, Standard';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
+MD(i).half = 12645;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -407,7 +407,9 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G31\2env\12_19_2014\2env standard\Working\octagon';
 end
 MD(i).Notes = 'Mid, Standard';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
+MD(i).half = 12645;
+
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -420,7 +422,9 @@ if (strcmp(userstr,'Nat'))
 end
 MD(i).Notes = 'Rotated 180 - Note that we lose basically half our data here because of the dropped frames, resulting in lower info scores, pvalues, etc.';
 MD(i).exclude_frames = 13134:18969;
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
+MD(i).half = 12655;
+
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -433,7 +437,9 @@ if (strcmp(userstr,'Nat'))
 end
 MD(i).Notes = 'Rotated 180';
 MD(i).exclude_frames = 13134:18969;
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
+MD(i).half = 12655;
+
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -445,7 +451,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G31\2env\12_21_2014_nb\1 - 2env square left\Working';
 end
 MD(i).Notes = 'Left';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -457,7 +463,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G31\2env\12_21_2014_nb\2 - 2env square mid 90CW\Working';
 end
 MD(i).Notes = 'Mid, Rotated 90CW';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -469,7 +475,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G31\2env\12_22_2014_nb\1 - 2env octagon mid\Working';
 end
 MD(i).Notes = 'Mid';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -481,7 +487,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G31\2env\12_22_2014_nb\2 - 2env octagon left 90CW\Working';
 end
 MD(i).Notes = 'Left, Rotated 90CW';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 G31.two_env(2) = i;
 
@@ -923,7 +929,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_19_2014\1 - 2env square left 201B\Working';
 end
 MD(i).Notes = 'Left';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -935,7 +941,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_19_2014\2 - 2env square mid 201B\Working';
 end
 MD(i).Notes = 'Mid';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -947,7 +953,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_20_2014\1 - 2env octagon left\Working';
 end
 MD(i).Notes = 'Left';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -959,7 +965,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_20_2014\2 - 2env octagon right 90CCW\Working';
 end
 MD(i).Notes = 'Right, Rotated 90CCW';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -971,7 +977,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_21_2014\1 - 2env octagon mid 201B\Working';
 end
 MD(i).Notes = 'Mid';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -983,7 +989,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_21_2014\2 - 2env octagon left 90CW 201B\Working';
 end
 MD(i).Notes = 'Left, rotated 90CW';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -995,7 +1001,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_22_2014\1 - 2env square right 201B\Working';
 end
 MD(i).Notes = 'Right';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -1007,7 +1013,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_22_2014\2 - 2env square mid 90CW 201B\Working';
 end
 MD(i).Notes = 'Mid 90CW';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -1019,7 +1025,8 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_23_2014\2env standard\Working\square';
 end
 MD(i).Notes = 'Mid - Standard';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
+MD(i).half = 13460;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -1031,7 +1038,8 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_23_2014\2env standard\Working\octagon';
 end
 MD(i).Notes = 'Mid - Standard';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
+MD(i).half = 13460;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -1043,7 +1051,8 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_24_2014\rotate 180\Working\octagon';
 end
 MD(i).Notes = 'Mid, Rotated 180';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
+MD(i).half = 13152;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -1055,7 +1064,8 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_24_2014\rotate 180\Working\square';
 end
 MD(i).Notes = 'Mid, Rotated 180';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
+MD(i).half = 13152;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -1067,7 +1077,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_25_2014\1 - 2env square left 201B\Working';
 end
 MD(i).Notes = 'Mid';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -1079,7 +1089,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_25_2014\2 - 2env square right 90CCW 201B\Working';
 end
 MD(i).Notes = 'Right 90CCW';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -1091,7 +1101,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_26_2014\1 - 2env octagon right 201B\Working';
 end
 MD(i).Notes = 'Right';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -1103,7 +1113,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\2env\11_26_2014\2 - 2 env octagon mid 201B\Working';
 end
 MD(i).Notes = 'Mid';
-MD(i).Pix2CM = 0.0709;
+MD(i).Pix2CM = 0.136;
 
 G30.two_env(2) = i;
 G30.all(2) = i;
@@ -1538,6 +1548,8 @@ MD(i).Env = '2env - square right';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\08_28_2015\1 - square right\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 1\1 - square\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'square right';
@@ -1550,6 +1562,8 @@ MD(i).Env = '2env - square left 90CCW';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\08_28_2015\2 - square left 90CCW\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 1\2 - square\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'square left 90CCW';
@@ -1562,6 +1576,8 @@ MD(i).Env = '2env - octagon right';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\08_29_2015\1 - oct right\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 2\1 - octagon\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'octagon right';
@@ -1574,6 +1590,8 @@ MD(i).Env = '2env - octagon mid 90CCW';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\08_29_2015\2 - oct mid 90CCW\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 2\2 - octagon\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'octagon mid 90CCW';
@@ -1586,6 +1604,8 @@ MD(i).Env = '2env - octagon mid';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\08_30_2015\1 - oct mid\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 3\1 - octagon\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'octagon mid';
@@ -1598,6 +1618,8 @@ MD(i).Env = '2env - octagon mid';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\08_30_2015\2 - oct left 90CW\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 3\2 - octagon\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'octagon left 90CW';
@@ -1610,6 +1632,8 @@ MD(i).Env = '2env - square left';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\08_31_2015\1 - square left\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 4\1 - square\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'square left';
@@ -1622,6 +1646,8 @@ MD(i).Env = '2env - square mid';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\08_31_2015\2 - square mid 90CW\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 4\2 - square\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'square mid 90CW';
@@ -1647,9 +1673,12 @@ MD(i).Env = '2env - standard square';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\09_01_2015\Working\square';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 5\2env std\1 - square\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'Standard, square';
+MD(i).half = 12750;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_45';
@@ -1659,9 +1688,12 @@ MD(i).Env = '2env - standard octagon';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\09_01_2015\Working\octagon';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 5\2env std\2 - octagon\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'Standard, octagon';
+MD(i).half = 12750;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_45';
@@ -1671,6 +1703,7 @@ MD(i).Env = '2env - connected 180';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\09_02_2015\2 env 180\Working';
+
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = '2env connected - 180';
@@ -1683,9 +1716,12 @@ MD(i).Env = '2env - connected 180 octagon';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\09_02_2015\2 env 180\Working\octagon';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 6\2env 180\1 - octagon\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'Rotated 180, Octagon';
+MD(i).half = 13015;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_45';
@@ -1695,9 +1731,12 @@ MD(i).Env = '2env - connected 180 square';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\09_02_2015\2 env 180\Working\square';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 6\2env 180\2 - square\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'Rotated 180, Square';
+MD(i).half = 13015;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_45';
@@ -1707,6 +1746,8 @@ MD(i).Env = '2env - square mid';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\09_03_2015\1 - square mid\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 7\1 - square\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'square mid';
@@ -1719,6 +1760,8 @@ MD(i).Env = '2env - square right 90CCW';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\09_03_2015\2 - square right 90CCW\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 7\2 - square\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'square right 90CCW';
@@ -1731,6 +1774,8 @@ MD(i).Env = '2env - octagon left';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\09_04_2015\1 - oct left\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 8\1 - octagon\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'octagon left';
@@ -1743,6 +1788,8 @@ MD(i).Env = '2env - octagon right';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\09_04_2015\2 - oct right 90CW\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G45\2env duplication\day 8\2 - octagon\Working';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'octagon right 90CW';
@@ -1755,6 +1802,8 @@ MD(i).Env = '2env - octagon mid';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\09_04_2015\3 - octagon mid\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = '';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'octagon mid';
@@ -1767,6 +1816,8 @@ MD(i).Env = '2env - octagon left 180';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\09_04_2015\4 - octagon left 180\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = '';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'octagon left 180';
@@ -1779,6 +1830,8 @@ MD(i).Env = '2env - square right';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\09_05_2015\1 - square right\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = '';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'square right';
@@ -1791,6 +1844,8 @@ MD(i).Env = '2env - square mid 180';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G45\2env\09_05_2015\2 - square mid 180\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = '';
 end
 MD(i).Pix2CM = 0.0874;
 MD(i).Notes = 'square mid 180';
@@ -2150,6 +2205,8 @@ MD(i).Env = 'square right';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\08_29_2015\1 - square right\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 1\1 - square\Working';
 end
 MD(i).Notes = 'square right';
 MD(i).Pix2CM = 0.0874;
@@ -2162,6 +2219,8 @@ MD(i).Env = 'square left 90CCW';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\08_29_2015\2 - square left 90CCW\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 1\2 - square\Working';
 end
 MD(i).Notes = 'square left 90CCW';
 MD(i).Pix2CM = 0.0874;
@@ -2174,6 +2233,8 @@ MD(i).Env = 'octagon mid';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\08_30_2015\1 - oct mid\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 2\1 - octagon\Working';
 end
 MD(i).Notes = 'octagon mid';
 MD(i).Pix2CM = 0.0874;
@@ -2186,6 +2247,8 @@ MD(i).Env = 'octagon left 90CCW';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\08_30_2015\2 - oct left 90CCW\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 2\2 - octagon\Working';
 end
 MD(i).Notes = 'octagon left 90CCW';
 MD(i).Pix2CM = 0.0874;
@@ -2198,6 +2261,8 @@ MD(i).Env = 'octagon right';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\08_31_2015\1 - oct right\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 3\1 - octagon\Working';
 end
 MD(i).Notes = 'octagon right';
 MD(i).Pix2CM = 0.0874;
@@ -2210,6 +2275,8 @@ MD(i).Env = 'octagon mid 90CW';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\08_31_2015\2 - oct mid 90CW\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 3\2 - octagon\Working';
 end
 MD(i).Notes = 'octagon mid 90CW';
 MD(i).Pix2CM = 0.0874;
@@ -2222,6 +2289,8 @@ MD(i).Env = 'square left';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\09_01_2015\1 - square left\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 4\1 - square\Working';
 end
 MD(i).Notes = 'square left';
 MD(i).Pix2CM = 0.0874;
@@ -2234,6 +2303,8 @@ MD(i).Env = 'square mid 90CW';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\09_01_2015\2 - square mid 90CW\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 4\2 - square\Working';
 end
 MD(i).Notes = 'square mid 90CW';
 MD(i).Pix2CM = 0.0874;
@@ -2246,9 +2317,12 @@ MD(i).Env = '2env standard - square';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\09_02_2015\2env standard\Working\square';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 5\2env std\1 - square\Working';
 end
 MD(i).Notes = '2env standard - square';
 MD(i).Pix2CM = 0.0874;
+MD(i).half = 13035;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_48';
@@ -2258,9 +2332,12 @@ MD(i).Env = '2env standard - octagon';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\09_02_2015\2env standard\Working\octagon';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 5\2env std\2 - octagon\Working';
 end
 MD(i).Notes = '2env standard - octagon';
 MD(i).Pix2CM = 0.0874;
+MD(i).half = 13035;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_48';
@@ -2270,9 +2347,12 @@ MD(i).Env = '2env 180 - octagon';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\09_03_2015\2env 180\Working\octagon';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 6\2env 180\1 - octagon\Working';
 end
 MD(i).Notes = '2env - Octagon Rotated 180';
 MD(i).Pix2CM = 0.0874;
+MD(i).half = 12790;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_48';
@@ -2282,9 +2362,12 @@ MD(i).Env = '2env 180 - square';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\09_03_2015\2env 180\Working\square';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 6\2env 180\2 - square\Working';
 end
 MD(i).Notes = '2env - Square Rotated 180';
 MD(i).Pix2CM = 0.0874;
+MD(i).half = 12790;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_48';
@@ -2294,6 +2377,8 @@ MD(i).Env = 'square right';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\09_04_2015\1 - square right\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 7\1 - square\Working';
 end
 MD(i).Notes = 'square right';
 MD(i).Pix2CM = 0.0874;
@@ -2306,6 +2391,8 @@ MD(i).Env = 'square mid 90CW';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\09_04_2015\2 - square mid 90CW\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 7\2 - square\Working';
 end
 MD(i).Notes = 'square mid 90CW';
 MD(i).Pix2CM = 0.0874;
@@ -2318,6 +2405,8 @@ MD(i).Env = 'octagon left';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\09_05_2015\1 - oct left\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 8\1 - octagon\Working';
 end
 MD(i).Notes = 'octagon left';
 MD(i).Pix2CM = 0.0874;
@@ -2330,11 +2419,26 @@ MD(i).Env = 'octagon right 90CCW';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\09_05_2015\2 - oct right 90CCW\Working';
+elseif strcmpi(userstr,'Natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 8\2 - octagon\Working';
 end
 MD(i).Notes = 'octagon right 90CCW';
 MD(i).Pix2CM = 0.0874;
 
 G48.twoenv(2) = i;
+%% G48 from Will for QC
+
+i = i+1;
+MD(i).Animal = 'GCamp6f_48';
+MD(i).Date = '02_17_2017';
+MD(i).Session = 1;
+MD(i).Env = 'NA';
+MD(i).Room = 'NA';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'D:\GCamp mice\G48\Will session';
+end
+MD(i).Notes = 'Example session from Will to compare to my data';
+
 
 %% G48 Alternation
 

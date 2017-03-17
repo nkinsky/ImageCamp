@@ -55,7 +55,8 @@ function [ neuron_map] = neuron_register( mouse_name, base_date, base_session, r
 %       that maps to the neurons in the 1st session.  An empty cell means
 %       that no neuron from the 2nd session maps to that neuron from the 1st
 %       session.  A value of NaN means that the closest neuron within the
-%       min_thresh distance has already been mapped to another neuron.
+%       min_thresh distance has already been mapped to another neuron (i.e.
+%       it is in a densely packed area)
 %
 %       .same_neuron: n x m logical, where the a value of 1 indicates that
 %       more than one neuron from the second session maps to a cell in the
@@ -112,7 +113,7 @@ min_thresh = p.Results.min_thresh;
 save_on = p.Results.save_on;
 suppress_output = p.Results.suppress_output;
 %% 2: Perform Image Registration
-[RegistrationInfoX, ~] = image_registerX(mouse_name, base_date, base_session, ...
+[RegistrationInfoX, imreg_unique_filename] = image_registerX(mouse_name, base_date, base_session, ...
     reg_date, reg_session, manual_reg_enable,'use_neuron_masks',use_neuron_masks,...
     'suppress_output', suppress_output,'name_append',name_append);
 
@@ -121,7 +122,9 @@ suppress_output = p.Results.suppress_output;
 if ~isempty(alt_reg_tform)
     disp('Using user-specified transform for registration');
     RegistrationInfoX.tform.T = alt_reg_tform;
+    save(imreg_unique_filename,'RegistrationInfoX');
 %     save_alt = 1;
+%     save_on = false;
 end
 
 % 2B: Adjust Image registration to add "jitter"
@@ -392,9 +395,9 @@ for j = 1:size(sesh(2).NeuronImage_reg,2)
         end
         
         % Sort out neurons with best/worst match and map to best match
-        if length(best_match) == 1 % Only choose the cell with the most overlap if it is truly the most
+        if length(best_match) == 1 % Only choose the cell with the highest correlation
             neuron_id{same_ind(best_match)} = j;
-        elseif length(best_match) > 1 % send all to nans if more than one neuron is completely inside the other
+        elseif length(best_match) > 1 % send all to nans if more than one neuron has the same highest correlation
             for m = 1: length(best_match)
                 neuron_id{same_ind(best_match(m))} = nan;
             end
@@ -534,7 +537,7 @@ end
     
 %% Find how many cells don't map onto the second session. 
 nonmapped = sum(cellfun(@isempty, neuron_id));          %Cells that disappeared/appeared over the two sessions.
-crappy = sum(cellfun(@sum,cellfun(@isnan,neuron_id,'UniformOutput',false)));    %Multiple of these cells in session 1 map onto session 2.
+crappy = sum(cellfun(@sum,cellfun(@isnan,neuron_id,'UniformOutput',false)));    %Multiple of these cells in session 1 map onto session 2. Not necessarily crappy, just densedly packed.
 
 num_bad_cells.nonmapped = nonmapped;
 num_bad_cells.crappy = crappy;                          %Number of cells that didn't make the cut.
