@@ -33,15 +33,15 @@ end
 NumNeurons = length(TMap);
 figure(h_use); % Grab figure
 n_out = 1;
-    stay_in = true;
-    while stay_in
-        [~, temp] = make_nan_TMap(OccMap,TMap{n_out},'perform_smooth',...
-            perform_smooth);
-        imagesc_nan(temp, cmap, [1 1 1]);
-        title(['Heat Map for neuron ' num2str(n_out)])
-        
-        [n_out, stay_in] = LR_cycle(n_out,[1 NumNeurons]);
-    end
+stay_in = true;
+while stay_in
+    [~, temp] = make_nan_TMap(OccMap,TMap{n_out},'perform_smooth',...
+        perform_smooth);
+    imagesc_nan(temp, cmap, [1 1 1]);
+    title(['Heat Map for neuron ' num2str(n_out)])
+    
+    [n_out, stay_in] = LR_cycle(n_out,[1 NumNeurons]);
+end
 
 end
 
