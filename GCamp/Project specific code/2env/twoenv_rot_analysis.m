@@ -134,7 +134,7 @@ for k = 2:length(sesh_use)
     
     figure(h3);
     subplot_auto(num_sessions,k);
-    histogram(best_angle_all, edges2, 'Normalization', 'probability'); hold on;
+    histogram(best_angle_all, edges2); hold on;
     pshuf = histcounts(best_angle_all_shuf, edges2, 'Normalization', 'probability');
     plot(rot_array, pshuf*length(best_angle_all),'k--')
     title([mouse_name_title(sesh_use(k).Date) ' - Session ' num2str(sesh_use(k).Session) ...

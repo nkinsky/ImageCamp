@@ -94,8 +94,10 @@ linkaxes(ax);
 %% Run immediately after above
 for j = 1:length(sesh_use)
     disp(['Running Rotated Placefield Analysis on ' sesh_use(j).Animal ' - ' sesh_use(j).Date ' - session ' num2str(sesh_use(j).Session)])
+    sesh_full = ChangeDirectory_NK(sesh_use,0); % fill in partial struct
     for k = 1:length(rot_use)
-        Placefields(sesh_use(j),'minspeed',1,'name_append', ['_rot' num2str(rot_use(k))],'Pos_data', ['Pos_align_rot' num2str(rot_use(k)) '.mat']);
+        Placefields(sesh_full,'minspeed',1,'name_append', ['_rot' num2str(rot_use(k))],...
+            'Pos_data', ['Pos_align_rot' num2str(rot_use(k)) '.mat'], 'exclude_frames',sesh_full.exclude_frames);
         PlacefieldStats(sesh_use(j),'name_append',['_rot' num2str(rot_use(k))]);
     end
 end
@@ -274,4 +276,4 @@ for j = 1:3
     twoenv_rot_analysis_full(sessions{j}, sesh_type{j}, 'save_dir', save_dir);
 end
 
-asdf
+%% Plot cells

@@ -42,18 +42,27 @@ miscVar.VideoLoadedFlag=0;
 miscVar.LapsWorkedOn=[];
 miscVar.xLL = [];
 miscVar.yLL = [];
+miscVar.xUL = [];
+miscVar.yUL = [];
 miscVar.xUR = [];
 miscVar.yUR = [];
+miscVar.xLR = [];
+miscVar.yLR = [];
 
 NOVar.LLframes = [];
-NOVar.URframes = [];  
+NOVar.URframes = [];
+NOVar.ULframes = [];
+NOVar.LRframes = []; 
 NOVar.nLL = 0;
 NOVar.nUR = 0;
+NOVar.nUL = 0;
+NOVar.nLR = 0;
 NOVar.Questionable = [];
 %% Layout for Novel Object
 fcnLoadVideo;
 miscVar.buttonsInUse={'UpperRightButton';'NeitherButton';...
-    'LowerLeftButton';'QuestionableButton'}; 
+    'LowerLeftButton';'QuestionableButton'; 'LowerRightButton';...
+    'UpperLeftButton'}; 
 
 videoFig.UpperRightButton = uicontrol('Style','pushbutton','String','UPPER RIGHT OBJECT (9)',...
                              'Position',[miscVar.buttonSecondCol,miscVar.upperLimit, miscVar.buttonWidth,30],...
@@ -70,6 +79,15 @@ videoFig.LowerLeftButton = uicontrol('Style','pushbutton','String','LOWER LEFT O
 videoFig.QuestionableButton = uicontrol('Style','pushbutton','String','QUESTIONABLE',...
                              'Position',[miscVar.buttonMiddleEdge,miscVar.upperLimit - miscVar.buttonStepDown*3,...
                              miscVar.buttonWidth,30], 'Callback',{@fcnQuestionableButton});
+                         
+videoFig.LowerRightButton = uicontrol('Style','pushbutton','String','LOWER RIGHT OBJECT (3)',...
+                             'Position',[miscVar.buttonSecondCol,miscVar.upperLimit - miscVar.buttonStepDown*2,...
+                             miscVar.buttonWidth,30], 'Callback',{@fcnLowerRightButton});
+                         
+videoFig.UpperLeftButton = uicontrol('Style','pushbutton','String','UPPER LEFT OBJECT (7)',...
+                             'Position',[miscVar.buttonLeftEdge,miscVar.upperLimit, miscVar.buttonWidth,30],...
+                             'Callback',{@fcnUpperLeftButton});
+                         
                          
 %% Other buttons
                          
@@ -96,9 +114,19 @@ videoFig.DrawLLoutlineButton = uicontrol('Style','pushbutton','String','DRAW LL 
 videoFig.DrawLLoutlineButton.BackgroundColor=miscVar.Green;
 
 videoFig.DrawURoutlineButton = uicontrol('Style','pushbutton','String','DRAW UR outline',...
-                             'Position',[miscVar.buttonSecondCol,miscVar.upperLimit - miscVar.buttonStepDown*5,...
+                             'Position',[miscVar.buttonSecondCol,miscVar.upperLimit - miscVar.buttonStepDown*4,...
                              miscVar.buttonWidth,30], 'Callback',{@fcnDrawURoutline});
 videoFig.DrawURoutlineButton.BackgroundColor=miscVar.Green;
+
+videoFig.DrawULoutlineButton = uicontrol('Style','pushbutton','String','DRAW UL outline',...
+                             'Position',[miscVar.buttonLeftEdge,miscVar.upperLimit - miscVar.buttonStepDown*4,...
+                             miscVar.buttonWidth,30], 'Callback',{@fcnDrawULoutline});
+videoFig.DrawULoutlineButton.BackgroundColor=miscVar.Green;
+
+videoFig.DrawLRoutlineButton = uicontrol('Style','pushbutton','String','DRAW LR outline',...
+                             'Position',[miscVar.buttonSecondCol,miscVar.upperLimit - miscVar.buttonStepDown*5,...
+                             miscVar.buttonWidth,30], 'Callback',{@fcnDrawLRoutline});
+videoFig.DrawLRoutlineButton.BackgroundColor=miscVar.Green;
 
 end
 
@@ -135,6 +163,23 @@ if miscVar.VideoLoadedFlag==1
     updatebuttoncolor
 end
 end
+
+function fcnUpperLeftButton(~,~)
+global miscVar
+if miscVar.VideoLoadedFlag==1
+    fcnAddUL
+    updatebuttoncolor
+end
+end
+
+function fcnLowerRightButton(~,~)
+global miscVar
+if miscVar.VideoLoadedFlag==1
+    fcnAddLR
+    updatebuttoncolor
+end
+end
+
 %% Object Outline Functions
 function fcnDrawLLoutline(~,~)
 global miscVar
@@ -158,6 +203,28 @@ if miscVar.VideoLoadedFlag==1
 end
 end
 
+function fcnDrawULoutline(~,~)
+global miscVar
+global videoFig
+if miscVar.VideoLoadedFlag==1
+    [~, xi, yi] = roipoly;
+    [miscVar.xUL, miscVar.yUL] = dilate_shape(xi,yi,12);
+    videoFig.DrawULoutlineButton.BackgroundColor=miscVar.Gray;
+    fcnRefreshOutlines
+end
+end
+
+function fcnDrawLRoutline(~,~)
+global miscVar
+global videoFig
+if miscVar.VideoLoadedFlag==1
+    [~, xi, yi] = roipoly;
+    [miscVar.xLR, miscVar.yLR] = dilate_shape(xi,yi,12);
+    videoFig.DrawLRoutlineButton.BackgroundColor=miscVar.Gray;
+    fcnRefreshOutlines
+end
+end
+
 function fcnRefreshOutlines(~,~)
 global miscVar
 global videoFig
@@ -173,6 +240,16 @@ end
 %Update UR object
 if ~isempty(miscVar.xUR) && ~isempty(miscVar.yUR)
     plot(miscVar.xUR, miscVar.yUR,'r');
+end
+
+% Update UL object
+if ~isempty(miscVar.xUL) && ~isempty(miscVar.yUL)
+    plot(miscVar.xUL, miscVar.yUL,'r');
+end
+
+%Update LR object
+if ~isempty(miscVar.xLR) && ~isempty(miscVar.yLR)
+    plot(miscVar.xLR, miscVar.yLR,'r');
 end
 
 hold off
@@ -329,6 +406,14 @@ switch e.Key
         fcnAddLL
         updatebuttoncolor
         
+    case 'numpad3' % log framenum as LR
+        fcnAddLR
+        updatebuttoncolor
+        
+    case 'numpd7' % log framenum as UL
+        fcnAddUL
+        updatebuttoncolor
+        
     case 'numpad9' % log framenum as UR
         fcnAddUR
         updatebuttoncolor
@@ -363,6 +448,8 @@ global videoFig
 % Identify if mouse is exploring either object
 LLactive = ~isempty(NOVar) && any(NOVar.LLframes == miscVar.frameNum);
 URactive = ~isempty(NOVar) && any(NOVar.URframes == miscVar.frameNum);
+ULactive = ~isempty(NOVar) && any(NOVar.ULframes == miscVar.frameNum);
+LRactive = ~isempty(NOVar) && any(NOVar.LRframes == miscVar.frameNum);
 
 % Set all buttons to gray
 for buttonCol=1:length(miscVar.buttonsInUse)
@@ -370,13 +457,17 @@ for buttonCol=1:length(miscVar.buttonsInUse)
 end
 
 % Make appropriate button red
-if LLactive && ~URactive
+if LLactive && ~URactive && ~ULactive && ~LRactive
     videoFig.LowerLeftButton.BackgroundColor=miscVar.Red;
-elseif ~LLactive && URactive
+elseif ~LLactive && URactive && ~ULactive && ~LRactive
     videoFig.UpperRightButton.BackgroundColor=miscVar.Red;
-elseif ~LLactive && ~URactive
+elseif ~LLactive && ~URactive && ULactive && ~LRactive
+    videoFig.UpperLeftButton.BackgroundColor=miscVar.Red;
+elseif ~LLactive && ~URactive && ~ULactive && LRactive
+    videoFig.LowerRightButton.BackgroundColor=miscVar.Red;
+elseif ~LLactive && ~URactive && ~ULactive && ~LRactive
     videoFig.NeitherButton.BackgroundColor=miscVar.Red;
-elseif LLactive && URactive
+elseif sum([LLactive, URactive, ULactive, LRactive]) > 1
     error('Something wrong - mouse appears to be exploring both objects at the same time')
 end
 
@@ -387,23 +478,33 @@ end
 
 end
 
-%% Add Lower-Left exploration
+%% Add Lower-Left exploration - NRK need to update more here ASAP!!!
 function fcnAddLL(~,~)
 global NOVar
 global miscVar
 
 NOVar.LLframes = unique([NOVar.LLframes miscVar.frameNum]); % Add existing frame number if unique and sort it
 NOVar.nLL = length(NOVar.LLframes); %
-if any(miscVar.frameNum == NOVar.URframes) % remove from NOVar.URframes if there already
-    ind_remove = miscVar.frameNum == NOVar.URframes;
-    NOVar.URframes = NOVar.URframes(~ind_remove);
-    NOVar.nUR = length(NOVar.URframes);
-    disp(['Frame ' num2str(miscVar.frameNum) ' REMOVED from upper-right object exploration count'])
+% if any(miscVar.frameNum == NOVar.URframes) % remove from NOVar.URframes if there already
+%     ind_remove = miscVar.frameNum == NOVar.URframes;
+%     NOVar.URframes = NOVar.URframes(~ind_remove);
+%     NOVar.nUR = length(NOVar.URframes);
+%     disp(['Frame ' num2str(miscVar.frameNum) ' REMOVED from upper-right object exploration count'])
+% end
+
+otherframes = {'URframes','ULframes','LRframes'};
+othern = {'nUR','nUL','nLR'};
+for j = 1:length(otherframes)
+    if any(miscVar.frameNum == NOVar.(otherframes{j})) % remove from NOVar.URframes if there already
+        ind_remove = miscVar.frameNum == NOVar.(otherframes{j});
+        NOVar.(otherframes{j}) = NOVar.(otherframes{j})(~ind_remove);
+        NOVar.(othern{j}) = length(NOVar.(otherframes{j}));
+        disp(['Frame ' num2str(miscVar.frameNum) ' REMOVED from ' otherframes{j} ' object exploration count'])
+    end
 end
 disp(['Frame ' num2str(miscVar.frameNum) ' ADDED to lower-left object exploration count'])
 
 fcnSaveNOVar
-% save NOVar NOVar
 
 end
 %% Add Upper-Right exploration
@@ -413,36 +514,116 @@ global miscVar
 
 NOVar.URframes = unique([NOVar.URframes miscVar.frameNum]); % Add existing frame number if unique and sort it
 NOVar.nUR = length(NOVar.URframes); %
-if any(miscVar.frameNum == NOVar.LLframes) % remove from NOVar.LLframes if there already
-    ind_remove = miscVar.frameNum == NOVar.LLframes;
-    NOVar.LLframes = NOVar.LLframes(~ind_remove);
-    NOVar.nLL = length(NOVar.LLframes);
-    disp(['Frame ' num2str(miscVar.frameNum) ' REMOVED from lower-left object exploration count'])
+% if any(miscVar.frameNum == NOVar.LLframes) % remove from NOVar.LLframes if there already
+%     ind_remove = miscVar.frameNum == NOVar.LLframes;
+%     NOVar.LLframes = NOVar.LLframes(~ind_remove);
+%     NOVar.nLL = length(NOVar.LLframes);
+%     disp(['Frame ' num2str(miscVar.frameNum) ' REMOVED from lower-left object exploration count'])
+% end
+
+otherframes = {'ULframes','LLframes','LRframes'};
+othern = {'nUL','nLL','nLR'};
+for j = 1:length(otherframes)
+    if any(miscVar.frameNum == NOVar.(otherframes{j})) % remove from NOVar.URframes if there already
+        ind_remove = miscVar.frameNum == NOVar.(otherframes{j});
+        NOVar.(otherframes{j}) = NOVar.(otherframes{j})(~ind_remove);
+        NOVar.(othern{j}) = length(NOVar.(otherframes{j}));
+        disp(['Frame ' num2str(miscVar.frameNum) ' REMOVED from ' otherframes{j} ' object exploration count'])
+    end
 end
 disp(['Frame ' num2str(miscVar.frameNum) ' ADDED to upper-right object exploration count'])
 
 fcnSaveNOVar
-% save NOVar NOVar
 
 end
 
-%% Remove Upper-Right/Lower-Left exploration
+%% Add Upper-Left exploration
+function fcnAddUL(~,~)
+global NOVar
+global miscVar
+
+NOVar.ULframes = unique([NOVar.ULframes miscVar.frameNum]); % Add existing frame number if unique and sort it
+NOVar.nUL = length(NOVar.ULframes); %
+otherframes = {'URframes','LLframes','LRframes'};
+othern = {'nUR','nLL','nLR'};
+for j = 1:length(otherframes)
+    if any(miscVar.frameNum == NOVar.(otherframes{j})) % remove from NOVar.URframes if there already
+        ind_remove = miscVar.frameNum == NOVar.(otherframes{j});
+        NOVar.(otherframes{j}) = NOVar.(otherframes{j})(~ind_remove);
+        NOVar.(othern{j}) = length(NOVar.(otherframes{j}));
+        disp(['Frame ' num2str(miscVar.frameNum) ' REMOVED from ' otherframes{j} ' object exploration count'])
+    end
+end
+disp(['Frame ' num2str(miscVar.frameNum) ' ADDED to upper-left object exploration count'])
+
+fcnSaveNOVar
+
+end
+
+%% Add Lower-Right exploration
+function fcnAddLR(~,~)
+global NOVar
+global miscVar
+
+NOVar.LRframes = unique([NOVar.LRframes miscVar.frameNum]); % Add existing frame number if unique and sort it
+NOVar.nLR = length(NOVar.LRframes); %
+% if any(miscVar.frameNum == NOVar.LLframes) % remove from NOVar.LLframes if there already
+%     ind_remove = miscVar.frameNum == NOVar.LLframes;
+%     NOVar.LLframes = NOVar.LLframes(~ind_remove);
+%     NOVar.nLL = length(NOVar.LLframes);
+%     disp(['Frame ' num2str(miscVar.frameNum) ' REMOVED from lower-left object exploration count'])
+% end
+
+otherframes = {'ULframes','LLframes','URframes'};
+othern = {'nUL','nLL','nUR'};
+for j = 1:length(otherframes)
+    if any(miscVar.frameNum == NOVar.(otherframes{j})) % remove from NOVar.URframes if there already
+        ind_remove = miscVar.frameNum == NOVar.(otherframes{j});
+        NOVar.(otherframes{j}) = NOVar.(otherframes{j})(~ind_remove);
+        NOVar.(othern{j}) = length(NOVar.(otherframes{j}));
+        disp(['Frame ' num2str(miscVar.frameNum) ' REMOVED from ' otherframes{j} ' object exploration count'])
+    end
+end
+disp(['Frame ' num2str(miscVar.frameNum) ' ADDED to lower-right object exploration count'])
+
+fcnSaveNOVar
+
+end
+
+%% Remove UL/UR/LL/LR exploration
 function fcnNeither(~,~)
 global NOVar
 global miscVar
 
-if any(miscVar.frameNum == NOVar.LLframes) % remove from NOVar.LLframes if there already
-    ind_remove = miscVar.frameNum == NOVar.LLframes;
-    NOVar.LLframes = NOVar.LLframes(~ind_remove);
-    NOVar.nLL = length(NOVar.LLframes);
-    disp(['Frame ' num2str(miscVar.frameNum) ' REMOVED from lower-left object exploration count'])
-elseif any(miscVar.frameNum == NOVar.URframes) % remove from NOVar.URframes if there already
-    ind_remove = miscVar.frameNum == NOVar.URframes;
-    NOVar.URframes = NOVar.URframes(~ind_remove);
-    NOVar.nUR = length(NOVar.URframes);
-    disp(['Frame ' num2str(miscVar.frameNum) ' REMOVED from upper-right object exploration count'])
-else
-    disp(['Frame ' num2str(miscVar.frameNum) ' isn''t already logged as lower-left or upper-right object exploration.'])
+% if any(miscVar.frameNum == NOVar.LLframes) % remove from NOVar.LLframes if there already
+%     ind_remove = miscVar.frameNum == NOVar.LLframes;
+%     NOVar.LLframes = NOVar.LLframes(~ind_remove);
+%     NOVar.nLL = length(NOVar.LLframes);
+%     disp(['Frame ' num2str(miscVar.frameNum) ' REMOVED from lower-left object exploration count'])
+% elseif any(miscVar.frameNum == NOVar.URframes) % remove from NOVar.URframes if there already
+%     ind_remove = miscVar.frameNum == NOVar.URframes;
+%     NOVar.URframes = NOVar.URframes(~ind_remove);
+%     NOVar.nUR = length(NOVar.URframes);
+%     disp(['Frame ' num2str(miscVar.frameNum) ' REMOVED from upper-right object exploration count'])
+% else
+%     disp(['Frame ' num2str(miscVar.frameNum) ' isn''t already logged as lower-left or upper-right object exploration.'])
+% end
+
+otherframes = {'LRframes', 'ULframes','LLframes','URframes'};
+othern = {'nLR','nUL','nLL','nUR'};
+removed = false;
+for j = 1:length(otherframes)
+    if any(miscVar.frameNum == NOVar.(otherframes{j})) % remove from NOVar.URframes if there already
+        ind_remove = miscVar.frameNum == NOVar.(otherframes{j});
+        NOVar.(otherframes{j}) = NOVar.(otherframes{j})(~ind_remove);
+        NOVar.(othern{j}) = length(NOVar.(otherframes{j}));
+        disp(['Frame ' num2str(miscVar.frameNum) ' REMOVED from ' otherframes{j} ' object exploration count'])
+        removed = true;
+    end
+    
+    if ~removed
+        disp(['Frame ' num2str(miscVar.frameNum) ' isn''t already logged as UL/UR/LL/LR object exploration.'])
+    end
 end
 
 fcnSaveNOVar
@@ -503,15 +684,23 @@ global NOVar
 global miscVar
 NOtracking.LLframes = NOVar.LLframes;
 NOtracking.URframes = NOVar.URframes;
+NOtracking.ULframes = NOVar.ULframes;
+NOtracking.LRframes = NOVar.LRframes;
 NOtracking.nUR = NOVar.nUR;
 NOtracking.nLL = NOVar.nLL;
+NOtracking.nUL = NOVar.nUL;
+NOtracking.nLR = NOVar.nLR;
 NOtracking.PathName = NOVar.PathName;
 NOtracking.FileName = NOVar.FileName;
 NOtracking.Questionable = NOVar.Questionable;
 NOtracking.xLL = miscVar.xLL;
 NOtracking.yLL = miscVar.yLL;
+NOtracking.xUL = miscVar.xUL;
+NOtracking.yUL = miscVar.yUL;
 NOtracking.xUR = miscVar.xUR;
 NOtracking.yUR = miscVar.yUR;
+NOtracking.xLR = miscVar.xLR;
+NOtracking.yLR = miscVar.yLR;
 NOtracking.currentFrame = miscVar.currentFrame;
 
 % Update frame viewed
