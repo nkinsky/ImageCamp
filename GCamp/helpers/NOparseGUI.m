@@ -410,7 +410,7 @@ switch e.Key
         fcnAddLR
         updatebuttoncolor
         
-    case 'numpd7' % log framenum as UL
+    case 'numpad7' % log framenum as UL
         fcnAddUL
         updatebuttoncolor
         
