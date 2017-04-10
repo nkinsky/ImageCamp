@@ -105,12 +105,16 @@ for j = 1:num_animals
 end
 
 %% Plot mean correlations vs days for each comparison type
+marker_type = {'s', 'o', 'x'};
+plot_combined = true;
+
+if plot_combined; figure; end
 for k = 1:length(sesh_type)
-    figure
+    if ~plot_combined; figure; end
     days_diff_use = days_diff.(sesh_type{k});
     for j = 1:num_animals
         plot(Mouse(j).days_v_corr.(sesh_type{k})(:,1), ...
-            Mouse(j).days_v_corr.(sesh_type{k})(:,2),'o');
+            Mouse(j).days_v_corr.(sesh_type{k})(:,2),marker_type{k});
         hold on
 %         plot(days_diff,Mouse(j).days_v_corr2.(sesh_type{k}))
 %         plot(days_diff,Mouse(j).days_v_shuf2.(sesh_type{k}),'k--')
@@ -132,6 +136,31 @@ for k = 1:length(sesh_type)
         xlim([-1 7]); ylim([-0.1 1]);
         set(gca,'XTick',0:6)
     end
+end
+
+%% Plot histograms of the above plots
+edges = -0.1:0.025:1;
+figure;
+for k = 1:length(sesh_type)
+    temp = [];
+    temp_shuf = [];
+    for j = 1:num_animals
+        temp = [temp; Mouse(j).days_v_corr.(sesh_type{k})(:,2)];
+        temp_shuf = [temp_shuf; Mouse(j).days_v_shuf.(sesh_type{k})(:,2)];
+    end
+    subplot(3,1,k)
+    histogram(temp, edges,'Normalization','probability')
+    hold on
+%     histogram(temp_shuf(:,2), edges, 'Normalization','probability')
+    [f,x] = ecdf(temp_shuf);
+    shuf_lim = repmat(x(findclosest(f,0.975)),1,2);
+    ylims = get(gca,'YLim');
+    plot(shuf_lim, ylims,'r--');
+    set(gca,'YLim',ylims);
+    hold off
+    title([sesh_type{k} ' b/w session correlations'])
+    xlabel('Mean Correlation')
+    ylabel('Probability')
 end
 
 %% Remapping analysis
@@ -197,6 +226,8 @@ for k = 1:length(sesh_type)
         local_align_mat = double(angle_diff_mat == 0 & ~global_remap);
         other_align_mat = double(angle_diff_mat ~= 0 & angle_diff_mat ~= Mouse(j).distal_rot_mat.(sesh_type{k}) ...
             & ~global_remap);
+        other_align_mat2 = double(abs(angle_diff_mat) > 45 & angle_diff_mat ~= Mouse(j).distal_rot_mat.(sesh_type{k}) ...
+            & ~global_remap);
         global_remap = double(global_remap);
         
         distal_align_mat(~valid_comp) = nan;
@@ -217,7 +248,7 @@ end
 %%% local, other rotation, global remapping.  Break into 4 - local, distal
 %%% (only if not local), other rotation, global remapping
 
-%%
+%% Plot Breakdown of alignment type
 align_type = {'distal_align','local_align','other_align','global'};
 
 for k = 1:length(sesh_type)
