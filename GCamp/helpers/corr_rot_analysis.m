@@ -15,10 +15,13 @@ ip.addRequired('batch_session_map', @isstruct);
 ip.addRequired('rot_array', @isnumeric);
 ip.addOptional('num_shuffles', 1, @(a) a >= 0 && round(a) == a);
 ip.addParameter('trans', false, @islogical);
+ip.addParameter('TMap_type', 'TMap_gauss', @(a) strcmpi(a,'TMap_gauss') || ...
+    strcmpi(a,'TMap_unsmoothed'));
 ip.parse(session1, session2, batch_session_map, rot_array, varargin{:});
 
 num_shuffles = ip.Results.num_shuffles;
-trans = ip.Results.trans; %%% NK follow up here
+trans = ip.Results.trans;
+TMap_type = ip.Results.TMap_type;
 
 if trans; trans_append = '_trans'; else; trans_append = ''; end
 
@@ -27,9 +30,9 @@ batch_session_map = fix_batch_session_map(batch_session_map);
 [~, sesh] = ChangeDirectory(session1.Animal, session1.Date, session1.Session,0);
 [~, sesh(2)] = ChangeDirectory(session2.Animal, session2.Date, session2.Session,0);
 
-load(fullfile(sesh(1).Location,['Placefields' trans_append '_rot0.mat']),'TMap_gauss');
-num_neurons = length(TMap_gauss);
-sesh(1).TMap_gauss = TMap_gauss;
+temp = load(fullfile(sesh(1).Location,['Placefields' trans_append '_rot0.mat']), TMap_type);
+num_neurons = length(temp.(TMap_type));
+sesh(1).TMap_use = temp.(TMap_type);
 
 sesh_index = nan(1,2);
 for j = 1:2
@@ -48,17 +51,17 @@ for j = 1:length(rot_array)
     file_load = fullfile(sesh(2).Location,['Placefields' trans_append '_rot' num2str(rot_array(j)) '.mat']);
     if exist(file_load,'file')
         
-        load(file_load,'TMap_gauss');
-        TMap1_use = sesh(1).TMap_gauss;
-        TMap2_use = TMap_gauss;
+        temp = load(file_load, TMap_type);
+        TMap1_use = sesh(1).TMap_use;
+        TMap2_use = temp.(TMap_type);
         
     elseif ~exist(file_load,'file') % If 2nd session rotation doesn't exist, send it to zero and rotate the other session
         
         rot_use = -rot_array(j) + 360;
-        load(fullfile(sesh(1).Location,['Placefields' trans_append '_rot' num2str(rot_use) '.mat']),'TMap_gauss');
-        TMap1_use = TMap_gauss;
-        load(fullfile(sesh(2).Location,['Placefields' trans_append '_rot0.mat']),'TMap_gauss');
-        TMap2_use = TMap_gauss;
+        temp = load(fullfile(sesh(1).Location,['Placefields' trans_append '_rot' num2str(rot_use) '.mat']), TMap_type);
+        TMap1_use = temp.(TMap_type);
+        temp = load(fullfile(sesh(2).Location,['Placefields' trans_append '_rot0.mat']), TMap_type);
+        TMap2_use = temp.(TMap_type);
         
     end
     corr_mat(:,j) = corr_bw_TMap(TMap1_use, TMap2_use, map_use);
@@ -94,17 +97,17 @@ for k = 1:num_shuffles
         file_load = fullfile(sesh(2).Location,['Placefields' trans_append '_rot' num2str(rot_array(j)) '.mat']);
         if exist(file_load,'file')
             
-            load(file_load,'TMap_gauss');
-            TMap1_use = sesh(1).TMap_gauss;
-            TMap2_use = TMap_gauss;
+            temp = load(file_load,TMap_type);
+            TMap1_use = sesh(1).TMap_use;
+            TMap2_use = temp.(TMap_type);
             
         elseif ~exist(file_load,'file') % If 2nd session rotation doesn't exist, send it to zero and rotate the other session
             
             rot_use = -rot_array(j) + 360;
-            load(fullfile(sesh(1).Location,['Placefields' trans_append '_rot' num2str(rot_use) '.mat']),'TMap_gauss');
-            TMap1_use = TMap_gauss;
-            load(fullfile(sesh(2).Location,['Placefields' trans_append '_rot0.mat']),'TMap_gauss');
-            TMap2_use = TMap_gauss;
+            temp = load(fullfile(sesh(1).Location,['Placefields' trans_append '_rot' num2str(rot_use) '.mat']), TMap_type);
+            TMap1_use = temp.(TMap_type);
+            load(fullfile(sesh(2).Location,['Placefields' trans_append '_rot0.mat']), TMap_type);
+            TMap2_use = temp.(TMap_type);
             
         end
         

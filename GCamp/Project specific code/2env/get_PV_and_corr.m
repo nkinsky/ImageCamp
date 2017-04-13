@@ -31,13 +31,14 @@ ip.addParameter('NumYBins', 5, @(a) a > 0 && round(a) == a)
 ip.addParameter('corr_type', 'Spearman', @(a) strcmp('Spearman',a) || ...
     strcmp('Kendall',a) || strcmp('Pearson',a));
 ip.addParameter('num_shuffles', 1, @(a) a > 0 && round(a) == a);
-ip.addParameter('disp_prog_bar', true, @(a) islogical(a) || a == 0 || a == 1);
+% ip.addParameter('disp_prog_bar', true, @(a) islogical(a) || a == 0 || a == 1);
 ip.addParameter('calc_half', false, @(a) islogical(a) || a == 0 || a == 1);
 ip.addParameter('alt_pos_file', 'Pos_align.mat', @(a) ischar(a) || iscell(a) && length(a) == num_sessions);
 % ip.addParameter('neuron_filter', true(size(batch_map)), @islogical); %This is not finished yet - probably need some more fancy code to make it work
 ip.addParameter('version_use', 'T4', @(a) strcmp('T2',a) || strcmp('T4',a));
 ip.addParameter('minspeed', 1, @(a) isnumeric(a) && a >= 0);
 ip.addParameter('exclude_frames', [], @(a) isempty(a) || iscell(a) && length(a) == num_sessions);
+ip.addParameter('output_flag',true, @islogical)
 ip.parse(session_struct, batch_session_map, varargin{:});
 
 rot_to_std = ip.Results.rot_to_std;
@@ -46,13 +47,14 @@ NumXBins = ip.Results.NumXBins;
 NumYBins = ip.Results.NumYBins;
 corr_type = ip.Results.corr_type;
 num_shuffles = ip.Results.num_shuffles;
-disp_prog_bar = ip.Results.disp_prog_bar;
+% disp_prog_bar = ip.Results.disp_prog_bar;
 calc_half = ip.Results.calc_half;
 pos_file = ip.Results.alt_pos_file;
 % neuron_filter = ip.Results.neuron_filter;
 version_use = ip.Results.version_use;
 minspeed = ip.Results.minspeed;
 exclude_frames = ip.Results.exclude_frames;
+output_flag = ip.Results.output_flag;
 
 % Make position file into a cell if applicable
 if ischar(pos_file)
@@ -70,6 +72,7 @@ end
 
 %Get appropriate session indices
 session_map = nan(1, num_sessions);
+batch_session_map = fix_batch_session_map(batch_session_map);
 for j = 1:num_sessions
    session_ind(j) = find(arrayfun(@(a) strcmp(a.Animal, session_struct(j).Animal)...
        & strcmp(a.Date,session_struct(j).Date)...
@@ -147,7 +150,7 @@ num_neurons = size(batch_map,1);
 % Get PV for each bin in each session!!! array is 4D (session_num x Xbin x
 % YBin x master_neuron_num)
 PV = nan(length(sesh),NumXBins,NumYBins,num_neurons); % Pre-allocate
-disp('Getting PV for each bin in each session')
+dispNK('Getting PV for each bin in each session', output_flag)
 
 % Get edges
 Xedges = xmin:(xmax-xmin)/NumXBins:xmax;
@@ -173,13 +176,13 @@ end
 
 %% Get PV correlations for all comparisons!
 
-disp('Calculating PV correlations between all sessions')
+dispNK('Calculating PV correlations between all sessions', output_flag);
 PV_corr = nan(length(sesh),length(sesh),NumXBins,NumYBins);
 PV_corr_shuffle = nan(length(sesh),length(sesh),NumXBins,NumYBins,num_shuffles);
 PV_dist = nan(length(sesh),length(sesh),NumXBins,NumYBins);
 PV_dist_shuffle = nan(length(sesh),length(sesh),NumXBins,NumYBins,num_shuffles);
 
-if disp_prog_bar == 1
+if output_flag
     p = ProgressBar(length(sesh));
 end
 
@@ -237,12 +240,12 @@ for m = 1:length(sesh)
             end
         end
     end
-    if disp_prog_bar == 1
+    if output_flag
         p.progress;
     end
 end
 
-if disp_prog_bar == 1
+if output_flag
     p.stop;
 end
 

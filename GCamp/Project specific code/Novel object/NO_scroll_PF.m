@@ -52,7 +52,7 @@ while stay_in
     for j = 1:num_sessions
         neuron_use = batch_session_map.map(n,j+1);
         
-        subplot(2,4,j)
+        subplot(3,4,j)
         if ~isnan(neuron_use) && neuron_use ~= 0
             imagesc_nan(rot90(sesh(j).TMap_gauss{neuron_use},1));
             title([mouse_name_title(sesh(j).Date) ' - neuron ' num2str(neuron_use)])
@@ -77,7 +77,7 @@ while stay_in
             PSAbool_ind = [];
         end
         
-        subplot(2,4,4+j)
+        subplot(3,4,4+j)
         imagesc(flipud(sesh(j).arena_frame))
         hold on
         plot(sesh(j).xAVI,sesh(j).yAVI,'b',sesh(j).xAVI(PSA_AVIind),sesh(j).yAVI(PSA_AVIind),'r.')
@@ -87,6 +87,7 @@ while stay_in
 %         subplot(3,4,8+j)
 %         plot(sesh(j).x, sesh(j).y, 'b', sesh(j).x(PSAbool_ind), ...
 %             sesh(j).y(PSAbool_ind), 'r.')
+
         
 %         keyboard
     
