@@ -42,19 +42,34 @@ for j = 1:2
 end
 
 %% Scroll through and plot for each neuron
+times_plot = (-frame_buffer:frame_buffer)/imageSR;
+
 figure
-for j=1:num_neurons
+
+n_out = 1;
+stay_in = true;
+while stay_in
     for k = 1:2
         subplot(2,1,k)
-        trace_plot = squeeze(trace_out{k}(j,:,:));
+        trace_plot = squeeze(trace_out{k}(n_out,:,:));
         baseline = mean(trace_plot,2);
-        mean_trace = mean(trace_plot,1);
-        plot((trace_plot - baseline)','r:');
+        mean_trace = mean(trace_plot - baseline,1);
+        plot(times_plot,(trace_plot - baseline),'r:');
         hold on
-        plot(mean_trace,'k');
+        plot(times_plot, mean_trace,'k');
         hold off
-        
+        xlabel('Time from object sample (s)')
+        ylabel('Fluorescence (au)')
+        title(['Neuron ' num2str(n_out) ' - Object ' num2str(k)])
+        ylims(k,:) = get(gca,'YLim');
     end
+    
+    for k = 1:2
+        subplot(2,1,k)
+        ylim([min(ylims(:,1)), max(ylims(:,2))])
+    end
+    [n_out, stay_in] = LR_cycle(n_out, [1 num_neurons]);
+    
 end
 % 
 end
