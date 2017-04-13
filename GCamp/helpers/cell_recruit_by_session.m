@@ -16,3 +16,4 @@ new_cells = diff(last_cell_index);
 
 end
 
+%why does it come up with 4 
