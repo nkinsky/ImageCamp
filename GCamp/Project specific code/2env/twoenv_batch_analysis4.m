@@ -65,10 +65,33 @@ for j = 1:num_animals
 end
 p.stop;
 
+%% Run PV analysis at best angle
+dispNK('Running PV analysis at best rotation angle')
+p = ProgressBar(num_animals*length(sesh_type));
+for j = 1:num_animals
+    for k = 1:length(sesh_type)
+        base_dir = ChangeDirectory_NK(Mouse(j).sesh.(sesh_type{k})(1),0);
+        if strcmpi(sesh_type{k},'circ2square')
+            load(fullfile(base_dir,'batch_session_map_trans'))
+        else
+            load(fullfile(base_dir,'batch_session_map'))
+        end
+        [PV, PV_corrs] = get_PV_and_corr( Mouse(j).sesh.(sesh_type{k}), ...
+            batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
+            Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput',false),'output_flag',false);
+        Mouse(j).PV.(sesh_type{k}) = PV;
+        Mouse(j).PV_corrs.(sesh_type{k}) = PV_corrs;
+        p.progress;
+    end
+end
+p.stop;
+
 %% Aggregate everything by time and type of comparison
-All.days_v_corr2.square = cell(length(days_diff.square),1);
-All.days_v_corr2.circle = cell(length(days_diff.circle),1);
-All.days_v_corr2.circ2square = cell(length(days_diff.circ2square),1);
+% Pre-allocate
+for k = 1:length(sesh_type)
+    All.days_v_corr2.(sesh_type{k}) = cell(length(days_diff.(sesh_type{k})),1);
+    All.days_v_PVcorr.(sesh_type{k}) = cell(length(days_diff.(sesh_type{k})),1);
+end
 for j = 1:num_animals
     for k = 1:length(sesh_type)
         days_diff_use = days_diff.(sesh_type{k});
@@ -85,20 +108,32 @@ for j = 1:num_animals
             corr_mat_temp(valid_comp)];
         Mouse(j).days_v_shuf.(sesh_type{k}) = [time_diff_mat(valid_comp), ...
             shuffle_mat_temp(valid_comp)];
-        
+        Mouse(j).days_v_PVcorr.(sesh_type{k}) = [time_diff_mat(valid_comp),...
+            Mouse(j).PV_corrs.(sesh_type{k}).PV_corr_mean(valid_comp)];
+        Mouse(j).days_v_PVshuf.(sesh_type{k}) = [time_diff_mat(valid_comp),...
+            Mouse(j).PV_corrs.(sesh_type{k}).PV_corr_shuffle_mean(valid_comp)];
+            
         % Put everything into a 2 column vector. 1: days between
         % comparison, 2 = mean correlation (Spearman)
         ttt = cell(length(days_diff_use),1);
         uuu = cell(length(days_diff_use),1);
+        vvv = uuu;
+        www = uuu;
         for ll = 1:length(days_diff_use)
             day_ind = Mouse(j).days_v_corr.(sesh_type{k})(:,1) == days_diff_use(ll);
             ttt{ll} = Mouse(j).days_v_corr.(sesh_type{k})(day_ind,2); 
             uuu{ll} = Mouse(j).days_v_shuf.(sesh_type{k})(day_ind,2);
+            vvv{ll} = Mouse(j).days_v_PVcorr.(sesh_type{k})(day_ind,2);
+            www{ll} = Mouse(j).days_v_PVshuf.(sesh_type{k})(day_ind,2);
             All.days_v_corr2.(sesh_type{k}){ll} = cat(1,...
                 All.days_v_corr2.(sesh_type{k}){ll}, ttt{ll});
+            All.days_v_PVcorr.(sesh_type{k}){ll} = cat(1,...
+                All.days_v_PVcorr.(sesh_type{k}){ll}, vvv{ll});
         end
         Mouse(j).days_v_corr2.(sesh_type{k}) = cellfun(@mean, ttt);
         Mouse(j).days_v_shuf2.(sesh_type{k}) = cellfun(@mean, uuu);
+        Mouse(j).days_v_PVcorr2.(sesh_type{k}) = cellfun(@mean, vvv);
+        Mouse(j).days_v_shuf2.(sesh_type{k}) = cellfun(@mean, www);
         
         
     end
@@ -106,7 +141,7 @@ end
 
 %% Plot mean correlations vs days for each comparison type
 marker_type = {'s', 'o', 'x'};
-plot_combined = true;
+plot_combined = false;
 
 if plot_combined; figure; end
 for k = 1:length(sesh_type)
@@ -163,8 +198,43 @@ for k = 1:length(sesh_type)
     ylabel('Probability')
 end
 
+%% Plot mean correlations vs days for each comparison type for PV
+marker_type = {'s', 'o', 'x'};
+plot_combined = false;
+
+if plot_combined; figure; end
+for k = 1:length(sesh_type)
+    if ~plot_combined; figure; end
+    days_diff_use = days_diff.(sesh_type{k});
+    for j = 1:num_animals
+        plot(Mouse(j).days_v_PVcorr.(sesh_type{k})(:,1), ...
+            Mouse(j).days_v_PVcorr.(sesh_type{k})(:,2),marker_type{k});
+        hold on
+%         plot(days_diff,Mouse(j).days_v_corr2.(sesh_type{k}))
+%         plot(days_diff,Mouse(j).days_v_shuf2.(sesh_type{k}),'k--')
+    end
+    for j = 1:num_animals
+        plot(Mouse(j).days_v_PVshuf.(sesh_type{k})(:,1), ...
+            Mouse(j).days_v_PVshuf.(sesh_type{k})(:,2),'k.');
+        hold on
+    end
+    plot(days_diff_use, cellfun(@mean, All.days_v_PVcorr.(sesh_type{k})),'b-')
+    legend(cellfun(@mouse_name_title, animal_names,'UniformOutput',0),'Shuffled')
+    xlabel('Days between session'); 
+    ylabel('Mean Spearman Correlation b/w PVs')
+    title(sesh_type{k})
+    if strcmpi(sesh_type{k},'circ2square')
+        xlim([-1 8]); ylim([-0.1 1]);
+        set(gca,'XTick',0:7)
+    else
+        xlim([-1 7]); ylim([-0.1 1]);
+        set(gca,'XTick',0:6)
+    end
+end
+
 %% Remapping analysis
 alpha = 0.05; % p-value cutoff
+align_cutoff = 45; % Angle difference for which the circle is considered aligned, e.g. if you think anything <=15 degrees different should count, set it to 15.
 
 % Find global remappers
 
@@ -221,13 +291,20 @@ for k = 1:length(sesh_type)
         global_remap = zeros(num_sessions, num_sessions);
         global_remap(valid_comp) = Mouse(j).global_remap_stats.(sesh_type{k}).h_remap(valid_comp);
         
-        distal_align_mat = double(angle_diff_mat == Mouse(j).distal_rot_mat.(sesh_type{k}) & ...
+        % Old code - delete once vetted below
+%         distal_align_mat = double(angle_diff_mat == Mouse(j).distal_rot_mat.(sesh_type{k}) & ...
+%             Mouse(j).distal_rot_mat.(sesh_type{k}) ~= 0 & ~global_remap);
+%         local_align_mat = double(angle_diff_mat == 0 & ~global_remap);
+%         other_align_mat = double(angle_diff_mat ~= 0 & angle_diff_mat ~= Mouse(j).distal_rot_mat.(sesh_type{k}) ...
+%             & ~global_remap);
+
+        
+        distal_align_mat = double(abs(angle_diff_mat - Mouse(j).distal_rot_mat.(sesh_type{k})) <= align_cutoff & ...
             Mouse(j).distal_rot_mat.(sesh_type{k}) ~= 0 & ~global_remap);
-        local_align_mat = double(angle_diff_mat == 0 & ~global_remap);
-        other_align_mat = double(angle_diff_mat ~= 0 & angle_diff_mat ~= Mouse(j).distal_rot_mat.(sesh_type{k}) ...
+        local_align_mat = double(abs(angle_diff_mat) <= align_cutoff & ~global_remap);
+        other_align_mat = double(abs(angle_diff_mat) > align_cutoff & angle_diff_mat ~= Mouse(j).distal_rot_mat.(sesh_type{k}) ...
             & ~global_remap);
-        other_align_mat2 = double(abs(angle_diff_mat) > 45 & angle_diff_mat ~= Mouse(j).distal_rot_mat.(sesh_type{k}) ...
-            & ~global_remap);
+        
         global_remap = double(global_remap);
         
         distal_align_mat(~valid_comp) = nan;
@@ -282,6 +359,32 @@ for k = 1:length(sesh_type)
     title(['All Mice - ' sesh_type{k}])
     
 end
+
+%% Plot Breakdown of alignment type take2
+align_type = {'distal_align','local_align','other_align','global'};
+
+% Assemble matrices
+square_mean = mean(All.ratio_plot_all.square,1);
+circle_mean = mean(All.ratio_plot_all.circle,1);
+circ2square_mean = mean(All.ratio_plot_all.circ2square,1);
+
+figure(16)
+% Plot
+h = bar(1:length(align_type),[square_mean', circle_mean', circ2square_mean']);
+set(gca,'XTickLabel',cellfun(@mouse_name_title,align_type,'UniformOutput',0))
+legend('Within square', 'Within circle', 'Square to Circle')
+xlabel('Remapping Type')
+ylabel('Proprotion of Sessions')
+
+% Now do each mouse
+compare_type = {'square','circle','circ2square'};
+hold on
+for j = 1:length(compare_type)
+    plot(repmat(h(j).XData + h(j).XOffset, num_animals,1),...
+        All.ratio_plot_all.(compare_type{j}),'ko')
+end
+hold off
+
                
 
 
