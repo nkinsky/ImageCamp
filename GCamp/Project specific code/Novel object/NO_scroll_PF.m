@@ -15,7 +15,7 @@ aviSR = 30.0003;
 %% Load Placefields for each session
 for j = 1:num_sessions
    dirstr = ChangeDirectory_NK(sesh(j),0);
-   load(fullfile(dirstr,'Placefields.mat'),'TMap_gauss','RunOccMap','PSAbool','isrunning');
+   load(fullfile(dirstr,'Placefields.mat'),'TMap_gauss','RunOccMap','PSAbool','isrunning','x','y');
    sesh(j).TMap_gauss = TMap_gauss;
    sesh(j).ZeroMap = nan(size(RunOccMap));
    sesh(j).ZeroMap(RunOccMap ~= 0) = 0;
@@ -44,7 +44,7 @@ while stay_in
     for j = 1:num_sessions
         neuron_use = batch_session_map.map(n,j+1);
         
-        subplot(2,4,j)
+        subplot(3,4,j)
         if ~isnan(neuron_use) && neuron_use ~= 0
             imagesc_nan(rot90(sesh(j).TMap_gauss{neuron_use},1));
             title([mouse_name_title(sesh(j).Date) ' - neuron ' num2str(neuron_use)])
@@ -63,7 +63,7 @@ while stay_in
         AVI_time_full = (1:1:length(sesh(j).xAVI))/aviSR; % get AVI times for full session
         PSA_AVIind = arrayfun(@(a) findclosest(a,AVI_time_full),PSA_AVItime); % get putative-spiking AVI indices
         
-        subplot(2,4,4+j)
+        subplot(3,4,4+j)
         imagesc(flipud(sesh(j).arena_frame))
         hold on
 
@@ -71,6 +71,8 @@ while stay_in
         set(gca,'YDir','normal')
         hold off
         
+        subplot(3,4,8+j)
+        plot(sesh(j).x,
         
     
     end
