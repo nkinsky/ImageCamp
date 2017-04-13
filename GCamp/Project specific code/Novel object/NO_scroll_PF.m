@@ -13,13 +13,20 @@ num_sessions = length(sesh);
 
 aviSR = 30.0003;
 %% Load Placefields for each session
+curr_dir = cd;
 for j = 1:num_sessions
-   dirstr = ChangeDirectory_NK(sesh(j),0);
-   load(fullfile(dirstr,'Placefields.mat'),'TMap_gauss','RunOccMap','PSAbool','isrunning');
+   [dirstr, sesh_full] = ChangeDirectory_NK(sesh(j),1);
+   load(fullfile(dirstr,'Placefields.mat'),'TMap_gauss','RunOccMap','PSAbool','isrunning','x','y');
    sesh(j).TMap_gauss = TMap_gauss;
    sesh(j).ZeroMap = nan(size(RunOccMap));
    sesh(j).ZeroMap(RunOccMap ~= 0) = 0;
    sesh(j).PSAbool = PSAbool;
+   sesh(j).x = x;
+   sesh(j).y = y;
+   sesh(j).isrunning = isrunning;
+   load(fullfile(dirstr,'FinalOutput.mat'),'PSAbool')
+   [~,~,~,~,~,~,sesh(j).AVItime] = AlignImagingToTracking(sesh_full.Pix2CM,...
+       PSAbool,0); % Get aviTimes corresponding to PSAbool in Placefields.mat
    pos_dir = fullfile(fileparts(dirstr),'cineplex');
    avi_file = ls(fullfile(pos_dir, '*.avi'));
    avi_file = fullfile(pos_dir, avi_file);
@@ -29,6 +36,7 @@ for j = 1:num_sessions
    sesh(j).xAVI = xAVI;
    sesh(j).yAVI = yAVI;
 end
+cd(curr_dir);
 
 % Load batch map
 base_dir = ChangeDirectory_NK(sesh(1),0);
@@ -56,22 +64,31 @@ while stay_in
             title([mouse_name_title(sesh(j).Date) ' - Ambiguous neuron identity'])
         end
         
-        good_ind = find(isrunning); % get indices where the mouse was active
-        PSAbool_ind = PSAbool(neuron_use,:); % get PS epochs for a given neuron 
-        PSA_ind_full = good_ind(PSAbool_ind); % get PS epochs for full session (not speed thresholded)
-        PSA_AVItime = AVItime_interp(PSA_ind_full); % get PS epochs in PSAtime
-        AVI_time_full = (1:1:length(sesh(j).xAVI))/aviSR; % get AVI times for full session
-        PSA_AVIind = arrayfun(@(a) findclosest(a,AVI_time_full),PSA_AVItime); % get putative-spiking AVI indices
+        good_ind = find(sesh(j).isrunning); % get indices where the mouse was active
+        if ~isnan(neuron_use) && neuron_use ~= 0
+            PSAbool_ind = sesh(j).PSAbool(neuron_use,:); % get PS epochs for a given neuron
+            PSA_ind_full = good_ind(PSAbool_ind); % get PS epochs for full session (not speed thresholded)
+%             PSA_AVItime = AVItime_interp(PSA_ind_full); % get PS epochs in PSAtime
+            PSA_AVItime = sesh(j).AVItime(PSA_ind_full);
+            AVI_time_full = (1:1:length(sesh(j).xAVI))/aviSR; % get AVI times for full session
+            PSA_AVIind = arrayfun(@(a) findclosest(a,AVI_time_full),PSA_AVItime); % get putative-spiking AVI indices
+        else
+            PSA_AVIind = [];
+            PSAbool_ind = [];
+        end
         
         subplot(2,4,4+j)
         imagesc(flipud(sesh(j).arena_frame))
         hold on
-
         plot(sesh(j).xAVI,sesh(j).yAVI,'b',sesh(j).xAVI(PSA_AVIind),sesh(j).yAVI(PSA_AVIind),'r.')
         set(gca,'YDir','normal')
         hold off
         
+%         subplot(3,4,8+j)
+%         plot(sesh(j).x, sesh(j).y, 'b', sesh(j).x(PSAbool_ind), ...
+%             sesh(j).y(PSAbool_ind), 'r.')
         
+%         keyboard
     
     end
     [n, stay_in] = LR_cycle(n,[1 NumNeurons]);
