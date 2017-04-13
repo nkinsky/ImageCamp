@@ -1,15 +1,24 @@
-function [n1, n2, nboth ] = plot_mapped_neurons( Animal, Base_Date, Base_Session, Reg_Date, Reg_Session)
-% [n1, n2, nboth] = plot_mapped_neurons( Animal, Base_Date, Base_Session, Reg_Date, Reg_Session)
+function [n1, n2, nboth ] = plot_mapped_neurons( Animal, Base_Date, Base_Session, Reg_Date, Reg_Session, all_mask)
+% [n1, n2, nboth] = plot_mapped_neurons( Animal, Base_Date, Base_Session, Reg_Date, Reg_Session,...)
 %   Plots each session's neuron ROIs overlaid on the other.  Good for
 %   identifying good/bad registrations.  Same as plot_mapped_neurons2 but
 %   with different inputs.
 %
 %   n1, n2, nboth: # cells active in session 1 only, session 2 only, and
-%   both
+%   both 
+
+if nargin < 6
+    all_mask = false;
+end
 
 base_dir = ChangeDirectory(Animal, Base_Date, Base_Session, 0);
-load(fullfile(base_dir,'FinalOutput.mat'),'NeuronImage');
-sesh(1).NeuronImage_reg = NeuronImage;
+if ~all_mask
+    load(fullfile(base_dir,'FinalOutput.mat'),'NeuronImage');
+    sesh(1).NeuronImage_reg = NeuronImage;
+elseif all_mask
+    load(fullfile(base_dir,'Reg_NeuronIDs_updatemasks0.mat'));
+    sesh(1).NeuronImage_reg = Reg_NeuronIDs.AllMasks;
+end
 image_reg_file = fullfile(base_dir, ['RegistrationInfo-' Animal '-' ...
     Reg_Date '-session' num2str(Reg_Session) '.mat']);
 reg_dir = ChangeDirectory(Animal, Reg_Date, Reg_Session, 0);
@@ -18,9 +27,17 @@ reginfo = importdata(image_reg_file);
 sesh(2).NeuronImage_reg = cellfun(@(a) imwarp_quick(a, reginfo), ...
     NeuronImage, 'UniformOutput', 0);
 
-neuron_map = neuron_register(Animal, Base_Date, Base_Session, ...
-    Reg_Date, Reg_Session);
-neuron_id = neuron_map.neuron_id;
+if ~all_mask
+    neuron_map = neuron_register(Animal, Base_Date, Base_Session, ...
+        Reg_Date, Reg_Session);
+    neuron_id = neuron_map.neuron_id;
+elseif all_mask
+    %Get appropriate session indices
+    session_ind = find(arrayfun(@(a) strcmp(a.mouse, Animal)...
+        & strcmp(a.reg_date, Reg_Date) & a.reg_session == Reg_Session, ...
+        Reg_NeuronIDs));
+    neuron_id = Reg_NeuronIDs(session_ind).neuron_id;
+end
 
 for k = 1:2
     sesh(k).AllNeuronMask = create_AllICmask(sesh(k).NeuronImage_reg);
@@ -36,7 +53,7 @@ nboth = 0;
 for j = 1:length(neuron_id)
     nid = neuron_id{j};
     if ~isempty(nid) && ~isnan(nid)
-        b1 = bwboundaries( sesh(1).NeuronImage_reg{j},'noholes');
+        b1 = bwboundaries(sesh(1).NeuronImage_reg{j},'noholes');
         b2 = bwboundaries(sesh(2).NeuronImage_reg{nid},'noholes');
         plot(b1{1}(:,2),b1{1}(:,1),'r',b2{1}(:,2),b2{1}(:,1),'r');
         nboth = nboth + 1;
