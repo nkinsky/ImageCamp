@@ -18,7 +18,11 @@ end
 
 
 % Load variables into workspace
-dirstr = fileparts(session.posfile); 
+if isfield(session,'posfile')
+    dirstr = fileparts(session.posfile);
+else
+    dirstr = ChangeDirectory_NK(session,0);
+end
 load(fullfile(dirstr,'Pos_align.mat'),'time_interp','aviFrame','PSAbool','LPtrace');
 load(fullfile(dirstr,'NOtracking_final.mat'));
 
