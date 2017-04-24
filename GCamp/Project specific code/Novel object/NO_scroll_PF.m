@@ -35,6 +35,13 @@ for j = 1:num_sessions
    load(fullfile(dirstr,'Pos.mat'),'xAVI','yAVI','AVItime_interp','time_interp');
    sesh(j).xAVI = xAVI;
    sesh(j).yAVI = yAVI;
+   
+   try
+       [~, sesh(j).PETH_trace] = NO_PETH(sesh_full, 40, 'scroll_flag', false);
+       sesh(j).PETHbool = true;
+   catch
+       sesh(j).PETHbool = false; % If no NO_tracking_final file present, don't do the PETH analysis
+   end
 end
 cd(curr_dir);
 
@@ -43,7 +50,6 @@ base_dir = ChangeDirectory_NK(sesh(1),0);
 load(fullfile(base_dir,'batch_session_map.mat'));
 
 NumNeurons = size(batch_session_map.map,1);
-
 %% Plot them out
 
 n = start_cell;
@@ -52,16 +58,18 @@ while stay_in
     for j = 1:num_sessions
         neuron_use = batch_session_map.map(n,j+1);
         
-        subplot(3,4,j)
+        subplot(4,4,j)
         if ~isnan(neuron_use) && neuron_use ~= 0
             imagesc_nan(rot90(sesh(j).TMap_gauss{neuron_use},1));
             title([mouse_name_title(sesh(j).Date) ' - neuron ' num2str(neuron_use)])
         elseif neuron_use == 0
             imagesc_nan(rot90(sesh(j).ZeroMap,1));
             title([mouse_name_title(sesh(j).Date) ' - Neuron not active'])
+            axis off
         elseif isnan(neuron_use)
             imagesc_nan(rot90(nan(size(sesh(j).ZeroMap)),1));
             title([mouse_name_title(sesh(j).Date) ' - Ambiguous neuron identity'])
+            axis off
         end
         
         good_ind = find(sesh(j).isrunning); % get indices where the mouse was active
@@ -77,20 +85,54 @@ while stay_in
             PSAbool_ind = [];
         end
         
-        subplot(3,4,4+j)
+        % Plot trace PETHs at each object
+        if sesh(j).PETHbool
+            trace_out = sesh(j).PETH_trace;
+            ylims = nan(2,2);
+            if ~isnan(neuron_use) && neuron_use ~= 0
+                for k = 1:2
+                    ax(k) = subplot(4,4,8+4*(k-1)+j);
+                    trace_plot = squeeze(trace_out{k}(neuron_use,:,:));
+                    frames_plot = (1:length(trace_plot));
+                    times_plot = (frames_plot - mean(frames_plot))/20;
+                    baseline = nanmean(trace_plot,2);
+                    mean_trace = nanmean(trace_plot - baseline,1);
+                    plot(times_plot,(trace_plot - baseline),'r:');
+                    
+                    hold on
+                    plot(times_plot, mean_trace,'k');
+                    hold off
+                    if k == 2; xlabel('Time from object sample (s)'); end
+                    ylabel('Fluorescence (au)')
+                    title(['Object ' num2str(k)])
+                    ylims(k,:) = get(gca,'YLim');
+%                     if n == 3 && j == 4
+%                         keyboard
+%                     end
+                end
+                
+                for k = 1:2
+                    set(ax(k),'YLim',[min(ylims(:,1)), max(ylims(:,2))])
+                    %                 subplot(4,4,8+4*(k-1)+j)
+                    %                 ylim([min(ylims(:,1)), max(ylims(:,2))])
+                end
+            else % Overwrite plots so that you don't get previous cell activity here.
+                for k = 1:2
+                    subplot(4,4,8+4*(k-1)+j);
+                    imagesc_nan(nan(5,5));
+                    axis off
+                end
+            end
+        end
+        
+        % Plot trajectory
+        subplot(4,4,4+j)
         imagesc(flipud(sesh(j).arena_frame))
         hold on
         plot(sesh(j).xAVI,sesh(j).yAVI,'b',sesh(j).xAVI(PSA_AVIind),sesh(j).yAVI(PSA_AVIind),'r.')
         set(gca,'YDir','normal')
         hold off
-        
-%         subplot(3,4,8+j)
-%         plot(sesh(j).x, sesh(j).y, 'b', sesh(j).x(PSAbool_ind), ...
-%             sesh(j).y(PSAbool_ind), 'r.')
 
-        
-%         keyboard
-    
     end
     [n, stay_in] = LR_cycle(n,[1 NumNeurons]);
 end
