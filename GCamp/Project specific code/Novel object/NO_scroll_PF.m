@@ -27,17 +27,22 @@ for j = 1:num_sessions
    load(fullfile(dirstr,'FinalOutput.mat'),'PSAbool')
    [~,~,~,~,~,~,sesh(j).AVItime] = AlignImagingToTracking(sesh_full.Pix2CM,...
        PSAbool,0); % Get aviTimes corresponding to PSAbool in Placefields.mat
-   pos_dir = fullfile(fileparts(dirstr),'cineplex');
-   avi_file = ls(fullfile(pos_dir, '*.avi'));
-   avi_file = fullfile(pos_dir, avi_file);
-   vidObj = VideoReader(avi_file);
-   sesh(j).arena_frame = readFrame(vidObj);
+   try % Load a blank arena frame if the avi file isn't there
+       pos_dir = fullfile(fileparts(dirstr),'cineplex');
+       avi_file = ls(fullfile(pos_dir, '*.avi'));
+       avi_file = fullfile(pos_dir, avi_file);
+       vidObj = VideoReader(avi_file);
+       sesh(j).arena_frame = readFrame(vidObj);
+   catch
+       sesh(j).arena_frame = nan;
+       
+   end
    load(fullfile(dirstr,'Pos.mat'),'xAVI','yAVI','AVItime_interp','time_interp');
    sesh(j).xAVI = xAVI;
    sesh(j).yAVI = yAVI;
    
    try
-       [~, sesh(j).PETH_trace] = NO_PETH(sesh_full, 40, 'scroll_flag', false);
+       [sesh(j).PETH, sesh(j).PETH_trace, sesh(j).trace_shuffle, sesh(j).sig_sum] = NO_PETH(sesh_full, 40, 'scroll_flag', false);
        sesh(j).PETHbool = true;
    catch
        sesh(j).PETHbool = false; % If no NO_tracking_final file present, don't do the PETH analysis
@@ -50,6 +55,7 @@ base_dir = ChangeDirectory_NK(sesh(1),0);
 load(fullfile(base_dir,'batch_session_map.mat'));
 
 NumNeurons = size(batch_session_map.map,1);
+
 %% Plot them out
 
 n = start_cell;
@@ -88,19 +94,32 @@ while stay_in
         % Plot trace PETHs at each object
         if sesh(j).PETHbool
             trace_out = sesh(j).PETH_trace;
+            shuf_out = sesh(j).trace_shuffle;
+            sig_sum = sesh(j).sig_sum;
             ylims = nan(2,2);
             if ~isnan(neuron_use) && neuron_use ~= 0
                 for k = 1:2
                     ax(k) = subplot(4,4,8+4*(k-1)+j);
+                    
+                    
                     trace_plot = squeeze(trace_out{k}(neuron_use,:,:));
                     frames_plot = (1:length(trace_plot));
                     times_plot = (frames_plot - mean(frames_plot))/20;
+                    
                     baseline = nanmean(trace_plot,2);
                     mean_trace = nanmean(trace_plot - baseline,1);
-                    plot(times_plot,(trace_plot - baseline),'r:');
+                    h_ind = plot(times_plot,(trace_plot - baseline),'r:');
+                    
+                    % Calculate shuffled mean
+                    shuf_plot = squeeze(shuf_out{k}(neuron_use,:,:));
+                    baseline = nanmean(shuf_plot,2);
+                    mean_shuf = nanmean(shuf_plot - baseline,1); % Better would be to plot 95% CI for this and plot over that
+                    
+                    sig_use = logical(squeeze(sig_sum(k,neuron_use,:))); % Gets pts that are significantly above the shuffled curve
                     
                     hold on
-                    plot(times_plot, mean_trace,'k');
+                    h_mean = plot(times_plot, mean_trace,'k', times_plot(sig_use), mean_trace(sig_use), 'k*');
+                    h_shuf = plot(times_plot, mean_shuf, 'b--');
                     hold off
                     if k == 2; xlabel('Time from object sample (s)'); end
                     ylabel('Fluorescence (au)')
