@@ -62,7 +62,7 @@ p.addParameter('add_jitter', [], @(x) isempty(x) || validateattributes(x,{'numer
 p.parse(base_struct, reg_struct, varargin{:});
 
 use_neuron_masks = p.Results.use_neuron_masks;
-name_append = p.Results.name_append;
+name_append = p.Results.name_append; % NRK - need to make this into a cell so that you can use different registrations for each session - ditto for alt_reg
 alt_reg_tform = p.Results.alt_reg;
 jitter_mat = p.Results.add_jitter;
 

@@ -45,8 +45,6 @@ while stay_in
     [n_out, stay_in] = LR_cycle(n_out,[1 NumNeurons]);
 end
 
-
-
 %% Take 2
 
 Num_Neurons = size(batch_map,1);
@@ -65,7 +63,6 @@ while stay_in
     end
     [n, stay_in] = LR_cycle(n,[1 NumNeurons]);
 end
-
 
 end
 

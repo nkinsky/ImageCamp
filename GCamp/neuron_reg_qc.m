@@ -80,7 +80,7 @@ if batch_mode == 0 || batch_mode == 1
         map_use = neuron_map.neuron_id;
     elseif batch_mode == 1 % Use final vetted map from neuron_reg_batch (better, conservative)
         load(fullfile(base_path,['batch_session_map' name_append '.mat'])); % Load batch map
-        batch_session_map = fix_batch_session_map( batch_session_map);  % Fix it if pre-bugfix
+        batch_session_map = fix_batch_session_map(batch_session_map);  % Fix it if pre-bugfix
         reg_index_use = get_index(batch_session_map.session, reg_struct);
         map_use = get_neuronmap_from_batchmap(batch_session_map.map, 1, reg_index_use);
     end
@@ -104,7 +104,7 @@ load(fullfile(reg_path,'FinalOutput.mat'),'NeuronImage','NeuronAvg');
 % Register neuron ROIs and AvgROIs to base_session
 [reginfo, ~] = image_registerX(base_struct.Animal, ...
     base_struct.Date, base_struct.Session, reg_struct.Date, ...
-    reg_struct.Session, 'suppress_output', true); % Get transform between sessions
+    reg_struct.Session, 'suppress_output', true, 'name_append', name_append); % Get transform between sessions
 ROI_reg = cellfun(@(a) imwarp_quick(a,reginfo),NeuronImage,'UniformOutput',0);
 ROIavg = MakeAvgROI(NeuronImage,NeuronAvg);
 ROIavg_reg = cellfun(@(a) imwarp_quick(a,reginfo),ROIavg,'UniformOutput',0);
