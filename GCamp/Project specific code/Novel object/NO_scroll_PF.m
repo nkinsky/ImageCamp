@@ -16,8 +16,9 @@ aviSR = 30.0003;
 curr_dir = cd;
 for j = 1:num_sessions
    [dirstr, sesh_full] = ChangeDirectory_NK(sesh(j),1);
-   load(fullfile(dirstr,'Placefields.mat'),'TMap_gauss','RunOccMap','PSAbool','isrunning','x','y');
+   load(fullfile(dirstr,'Placefields.mat'),'TMap_gauss','RunOccMap','PSAbool','isrunning','x','y','pval');
    sesh(j).TMap_gauss = TMap_gauss;
+   sesh(j).pval = pval;
    sesh(j).ZeroMap = nan(size(RunOccMap));
    sesh(j).ZeroMap(RunOccMap ~= 0) = 0;
    sesh(j).PSAbool = PSAbool;
@@ -60,6 +61,7 @@ NumNeurons = size(batch_session_map.map,1);
 
 n = start_cell;
 stay_in = true;
+num_rows = size(sesh(1).TMap_gauss{1},2);
 while stay_in
     for j = 1:num_sessions
         neuron_use = batch_session_map.map(n,j+1);
@@ -67,7 +69,9 @@ while stay_in
         subplot(4,4,j)
         if ~isnan(neuron_use) && neuron_use ~= 0
             imagesc_nan(rot90(sesh(j).TMap_gauss{neuron_use},1));
-            title([mouse_name_title(sesh(j).Date) ' - neuron ' num2str(neuron_use)])
+            title([mouse_name_title(sesh(j).Date) ' - neuron ' num2str(neuron_use) ])
+            axis off
+            text(1,num_rows,num2str(sesh(j).pval(neuron_use)))
         elseif neuron_use == 0
             imagesc_nan(rot90(sesh(j).ZeroMap,1));
             title([mouse_name_title(sesh(j).Date) ' - Neuron not active'])
@@ -100,7 +104,6 @@ while stay_in
             if ~isnan(neuron_use) && neuron_use ~= 0
                 for k = 1:2
                     ax(k) = subplot(4,4,8+4*(k-1)+j);
-                    
                     
                     trace_plot = squeeze(trace_out{k}(neuron_use,:,:));
                     frames_plot = (1:length(trace_plot));
@@ -151,6 +154,7 @@ while stay_in
         plot(sesh(j).xAVI,sesh(j).yAVI,'b',sesh(j).xAVI(PSA_AVIind),sesh(j).yAVI(PSA_AVIind),'r.')
         set(gca,'YDir','normal')
         hold off
+        axis off
 
     end
     [n, stay_in] = LR_cycle(n,[1 NumNeurons]);
