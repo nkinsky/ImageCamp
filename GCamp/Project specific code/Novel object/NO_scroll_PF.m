@@ -16,7 +16,8 @@ aviSR = 30.0003;
 curr_dir = cd;
 for j = 1:num_sessions
    [dirstr, sesh_full] = ChangeDirectory_NK(sesh(j),1);
-   load(fullfile(dirstr,'Placefields.mat'),'TMap_gauss','RunOccMap','PSAbool','isrunning','x','y','pval');
+   load(fullfile(dirstr,'Placefields.mat'),'TMap_gauss','RunOccMap','PSAbool',...
+       'isrunning','x','y','pval');
    sesh(j).TMap_gauss = TMap_gauss;
    sesh(j).pval = pval;
    sesh(j).ZeroMap = nan(size(RunOccMap));
