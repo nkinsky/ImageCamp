@@ -64,6 +64,7 @@ obj_frames{2} = sesh_full.frames2;
 %% Calculate PETHs
 PETH_out = cell(1,2);
 trace_out = cell(1,2);
+trace_mean_shuffle = nan(num_shuffles, num_objects, num_neurons,sum(frame_buffer)+1);
 for j = 1:num_objects
     % Identify exploration epochs for the object
 	event_frames_AVI = get_event_frames(obj_frames{j},frame_buffer(1)*aviSR/imageSR);
@@ -75,7 +76,7 @@ for j = 1:num_objects
     num_frames = size(PSAbool,2);
     shuf_shifts = randperm(num_frames,num_shuffles);
     trace_shuffle{j} = [];
-    trace_mean_shuffle = nan(num_shuffles, num_objects, num_neurons, size(trace_out{1},3));
+    
     for k = 1:num_shuffles
         PSAshift = circshift(PSAbool,shuf_shifts(k),2);
         LPshift = circshift(LPtrace,shuf_shifts(k),2);
@@ -86,13 +87,10 @@ for j = 1:num_objects
 
 end
 
-%%
-keyboard
 %% Need to subtract shuffled trace from mean trace for each shuffle and quantify
 % significant times as those that fall below zero less than 5% of the time
-% 
 
-alpha = 0.05; % Significance level
+alphaa = 0.01; % Significance level
 sig_sum = nan(num_objects,num_neurons,size(PETH_out{j},3));
 for j = 1:num_objects
     for k = 1:num_neurons
@@ -100,8 +98,8 @@ for j = 1:num_objects
         baseline = mean(trace_use,2);
         mean_trace = mean(trace_use - baseline,1);
         
-        trace_diff = mean_trace - squeeze(trace_mean_shuffle(:,k,j,:)); %mean_trace - squeeze(trace_shuffle{j}(k,:,:)); % Subtrace shuffled traces from mean trace
-        sig_sum(j,k,:) = sum(trace_diff > 0,1)/num_shuffles > (1-alpha);
+        trace_diff = mean_trace - squeeze(trace_mean_shuffle(:,j,k,:)); %mean_trace - squeeze(trace_shuffle{j}(k,:,:)); % Subtrace shuffled traces from mean trace
+        sig_sum(j,k,:) = sum(trace_diff > 0,1)/num_shuffles > (1-alphaa);
 %         sig_sum(j,k,:) = sum(trace_diff > 0,1)/size(trace_shuffle{j},2) > (1-alpha); % Identify how many times the mean trace was above the shuffled trace
 
     end
@@ -126,10 +124,12 @@ if scroll_flag
             baseline_shuf = nanmean(shuf_plot,2);
             mean_shuffle = nanmean(shuf_plot - baseline_shuf,1);
             
+            sig_use = logical(squeeze(sig_sum(k,n_out,:))); % Gets pts that are significantly above the shuffled curve
+            
             plot(times_plot,(trace_plot - baseline),'r:');
             hold on
-            plot(times_plot, mean_trace,'b');
-            plot(times_plot, mean_shuffle,'k--')
+            h_mean = plot(times_plot, mean_trace,'k', times_plot(sig_use), mean_trace(sig_use), 'k*');
+            h_shuf = plot(times_plot, mean_shuffle, 'b--');
             hold off
             xlabel('Time from object sample (s)')
             ylabel('Fluorescence (au)')
