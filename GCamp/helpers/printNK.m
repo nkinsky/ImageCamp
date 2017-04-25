@@ -12,6 +12,8 @@ elseif nargin == 2
         location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Presentations\Russek Day 2017\Poster';
     elseif strcmpi(location, 'NO')
         location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
+    elseif strcmpi(location, 'NOlaptop')
+        location = 'C:\Users\Nat\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
     end
 end
 
