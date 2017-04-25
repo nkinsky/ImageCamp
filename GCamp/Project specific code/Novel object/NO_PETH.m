@@ -75,16 +75,19 @@ for j = 1:num_objects
     num_frames = size(PSAbool,2);
     shuf_shifts = randperm(num_frames,num_shuffles);
     trace_shuffle{j} = [];
+    trace_mean_shuffle = nan(num_shuffles, num_objects, num_neurons, size(trace_out{1},3));
     for k = 1:num_shuffles
         PSAshift = circshift(PSAbool,shuf_shifts(k),2);
         LPshift = circshift(LPtrace,shuf_shifts(k),2);
         [~, temp] = make_PETH(PSAshift, LPshift, event_frames, frame_buffer);
         trace_shuffle{j} = cat(2,trace_shuffle{j},temp);
-        
+        trace_mean_shuffle(k,j,:,:) = squeeze(nanmean(temp - nanmean(temp,3),2));
     end
-    
+
 end
 
+%%
+keyboard
 %% Need to subtract shuffled trace from mean trace for each shuffle and quantify
 % significant times as those that fall below zero less than 5% of the time
 % 
@@ -97,8 +100,9 @@ for j = 1:num_objects
         baseline = mean(trace_use,2);
         mean_trace = mean(trace_use - baseline,1);
         
-        trace_diff = mean_trace - squeeze(trace_shuffle{j}(k,:,:)); % Subtrace shuffled traces from mean trace
-        sig_sum(j,k,:) = sum(trace_diff > 0,1)/size(trace_shuffle{j},2) > (1-alpha); % Identify how many times the mean trace was above the shuffled trace
+        trace_diff = mean_trace - squeeze(trace_mean_shuffle(:,k,j,:)); %mean_trace - squeeze(trace_shuffle{j}(k,:,:)); % Subtrace shuffled traces from mean trace
+        sig_sum(j,k,:) = sum(trace_diff > 0,1)/num_shuffles > (1-alpha);
+%         sig_sum(j,k,:) = sum(trace_diff > 0,1)/size(trace_shuffle{j},2) > (1-alpha); % Identify how many times the mean trace was above the shuffled trace
 
     end
 end
