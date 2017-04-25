@@ -8,6 +8,8 @@ function [ ] = scroll_PF(TMap,varargin )
 %   'perform_smooth': 1 = perform smoothing of OccMap, 0 = do not
 %   smooth OccMap (may need to do if you have large bin sizes).  Default =
 %   1.
+%
+% Currently obsolete for T4/Placefields function TMaps.
 
 %% Parse varargins
 OccMap = ones(size(TMap{1})); % default
@@ -41,6 +43,25 @@ while stay_in
     title(['Heat Map for neuron ' num2str(n_out)])
     
     [n_out, stay_in] = LR_cycle(n_out,[1 NumNeurons]);
+end
+
+%% Take 2
+
+Num_Neurons = size(batch_map,1);
+n = 1;
+stay_in = true;
+while stay_in
+    for j = 1:num_sessions
+        neuron_use = batch_map(n, j+1);
+        subplot(4,2,j)
+        if ~isnan(j+1)
+            imagesc_nan(sesh(j).TMap{neuron_use});
+            title(['Neuron ' num2str(neuron_use) ' Session ' num2str(j)]
+        else
+            % Need to plot something here if neuron reg is sketchy!!!
+        end
+    end
+    [n, stay_in] = LR_cycle(n,[1 NumNeurons]);
 end
 
 end
