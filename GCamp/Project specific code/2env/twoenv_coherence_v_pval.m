@@ -1,6 +1,8 @@
 function [ output_args ] = twoenv_coherence_v_pval( input_args )
-%UNTITLED3 Summary of this function goes here
-%   Detailed explanation goes here
+% bare bones skeleton code to see if cells with higher spatial info tend to
+% align to local cues more?  Or maybe something else.  General idea is that
+% I want to see if cells with higher spatial info tend to stay in a
+% configuration more than cells with low spatial info...
 
 %% Very rough code to get this going - wanted to get it down before heading on vacation
 [best_angle, best_angle_all] = twoenv_rot_analysis_full(G30_square(1:3), 'square');
