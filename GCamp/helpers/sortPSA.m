@@ -7,7 +7,7 @@ function [ PSAbool_sort, sort_ind ] = sortPSA(PSAbool )
 num_neurons = size(PSAbool,1);
 recruit_time = nan(num_neurons,1);
 
-% ID any neurons that have PSAs for some reason and dump them to the end
+% ID any neurons that no have PSAs for some reason and dump them to the end
 no_PSA = ~any(PSAbool,2);
 PSAbool_temp = PSAbool;
 PSAbool_temp(no_PSA, size(PSAbool,2)) = true;

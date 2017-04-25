@@ -3,8 +3,7 @@ function [corr_mat, shuffle_mat, shuffle_mat2 ] = corr_rot_analysis( session1, s
 %   
 % Compares session1 TMaps to TMaps in session2 that have been rotated as
 % specified in rot_array.  Requires running batch_rot_arena and
-% PlaceFields/PlacefieldStats on the data first.  Not yet capable of taking
-% data where the circle has been transformed to a square
+% PlaceFields/PlacefieldStats on the data first.
 % Need to add in thresholding of some sort - currently ALL cells are
 % included.
 
@@ -106,12 +105,15 @@ for k = 1:num_shuffles
             rot_use = -rot_array(j) + 360;
             temp = load(fullfile(sesh(1).Location,['Placefields' trans_append '_rot' num2str(rot_use) '.mat']), TMap_type);
             TMap1_use = temp.(TMap_type);
-            load(fullfile(sesh(2).Location,['Placefields' trans_append '_rot0.mat']), TMap_type);
+            temp = load(fullfile(sesh(2).Location,['Placefields' trans_append '_rot0.mat']), TMap_type);
             TMap2_use = temp.(TMap_type);
             
         end
-        
-        shuffle_mat2_temp(:,j) = corr_bw_TMap(TMap1_use, TMap2_use, shuf_map);
+        try
+            shuffle_mat2_temp(:,j) = corr_bw_TMap(TMap1_use, TMap2_use, shuf_map);
+        catch
+            keyboard
+        end
         
     end
     [~, imax] = max(nanmean(shuffle_mat2_temp,1));

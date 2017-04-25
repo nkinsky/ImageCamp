@@ -72,7 +72,7 @@ while stay_in
             imagesc_nan(rot90(sesh(j).TMap_gauss{neuron_use},1));
             title([mouse_name_title(sesh(j).Date) ' - neuron ' num2str(neuron_use) ])
             axis off
-            text(1,num_rows,num2str(sesh(j).pval(neuron_use)))
+            text(1,num_rows,num2str(round(sesh(j).pval(neuron_use),2)))
         elseif neuron_use == 0
             imagesc_nan(rot90(sesh(j).ZeroMap,1));
             title([mouse_name_title(sesh(j).Date) ' - Neuron not active'])

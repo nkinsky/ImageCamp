@@ -18,7 +18,7 @@ print([MD(sesh_use).Animal '_allneurons'],'-dpdf', '-bestfit')
 %% Plot cells across days
 % 1 = square, 2 = square rotated with cells following local cues, 3 =
 % square rotated, 4 = circle
-sesh_use = cat(2, G48_oct(1), G48_oct(2), G48_oct(5), G48_square(5), G48_oct(3)); % cat(2,G30_square(1), G30_square(3), G30_square(4), G30_oct(1), G30_square(6));
+sesh_use = cat(2, G48_oct(1), G48_oct(2), G48_oct(3), G48_square(5), G48_oct(5)); % cat(2, G48_oct(1), G48_oct(2), G48_oct(5), G48_square(5), G48_oct(3)); % cat(2,G30_square(1), G30_square(3), G30_square(4), G30_oct(1), G30_square(6));
 base_sesh = G48_square(1); %G30_square(1);
 num_cols = length(sesh_use);
 num_rows = 3;
@@ -59,13 +59,13 @@ for m = 1:20
             if isnan(neuron_use)
                 title('Sketchy neuron mapping')
             elseif neuron_use == 0
-                imagesc_nan(sesh_use(k).nanmap);
+                imagesc_nan(rot90(sesh_use(k).nanmap,1));
                 title('Neuron not active')
             elseif neuron_use > 0
                 if sum(isnan(sesh_use(k).tmap{neuron_use}(:))) == length(sesh_use(k).tmap{neuron_use}(:)) % edge case where bug in Placefields has cause TMap_gauss to be all NaNs
-                    imagesc_nan(sesh_use(k).nanmap);
+                    imagesc_nan(rot90(sesh_use(k).nanmap,1));
                 else
-                    imagesc_nan(sesh_use(k).tmap{neuron_use});                    
+                    imagesc_nan(rot90(sesh_use(k).tmap{neuron_use},1));                    
                 end
                 if k == 1 % only label neuron in first session
                     title(['Neuron ' num2str(neuron_use)])
@@ -79,4 +79,48 @@ for m = 1:20
     waitforbuttonpress
 end
 
-%% Make hi
+%% Plot cell recruitment 1st v 2nd environment
+sesh_use = G45_square(5);
+
+dirstr = ChangeDirectory_NK(sesh_use,0);
+load(fullfile(dirstr,'FinalOutput.mat'),'PSAbool','NeuronTraces');
+num_neurons = size(PSAbool,1);
+num_frames = size(PSAbool,2);
+ 
+% Stuff you need to specify
+env_t = [6750 13200 19550]/20; % Times of entry into 2nd env, 1st env, and 2nd env
+cells1 = 1:660; % cells recruited in 1st env
+cell2 = 670:num_neurons; % cells recruited in 2nd env
+
+[PSAbool_sort, sort_ind] = sortPSA(PSAbool);
+PSAbool_sort2 = double(PSAbool_sort);
+PSAbool_sort2(cells2,:) = PSAbool_sort2(cells2,:)*2;
+LPtrace_sort = NeuronTraces.LPtrace(sort_ind,:);
+time_plot = (1:num_frames)/20;
+
+figure(100) 
+h1 = subplot(6,1,2:6);
+imagesc(time_plot,1:num_neurons,PSAbool_sort2); 
+% colormap('gray')
+colormap([1 1 1; 1 0 0; 0 0 1])
+hold on
+for j = 1:3
+    plot([env_t(j) env_t(j)],[1 num_neurons],'k--');
+end
+plot([1 max(time_plot)], [cells1(end) cells1(end)],'k--')
+xlabel('Time (s)')
+ylabel('Neuron #')
+hold off
+% imagesc_gray(PSAbool_sort); colorbar off;
+h2 = subplot(6,1,1);
+smth_win_sec = 10; % Smoothing window to use in seconds
+plot_type = 'PSAbool';
+switch plot_type; case 'PSAbool'; act_plot = PSAbool_sort; case 'LPtrace'; act_plot = LPtrace_sort; end
+plot(time_plot, convtrim(mean(act_plot(cells1,:),1), ones(20*smth_win_sec,1))/smth_win_sec,'b'); 
+hold on; 
+plot(time_plot, convtrim(mean(act_plot(cells2,:),1), ones(20*smth_win_sec,1))/smth_win_sec,'r'); 
+ylims = get(gca,'YLim');
+% for j = 1:3; plot([env_t(j) env_t(j)],ylims,'k--'); end
+hold off
+axis tight
+axis off

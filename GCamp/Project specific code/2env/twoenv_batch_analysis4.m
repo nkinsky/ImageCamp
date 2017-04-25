@@ -65,6 +65,47 @@ for j = 1:num_animals
 end
 p.stop;
 
+%% Perform local angle rotation analysis for circ2square
+
+comps.before = [1 2 7 8; 3 4 5 6]';  comps.during = [9 11 ; 10 12]'; comps.after = [13 14; 15 16]';
+
+rot_array = 0; % Always compare local cues aligned 
+comp_type = {'before','during','after'};
+p = ProgressBar(num_animals*length(comp_type)*2*2);
+for j = 1:num_animals
+    base_dir = ChangeDirectory_NK(Mouse(j).sesh.circ2square(1),0);
+    load(fullfile(base_dir,'batch_session_map_trans.mat')); % load batch_session_map
+    for k = 1:length(comp_type)
+        comp_seshs = comps.(comp_type{k});
+        num_sessions = size(comp_seshs,1);
+        Mouse(j).local_comps.(comp_type{k}).corr_mat = cell(size(comp_seshs));
+        Mouse(j).local_comps.(comp_type{k}).corr_mean = nan(size(comp_seshs));
+        for ll = 1:num_sessions
+            session1 = Mouse(j).sesh.circ2square(comp_seshs(ll,1)); % Get square session
+            for mm = 1:num_sessions
+                session2 = Mouse(j).sesh.circ2square(comp_seshs(mm,2)); % Get circle session
+                [corr_mat, ~, shuffle_mat2 ] = corr_rot_analysis( session1, session2,...
+                    batch_session_map, rot_array, 'trans', true, 'num_shuffles', 1 );
+                Mouse(j).local_comps.(comp_type{k}).corr_mat{ll,mm} = corr_mat;
+                Mouse(j).local_comps.(comp_type{k}).corr_mean(ll,mm) = nanmean(corr_mat(:));
+                p.progress;
+            end
+        end
+    end
+end
+p.stop;
+
+%% Assemble into All mouse variable
+
+for k = 1:length(comp_type)
+    All.local_comps.(comp_type{k}).corr_mat = [];
+    All.local_comps.(comp_type{k}).corr_mean = [];
+    for j = 1:num_animals
+        All.local_comps.(comp_type{k}).corr_mat = [All.local_comps.(comp_type{k}).corr_mat; cat(1,Mouse(j).local_comps.(comp_type{k}).corr_mat{:})];
+        All.local_comps.(comp_type{k}).corr_mean = [All.local_comps.(comp_type{k}).corr_mean; Mouse(j).local_comps.(comp_type{k}).corr_mean(:)];
+    end
+end
+
 %% Run PV analysis at best angle
 dispNK('Running PV analysis at best rotation angle')
 p = ProgressBar(num_animals*length(sesh_type));
@@ -267,12 +308,15 @@ end
 % Get distal cue v local cue v incongruous comparisons
 for k = 1:length(sesh_type)
     num_sessions = length(Mouse(1).sesh.(sesh_type{k}));
+%     circ2square_flag = strcmpi('circ2square',sesh_type{k});
     for j = 1:num_animals
         Mouse(j).distal_rot_mat.(sesh_type{k}) = nan(num_sessions,num_sessions);
         angle_diff_mat = repmat(Mouse(j).best_angle.(sesh_type{k}), num_sessions, 1) - ...
             repmat(Mouse(j).best_angle.(sesh_type{k})', 1, num_sessions);
-        for ll = 1:num_sessions-1
+%         if circ2square_flag; end_ind = num_sessions; else; end_ind = num_sessions-1; end 
+        for ll = 1:num_sessions-1 %1:end_ind
             [~, sesh1_rot] = get_rot_from_db(Mouse(j).sesh.(sesh_type{k})(ll));
+%             if circ2square_flag; start_ind = 1; else; start_ind = ll+1; end
             for mm = ll+1:num_sessions
                 [~, sesh2_rot] = get_rot_from_db(Mouse(j).sesh.(sesh_type{k})(mm));
                 distal_rot = sesh2_rot - sesh1_rot;
@@ -385,7 +429,92 @@ for j = 1:length(compare_type)
 end
 hold off
 
-               
+%% Plot Breakdown of alignment before, during, after
+% Must run twoenv_reference beforehand to get bw_before, bw_during, &
+% bw_after
 
+time_comp = {'before', 'during', 'after'};
+for k = 1:length(time_comp)
+    sesh_comp = bw_sesh.(time_comp{k}); % Get indices for comparions before/during/after
+    num_comps = size(sesh_comp,1); % number of sessions to compare
+    All.bw_sesh.(time_comp{k}) = zeros(1,4); % pre-allocate
+    for j=1:num_animals
+        for ll = 1:length(align_type)
+            remap_mat = Mouse(j).remapping_type.(align_type{ll}).circ2square; % Get remapping matrix for each alignment type
+            ind_use = sub2ind(size(remap_mat),sesh_comp(:,1), sesh_comp(:,2)); % Get indices from subs in sesh_comp
+            Mouse(j).bw_sesh.(time_comp{k}).(align_type{ll}) = ...
+                sum(remap_mat(ind_use));
+            All.bw_sesh.(time_comp{k})(ll) = All.bw_sesh.(time_comp{k})(ll)+ sum(remap_mat(ind_use));
+        end
 
+    end
+    
+end
 
+plot_mat = [All.bw_sesh.before; All.bw_sesh.during; All.bw_sesh.after];
+figure;
+bar(1:length(time_comp), plot_mat./sum(plot_mat,2));
+set(gca,'XTickLabel',time_comp)
+ylabel('Proprotion of Sessions')
+legend(cellfun(@mouse_name_title, align_type,'UniformOutput',false))
+title('Circle-to-square mapping breakdown')
+
+%% Take 2 - just plot local cue aligned sessions
+
+plot_mat2 = [All.bw_sesh.before(2) All.bw_sesh.during(2) All.bw_sesh.after(2)];
+figure;
+bar(1:length(time_comp), plot_mat2./[sum(plot_mat,2)]');
+set(gca,'XTickLabel',time_comp)
+ylabel('Proprotion of Sessions')
+% legend(cellfun(@mouse_name_title, align_type,'UniformOutput',false))
+title('Circle-to-square mapping breakdown') 
+
+%% Take 3 - just look at correlations with local cues aligned before/during/after
+% Something weird here - correlations for local cue aligned sessions are
+% only slightly higher for during than before/after
+for k = 1:length(time_comp)
+    mean_array = All.local_comps.(time_comp{k}).corr_mean;
+    bda_mean(1,k) = mean(mean_array);
+    bda_sem(1,k) = std(mean_array)/sqrt(length(mean_array));
+end
+
+figure
+bar(bda_mean);
+hold on
+errorbar(bda_mean, bda_sem)
+
+%% Plot Cell recruitment for each mouse across days
+new_cells = nan(4,16);
+old_cells = nan(4,16);
+sesh_plot = [1:8 9 11 13:16];
+figure(25)
+
+plot_type = 'ratio';
+for j = 1:num_animals
+    dirstr = ChangeDirectory_NK(Mouse(j).sesh.circ2square(1),0);
+    load(fullfile(dirstr,'batch_session_map_trans.mat'));
+    [new_cells(j,:), old_cells(j,:)] = cell_recruit_by_session(batch_session_map.map);
+    switch plot_type
+        case 'new'
+            plot(new_cells(j,sesh_plot),'o');
+        case 'ratio'
+            plot(new_cells(j,sesh_plot)./sum(new_cells(j,sesh_plot),2),'o')
+        otherwise
+      
+    end
+    
+    hold on
+end
+
+xlabel('Session')
+switch plot_type
+    case 'new'
+        plot(mean(new_cells(:,sesh_plot),1),'k-')
+        ylabel('New Cells Recruited')
+    case 'ratio'
+        plot(mean(new_cells(:,sesh_plot)./sum(new_cells(:,sesh_plot),2),1),'k-')
+        ylabel('Proportion of Recruited Cells That are New')
+    otherwise
+        
+end
+hold off
