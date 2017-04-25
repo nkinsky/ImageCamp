@@ -14,7 +14,7 @@ num_events = length(event_frames);
 num_frames = sum(frame_buffer)+1;
 
 PETH_out = nan(num_neurons, num_events, num_frames);
-trace_out = nan(num_neurons,num_events, num_frames);
+trace_out = nan(num_neurons, num_events, num_frames);
 
 for j = 1:length(event_frames)
     start_frame = max([1, event_frames(j)-frame_buffer(1)]);
