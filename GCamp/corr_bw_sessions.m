@@ -1,5 +1,6 @@
 function [ corr_1st_2nd, dist_1st_2nd] = corr_bw_sessions(rate_map1, rate_map2, exclude)
 %[corr_1st_2nd] = corr_bw_sessions(rate_map1, rate_map2) 
+%   Not a great function - do I even use it anymore?
 %   Get correlation between rate maps between two sessions.  
 %
 %   rate_map1 and
