@@ -3,7 +3,7 @@ function [PETH_out, trace_out, trace_shuffle, sig_sum ] = NO_PETH(session, varar
 %   Plots a peri-event histogram for each neuron for each object.  Frame
 %   buffer is the number of frames that you wish to
 %   display before/after using the imaging sampling rate (20 fps).
-%   Default = 40 if not specified.
+%   Default = 40 if not specified. test.
 %
 %   Must have NOtracking_final and Pos_align.mat in the working directory
 %   in session.
@@ -65,6 +65,8 @@ obj_frames{2} = sesh_full.frames2;
 PETH_out = cell(1,2);
 trace_out = cell(1,2);
 trace_mean_shuffle = nan(num_shuffles, num_objects, num_neurons,sum(frame_buffer)+1);
+PSA_mean_shuffle = nan(num_shuffles, num_objects, num_neurons,sum(frame_buffer)+1);
+p = ProgressBar(num_objects*num_shuffles);
 for j = 1:num_objects
     % Identify exploration epochs for the object
 	event_frames_AVI = get_event_frames(obj_frames{j},frame_buffer(1)*aviSR/imageSR);
@@ -75,17 +77,91 @@ for j = 1:num_objects
     % Set up and run shuffling
     num_frames = size(PSAbool,2);
     shuf_shifts = randperm(num_frames,num_shuffles);
-    trace_shuffle{j} = [];
+    trace_shuffle{j} = []; PSA_shuffle{j} = []; %#ok<AGROW>
     
     for k = 1:num_shuffles
         PSAshift = circshift(PSAbool,shuf_shifts(k),2);
         LPshift = circshift(LPtrace,shuf_shifts(k),2);
-        [~, temp] = make_PETH(PSAshift, LPshift, event_frames, frame_buffer);
-        trace_shuffle{j} = cat(2,trace_shuffle{j},temp);
-        trace_mean_shuffle(k,j,:,:) = squeeze(nanmean(temp - nanmean(temp,3),2));
+        [PSA_temp, trace_temp] = make_PETH(PSAshift, LPshift, event_frames, frame_buffer);
+        trace_shuffle{j} = cat(2,trace_shuffle{j},trace_temp);
+        trace_mean_shuffle(k,j,:,:) = squeeze(nanmean(trace_temp - nanmean(trace_temp,3),2));
+        PSA_shuffle{j} = cat(2,PSA_shuffle{j}, PSA_temp);
+        PSA_mean_shuffle(k,j,:,:) = squeeze(nanmean(PSA_temp,2));
+        p.progress;
     end
 
 end
+p.stop;
+%%
+keyboard
+
+%% Plot raster for each and scroll through
+if scroll_flag
+    plot_color = {'b.', 'r.'}; plot_color2 = {'b'; 'r'}; plot_color3 = {'b*','r*'};
+    clength = 5; % # frames to smooth with
+    legend_names = {'Object 1', 'Object 2'};
+    times_plot = (-frame_buffer:frame_buffer)/imageSR;
+    
+    [~, nsamp, ~] = cellfun(@size, PETH_out); % Get number of samples for each object
+    figure; 
+    for j = 1:num_neurons
+        start_row = 0;        
+        
+        subplot(5,1,1:4)
+        cla
+        hl = [];
+        PETH_plot = cell(1,2);
+        for k = 1:2
+            subplot(5,1,1:4)
+            PETH_plot{k} = squeeze(PETH_out{k}(j,:,:));
+            [PSA_trial, PSA_times] = find(PETH_plot{k});
+            plot_row = start_row + PSA_trial;
+            htemp = plot(times_plot(PSA_times), plot_row, plot_color{k});
+            	if ~isempty(htemp); hl(k) = htemp(1); end
+            hold on
+            start_row = nsamp(1);
+
+        end
+        plot([times_plot(1), times_plot(end)], [nsamp(1) + 0.5, nsamp(1) + 0.5],'k-')
+
+        hold off
+        xlim([times_plot(1), times_plot(end)])
+        ylim([0 sum(nsamp)]);
+        set(gca,'YDir','reverse')
+        title(['Neuron ' num2str(j)]);
+        legend(hl(hl~= 0), legend_names(hl ~= 0))
+        
+        % Plot mean curve
+        subplot(5,1,5)
+        cla
+        shuf_mat = [];
+        tuning_curve = zeros(2,sum(frame_buffer)+1);
+        sig_epochs = false(2,sum(frame_buffer)+1);
+        %
+        for k = 1:2
+            if any(sum(PETH_plot{k},1))
+                tuning_curve(k,:) = convtrim(mean(PETH_plot{k},1),ones(clength,1))/clength;
+                plot(times_plot, tuning_curve(k,:), plot_color2{k});
+                hold on
+            end
+            %
+            temp_shuf = squeeze(PSA_mean_shuffle(:,k,j,:));
+            shuf_mat = [shuf_mat; temp_shuf]; %#ok<AGROW>
+            hold on
+            sig_epochs(k,:) = sum((tuning_curve(k,:) - temp_shuf) > 0,1)/num_shuffles >=.99;
+            plot(times_plot(sig_epochs(k,:)), tuning_curve(k,sig_epochs(k,:)), plot_color3{k})
+        end
+        std_use = std(shuf_mat,0,1);
+        mu_use = mean(shuf_mat,1);
+        plot(times_plot,mu_use+3*std_use,'k--');
+        hold on;
+        
+        ylim([0 0.6])
+            
+        waitforbuttonpress
+    end
+end
+
 
 %% Need to subtract shuffled trace from mean trace for each shuffle and quantify
 % significant times as those that fall below zero less than 5% of the time
