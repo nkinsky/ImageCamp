@@ -144,4 +144,13 @@ for j= 1:num_animals
     end
 end
 
+%% Get #s of PFs
+sig_level = 0.05;
 
+for j = 1:2
+    for k = 1:8
+        dirstr = ChangeDirectory_NK(Mouse{j}.sesh(k),0);
+        load(fullfile(dirstr,'Placefields.mat'),'pval')
+        num_PFs(j,k) = sum(pval < sig_level);
+    end
+end
