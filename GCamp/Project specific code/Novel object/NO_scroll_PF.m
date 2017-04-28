@@ -1,4 +1,4 @@
-function [ ] = NO_scroll_PF( sesh1_struct, other_structs, start_cell )
+function [ ] = NO_scroll_PF( sesh1_struct, other_structs, start_cell, pval_disp )
 % NO_scroll_PF( sesh1_struct, other_structs, start_cell )
 %   sesh1_struct is the first (habituation) day of a given experiment and
 %   should be entered as MD(#).
@@ -6,6 +6,7 @@ function [ ] = NO_scroll_PF( sesh1_struct, other_structs, start_cell )
 
 if nargin < 3
     start_cell = 1;
+    pval_disp = true; % display p-value by default
 end
 
 sesh = cat(2,sesh1_struct, other_structs);
@@ -72,7 +73,7 @@ while stay_in
             imagesc_nan(rot90(sesh(j).TMap_gauss{neuron_use},1));
             title([mouse_name_title(sesh(j).Date) ' - neuron ' num2str(neuron_use) ])
             axis off
-            text(1,num_rows,num2str(round(sesh(j).pval(neuron_use),2)))
+            if pval_disp; text(1,num_rows,num2str(round(sesh(j).pval(neuron_use),2))); end
         elseif neuron_use == 0
             imagesc_nan(rot90(sesh(j).ZeroMap,1));
             title([mouse_name_title(sesh(j).Date) ' - Neuron not active'])
