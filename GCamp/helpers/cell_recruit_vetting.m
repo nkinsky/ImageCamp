@@ -13,6 +13,7 @@
 % 2) Do the above with a very sparse session (e.g. G48)
 
 [MD, ref] = MakeMouseSessionList('Natlaptop');
+[MD, ref] = MakeMouseSessionListNK('Natlaptop');
 %% 1 ) Plot sorted PSAbool along with sorted Traces
 % Specify session to use
 twoenv_reference;
@@ -23,17 +24,24 @@ dirstr = ChangeDirectory_NK(sesh_use);
 load(fullfile(dirstr,'FinalOutput.mat'),'PSAbool','NeuronTraces');
 [PSAbool_sort, sort_ind] = sortPSA(PSAbool);
 LPtrace_sort = NeuronTraces.LPtrace(sort_ind,:);
+num_neurons = size(LPtrace_sort,1);
 
 % plot it
 figure(20)
-subplot(2,1,1)
+subplot(2,2,1)
 imagesc(PSAbool_sort)
 title([mouse_name_title(sesh_use.Animal) ': PSAbool - sorted'])
 
-subplot(2,1,2)
-imagesc(LPtrace_sort)
+subplot(2,2,3)
+imagesc(LPtrace_sort > 0.025)
 title([mouse_name_title(sesh_use.Animal) ': LPtrace - sorted'])
-colorbar
+% colorbar
+
+htrace = subplot(2,2,4);
+neuron_incr = round(num_neurons/30);
+neurons_plot = 1:neuron_incr:num_neurons;
+plot_neuron_traces(flip(LPtrace_sort(neurons_plot,:)),nan,htrace);
+% set(gca,'YDir','reverse')
 
 %% 1a) Calculate before v after firing
 num_neurons = size(PSAbool,1);
