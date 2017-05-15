@@ -14,6 +14,8 @@ elseif nargin == 2
         location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
     elseif strcmpi(location, 'NOlaptop')
         location = 'C:\Users\Nat\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
+    elseif strcmpi(location, '2env_laptop')
+        location = 'C:\Users\Nat\Dropbox\Imaging Project\Manuscripts\2env\Figures';
     end
 end
 
