@@ -269,7 +269,6 @@ for k = 1:length(sesh_type)
 end
 
 %% Plot mean correlations vs days for each comparison type for PV
-
 marker_type = {'ko', 'ko', 'ko'}; % marker_type = {'s', 'o', 'x'};
 plot_combined = false;
 
@@ -482,7 +481,7 @@ compare_type = {'square','circle','circ2square'};
 hold on
 for j = 1:length(compare_type)
     plot_mat = [sum(All.ratio_plot_all.(compare_type{j})(:,1:3),2) All.ratio_plot_all.(compare_type{j})(:,4)];
-    plot_mat2 = plot_mat./sum(plot_mat,2) % Hack to fix an error above where I'm dividing by the wrong number to get my ratios - need to fix later
+    plot_mat2 = plot_mat./sum(plot_mat,2); % Hack to fix an error above where I'm dividing by the wrong number to get my ratios - need to fix later
         plot(repmat(h(j).XData + h(j).XOffset, num_animals,1),...
              plot_mat2,'ko')
 end
@@ -577,3 +576,24 @@ switch plot_type
         
 end
 hold off
+
+%% Create PF density maps
+disp('Creating PF density maps')
+arena_type = {'square','circle'};
+for j = 1:num_animals
+    for k = 1:2
+        dirstr = ChangeDirectory_NK(Mouse(j).sesh.(arena_type{k})(1),0); % 
+        load(fullfile(dirstr,'batch_session_map.mat'));
+        batch_map_use = fix_batch_session_map(batch_session_map);
+        Mouse(j).batch_session_map.(arena_type{k}) = batch_map_use;
+        for ll = 1:8
+            dirstr = ChangeDirectory_NK(batch_map_use.session(ll),0); % Get base directory
+            load(fullfile(dirstr,'Placefields_rot0.mat'),'TMap_gauss',...
+                'RunOccMap'); % Load TMaps and Occupancy map
+            temp = create_PFdensity_map(cellfun(@(a) ...
+                make_binary_TMap(a),TMap_gauss,'UniformOutput',0)); % create density map from binary TMaps
+            [~, Mouse(j).PFdens_map{k,ll}] = make_nan_TMap(RunOccMap,temp); % Make non-occupied pixels white
+            Mouse(j).PFdensity_analysis(k).RunOccMap{ll} = RunOccMap; % save RunOccMaps for future analysis
+        end
+    end
+end
