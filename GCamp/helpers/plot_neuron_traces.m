@@ -2,6 +2,22 @@ function [ h, colors_used ] = plot_neuron_traces( traces, varargin)
 % [ h, colors_used ] = plot_neuron_traces( traces, color_table, h )
 %   Plot neuron traces with colors in rgb color_table onto handle h.
 %   color_table and h are options inputs.  Assumes 20 fps for now;
+%
+%   INPUTS:
+%       traces: Either NeuronTraces.RawTrace or NeuronTraces.LPtrace from
+%       FinalOutput.mat
+%
+%       color_table (optional): Add in color table from
+%       plot_neuron_outlines to match ROI outlin colors or any other custom
+%       colors you want (rgb format, rows = neuron color, #rows must match
+%       #rows traces
+%
+%       h (optional): axes handle to plot into
+%
+%   OUTPUTS:
+%       h: axes handle to plot
+%
+%       colors_used: color table matching plotted traces
 
 %% Parse inputs
 ip = inputParser;
@@ -27,6 +43,10 @@ baseline = mean(traces,2);
 trace_adj = traces - baseline; % Subtract out baseline to zero everything
 time_plot = (1:num_frames)/SR;
 
+% NK attempt to make everything more or less equally spaced
+trace_max = max(trace_adj,[],2);
+trace_adj = trace_adj./trace_max;
+
 axes(h)
 y_base = 0;
 
@@ -47,6 +67,7 @@ for j = 1:num_neurons
     else 
         y_base = max(trace_use);
     end
+%     printNK(['testing' num2str(j)],'2env')
 end
 
 if ~isnan(color_table)
