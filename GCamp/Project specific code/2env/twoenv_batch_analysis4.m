@@ -127,6 +127,35 @@ for j = 1:num_animals
 end
 p.stop;
 
+%% Calculate Discrimination Ratios for all cells 
+square_sesh = [1 2 7 8 9 12 13 14];
+circ_sesh = [3 4 5 6 10 11 15 16];
+for ii = 1:num_animals
+    Mouse(ii).DI = nan(8,8,size(Mouse(ii).PV.circ2square,4)); % Pre-allocate
+    for j = 1:8
+        PV_square = squeeze(mean(mean(Mouse(ii).PV.circ2square(square_sesh(j),:,:,:),2),3)); % Activity across all bins in the square
+        for k = 1:8
+            PV_circle = squeeze(mean(mean(Mouse(ii).PV.circ2square(circ_sesh(k),:,:,:),2),3));
+            active_cells = PV_square ~= 0 | PV_circle ~= 0;
+            DI_temp = (PV_square(active_cells) - PV_circle(active_cells))...
+                ./(PV_square(active_cells) + PV_circle(active_cells));
+            Mouse(ii).DI(j,k,active_cells) = DI_temp;
+        end
+    end
+end
+
+high_discr_ratio = nan(4,8,8);
+low_discr_ratio = nan(4,8,8);
+for ii = 1:num_animals
+    for j = 1:8
+        for k = 1:8
+            ttt = squeeze(Mouse(ii).DI(j,k,:)); high_discr_ratio(ii,j,k) = sum(abs(ttt) >= 0.75 & abs(ttt) < 1)/sum(~isnan(ttt) & abs(ttt) ~= 1);
+            low_discr_ratio(ii,j,k) = sum(abs(ttt) <= 0.25)/sum(~isnan(ttt));
+        end
+    end
+end
+All.DI.high_discr_ratio = high_discr_ratio;
+All.DI.low_discr_ratio = low_discr_ratio;
 %% Aggregate everything by time and type of comparison
 % Pre-allocate
 for k = 1:length(sesh_type)
@@ -240,16 +269,19 @@ for k = 1:length(sesh_type)
 end
 
 %% Plot mean correlations vs days for each comparison type for PV
-marker_type = {'s', 'o', 'x'};
+
+marker_type = {'ko', 'ko', 'ko'}; % marker_type = {'s', 'o', 'x'};
 plot_combined = false;
 
 if plot_combined; figure; end
 for k = 1:length(sesh_type)
     if ~plot_combined; figure; end
+    set(gcf,'Position',[488.2000  393.0000  784.8000  368.8000])
     days_diff_use = days_diff.(sesh_type{k});
     for j = 1:num_animals
-        plot(Mouse(j).days_v_PVcorr.(sesh_type{k})(:,1), ...
+        hmouse = plot(Mouse(j).days_v_PVcorr.(sesh_type{k})(:,1), ...
             Mouse(j).days_v_PVcorr.(sesh_type{k})(:,2),marker_type{k});
+        hmouse.Color = [0.67 0.67 0.67];
         hold on
 %         plot(days_diff,Mouse(j).days_v_corr2.(sesh_type{k}))
 %         plot(days_diff,Mouse(j).days_v_shuf2.(sesh_type{k}),'k--')
@@ -260,15 +292,15 @@ for k = 1:length(sesh_type)
         hold on
     end
     plot(days_diff_use, cellfun(@mean, All.days_v_PVcorr.(sesh_type{k})),'b-')
-    legend(cellfun(@mouse_name_title, animal_names,'UniformOutput',0),'Shuffled')
+%     legend(cellfun(@mouse_name_title, animal_names,'UniformOutput',0),'Shuffled')
     xlabel('Days between session'); 
     ylabel('Mean Spearman Correlation b/w PVs')
     title(sesh_type{k})
     if strcmpi(sesh_type{k},'circ2square')
-        xlim([-1 8]); ylim([-0.1 1]);
+        xlim([-1 8]); ylim([-0.1 0.6]);
         set(gca,'XTick',0:7)
     else
-        xlim([-1 7]); ylim([-0.1 1]);
+        xlim([-1 7]); ylim([-0.1 0.6]);
         set(gca,'XTick',0:6)
     end
 end
@@ -426,6 +458,33 @@ hold on
 for j = 1:length(compare_type)
     plot(repmat(h(j).XData + h(j).XOffset, num_animals,1),...
         All.ratio_plot_all.(compare_type{j}),'ko')
+end
+hold off
+
+%% Plot Breakdown of alignment type take3
+align_type = {'distal_align','local_align','other_align','global'};
+
+% Assemble matrices
+square_mean2 = mean([sum(All.ratio_plot_all.square(:,1:3),2) All.ratio_plot_all.square(:,4)]); 
+circle_mean2 = mean([sum(All.ratio_plot_all.circle(:,1:3),2) All.ratio_plot_all.circle(:,4)]); 
+circ2square_mean2 = mean([sum(All.ratio_plot_all.circ2square(:,1:3),2) All.ratio_plot_all.circ2square(:,4)]); 
+
+figure(17)
+% Plot
+h = bar(1:2,[square_mean2', circle_mean2', circ2square_mean2']);
+set(gca,'XTickLabel',cellfun(@mouse_name_title,{'Coherent','Global Remapping'},'UniformOutput',0))
+legend('Within square', 'Within circle', 'Square to Circle')
+xlabel('Remapping Type')
+ylabel('Proprotion of Sessions')
+
+% Now do each mouse
+compare_type = {'square','circle','circ2square'};
+hold on
+for j = 1:length(compare_type)
+    plot_mat = [sum(All.ratio_plot_all.(compare_type{j})(:,1:3),2) All.ratio_plot_all.(compare_type{j})(:,4)];
+    plot_mat2 = plot_mat./sum(plot_mat,2) % Hack to fix an error above where I'm dividing by the wrong number to get my ratios - need to fix later
+        plot(repmat(h(j).XData + h(j).XOffset, num_animals,1),...
+             plot_mat2,'ko')
 end
 hold off
 
