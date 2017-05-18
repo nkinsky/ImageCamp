@@ -21,6 +21,8 @@ elseif nargin == 2
             location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
         case 'NOlaptop'
             location = 'C:\Users\Nat\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
+        case '2env_laptop'
+            location = 'C:\Users\Nat\Dropbox\Imaging Project\Manuscripts\2env\Figures';
         otherwise
     end
 end
