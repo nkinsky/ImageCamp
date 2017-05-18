@@ -275,7 +275,7 @@ end
 
 %% Remapping analysis
 alpha = 0.05; % p-value cutoff
-align_cutoff = 45; % Angle difference for which the circle is considered aligned, e.g. if you think anything <=15 degrees different should count, set it to 15.
+align_cutoff = 30; % Angle difference for which the circle is considered aligned, e.g. if you think anything <=15 degrees different should count, set it to 15.
 
 % Find global remappers
 
@@ -335,39 +335,73 @@ for k = 1:length(sesh_type)
         global_remap = zeros(num_sessions, num_sessions);
         global_remap(valid_comp) = Mouse(j).global_remap_stats.(sesh_type{k}).h_remap(valid_comp);
         
-        % Old code - delete once vetted below
-%         distal_align_mat = double(angle_diff_mat == Mouse(j).distal_rot_mat.(sesh_type{k}) & ...
-%             Mouse(j).distal_rot_mat.(sesh_type{k}) ~= 0 & ~global_remap);
-%         local_align_mat = double(angle_diff_mat == 0 & ~global_remap);
-%         other_align_mat = double(angle_diff_mat ~= 0 & angle_diff_mat ~= Mouse(j).distal_rot_mat.(sesh_type{k}) ...
-%             & ~global_remap);
-
-        
+        %%% Breakdown with no regard for where comparisons are rotated or
+        %%% not
+        %  Note that this is super-conservative for designating session
+        %  comparisons as tracking local cues - when there is NO
+        %  conflict between distal/local cues (e.g. rotation = 0), cells
+        %  aligning to distal/local cues are designated as distal
+        %  following...
         distal_align_mat = double(abs(angle_diff_mat - Mouse(j).distal_rot_mat.(sesh_type{k})) <= align_cutoff & ...
-            Mouse(j).distal_rot_mat.(sesh_type{k}) ~= 0 & ~global_remap);
-        local_align_mat = double(abs(angle_diff_mat) <= align_cutoff & ~global_remap);
-        other_align_mat = double(abs(angle_diff_mat) > align_cutoff & angle_diff_mat ~= Mouse(j).distal_rot_mat.(sesh_type{k}) ...
+            ~global_remap);
+        local_align_mat = double(abs(angle_diff_mat) <= align_cutoff & ~global_remap & abs(angle_diff_mat - Mouse(j).distal_rot_mat.(sesh_type{k})) > align_cutoff);
+        other_align_mat = double(abs(angle_diff_mat) > align_cutoff & abs(angle_diff_mat - Mouse(j).distal_rot_mat.(sesh_type{k})) > align_cutoff ...
             & ~global_remap);
-        
         global_remap = double(global_remap);
         
-        distal_align_mat(~valid_comp) = nan;
-        local_align_mat(~valid_comp) = nan;
-        other_align_mat(~valid_comp) = nan;
-        global_remap(~valid_comp) = nan;
+        % Breakdown with regard for rotation of sessions
+        rotation_log = ~isnan(Mouse(j).distal_rot_mat.(sesh_type{k})) & ...
+            Mouse(j).distal_rot_mat.(sesh_type{k}) ~= 0; % Identify comparisons with rotation between sessions
         
+        % With rotation
+        distal_align_mat_r = double(rotation_log & distal_align_mat);
+        local_align_mat_r = double(rotation_log & local_align_mat);
+        other_align_mat_r = double(rotation_log & other_align_mat);
+        global_remap_r = double(rotation_log & global_remap);
+        distal_align_mat_r(~valid_comp) = nan; local_align_mat_r(~valid_comp) = nan;
+        other_align_mat_r(~valid_comp) = nan; global_remap_r(~valid_comp) = nan;
+        
+        % No rotation
+        local_align_mat_nr = double(~rotation_log & local_align_mat) + double(~rotation_log & distal_align_mat);
+        other_align_mat_nr = double(~rotation_log & other_align_mat);
+        global_remap_nr = double(~rotation_log & global_remap);
+        local_align_mat_nr(~valid_comp) = nan;
+        other_align_mat_nr(~valid_comp) = nan; global_remap_nr(~valid_comp) = nan;
+        
+        % Make non-valid comparisons nan for ease of viewing
+        distal_align_mat(~valid_comp) = nan; local_align_mat(~valid_comp) = nan;
+        other_align_mat(~valid_comp) = nan; global_remap(~valid_comp) = nan;
+        
+        % Dump everything into mouse structures
         Mouse(j).remapping_type.distal_align.(sesh_type{k}) = distal_align_mat;
         Mouse(j).remapping_type.local_align.(sesh_type{k}) = local_align_mat;
         Mouse(j).remapping_type.other_align.(sesh_type{k}) = other_align_mat;
         Mouse(j).remapping_type.global.(sesh_type{k}) = global_remap;
         
+        Mouse(j).remapping_type2.rotation.distal_align.(sesh_type{k}) = distal_align_mat_r;
+        Mouse(j).remapping_type2.rotation.local_align.(sesh_type{k}) = local_align_mat_r;
+        Mouse(j).remapping_type2.rotation.other_align.(sesh_type{k}) = other_align_mat_r;
+        Mouse(j).remapping_type2.rotation.global.(sesh_type{k}) = global_remap_r;
+        
+        Mouse(j).remapping_type2.no_rotation.distal_align.(sesh_type{k}) = nan(size(local_align_mat_nr));
+        Mouse(j).remapping_type2.no_rotation.local_align.(sesh_type{k}) = local_align_mat_nr;
+        Mouse(j).remapping_type2.no_rotation.other_align.(sesh_type{k}) = other_align_mat_nr;
+        Mouse(j).remapping_type2.no_rotation.global.(sesh_type{k}) = global_remap_nr;
+        
     end
 end
 
-%%% NRK - need to QC above and then check for dist_rot_mat ==
-%%% best_angle_diff!! There are 5 cases - distal/local aligned, distal,
-%%% local, other rotation, global remapping.  Break into 4 - local, distal
-%%% (only if not local), other rotation, global remapping
+%% Double check above
+align_type = {'distal_align','local_align','other_align','global'};
+for k = 1:length(sesh_type)
+    for j = 1:num_animals
+        temp = nan(size(Mouse(j).remapping_type.distal_align.(sesh_type{k})));
+        for ll = 1:length(align_type)
+            temp = cat(3, temp, Mouse(j).remapping_type.(align_type{ll}).(sesh_type{k}));
+        end
+        sum_check.(sesh_type{k})(j,:,:) = nansum(temp,3);
+    end
+end
 
 %% Plot Breakdown of alignment type
 align_type = {'distal_align','local_align','other_align','global'};
