@@ -17,6 +17,8 @@ elseif nargin == 2
             location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Presentations\Russek Day 2017\Poster';
         case '2env'
             location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\2env\Figures';
+        case '2env_rot' % 2env rotation analysis figures
+            location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\2env\Figures\Rotation Analysis';
         case 'NO'
             location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
         case 'NOlaptop'
