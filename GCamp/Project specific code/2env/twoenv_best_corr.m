@@ -1,7 +1,9 @@
-function [ corr_at_best, best_angle, sig_test ] = twoenv_best_corr( corr_means, shuffle_mat2, alpha_corr )
-%UNTITLED2 Summary of this function goes here
-%   Detailed explanation goes here
+function [ corr_at_best, best_angle, sig_test ] = twoenv_best_corr( corr_mat, shuffle_mat2, rot_array, alpha_corr )
+% [ corr_at_best, best_angle, sig_test ] = twoenv_best_corr( corr_mat, shuffle_mat2, alpha_corr )
+%   Extract correlation at best angle, best angle, and if it is
+%   significantly coherent.
 
+corr_means = nanmean(corr_mat,1);
 [corr_at_best, idx] = max(corr_means);
 best_angle = rot_array(idx);
 
