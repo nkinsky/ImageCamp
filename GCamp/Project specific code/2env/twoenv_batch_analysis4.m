@@ -3,6 +3,8 @@
 %% Set-up everything
 twoenv_reference;
 
+num_shuffles = 1000;
+
 Mouse(1).sesh.square = G30_square;
 Mouse(1).sesh.circle = G30_oct;
 Mouse(1).sesh.circ2square = G30_botharenas;
@@ -85,7 +87,7 @@ for j = 1:num_animals
             for mm = 1:num_sessions
                 session2 = Mouse(j).sesh.circ2square(comp_seshs(mm,2)); % Get circle session
                 [corr_mat, ~, shuffle_mat2 ] = corr_rot_analysis( session1, session2,...
-                    batch_session_map, rot_array, 'trans', true, 'num_shuffles', 1 );
+                    batch_session_map, rot_array, 'trans', true, 'num_shuffles', num_shuffles );
                 Mouse(j).local_comps.(comp_type{k}).corr_mat{ll,mm} = corr_mat;
                 Mouse(j).local_comps.(comp_type{k}).corr_mean(ll,mm) = nanmean(corr_mat(:));
                 p.progress;
@@ -119,7 +121,8 @@ for j = 1:num_animals
         end
         [PV, PV_corrs] = get_PV_and_corr( Mouse(j).sesh.(sesh_type{k}), ...
             batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
-            Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput',false),'output_flag',false);
+            Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput',false),...
+            'output_flag',false, 'num_shuffles', num_shuffles);
         Mouse(j).PV.(sesh_type{k}) = PV;
         Mouse(j).PV_corrs.(sesh_type{k}) = PV_corrs;
         p.progress;
