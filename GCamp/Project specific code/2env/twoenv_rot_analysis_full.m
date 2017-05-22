@@ -1,4 +1,5 @@
-function [best_angle, best_angle_all, corr_at_best, sig_test] = twoenv_rot_analysis_full(sessions, rot_type, varargin)
+function [best_angle, best_angle_all, corr_at_best, sig_test] = ...
+    twoenv_rot_analysis_full(sessions, rot_type, varargin)
 % best_angle = twoenv_rot_analysis(sessions, rot_type, ...)
 %
 %   Plots rotation "tuning curves" for all sessions versus one another, the
@@ -14,7 +15,8 @@ ip = inputParser;
 ip.addRequired('sessions', @(a) isstruct(a));
 ip.addRequired('rot_type', @(a) ischar(a) && (strcmpi(a,'square') || ...
     strcmpi(a,'circle') || strcmpi(a,'circ2square'))); % type of analysis to perform
-ip.addParameter('map_session', sessions(1), @(a) isstruct(a) && length(a) == 1); % location of batch map if NOT in 1st entry in sessions
+ip.addParameter('map_session', sessions(1), @(a) isstruct(a) && ...
+    length(a) == 1); % location of batch map if NOT in 1st entry in sessions
 ip.addParameter('alt_map_file', '', @ischar); % alternate batch_map filename if it isn't batch_session_map or batch_session_map_trans
 ip.addParameter('num_shuffles', 10, @(a) a >= 0 && round(a) == a);
 ip.addParameter('save_fig', false, @islogical);
@@ -90,13 +92,15 @@ if ~trans
         for k = j+1:num_sessions
             % Do analysis
             [corr_mat, ~, shuffle_mat2] = corr_rot_analysis(sessions(j), ...
-                sessions(k), batch_session_map, rot_array, num_shuffles, 'trans', trans); % do rotation analysis
+                sessions(k), batch_session_map, rot_array, num_shuffles, ...
+                'trans', trans); % do rotation analysis
             
             % Plot everything            
             [~, sesh2_rot] = get_rot_from_db(sessions(k));
             distal_rot = sesh2_rot - base_rot;
             subplot_ind = (j-1)*num_sessions + k;
-            [best_angle(j,k), best_angle_all{j,k}, corr_lims, corr_at_best(j,k), sig_test(j,k)] = ...
+            [best_angle(j,k), best_angle_all{j,k}, corr_lims, corr_at_best(j,k), ...
+                sig_test(j,k)] = ...
                 plot_func(corr_mat, shuffle_mat2, rot_array, ...
                 distal_rot, edges, edges2, hh, num_sessions, subplot_ind, ...
                 j, k, j, k, sessions, rot_type, alpha_corr);
@@ -136,16 +140,18 @@ elseif trans
         for k = 1:length(circle_ind)
             
             [corr_mat, ~, shuffle_mat2] = corr_rot_analysis(sessions(square_ind(j)), ...
-                sessions(circle_ind(k)), batch_session_map, rot_array, num_shuffles, 'trans', trans); % do rotation analysis
+                sessions(circle_ind(k)), batch_session_map, rot_array, ...
+                num_shuffles, 'trans', trans); % do rotation analysis
             
             % Plot everything            
             [~, sesh2_rot] = get_rot_from_db(sessions(circle_ind(k)));
             distal_rot = sesh2_rot - base_rot;
             subplot_ind = (j-1)*num_sessions/2 + k;
-            [best_angle(j,k), best_angle_all{j,k}, corr_lims, corr_at_best(j,k), sig_test(j,k)] = ...
-                plot_func(corr_mat, shuffle_mat2, rot_array, ...
-                distal_rot, edges, edges2, hh, num_sessions/2, subplot_ind, ...
-                square_ind(j), circle_ind(k), j, k, sessions, rot_type, alpha_corr);
+            [best_angle(j,k), best_angle_all{j,k}, corr_lims,...
+                corr_at_best(j,k), sig_test(j,k)] = ...
+                plot_func(corr_mat, shuffle_mat2, rot_array, distal_rot, ...
+                edges, edges2, hh, num_sessions/2, subplot_ind, square_ind(j),...
+                circle_ind(k), j, k, sessions, rot_type, alpha_corr);
             
             ylims(1) = min([ylims(1) corr_lims(1)]);
             ylims(2) = max([ylims(2) corr_lims(2)]);
@@ -169,7 +175,8 @@ end
 
 if ~isempty(save_fig)
 %     ext_type = '.png';
-    file_name = {[sessions(1).Animal ' - ' rot_type ' - Population Rotation Analysis'],...
+        file_name = {[sessions(1).Animal ' - ' rot_type ...
+            ' - Population Rotation Analysis'],...
         [sessions(1).Animal ' - ' rot_type ' - Population Best Angle Histogram'],...
         [sessions(1).Animal ' - ' rot_type ' - Neuron Best Angle Histogram']};
     for j = 1:3
@@ -183,8 +190,10 @@ end
 end
 
 %% plotting sub-function
-function [best_angle, best_angle_all2, corr_lims, corr_at_best, sig_test] = plot_func(corr_mat, shuffle_mat2, rot_array, distal_rot, ...
-    edges, edges2, fig_h, num_sessions, subplot_ind, sesh1_ind, sesh2_ind, row, col, sesh_use, rot_type, alpha_corr)
+function [best_angle, best_angle_all2, corr_lims, corr_at_best, sig_test] = ...
+    plot_func(corr_mat, shuffle_mat2, rot_array, distal_rot, ...
+    edges, edges2, fig_h, num_sessions, subplot_ind, sesh1_ind, sesh2_ind, ...
+    row, col, sesh_use, rot_type, alpha_corr)
 
 %%% How do I do stats here? %%% K-S test on distributions? Or compare to
 %%% shuffled means and look for means greater than shuffled (1-alpha)*100%
@@ -239,7 +248,7 @@ hold on
 shuf_mean_sort = sort(shuf_mean_temp,1);
 CI(1,:) = shuf_mean_sort(round(0.975*num_shuffles),:);
 CI(2,:) = shuf_mean_sort(max([round(0.025*num_shuffles),1]),:); % ceil(0.025*num_shuffles),1);
-plot(rot_array,circshift(CI,idx-1,2),'g:') % Plot 95% CI
+plot(rot_array,circshift(CI,idx-1,2),'k:') % Plot 95% CI
 hold off
 
 % Get best angle for each individual cell
@@ -281,7 +290,8 @@ function [shape_ind] = get_shape_ind(struct_in,shape)
 end
 
 %% title label sub-function
-function [] = title_label(subplot_ind, sesh1_index, sesh2_index, row, col, rot_type, sesh_use)
+function [] = title_label(subplot_ind, sesh1_index, sesh2_index, row, col, ...
+    rot_type, sesh_use)
 
 if (strcmpi(rot_type,'circ2square') && subplot_ind == 1) || ...
         (~strcmpi(rot_type,'circ2square') && sesh1_index == 1 && sesh2_index == 2)
