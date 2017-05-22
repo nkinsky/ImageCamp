@@ -34,15 +34,16 @@ if nargin < 3
 end
 
 % set to landscape or portrait
-if hfig.Position(3) > hfig.Position(4)
-    hfig.PaperOrientation = 'landscape';
-else
-    hfig.PaperOrientation = 'portrait';
-end
+% if hfig.Position(3) > hfig.Position(4)
+%     hfig.PaperOrientation = 'landscape';
+% else
+%     hfig.PaperOrientation = 'portrait';
+% end
 
 hfig.Renderer = 'painters';
 save_file = fullfile(location, filename);
-print(hfig, save_file,'-dpdf','-bestfit',resolution_use)
+print(hfig, save_file,'-dpdf',resolution_use);
+% print(hfig, save_file,'-dpdf','-bestfit',resolution_use)
 
 end
 
