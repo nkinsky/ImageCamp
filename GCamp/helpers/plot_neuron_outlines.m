@@ -33,7 +33,7 @@ end
 
 axes(h)
 if ~isnan(sum(base_image(:)))
-    imagesc_gray(base_image); colorbar off; axis off
+    imagesc_gray(base_image); colorbar off; 
 end
 hold on
 
@@ -47,6 +47,8 @@ for j = 1:num_neurons
     colors_used(j,:) = hline.Color;
 end
 hold off
+axis equal
+axis off
 
 end
 
