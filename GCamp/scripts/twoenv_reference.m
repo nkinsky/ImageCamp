@@ -168,12 +168,19 @@ square_days = [ 1 1 4 4 5 6 7 7];
 circle_days = [2 2 3 3 5 6 8 8];
 all_days = [1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8];
 bw_sesh.before = [1 1 1 1 2 2 2 2 7 7 7 7 8 8 8 8; ...
-             3 4 5 6 3 4 5 6 3 4 5 6 3 4 5 6]'; % Session indices for comparisons between square/circle before connection
+                  3 4 5 6 3 4 5 6 3 4 5 6 3 4 5 6]'; % Session indices for comparisons between square/circle before connection
 bw_sesh.during = [ 9  9  12 12;...
-              10 11 10 11]';
+                   10 11 10 11]';
 bw_sesh.after = [ 13 13 14 14; ...
-             15 16 15 16]';
+                  15 16 15 16]';
          
+bw_sesh2.before = [1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4; ...
+                   1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4]';
+bw_sesh2.during = [5 5 6 6 ; ... 
+                   5 6 5 6]';
+bw_sesh2.after = [7 7 8 8 ; ...
+                  7 8 7 8]';
+
 time_comp = {'before','during','after'};
 for j = 1:length(time_comp)
     bw_sesh.(time_comp{j}) = sort(bw_sesh.(time_comp{j}),2);
