@@ -127,6 +127,21 @@ for j = 1:num_animals
 end
 p.stop;
 
+%% Generate tuning curves via PV analysis
+
+% rough start - might need to exclude and +1 or -1 DIs to validate...also,
+% not sure if taking the mean is actually legit - might need to only use
+% peak FR for each...
+DI = get_discr_ratio(squeeze(max(max(Mouse(1).PV.square(1,:,:,:),[],2),[],3)),squeeze(max(max(Mouse(1).PV.square(2,:,:,:),[],2),[],3)));
+DI2 = get_discr_ratio(squeeze(max(max(Mouse(1).PV.square(1,:,:,:),[],2),[],3)),squeeze(max(max(Mouse(1).PV.square(8,:,:,:),[],2),[],3)));
+DI3 = get_discr_ratio(squeeze(max(max(Mouse(1).PV.circle(1,:,:,:),[],2),[],3)),squeeze(max(max(Mouse(1).PV.circle(2,:,:,:),[],2),[],3)));
+DI4 = get_discr_ratio(squeeze(max(max(Mouse(1).PV.circle(1,:,:,:),[],2),[],3)),squeeze(max(max(Mouse(1).PV.circle(8,:,:,:),[],2),[],3)));
+DI5 = get_discr_ratio(squeeze(max(max(Mouse(1).PV.circ2square(2,:,:,:),[],2),[],3)),squeeze(max(max(Mouse(1).PV.circ2square(3,:,:,:),[],2),[],3)));
+DI6 = get_discr_ratio(squeeze(max(max(Mouse(1).PV.circ2square(2,:,:,:),[],2),[],3)),squeeze(max(max(Mouse(1).PV.circ2square(15,:,:,:),[],2),[],3)));
+figure; subplot(1,3,1); histogram(DI,30); hold on; histogram(DI2,30); legend('DI','DI2')
+subplot(1,3,2); histogram(DI3,30); hold on; histogram(DI4,30); legend('DI3','DI4')
+subplot(1,3,3); histogram(DI5,30); hold on; histogram(DI6,30); legend('DI5','DI6')
+
 %% Calculate Discrimination Ratios for all cells 
 square_sesh = [1 2 7 8 9 12 13 14];
 circ_sesh = [3 4 5 6 10 11 15 16];
