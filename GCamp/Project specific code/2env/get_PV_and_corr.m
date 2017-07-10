@@ -165,7 +165,7 @@ for m = 1:length(sesh)
     for j = 1:NumXBins
         for k = 1:NumYBins
             temp_FR = sum(sesh(m).PSAbool(:,Xbin == j & Ybin == k),2)/...
-                (length(sesh(m).x)/20); % Firing rate in Hz for each neuron
+                (length(sesh(m).x)/20); % Firing rate in Hz for each neuron - this only includes times when the mouse is running for calculating rate - is this legit?
             map_use = batch_map(:,session_ind(m)+1);
             
             PV(m,j,k,:) = assign_FR( temp_FR, map_use );
