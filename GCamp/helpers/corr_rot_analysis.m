@@ -16,11 +16,13 @@ ip.addOptional('num_shuffles', 1, @(a) a >= 0 && round(a) == a);
 ip.addParameter('trans', false, @islogical);
 ip.addParameter('TMap_type', 'TMap_gauss', @(a) strcmpi(a,'TMap_gauss') || ...
     strcmpi(a,'TMap_unsmoothed'));
+ip.addParameter('disp_progress', false, @islogical);
 ip.parse(session1, session2, batch_session_map, rot_array, varargin{:});
 
 num_shuffles = ip.Results.num_shuffles;
 trans = ip.Results.trans;
 TMap_type = ip.Results.TMap_type;
+disp_progress = ip.Results.disp_progress;
 
 if trans; trans_append = '_trans'; else; trans_append = ''; end
 
@@ -87,7 +89,12 @@ shuffle_mat = [];
 % shuffle to align the shuffled tuning curves
 
 shuffle_mat2 = [];
-for k = 1:num_shuffles
+% if disp_progress
+    
+%     disp('Shuffling')
+%     p = ProgressBar(num_shuffles);
+% end
+parfor k = 1:num_shuffles
     good_ind = find(map_use);
     shuf_map = map_use;
     shuf_map(good_ind) = map_use(good_ind(randperm(length(good_ind))));
@@ -97,8 +104,8 @@ for k = 1:num_shuffles
         if exist(file_load,'file')
             
             temp = load(file_load,TMap_type);
-            TMap1_use = sesh(1).TMap_use;
-            TMap2_use = temp.(TMap_type);
+            TMap1_use = sesh(1).TMap_use; %#ok<PFTIN>
+            TMap2_use = temp.(TMap_type); %#ok<PFTIN>
             
         elseif ~exist(file_load,'file') % If 2nd session rotation doesn't exist, send it to zero and rotate the other session
             
@@ -118,8 +125,12 @@ for k = 1:num_shuffles
     end
     [~, imax] = max(nanmean(shuffle_mat2_temp,1));
     shuffle_mat2_temp = circshift(shuffle_mat2_temp,1-imax,2);
-    shuffle_mat2 = [shuffle_mat2; shuffle_mat2_temp]; %#ok<AGROW> % suppress warning in editor
+    shuffle_mat2 = [shuffle_mat2; shuffle_mat2_temp]; 
+    
+%     if disp_progress; p.progress; end
 end
+
+% if disp_progress; p.stop; end
     
 
 end

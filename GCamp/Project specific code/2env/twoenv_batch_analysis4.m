@@ -3,6 +3,8 @@
 %% Set-up everything
 twoenv_reference;
 
+num_shuffles = 1000;
+
 Mouse(1).sesh.square = G30_square;
 Mouse(1).sesh.circle = G30_oct;
 Mouse(1).sesh.circ2square = G30_botharenas;
@@ -85,7 +87,7 @@ for j = 1:num_animals
             for mm = 1:num_sessions
                 session2 = Mouse(j).sesh.circ2square(comp_seshs(mm,2)); % Get circle session
                 [corr_mat, ~, shuffle_mat2 ] = corr_rot_analysis( session1, session2,...
-                    batch_session_map, rot_array, 'trans', true, 'num_shuffles', 1 );
+                    batch_session_map, rot_array, 'trans', true, 'num_shuffles', num_shuffles );
                 Mouse(j).local_comps.(comp_type{k}).corr_mat{ll,mm} = corr_mat;
                 Mouse(j).local_comps.(comp_type{k}).corr_mean(ll,mm) = nanmean(corr_mat(:));
                 p.progress;
@@ -119,7 +121,8 @@ for j = 1:num_animals
         end
         [PV, PV_corrs] = get_PV_and_corr( Mouse(j).sesh.(sesh_type{k}), ...
             batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
-            Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput',false),'output_flag',false);
+            Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput',false),...
+            'output_flag',false, 'num_shuffles', num_shuffles);
         Mouse(j).PV.(sesh_type{k}) = PV;
         Mouse(j).PV_corrs.(sesh_type{k}) = PV_corrs;
         p.progress;
@@ -321,7 +324,7 @@ end
 
 %% Remapping analysis
 alpha = 0.05; % p-value cutoff
-align_cutoff = 45; % Angle difference for which the circle is considered aligned, e.g. if you think anything <=15 degrees different should count, set it to 15.
+align_cutoff = 30; % Angle difference for which the circle is considered aligned, e.g. if you think anything <=15 degrees different should count, set it to 15.
 
 % Find global remappers
 
@@ -381,77 +384,128 @@ for k = 1:length(sesh_type)
         global_remap = zeros(num_sessions, num_sessions);
         global_remap(valid_comp) = Mouse(j).global_remap_stats.(sesh_type{k}).h_remap(valid_comp);
         
-        % Old code - delete once vetted below
-%         distal_align_mat = double(angle_diff_mat == Mouse(j).distal_rot_mat.(sesh_type{k}) & ...
-%             Mouse(j).distal_rot_mat.(sesh_type{k}) ~= 0 & ~global_remap);
-%         local_align_mat = double(angle_diff_mat == 0 & ~global_remap);
-%         other_align_mat = double(angle_diff_mat ~= 0 & angle_diff_mat ~= Mouse(j).distal_rot_mat.(sesh_type{k}) ...
-%             & ~global_remap);
-
-        
+        %%% Breakdown with no regard for where comparisons are rotated or
+        %%% not
+        %  Note that this is super-conservative for designating session
+        %  comparisons as tracking local cues - when there is NO
+        %  conflict between distal/local cues (e.g. rotation = 0), cells
+        %  aligning to distal/local cues are designated as distal
+        %  following...
         distal_align_mat = double(abs(angle_diff_mat - Mouse(j).distal_rot_mat.(sesh_type{k})) <= align_cutoff & ...
-            Mouse(j).distal_rot_mat.(sesh_type{k}) ~= 0 & ~global_remap);
-        local_align_mat = double(abs(angle_diff_mat) <= align_cutoff & ~global_remap);
-        other_align_mat = double(abs(angle_diff_mat) > align_cutoff & angle_diff_mat ~= Mouse(j).distal_rot_mat.(sesh_type{k}) ...
+            ~global_remap);
+        local_align_mat = double(abs(angle_diff_mat) <= align_cutoff & ~global_remap & abs(angle_diff_mat - Mouse(j).distal_rot_mat.(sesh_type{k})) > align_cutoff);
+        other_align_mat = double(abs(angle_diff_mat) > align_cutoff & abs(angle_diff_mat - Mouse(j).distal_rot_mat.(sesh_type{k})) > align_cutoff ...
             & ~global_remap);
-        
         global_remap = double(global_remap);
         
-        distal_align_mat(~valid_comp) = nan;
-        local_align_mat(~valid_comp) = nan;
-        other_align_mat(~valid_comp) = nan;
-        global_remap(~valid_comp) = nan;
+        % Breakdown with regard for rotation of sessions
+        rotation_log = ~isnan(Mouse(j).distal_rot_mat.(sesh_type{k})) & ...
+            Mouse(j).distal_rot_mat.(sesh_type{k}) ~= 0; % Identify comparisons with rotation between sessions
         
+        % With rotation
+        distal_align_mat_r = double(rotation_log & distal_align_mat);
+        local_align_mat_r = double(rotation_log & local_align_mat);
+        other_align_mat_r = double(rotation_log & other_align_mat);
+        global_remap_r = double(rotation_log & global_remap);
+        distal_align_mat_r(~valid_comp | ~rotation_log) = nan; local_align_mat_r(~valid_comp | ~rotation_log) = nan;
+        other_align_mat_r(~valid_comp | ~rotation_log) = nan; global_remap_r(~valid_comp | ~rotation_log) = nan;
+        
+        % No rotation
+        local_align_mat_nr = double(~rotation_log & local_align_mat) + double(~rotation_log & distal_align_mat);
+        other_align_mat_nr = double(~rotation_log & other_align_mat);
+        global_remap_nr = double(~rotation_log & global_remap);
+        local_align_mat_nr(~valid_comp | rotation_log) = nan;
+        other_align_mat_nr(~valid_comp | rotation_log) = nan; global_remap_nr(~valid_comp | rotation_log) = nan;
+        
+        % Make non-valid comparisons nan for ease of viewing
+        distal_align_mat(~valid_comp) = nan; local_align_mat(~valid_comp) = nan;
+        other_align_mat(~valid_comp) = nan; global_remap(~valid_comp) = nan;
+        
+        % Dump everything into mouse structures
         Mouse(j).remapping_type.distal_align.(sesh_type{k}) = distal_align_mat;
         Mouse(j).remapping_type.local_align.(sesh_type{k}) = local_align_mat;
         Mouse(j).remapping_type.other_align.(sesh_type{k}) = other_align_mat;
         Mouse(j).remapping_type.global.(sesh_type{k}) = global_remap;
         
+        Mouse(j).remapping_type2.rotation.distal_align.(sesh_type{k}) = distal_align_mat_r;
+        Mouse(j).remapping_type2.rotation.local_align.(sesh_type{k}) = local_align_mat_r;
+        Mouse(j).remapping_type2.rotation.other_align.(sesh_type{k}) = other_align_mat_r;
+        Mouse(j).remapping_type2.rotation.global.(sesh_type{k}) = global_remap_r;
+        
+        Mouse(j).remapping_type2.no_rotation.distal_align.(sesh_type{k}) = nan(size(local_align_mat_nr));
+        Mouse(j).remapping_type2.no_rotation.local_align.(sesh_type{k}) = local_align_mat_nr;
+        Mouse(j).remapping_type2.no_rotation.other_align.(sesh_type{k}) = other_align_mat_nr;
+        Mouse(j).remapping_type2.no_rotation.global.(sesh_type{k}) = global_remap_nr;
+        
     end
 end
 
-%%% NRK - need to QC above and then check for dist_rot_mat ==
-%%% best_angle_diff!! There are 5 cases - distal/local aligned, distal,
-%%% local, other rotation, global remapping.  Break into 4 - local, distal
-%%% (only if not local), other rotation, global remapping
-
-%% Plot Breakdown of alignment type
+%% Double check above
 align_type = {'distal_align','local_align','other_align','global'};
+for k = 1:length(sesh_type)
+    for j = 1:num_animals
+        temp = nan(size(Mouse(j).remapping_type.distal_align.(sesh_type{k})));
+        for ll = 1:length(align_type)
+            temp = cat(3, temp, Mouse(j).remapping_type.(align_type{ll}).(sesh_type{k}));
+        end
+        sum_check.(sesh_type{k})(j,:,:) = nansum(temp,3);
+    end
+end
+
+%% Aggregate Results and Plot Breakdown of alignment type by mouse and combined
+plot_flag = false;
 
 for k = 1:length(sesh_type)
     ratio_plot_all = zeros(num_animals, length(align_type));
+    ratio_plot_all2_r = zeros(num_animals, length(align_type));
+    ratio_plot_all2_nr = zeros(num_animals, length(align_type));
     for j = 1:num_animals
-        figure(10 + j)
-        num_comps = sum(sum(cellfun(@(a) ~isempty(a), Mouse(j).corr_mat.(sesh_type{k}))));
-        ratio_plot = zeros(size(align_type));
+        if plot_flag; figure(10 + j); end
+%         num_comps = sum(sum(cellfun(@(a) ~isempty(a), Mouse(j).corr_mat.(sesh_type{k}))));
+        num_comps = sum(~isnan(Mouse(j).remapping_type.local_align.(sesh_type{k})(:)));
+        num_comps_r = sum(~isnan(Mouse(j).remapping_type2.rotation.local_align.(sesh_type{k})(:)));
+        num_comps_nr = sum(~isnan(Mouse(j).remapping_type2.no_rotation.local_align.(sesh_type{k})(:)));
+        ratio_plot = zeros(size(align_type)); ratio_plot2_r = zeros(size(align_type));
+        ratio_plot2_nr = zeros(size(align_type));
         for ll = 1:length(align_type)
             ratio_plot(ll) = nansum(Mouse(j).remapping_type.(align_type{ll}).(sesh_type{k})(:))/num_comps;
+            ratio_plot_r(ll) = nansum(Mouse(j).remapping_type2.rotation.(align_type{ll}).(sesh_type{k})(:))/num_comps_r;
+            ratio_plot_nr(ll) = nansum(Mouse(j).remapping_type2.no_rotation.(align_type{ll}).(sesh_type{k})(:))/num_comps_nr;
         end
-        ratio_plot_all(j,:) = ratio_plot;
         
-        subplot(length(sesh_type),1,k)
-        bar(1:length(align_type), ratio_plot)
-        xlim([0 length(align_type) + 1]); ylim([0 1]);
-        set(gca,'XTick',1:length(align_type),'XTickLabel',cellfun(@mouse_name_title, align_type,'UniformOutput',0));
-        ylabel('Ratio')
-        title([mouse_name_title(animal_names{j}) ' - ' sesh_type{k}])
+        ratio_plot_all(j,:) = ratio_plot;
+        ratio_plot_all2_r(j,:) = ratio_plot_r;
+        ratio_plot_all2_nr(j,:) = ratio_plot_nr;
+        if plot_flag
+            subplot(length(sesh_type),1,k)
+            bar(1:length(align_type), ratio_plot)
+            xlim([0 length(align_type) + 1]); ylim([0 1]);
+            set(gca,'XTick',1:length(align_type),'XTickLabel',cellfun(@mouse_name_title, align_type,'UniformOutput',0));
+            ylabel('Ratio')
+            title([mouse_name_title(animal_names{j}) ' - ' sesh_type{k}])
+        end
         
     end
     
-    figure(10+num_animals+1)
     All.ratio_plot_all.(sesh_type{k}) = ratio_plot_all;
-    
-    subplot(length(sesh_type),1,k)
-    bar(1:length(align_type), mean(ratio_plot_all,1))
-    xlim([0 length(align_type) + 1]); ylim([0 1]);
-    set(gca,'XTick',1:length(align_type),'XTickLabel',cellfun(@mouse_name_title, align_type,'UniformOutput',0));
-    ylabel('Ratio')
-    title(['All Mice - ' sesh_type{k}])
+    All.ratio_plot_all2.rotation.(sesh_type{k}) = ratio_plot_all2_r;
+    All.ratio_plot_all2.no_rotation.(sesh_type{k}) = ratio_plot_all2_nr;
+
+    if plot_flag
+        figure(10+num_animals+1)
+        subplot(length(sesh_type),1,k)
+        bar(1:length(align_type), mean(ratio_plot_all,1))
+        xlim([0 length(align_type) + 1]); ylim([0 1]);
+        set(gca,'XTick',1:length(align_type),'XTickLabel',cellfun(@mouse_name_title, align_type,'UniformOutput',0));
+        ylabel('Ratio')
+        title(['All Mice - ' sesh_type{k}])
+    end
     
 end
 
-%% Plot Breakdown of alignment type take2
+%% Full Alignment Breakdown Plot - No Rotation Distinction, Coherent v Global only
 align_type = {'distal_align','local_align','other_align','global'};
+align_text = {'Coherent - Distal Cues', 'Coherent - Local Cues', 'Coherent - Other', 'Global Remapping'};
 
 % Assemble matrices
 square_mean = mean(All.ratio_plot_all.square,1);
@@ -461,10 +515,10 @@ circ2square_mean = mean(All.ratio_plot_all.circ2square,1);
 figure(16)
 % Plot
 h = bar(1:length(align_type),[square_mean', circle_mean', circ2square_mean']);
-set(gca,'XTickLabel',cellfun(@mouse_name_title,align_type,'UniformOutput',0))
+set(gca,'XTickLabel',cellfun(@mouse_name_title,align_text,'UniformOutput',0))
 legend('Within square', 'Within circle', 'Square to Circle')
 xlabel('Remapping Type')
-ylabel('Proprotion of Sessions')
+ylabel('Proprotion of Comparisons')
 
 % Now do each mouse
 compare_type = {'square','circle','circ2square'};
@@ -475,7 +529,7 @@ for j = 1:length(compare_type)
 end
 hold off
 
-%% Plot Breakdown of alignment type take3
+%% Simple Alignment Breakdown Plot - No Rotation Distinction, Coherent v Global only
 align_type = {'distal_align','local_align','other_align','global'};
 
 % Assemble matrices
@@ -489,7 +543,7 @@ h = bar(1:2,[square_mean2', circle_mean2', circ2square_mean2']);
 set(gca,'XTickLabel',cellfun(@mouse_name_title,{'Coherent','Global Remapping'},'UniformOutput',0))
 legend('Within square', 'Within circle', 'Square to Circle')
 xlabel('Remapping Type')
-ylabel('Proprotion of Sessions')
+ylabel('Proprotion of Comparisons')
 
 % Now do each mouse
 compare_type = {'square','circle','circ2square'};
@@ -501,6 +555,208 @@ for j = 1:length(compare_type)
              plot_mat2,'ko')
 end
 hold off
+
+%% Alignment Breakdown Plot - Rotation and No Rotation Distinctions
+rot_type = {'rotation','no_rotation'}; rot_text = {'Rotation', 'No Rotation'};
+breakdown_type = {'Full', 'Simple'};
+
+figure(18)
+for m = 1:length(rot_type)
+    
+    %%% Full Breakdown %%%
+    subplot(2, 2, (m-1)*2 + 1)
+    
+    % Assemble Matrices
+    square_mean = mean(All.ratio_plot_all2.(rot_type{m}).square,1);
+    circle_mean = mean(All.ratio_plot_all2.(rot_type{m}).circle,1);
+    circ2square_mean = mean(All.ratio_plot_all2.(rot_type{m}).circ2square,1);
+    
+    h = bar(1:length(align_type),[square_mean', circle_mean', circ2square_mean']);
+    set(gca,'XTickLabel',align_text)
+    legend('Within square', 'Within circle', 'Square to Circle')
+    xlabel('Remapping Type')
+    ylabel('Proprotion of Comparisons')
+    
+    % Now do each mouse
+    compare_type = {'square','circle','circ2square'};
+    hold on
+    for j = 1:length(compare_type)
+        plot(repmat(h(j).XData + h(j).XOffset, num_animals,1),...
+            All.ratio_plot_all2.(rot_type{m}).(compare_type{j}),'ko')
+    end
+    hold off
+    if m == 2
+        set(gca,'XTickLabel', {'', 'Coherent - Local/Distal Cues', 'Coherent - Other', 'Global Remapping'})
+    end
+    title([rot_text{m} ' - ' breakdown_type{1} ' Breakdown'])
+    
+    %%% Simple Breakdown %%%
+    subplot(2, 2, (m-1)*2 + 2)
+    
+    % Assemble matrices
+    square_mean2 = mean([sum(All.ratio_plot_all2.(rot_type{m}).square(:,1:3),2) ...
+        All.ratio_plot_all2.(rot_type{m}).square(:,4)]);
+    circle_mean2 = mean([sum(All.ratio_plot_all2.(rot_type{m}).circle(:,1:3),2) ....
+        All.ratio_plot_all2.(rot_type{m}).circle(:,4)]);
+    circ2square_mean2 = mean([sum(All.ratio_plot_all2.(rot_type{m}).circ2square(:,1:3),2) ....
+        All.ratio_plot_all2.(rot_type{m}).circ2square(:,4)]);
+    
+    % Plot
+    h = bar(1:2,[square_mean2', circle_mean2', circ2square_mean2']);
+    set(gca,'XTickLabel',cellfun(@mouse_name_title,{'Coherent','Global Remapping'},'UniformOutput',0))
+    legend('Within square', 'Within circle', 'Square to Circle')
+    xlabel('Remapping Type')
+    ylabel('Proprotion of Comparisons')
+    
+    % Now do each mouse
+    compare_type = {'square','circle','circ2square'};
+    hold on
+    for j = 1:length(compare_type)
+        plot_mat = [sum(All.ratio_plot_all2.(rot_type{m}).(compare_type{j})(:,1:3),2) ...
+            All.ratio_plot_all2.(rot_type{m}).(compare_type{j})(:,4)];
+        plot_mat2 = plot_mat./sum(plot_mat,2); % Hack to fix an error above where I'm dividing by the wrong number to get my ratios - need to fix later
+        plot(repmat(h(j).XData + h(j).XOffset, num_animals,1),...
+            plot_mat2,'ko')
+    end
+    hold off
+
+    title([rot_text{m} ' - ' breakdown_type{2} ' Breakdown'])
+
+end
+
+%% Paired Coherent Proportion Breakdown
+figure(19)
+plot_type = {'ks-','ko-','kx-'};
+for k = 1:length(sesh_type)
+    all_coherent_rot = sum(All.ratio_plot_all2.rotation.(sesh_type{k})(:,1:3),2);
+    all_coherent_no_rot = sum(All.ratio_plot_all2.no_rotation.(sesh_type{k})(:,1:3),2);
+    temp = plot([all_coherent_no_rot, all_coherent_rot]',plot_type{k});
+    hh(k) = temp(1);
+    hold on
+end
+hh(4:end) = [];
+xlim([0.5 2.5]);
+set(gca, 'XTick', [1 2], 'XTickLabel', {'Rotation', 'No Rotation'});
+ylabel('Proportion of Comparions that are Coherent')
+legend(hh,'Square-to-square','Circle-to-circle','Circle-to-square')
+
+%% Get coherent proportion vs. days between sessions
+
+sanity_check = false(num_animals, length(sesh_type));
+for k = 1:3 %length(sesh_type)
+    num_sesh = length(days.(sesh_type{k}));
+    time_diff_mat = repmat(days.(sesh_type{k}), num_sesh, 1) - ...
+        repmat(days.(sesh_type{k})', 1, num_sesh); % Get time between sessions
+    for j = 1:num_animals
+        
+        valid_comps = ~cellfun(@isempty,Mouse(j).corr_mat.(sesh_type{k}));
+        days_bw = unique(time_diff_mat(valid_comps));
+        num_coherent = 0; num_global = 0;
+        for ll = 1:length(rot_type)
+            temp = cat(3,Mouse(j).remapping_type2.(rot_type{ll}).distal_align.(sesh_type{k}),...
+                Mouse(j).remapping_type2.(rot_type{ll}).local_align.(sesh_type{k}), ...
+                Mouse(j).remapping_type2.(rot_type{ll}).other_align.(sesh_type{k}));
+            temp_coherent = nansum(temp,3); % ID coherent sessions
+            temp_local = Mouse(j).remapping_type2.(rot_type{ll}).local_align.(sesh_type{k}); % ID local cue coherent sessions
+            temp_global = Mouse(j).remapping_type2.(rot_type{ll}).global.(sesh_type{k}); % ID global remapping sessions
+            num_coherent = nansum(temp_coherent(:)) + num_coherent; % Add up numbers for later sanity check
+            num_global = nansum(temp_global(:)) + num_global;
+            
+            % Assemble array - first col = days between, 2nd col = num
+            % coherent sessions, 3rd col = num global remapping sessions,
+            % 4th col = num local cue coherent sessions
+            Mouse(j).coherent_v_days.(rot_type{ll}).(sesh_type{k})(:,1) = days_bw;
+            for mm = 1:length(days_bw)
+                days_log = time_diff_mat == days_bw(mm);
+                Mouse(j).coherent_v_days.(rot_type{ll}).(sesh_type{k})(mm,2) = ...
+                    nansum(temp_coherent(days_log));
+                Mouse(j).coherent_v_days.(rot_type{ll}).(sesh_type{k})(mm,3) = ...
+                    nansum(temp_global(days_log));
+                Mouse(j).coherent_v_days.(rot_type{ll}).(sesh_type{k})(mm,4) = ...
+                    nansum(temp_local(days_log));
+            end
+        end
+        sanity_check(j,k) = sum(valid_comps(:)) == (num_coherent + num_global); % Check to make sure everything adds up
+        
+    end
+    
+end
+
+%% Plot Coherency proportion vs time
+
+plot_by_animal = true; %Suggest keeping false since not much is apparent on the animal level
+
+coh_all = [];
+gr_all = [];
+loc_all = [];
+for mm = 1:length(sesh_type)
+    
+    days_plot = Mouse(1).coherent_v_days.rotation.(sesh_type{mm})(:,1);
+    coh_total_comb = zeros(size(days_plot));
+    gr_total_comb = zeros(size(days_plot));
+    local_total_comb = zeros(size(days_plot));
+    
+    if plot_by_animal; figure(20+mm); end
+    for j = 1:num_animals
+
+        coh_total = zeros(size(days_plot));
+        gr_total = zeros(size(days_plot));
+        local_total = zeros(size(days_plot));
+        for k = 1:length(rot_type)
+            mat_temp = Mouse(j).coherent_v_days.(rot_type{k}).(sesh_type{mm});
+            
+            % Get coherent/global remapping probabilities for rotation/no
+            % rotation
+            total_sesh = sum(mat_temp(:,2:3),2);
+            coh_prop = mat_temp(:,2)./total_sesh;
+            gr_prop = mat_temp(:,3)./total_sesh;
+            local_prop = mat_temp(:,4)./total_sesh;
+            
+            % Aggregate coherent/global probs. agnostic to rotation/no
+            % rotation
+            coh_total = coh_total + mat_temp(:,2);
+            gr_total = gr_total + mat_temp(:,3);
+            local_total = local_total + mat_temp(:,4);
+            
+            % Plot rotation/no-rotation breakdown
+            if plot_by_animal
+                subplot(3,4,4*(k-1)+j)
+                bar(days_plot,[coh_prop, local_prop]);
+                xlabel('Days b/w'); ylabel('Probability')
+                title(['Mouse ' num2str(j) ' ' sesh_type{mm} ' ' mouse_name_title(rot_type{k})])
+                ylim([0 1.5])
+                xlim([-1 8])
+                set(gca,'XTick',0:7)
+            end
+        end
+        % Compute agnostic probs and plot
+        total_comb = coh_total + gr_total;
+        if plot_by_animal
+            subplot(3,4,8+j)
+            bar(days_plot,[coh_total./total_comb, local_total./total_comb])
+            xlabel('Days b/w'); ylabel('Probability')
+            title(['Mouse ' num2str(j) ' ' sesh_type{mm} ' Rotation Agnostic'])
+            ylim([0 1.5])
+            xlim([-1 8])
+            set(gca,'XTick',0:7)
+        end
+        
+        % Aggregate across all mice!
+        coh_total_comb = coh_total_comb + coh_total;
+        gr_total_comb = gr_total_comb + gr_total;
+        local_total_comb = local_total_comb + local_total;
+    end
+    total_comb2 = coh_total_comb + gr_total_comb;
+    figure(24)
+    subplot(3,1,mm)
+    bar(days_plot,[coh_total_comb./total_comb2, local_total_comb./total_comb2])
+    ylim([0 1.5])
+    xlim([-1 8])
+    set(gca,'XTick',0:7)
+    xlabel('Days b/w'); ylabel('Probability')
+    title(['Rotation Agnostic Coherency v Time Breakdown - ' sesh_type{mm}])
+    legend('Coherent','Coherent - Local Cues')
+end
 
 %% Plot Breakdown of alignment before, during, after
 % Must run twoenv_reference beforehand to get bw_before, bw_during, &
@@ -560,7 +816,9 @@ errorbar(bda_mean, bda_sem)
 new_cells = nan(4,16);
 old_cells = nan(4,16);
 sesh_plot = [1:8 9 11 13:16];
-figure(25)
+sesh_plot_text = {'1-1' '1-2' '2-1' '2-2' '3-1' '3-2' '4-1' '4-2' '5-1/2' '6-1/2' ...
+    '7-1' '7-2' '8-1' '8-2'};
+figure(35)
 
 plot_type = 'ratio';
 for j = 1:num_animals
@@ -579,7 +837,7 @@ for j = 1:num_animals
     hold on
 end
 
-xlabel('Session')
+xlabel('Day-Session')
 switch plot_type
     case 'new'
         plot(mean(new_cells(:,sesh_plot),1),'k-')
@@ -590,6 +848,7 @@ switch plot_type
     otherwise
         
 end
+set(gca,'XTick',1:length(sesh_plot),'XTickLabel',sesh_plot_text)
 hold off
 
 %% Create PF density maps
