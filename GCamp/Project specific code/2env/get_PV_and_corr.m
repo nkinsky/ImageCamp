@@ -223,7 +223,7 @@ for m = 1:length(sesh)
                 PV_dist(m,ll,j,k) = temp(1,2);
                 
                 % Get shuffled correlations and distances
-                for zzz = 1:num_shuffles
+                parfor zzz = 1:num_shuffles
                     % Create shuffled distribution - randomly switch neuron
                     % identity in second session
                     PV2_shuffle = PV2_use(randperm(length(PV2_use)));
