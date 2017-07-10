@@ -65,8 +65,8 @@ end
 %% Two-env rotation analysis
 sesh_use = cat(2,G30_square, G31_square);
 limits_use = G31_manual_limits;
-rot_use = 0:15:345; % for circle % 0:90:270; % for square  
-batch_rot_arena(sesh_use(1), sesh_use(2:end), rot_use, logical(limits_use));
+rot_array_use = 0:15:345; % for circle % 0:90:270; % for square  
+batch_rot_arena(sesh_use(1), sesh_use(2:end), rot_array_use, logical(limits_use));
 
 %% GC above
 figure(35)
@@ -95,10 +95,10 @@ linkaxes(ax);
 for j = 1:length(sesh_use)
     disp(['Running Rotated Placefield Analysis on ' sesh_use(j).Animal ' - ' sesh_use(j).Date ' - session ' num2str(sesh_use(j).Session)])
     sesh_full = ChangeDirectory_NK(sesh_use,0); % fill in partial struct
-    for k = 1:length(rot_use)
-        Placefields(sesh_full,'minspeed',1,'name_append', ['_rot' num2str(rot_use(k))],...
-            'Pos_data', ['Pos_align_rot' num2str(rot_use(k)) '.mat'], 'exclude_frames',sesh_full.exclude_frames);
-        PlacefieldStats(sesh_use(j),'name_append',['_rot' num2str(rot_use(k))]);
+    for k = 1:length(rot_array_use)
+        Placefields(sesh_full,'minspeed',1,'name_append', ['_rot' num2str(rot_array_use(k))],...
+            'Pos_data', ['Pos_align_rot' num2str(rot_array_use(k)) '.mat'], 'exclude_frames',sesh_full.exclude_frames);
+        PlacefieldStats(sesh_use(j),'name_append',['_rot' num2str(rot_array_use(k))]);
     end
 end
 
@@ -169,7 +169,7 @@ sesh_use = G31_botharenas;
 
 %% Plot TMaps for all arenas with ideally aligned rotations
 sesh_use = G45_botharenas;
-rot_use = G45_both_best_angle;
+rot_array_use = G45_both_best_angle;
 trans = false;
 
 base_dir = ChangeDirectory(sesh_use(1).Animal, sesh_use(1).Date, ...
@@ -185,9 +185,9 @@ for j = 1:num_sessions
     dirstr = ChangeDirectory(sesh_use(j).Animal, sesh_use(j).Date, ...
         sesh_use(j).Session, 0);
     if ~isempty(regexpi(dirstr,'oct')) && trans 
-        load(fullfile(dirstr,['Placefields_trans_rot' num2str(rot_use(j)) '.mat']),'TMap_gauss');
+        load(fullfile(dirstr,['Placefields_trans_rot' num2str(rot_array_use(j)) '.mat']),'TMap_gauss');
     elseif ~isempty(regexpi(dirstr,'square')) || (~isempty(regexpi(dirstr,'oct')) && ~trans)
-        load(fullfile(dirstr,['Placefields_rot' num2str(rot_use(j)) '.mat']),'TMap_gauss');
+        load(fullfile(dirstr,['Placefields_rot' num2str(rot_array_use(j)) '.mat']),'TMap_gauss');
     end
     TMap_rot{j} = TMap_gauss;
 end
@@ -264,16 +264,79 @@ for j = 1:length(sesh_use)
         MD_use.half, 'Pos_data','Pos_align_rot0.mat');
 end
 
-%% Run full rotation analysis on each mouse/comparison type
-close all
-
+%% Run full rotation analysis for each mouse/comparison type
+% close all
+tic
 sesh_type = {'square', 'circle', 'circ2square'};
-save_dir = 'J:\GCamp Mice\Working\2env plots figures variables\full rotation analysis plots';
-sessions{1} = G48_square;
-sessions{2} = G48_oct;
-sessions{3} = G48_botharenas;
-for j = 1:3
-    twoenv_rot_analysis_full(sessions{j}, sesh_type{j}, 'save_dir', save_dir);
+num_shuffles = 1000;
+rot_array_use = {0:90:270, 0:15:345, 0:15:345};
+rotd_use = {-180:90:180, -180:15:180, -180:15:180};
+plot_comb = false;
+
+% Pre-allocate figure axes
+if plot_comb
+    for j = 1:3
+        hcomb(j) = figure(40+j);
+    end
 end
 
-%% Plot cells
+for mm = 1:num_animals
+    Animal_use = Mouse(mm);
+    sessions{1} = Animal_use.sesh.square;
+    sessions{2} = Animal_use.sesh.circle;
+    sessions{3} = Animal_use.sesh.circ2square;
+    % Run analysis and save individual plots for each comparison
+    for j = 1:length(sesh_type)
+        file_save_name = [Animal_use.sesh.(sesh_type{j})(1).Animal ...
+            ' - Combined Tuning Curves - ' sesh_type{j} ' - ' num2str(num_shuffles) ' shuffle'];
+
+        htemp = twoenv_squeeze(Animal_use.global_remap_stats.(sesh_type{j}).h_remap);
+        sig_value = twoenv_squeeze(Animal_use.global_remap_stats.(sesh_type{j}).p_remap);
+        sig_star = ~isnan(htemp) & htemp ~= 1;
+        [~, best_angle_all, ~, ~, corr_means, CI, hh] = twoenv_rot_analysis_full(sessions{j}, ...
+            sesh_type{j}, 'save_fig', true, 'num_shuffles', num_shuffles,...
+            'sig_star', sig_star, 'sig_value', sig_value);
+        close(hh)
+        
+        % Plot combined curve and save
+        gr_remap_log = ~isnan(Animal_use.remapping_type.global.(sesh_type{j})) & ...
+            (Animal_use.remapping_type.global.(sesh_type{j}) ~= 0);
+        if plot_comb
+            h2 = twoenv_plot_full_rot(corr_means, rot_array_use{j}, gr_remap_log, ...
+                'CI', CI);
+            printNK(file_save_name, '2env_rot')
+            close(h2);
+        end
+
+        if plot_comb
+            twoenv_plot_full_rot(corr_means, rot_array_use{j}, gr_remap_log, ...
+                'CI', CI, 'h', hcomb(j)); % Combine all mice for each sesh_type
+        end
+        
+        % Plot rotation difference
+        rotd_save_name = [Animal_use.sesh.(sesh_type{j})(1).Animal ...
+            ' - Rot Diffs - ' sesh_type{j} ' - ' num2str(num_shuffles) ' shuffle'];
+        coh_sig = Mouse(mm).global_remap_stats.(sesh_type{j}).h_remap;
+        coh_sig(~isnan(coh_sig)) = ~coh_sig(~isnan(coh_sig));
+        [rotd, h3] = twoenv_plot_rotd(best_angle_all, rotd_use{j}, coh_sig);
+        subplot(8,8,1); title([mouse_name_title(sessions{j}(1).Animal) ' - ' sesh_type{j}])
+        set(h3,'PaperPositionMode','auto', 'PaperOrientation','landscape',...
+            'PaperType', 'arch-b')
+%         keyboard
+        printNK(rotd_save_name,'2env_rot','')
+        close(h3);
+
+%         close(hh); close(h2); close(h3);
+    end
+end
+
+if plot_comb
+    for j = 1:3
+        file_save_name = ['All Mice - Combined Tuning Curves - ' sesh_type{j} ' - ' ...
+            num2str(num_shuffles) ' shuffle'];
+        figure(hcomb(j))
+        printNK(file_save_name,'2env_rot')
+    end
+end
+toc
+
