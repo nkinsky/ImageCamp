@@ -24,10 +24,14 @@ ip = inputParser;
 ip.addRequired('traces',@isnumeric);
 ip.addOptional('color_table',nan,@isnumeric);
 ip.addOptional('h', nan, @ishandle);
+ip.addParameter('SR',20,@(a) a == round(a)); % Frames/sec
+ip.addParameter('PSAbool',false(size(traces)),@islogical); % Putative spiking activity to match size of traces
 ip.parse(traces, varargin{:});
 
 color_table = ip.Results.color_table;
 h = ip.Results.h;
+SR = ip.Results.SR;
+PSAbool = ip.Results.PSAbool;
 
 if ~ishandle(h)
     figure; h = gca;
@@ -35,7 +39,7 @@ end
 
 num_neurons = size(traces,1);
 num_frames = size(traces,2);
-SR = 20; % frames/sec
+% SR = 20; % frames/sec
 
 %% Construct traces
 
@@ -53,6 +57,7 @@ y_base = 0;
 colors_used = nan(num_neurons,3);
 for j = 1:num_neurons
     trace_use = trace_adj(j,:) + y_base;
+    PSA_use = PSAbool(j,:);
     if ~isnan(color_table)
         plot(time_plot, trace_use, 'Color', color_table(j,:));
     else
@@ -60,6 +65,7 @@ for j = 1:num_neurons
         colors_used(j,:) = hline.Color;
     end
     hold on
+    plot(time_plot(PSA_use), trace_use(PSA_use), 'r.')
     
     % Get increment to next neuron's base y value
     if j ~= num_neurons
