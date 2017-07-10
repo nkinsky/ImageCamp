@@ -1,17 +1,20 @@
-function [  ] = printNK( filename, location, hfig )
-% printNK( filename, location, hfig )
+function [  ] = printNK( filename, location, hfig, varargin )
+% printNK( filename, location, hfig, varargin )
 %   Prints current figure to filename in location on NORVAL as a pdf with '-bestfit'
 %   option specified.
 %
 %   Location: pwd if unspecified, see below for other options.
 %
-%   hfig (optional): assumes current figure (gcf) if left unspecfied
+%   hfig (optional): assumes current figure (gcf) if left unspecfied or
+%   empty
+%
+%   varargin: can specify any flags valid for the print command here
 
 resolution_use = '-r600'; %'-r600' = 600 dpi
 
 if nargin < 2
     location = pwd;
-elseif nargin == 2
+elseif nargin >= 2
     switch location
         case 'russek'
             location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Presentations\Russek Day 2017\Poster';
@@ -29,7 +32,7 @@ elseif nargin == 2
     end
 end
 
-if nargin < 3
+if nargin < 3 || isempty(hfig)
     hfig = gcf;
 end
 
@@ -42,7 +45,7 @@ end
 
 hfig.Renderer = 'painters';
 save_file = fullfile(location, filename);
-print(hfig, save_file,'-dpdf',resolution_use);
+print(hfig, save_file,'-dpdf',resolution_use, varargin{:});
 % print(hfig, save_file,'-dpdf','-bestfit',resolution_use)
 
 end
