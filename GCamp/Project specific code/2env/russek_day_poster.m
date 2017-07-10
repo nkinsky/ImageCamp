@@ -18,7 +18,7 @@ print([MD(sesh_use).Animal '_allneurons'],'-dpdf', '-bestfit')
 %% Plot cells across days
 % 1 = square, 2 = square rotated with cells following local cues, 3 =
 % square rotated, 4 = circle
-sesh_use = cat(2, G48_oct(1), G48_oct(2), G48_oct(3), G48_oct(4), G48_square(5), G48_oct(5)); % cat(2, G48_oct(1), G48_oct(2), G48_oct(5), G48_square(5), G48_oct(3)); % cat(2,G30_square(1), G30_square(3), G30_square(4), G30_oct(1), G30_square(6));
+sesh_use = cat(2, G48_oct(1), G48_oct(5), G48_oct(2), G48_oct(3), G48_square(5), G48_oct(4)); % cat(2, G48_oct(1), G48_oct(2), G48_oct(5), G48_square(5), G48_oct(3)); % cat(2,G30_square(1), G30_square(3), G30_square(4), G30_oct(1), G30_square(6));
 base_sesh = G48_square(1); %G30_square(1);
 num_cols = length(sesh_use);
 % num_rows = 3;
@@ -42,11 +42,13 @@ for j = 1:length(sesh_use)
 end
 sparse_map = batch_session_map.map(:,arrayfun(@(a) a.sesh_index, sesh_use)+1); % get map for just the 4 days in question
 good_ind = find(sum(sparse_map ~= 0 & ~isnan(sparse_map),2) == num_cols); % neurons active on all 4 days
-good_ind = [63 7 42]; % [7 21 42 63 74 113 143]; % Use this code to get the
+good_ind = [63 21 22 7 42];
+% good_ind = [63 7 42]; % [7 21 42 63 74 113 143]; % Use this code to get the
 % appropriate neurons from the base session for G48 (G48_square(1) which
 % isn't plotted: arrayfun(@(a) find(a == batch_session_map.map(:,4)), G48_oct1_good_neurons)
 % good_ind = [50 71 368]; %[71 135 50 303 368]; %[70 71 72 82 135 224 230
 % 242 89 122]; % [71 230 135]; % All for G30
+% num_rows = 5; 
 num_rows = length(good_ind);
 
 figure
@@ -95,6 +97,7 @@ for m = 1:20
                     title(['Neuron ' num2str(neuron_use)])
                 end
             end
+            axis equal tight
             axis off
             if j == 1
                 dirstr = ChangeDirectory_NK(sesh_use(k),0);
@@ -112,6 +115,8 @@ for m = 1:20
                     ylims = [cent_ROI(1) - 15, cent_ROI(1) + 15];
                 end
                 xlim(xlims); ylim(ylims);
+                axis equal
+                axis tight
                 axis off
 %                 axis off
             end
