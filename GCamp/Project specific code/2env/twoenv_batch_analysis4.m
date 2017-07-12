@@ -162,18 +162,40 @@ for ii = 1:num_animals
     end
 end
 
+% Aggregate num of cells with a high v low discrimination ratio
 high_discr_ratio = nan(4,8,8);
 low_discr_ratio = nan(4,8,8);
 for ii = 1:num_animals
     for j = 1:8
         for k = 1:8
-            ttt = squeeze(Mouse(ii).DI(j,k,:)); high_discr_ratio(ii,j,k) = sum(abs(ttt) >= 0.75 & abs(ttt) < 1)/sum(~isnan(ttt) & abs(ttt) ~= 1);
+            ttt = squeeze(Mouse(ii).DI(j,k,:)); 
+            high_discr_ratio(ii,j,k) = sum(abs(ttt) >= 0.75 & abs(ttt) < 1)...
+                /sum(~isnan(ttt) & abs(ttt) ~= 1);
             low_discr_ratio(ii,j,k) = sum(abs(ttt) <= 0.25)/sum(~isnan(ttt));
         end
     end
 end
 All.DI.high_discr_ratio = high_discr_ratio;
 All.DI.low_discr_ratio = low_discr_ratio;
+
+%% Plot out DI histograms for each mouse
+for ii = 1:4
+    figure
+    for j = 1:8
+        for k = 1:8
+            temp = squeeze(Mouse(ii).DI(j,k,:));
+            subplot(8,8,8*(j-1)+k);
+            histogram(temp,-0.95:0.05:0.95);
+        end;
+    end;
+    title(['Mouse ' num2str(ii)]);
+end
+%% Plot out ratios of low DI vs high DI neuron ratios across days
+low_temp = squeeze(mean(All.DI.low_discr_ratio,1));
+high_temp = squeeze(mean(All.DI.high_discr_ratio,1));
+figure
+plot(low_temp(logical(eye(8))),'b'); 
+hold on; plot(high_temp(logical(eye(8))),'r')
 %% Aggregate everything by time and type of comparison
 % Pre-allocate
 for k = 1:length(sesh_type)
@@ -321,6 +343,55 @@ for k = 1:length(sesh_type)
         set(gca,'XTick',0:6)
     end
 end
+
+%% Alternate Coherency Analysis - Based off of best angle distribution
+rot_bins = {0:90:360, 0:15:360, 0:15:360};
+alpha = 0.05;
+for k = 1:length(sesh_type)
+    for j = 1:num_animals
+        [~, best_angle_all2, ~, ~, ~, ~, hh] = twoenv_rot_analysis_full(...
+            Mouse(j).sesh.(sesh_type{k}), sesh_type{k}, 'num_shuffles' , 1000);  % These should all already be run so this should be fast
+%         close(hh); % close only those figures above
+        [ chi2stat_mat, p_mat, df ] = calc_coherency( best_angle_all2, ...
+            rot_bins{k});
+        Mouse(j).coherency.(sesh_type{k}).pmat = p_mat;
+        Mouse(j).coherency.(sesh_type{k}).chi2stat = chi2stat_mat;
+        Mouse(j).coherency.(sesh_type{k}).df = df;
+        
+        % Bonferroni correct and aggregate for plotting
+        good_comps = ~isnan(p_mat);
+        num_comps = sum(good_comps(:));
+        hmat = p_mat < alpha/num_comps;
+        Mouse(j).coherency.(sesh_type{k}).hmat = hmat;
+        All.coherency.(sesh_type{k}).simple(j,1) = sum(hmat(:))/num_comps; % coherent
+        All.coherency.(sesh_type{k}).simple(j,2) = 1 - sum(hmat(:))/num_comps;
+    end
+end
+
+%% Plot results
+
+% Assemble matrices
+square_mean = mean(All.coherency.square.simple,1);
+circle_mean = mean(All.coherency.circle.simple,1);
+circ2square_mean = mean(All.coherency.circ2square.simple,1);
+
+figure(101)
+% Plot
+h = bar(1:2,[square_mean', circle_mean', circ2square_mean']);
+set(gca,'XTickLabel',{'Coherent', 'Global Remapping'} )
+legend('Within square', 'Within circle', 'Square to Circle')
+xlabel('Remapping Type')
+ylabel('Proprotion of Comparisons')
+
+% Now do each mouse
+compare_type = {'square','circle','circ2square'};
+hold on
+for j = 1:length(compare_type)
+    plot(repmat(h(j).XData + h(j).XOffset, num_animals,1),...
+        All.coherency.(compare_type{j}).simple,'ko')
+end
+hold off
+
 
 %% Remapping analysis
 alpha = 0.05; % p-value cutoff
