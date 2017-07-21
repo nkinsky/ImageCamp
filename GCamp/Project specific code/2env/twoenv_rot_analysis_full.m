@@ -1,7 +1,7 @@
-function [best_angle, best_angle_all, corr_at_best, sig_test, corr_means, CI, hh] = ...
-    twoenv_rot_analysis_full(sessions, rot_type, varargin)
-%  [best_angle, best_angle_all, corr_at_best, sig_test, corr_means] = ...
-%      twoenv_rot_analysis_full(sessions, rot_type, varargin)
+function [best_angle, best_angle_all, corr_at_best, sig_test, corr_means, CI, hh,...
+    best_angle_shuf_all] = twoenv_rot_analysis_full(sessions, rot_type, varargin)
+%  [best_angle, best_angle_all, corr_at_best, sig_test, corr_means, CI, hh, ...
+%   best_angle_shuf_all] = twoenv_rot_analysis_full(sessions, rot_type, varargin)
 %
 %   Plots rotation "tuning curves" for all sessions versus one another, the
 %   histogram of TMap correlations at the best rotation, and a histogram of
@@ -97,6 +97,7 @@ if ~trans
     alpha_corr = alpha/num_comp; % Bonferroni corrected significance level
     best_angle = nan(num_sessions, num_sessions);
     best_angle_all = cell(num_sessions, num_sessions);
+    best_angle_shuf_all = cell(num_sessions, num_sessions);
     corr_at_best = nan(num_sessions, num_sessions);
     sig_test = nan(num_sessions, num_sessions);
     corr_means = nan(num_sessions, num_sessions, length(rot_array));
@@ -115,11 +116,15 @@ if ~trans
             distal_rot = sesh2_rot - base_rot;
             subplot_ind = (j-1)*num_sessions + k;
             [best_angle(j,k), best_angle_all{j,k}, corr_lims, corr_at_best(j,k), ...
-                sig_test(j,k), corr_means(j,k,:), CI(j,k,:,:)] = ...
+                sig_test(j,k), corr_means(j,k,:), CI(j,k,:,:), best_angle_shuf_all{j,k}] = ...
                 plot_func(corr_mat, shuffle_mat2, rot_array, shift_back, ...
                 distal_rot, edges, edges2, hh, num_sessions, subplot_ind, ...
                 j, k, j, k, sessions, rot_type, alpha_corr,...
                 sig_star(j,k), sig_value(j,k));
+            % NK - adjust shuffle_mat2 in corr_rot_analysis to be
+            % num_neurons x num_shuffles, then run here as shuffle_mat(:).
+            % should keep everything the same.  Then I should be able to do
+            % a shuffle analysis on my coherency calculation
             
             ylims(1) = min([ylims(1) corr_lims(1)]);
             ylims(2) = max([ylims(2) corr_lims(2)]);
@@ -148,6 +153,7 @@ elseif trans
     
     best_angle = nan(num_sessions/2, num_sessions/2);
     best_angle_all = cell(num_sessions/2, num_sessions/2);
+    best_angle_shuf_all = cell(num_sessions/2, num_sessions/2);
     corr_at_best = nan(num_sessions/2, num_sessions/2);
     sig_test = nan(num_sessions/2, num_sessions/2);
     corr_means = nan(num_sessions/2, num_sessions/2, length(rot_array));
@@ -166,7 +172,8 @@ elseif trans
             distal_rot = sesh2_rot - base_rot;
             subplot_ind = (j-1)*num_sessions/2 + k;
             [best_angle(j,k), best_angle_all{j,k}, corr_lims,...
-                corr_at_best(j,k), sig_test(j,k), corr_means(j,k,:), CI(j,k,:,:)] = ...
+                corr_at_best(j,k), sig_test(j,k), corr_means(j,k,:),...
+                CI(j,k,:,:), best_angle_shuf_all{j,k}] = ...
                 plot_func(corr_mat, shuffle_mat2, rot_array, shift_back, distal_rot, ...
                 edges, edges2, hh, num_sessions/2, subplot_ind, square_ind(j),...
                 circle_ind(k), j, k, sessions, rot_type, alpha_corr,...
@@ -213,14 +220,15 @@ end
 file_save_name = fullfile(batch_dir,['full_rotation_analysis_' rot_type ...
     '_shuffle' num2str(num_shuffles)]);
 save(file_save_name, 'best_angle', 'best_angle_all', 'corr_at_best', ...
-    'sig_test', 'corr_means', 'CI', 'num_shuffles')
+    'sig_test', 'corr_means', 'CI', 'num_shuffles', 'best_angle_shuf_all')
 
 end
 
 end
 
 %% plotting sub-function
-function [best_angle, best_angle_all2, corr_lims, corr_at_best, sig_test, corr_means, CI] = ...
+function [best_angle, best_angle_all2, corr_lims, corr_at_best, sig_test, ...
+    corr_means, CI, best_angle_shuf_all] = ...
     plot_func(corr_mat, shuffle_mat2, rot_array, shift_back, distal_rot, ...
     edges, edges2, fig_h, num_sessions, subplot_ind, sesh1_ind, sesh2_ind, ...
     row, col, sesh_use, rot_type, alpha_corr, sig_star, sig_value)
@@ -293,11 +301,11 @@ hold off
 
 % Get best angle for each individual cell
 [~, best_ind2] = max(corr_mat(~isnan(nanmean(corr_mat,2)),:),[],2);
-[~, best_ind2_shuf] = max(shuffle_mat2(~isnan(nanmean(shuffle_mat2,2)),:),[],2);
+% [~, best_ind2_shuf] = max(shuffle_mat2(~isnan(nanmean(shuffle_mat2,2)),:),[],2);
 best_angle_all = rot_array(best_ind2);
 best_angle_all2 = nan(size(corr_mat,1),1);
 best_angle_all2(~isnan(nanmean(corr_mat,2))) = best_angle_all; % Keep these in the same neuron location as session1
-best_angle_all_shuf = rot_array(best_ind2_shuf);
+% best_angle_all_shuf = rot_array(best_ind2_shuf);
 
 % plot histogram breakdown of correlation values at best rotation
 % vs. shuffle
@@ -313,7 +321,8 @@ subplot(num_sessions, num_sessions, subplot_ind);
 histogram(best_angle_all, edges2); hold on;
 % pshuf = histcounts(best_angle_all_shuf, edges2, 'Normalization', 'probability');
 % Get 95% CIs
-shuf_count = nan(num_shuffles, length(rot_array));
+shuf_count = nan(num_shuffles, length(rot_array)); % pre-allocate
+best_angle_shuf_all = nan(round(length(best_ind2)*1.2), num_shuffles); % pre-allocate
 for k = 1:num_shuffles
     ind_use = ((k-1)*shuffle_chunk+1):(k*shuffle_chunk);
     shuf_mat_use = shuffle_mat2(ind_use,:); % Grab each shuffled chunk
@@ -321,6 +330,7 @@ for k = 1:num_shuffles
     [~, best_ind_shuf_temp] = max(shuf_mat_use(~isnan(nanmean(shuf_mat_use,2)),:),[],2); % ID best index for each cell
     best_ang_shuf = rot_array(best_ind_shuf_temp); % Convert index to angle
     shuf_count(k,:) = histcounts(best_ang_shuf, edges2); % Get counts
+    best_angle_shuf_all(1:length(best_ang_shuf),k) = best_ang_shuf'; % Dump into matrix!!
 end
 shuf_count_sort = sort(shuf_count,1);
 CI_count(1,:) = shuf_count_sort(round(0.975*num_shuffles),:);
