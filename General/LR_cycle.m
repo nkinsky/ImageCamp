@@ -20,10 +20,11 @@ function [ n_out, stay_in] = LR_cycle( n_in, n_range)
 %   end
 
 % ASCII definitions here
-right = 29; left = 28; spacebar = 32;
+right = 29; left = 28; spacebar = 32; k = 107;
 
 %% Set up and display output
-persistent disp_flag; % Set persistent variable so that you only display the above the 1st time it is called in a while loop
+persistent disp_flag; % Set persistent variable so that you only display 
+% below the 1st time it is called in a while loop
 % Will clear out when you push spacebar
 if ~exist('disp_flag','var') || isempty(disp_flag)
     disp('Use L/R keys to scroll. Hit spacebar to stop cycling')
@@ -54,6 +55,12 @@ try
             n_out = [];
             stay_in = false;
             clear disp_flag
+        case k
+            disp('Stepping into LR_cycle.  Type dbcont to keep on running')
+
+            keyboard
+            n_out = n_in;
+            stay_in = true;
         otherwise
             disp('error')
             n_out = n_in;
