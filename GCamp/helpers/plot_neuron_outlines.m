@@ -1,4 +1,4 @@
-function [ h , colors_used] = plot_neuron_outlines( base_image, NeuronImage, varargin )
+function [ h , colors_used, hline] = plot_neuron_outlines( base_image, NeuronImage, varargin )
 % [h, colors_used]  = plot_neuron_outlines( base_image, NeuronImage,  h, varargin)
 %   plot outlines of neurons on top of the base image.  h is optional.  
 %   h (output) is axis handle to plot, and colors_used is
