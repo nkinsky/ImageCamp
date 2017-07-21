@@ -151,9 +151,12 @@ circ_sesh = [3 4 5 6 10 11 15 16];
 for ii = 1:num_animals
     Mouse(ii).DI = nan(8,8,size(Mouse(ii).PV.circ2square,4)); % Pre-allocate
     for j = 1:8
-        PV_square = squeeze(mean(mean(Mouse(ii).PV.circ2square(square_sesh(j),:,:,:),2),3)); % Activity across all bins in the square
+        % NK note - shouldn't this be max? I think so...
+        PV_square = squeeze(max(max(Mouse(ii).PV.circ2square(square_sesh(j),:,:,:),...
+            [],2),[],3)); % Activity across all bins in the square
         for k = 1:8
-            PV_circle = squeeze(mean(mean(Mouse(ii).PV.circ2square(circ_sesh(k),:,:,:),2),3));
+            PV_circle = squeeze(max(max(Mouse(ii).PV.circ2square(circ_sesh(k),:,:,:),...
+                [],2),[],3));
             active_cells = PV_square ~= 0 | PV_circle ~= 0;
             DI_temp = (PV_square(active_cells) - PV_circle(active_cells))...
                 ./(PV_square(active_cells) + PV_circle(active_cells));
@@ -479,8 +482,20 @@ for k = 1:length(sesh_type)
 %     circ2square_flag = strcmpi('circ2square',sesh_type{k});
     for j = 1:num_animals
         Mouse(j).distal_rot_mat.(sesh_type{k}) = nan(num_sessions,num_sessions);
-        angle_diff_mat = twoenv_squeeze(repmat(Mouse(j).best_angle.(sesh_type{k}), num_sessions, 1) - ...
-            repmat(Mouse(j).best_angle.(sesh_type{k})', 1, num_sessions));
+%         angle_diff_mat = twoenv_squeeze(repmat(Mouse(j).best_angle.(sesh_type{k}), num_sessions, 1) - ...
+%             repmat(Mouse(j).best_angle.(sesh_type{k})', 1, num_sessions));
+        
+        % NK fix - above is not exact for all sessions because it does not
+        % directly compare the two sessions!
+        angle_diff_mat = twoenv_rot_analysis_full(Mouse(j).sesh.(sesh_type{k}),...
+            sesh_type{k},'num_shuffles',1000);
+        if strcmpi(sesh_type{k},'circ2square') % Fix to flip some values to make sure we are always referencing later session to the earlier session
+            temp = [false(1,8); false(1,8); true(1,4), false(1,4); true(1,4), ...
+                false(1,4); true(1,4), false(1,4); true(1,6), false(1,2); ...
+                true(1,6), false(1,2); true(1,6), false(1,2)];
+            angle_diff_mat(temp) = angle_diff_mat(temp)*-1;
+        end
+
 %         if circ2square_flag; end_ind = num_sessions; else; end_ind = num_sessions-1; end 
         for ll = 1:num_sessions-1 %1:end_ind
             [~, sesh1_rot] = get_rot_from_db(Mouse(j).sesh.(sesh_type{k})(ll));
@@ -495,7 +510,6 @@ for k = 1:length(sesh_type)
                 end
                 
                 Mouse(j).distal_rot_mat.(sesh_type{k})(ll,mm) = distal_rot;
-                
                 
             end
         end
@@ -1082,4 +1096,192 @@ for j = 1:num_animals
     end
 end
 
+%% Plot PF density maps
+plot_all_PFdens = true;
+plot_comb_PFdens = true;
+
+% Plot individual mouse PFdensity plots
+if plot_all_PFdens
+    for ll = 1:num_animals
+        figure(149 + ll);
+        for j = 1:2
+            for k = 1:8
+                subplot(2,8,8*(j-1)+k)
+                imagesc_nan(Mouse(ll).PFdens_map{j,k});
+                title(['Mouse ' num2str(ll) ' - session ' num2str(k)])
+            end
+        end
+    end
+    
+    % Get base size of image for later resizing, after removing nan padding
+    base_size = nan(2);
+    for j = 1:2
+        xspan = (find(sum(~isnan(Mouse(1).PFdens_map{j,1}),1) > 5,1,'first')-1):...
+            (find(sum(~isnan(Mouse(1).PFdens_map{j,1}),1) > 5,1,'last')+1);
+        yspan = (find(sum(~isnan(Mouse(1).PFdens_map{j,1}),2) > 5,1,'first')-1):...
+            (find(sum(~isnan(Mouse(1).PFdens_map{j,1}),2) > 5,1,'last')+1);
+        
+        base_size(j,:) = size(Mouse(1).PFdens_map{j,1}(yspan,xspan));
+    end
+end
+    
+    
+if plot_comb_PFdens
+%     figure(154)
+    temp_all = cell(2,8);
+    for j = 1:2
+        for k = 1:8
+            for ll = 1:num_animals % num_animals %num_animals
+                % First, find span to remove nan-padding at edges
+                xspan = max([(find(sum(~isnan(Mouse(ll).PFdens_map{j,k}),1) > 5,1,'first')-1),1]):...
+                    min([(find(sum(~isnan(Mouse(ll).PFdens_map{j,k}),1) > 5,1,'last')+1),...
+                    size(Mouse(ll).PFdens_map{j,k},2)]);
+                yspan = max([(find(sum(~isnan(Mouse(ll).PFdens_map{j,k}),2) > 5,1,'first')-1),1]):...
+                    min([(find(sum(~isnan(Mouse(ll).PFdens_map{j,k}),2) > 5,1,'last')+1),...
+                    size(Mouse(ll).PFdens_map{j,k},1)]);
+                
+                % Now, resize each and concatenate
+                h = fspecial('gaussian',[5 5],3);
+                temp2 = resize(Mouse(ll).PFdens_map{j,k}(yspan,xspan), ...
+                    base_size(j,:));
+                temp3 = conv2(temp2,h,'same');
+                temp2(isnan(temp2)) = nan;
+                temp_all{j,k} = cat(3,temp_all{j,k},temp2);
+                
+            end
+%             subplot(2,8,8*(j-1)+k)
+%             imagesc_nan(nanmean(temp_all{j,k},3));
+%             axis off
+        end
+    end
+
+    % Plot combined!!!
+    try; close 155; close 156; close 157; close 158; close 159; catch; end %#ok<NOSEM>
+    for zz = 1:1 % num_animals+1
+        figure(154+zz)
+        set(gcf,'Position',[2150 30 720 860])
+    end
+    bda_ind = {1:4,5:6,7:8};
+    for j = 1:2
+        clim_use = [];
+        for k = 1:3
+            temp_all_comb = [];
+            for ll = bda_ind{k}
+                temp_all_comb = cat(3,temp_all_comb, temp_all{j,ll});
+            end
+            figure(155)
+            subplot(3,3,3*(k-1)+j)
+            temp_comb_smooth = nanmean(temp_all_comb,3);
+            imagesc_nan(rot90(temp_comb_smooth,1));
+            axis off
+            clim_use = [clim_use; ...
+                [nanmin(temp_comb_smooth(:)) nanmax(temp_comb_smooth(:))]];
+            
+%             for zz = 1:num_animals
+%                 figure(155+zz)
+%                 subplot(3,2,2*(k-1)+j)
+%                 temp_all_comb = [];
+%                 for ll = bda_ind{k}
+%                     temp_all_comb = cat(3,temp_all_comb, temp_all{j,ll}(:,:,zz));
+%                 end
+%                 temp_comb_smooth = nanmean(temp_all_comb,3);
+%                 imagesc_nan(rot90(temp_comb_smooth,1));
+%                 axis off
+%             end
+        end   
+        for k = 1:3
+            subplot(3,3,3*(k-1)+j)
+            set(gca,'CLIM',[0 max(clim_use(:,2))])
+        end
+    end
+%     subplot(3,3,4); h = colorbar('manual','Position',[0.37 0.4093 0.018 0.216]);
+    subplot(3,3,5); h2 = colorbar('manual','Position',[0.65 0.4093 0.018 0.216]);
+end
+
+%             nan_log = isnan(temp_comb_smooth);
+%             temp_comb_smooth = conv2(temp_comb_smooth, h, 'same');
+%             temp_comb_smooth(nan_log) = nan;
+%             temp_comb_smooth = conv2(nanmean(temp_all_comb,3),ones(2),'same');
+%             temp_comb_smooth(isnan(nanmean(temp_all_comb,3))) = nan;
+%             h = fspecial('gaussian',[5 5],4);
+
 %% Look at coherent local designation during days 5/6
+
+%% Plot DI versus days
+sesh_pairs = [2 1; 3 4; 4 5; 5 5; 6 5; 5 6; 6 6; 7 6; 8 7]; % Session-pairs to look at for DI
+figure(171)
+for k = 1:num_animals
+    subplot(2,2,k)
+    DI_use = Mouse(k).DI;
+    DI_temp = [];
+    for j = 1:size(DI_use,3)
+        temp = squeeze(DI_use(:,:,j)); 
+        DIvec = temp(sub2ind([8 8],sesh_pairs(:,1),sesh_pairs(:,2))); 
+        plot(mean(sesh_pairs,2), DIvec,'--'); 
+        hold on
+        DI_temp = [DI_temp DIvec];
+    end
+    hmean = plot(mean(sesh_pairs,2), nanmean(DI_temp,2),'k-');
+    hmean.LineWidth = 2;
+    title(mouse_name_title(Mouse(k).sesh.circ2square(1).Animal))
+    xlabel('Day')
+    ylabel('DI (+1 = sq, -1 = circ.)')
+    hold off
+end
+
+%% Plot DI distribution versus days
+figure(172); 
+for j = 1:9
+    n = histcounts(DI_temp(j,:),-0.95:0.1:0.95,'normalization','probability'); 
+    plot((j + n*10),-0.9:0.1:0.9,'k-'); 
+    hold on; 
+end
+
+%% Get/plot cell classification between all pairs of sessions in different environments
+plot_classify = true;
+
+if plot_classify
+   for k = 1:num_animals
+      figure(200+k)
+      PV_use = Mouse(k).PV.circ2square;
+      for j = 1:8
+          PV_square = PV_use(square_sesh(j),:,:,:);
+          for m = 1:8
+              PV_circ = PV_use(circ_sesh(m),:,:,:);
+              h = subplot(8,8,8*(j-1)+m);
+              twoenv_cell_classify(PV_square, PV_circ, h);
+              ylim([0 0.7])
+          end
+      end
+   end
+   
+   % Plot comparisons for sessions in same arena on the same day...
+   win_day = [1 2; 3 4; 5 6; 7 8; 11 2; 13 14];
+   figure(205)
+   for k = 1:num_animals
+       PV_use = Mouse(k).PV.circ2square;
+       for ll = 1:6
+           PV1 = PV_use(win_day(ll,1),:,:,:);
+           PV2 = PV_use(win_day(ll,2),:,:,:);
+           h = subplot(4,6,6*(k-1) + ll);
+           twoenv_cell_classify(PV1, PV2, h);
+           ylim([ 0 0.7 ])
+           
+       end
+   end
+   
+   % Plot comparisons for sessions in the same arena across days...
+   acr_day = [4 5; 8 9; 10 11; 12 13];
+   figure(206)
+   for k = 1:num_animals
+       PV_use = Mouse(k).PV.circ2square;
+       for ll = 1:4
+           PV1 = PV_use(acr_day(ll,1),:,:,:);
+           PV2 = PV_use(acr_day(ll,2),:,:,:);
+           h = subplot(4,6,6*(k-1) + ll);
+           twoenv_cell_classify(PV1, PV2, h);
+           ylim([ 0 0.7 ])
+           
+       end
+   end
+end
