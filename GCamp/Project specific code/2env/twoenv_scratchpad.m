@@ -15,7 +15,7 @@ for j = 1:length(sesh_use)
     PlacefieldStats(sesh_use(j),'name_append','_rot_to_std');
 end
 %%
-sesh_use = G45_oct;
+sesh_use = G48_oct;
 limits_use = logical(G48_manual_limits);
 batch_align_pos(sesh_use(1), sesh_use(2:end), 'auto_rotate_to_std',0,...
     'manual_limits', limits_use);
@@ -63,10 +63,12 @@ for j = 1:50
 end
 
 %% Two-env rotation analysis
-sesh_use = cat(2,G30_square, G31_square);
-limits_use = G31_manual_limits;
-rot_array_use = 0:15:345; % for circle % 0:90:270; % for square  
-batch_rot_arena(sesh_use(1), sesh_use(2:end), rot_array_use, logical(limits_use));
+sesh_use = G48_oct([1, 3:4]);
+limits_use = G48_manual_limits([1, 3:4]);
+rot_array_use = 0:15:345; % for circle % 0:90:270; % for square
+adjust_base = false; % true = start from scratch, false = leave base sessions alone, only adjust registered sessions
+batch_rot_arena(sesh_use(1), sesh_use(2:end), rot_array_use, logical(limits_use),...
+    'base_adjust', adjust_base);
 
 %% GC above
 figure(35)
@@ -91,26 +93,32 @@ for j = 1:length(sesh_use)
 end
 linkaxes(ax);
 
-%% Run immediately after above
+%% Run immediately after above - run square or circle PF analysis on aligned data
+tic
 for j = 1:length(sesh_use)
-    disp(['Running Rotated Placefield Analysis on ' sesh_use(j).Animal ' - ' sesh_use(j).Date ' - session ' num2str(sesh_use(j).Session)])
-    sesh_full = ChangeDirectory_NK(sesh_use,0); % fill in partial struct
+    disp(['Running Rotated Placefield Analysis on ' sesh_use(j).Animal ' - ' ...
+        sesh_use(j).Date ' - session ' num2str(sesh_use(j).Session)])
+    [~, sesh_full] = ChangeDirectory_NK(sesh_use(j),0); % fill in partial struct
     for k = 1:length(rot_array_use)
         Placefields(sesh_full,'minspeed',1,'name_append', ['_rot' num2str(rot_array_use(k))],...
             'Pos_data', ['Pos_align_rot' num2str(rot_array_use(k)) '.mat'], 'exclude_frames',sesh_full.exclude_frames);
         PlacefieldStats(sesh_use(j),'name_append',['_rot' num2str(rot_array_use(k))]);
     end
 end
+toc
 
 %% two-env circle-to-square comparison - NOTE MAY NEED TO CORRECT G30 limits for this and RE-RUN all PFs!
-sesh_use = cat(2,G30_botharenas, G31_botharenas); limits_use = G48_both_manual_limits;
+sesh_use = cat(2,G48_square(1), G48_oct(1:4)); limits_use = G48_both_manual_limits([1 3 4 5 6]);
 rot_array = 0:15:345;
-batch_rot_arena(sesh_use(1), sesh_use(2:end), rot_array, logical(limits_use), 'circ2square', true);
+adjust_base = false; % true = start from scratch, false = leave base sessions alone, only adjust registered sessions
+batch_rot_arena(sesh_use(1), sesh_use(2:end), rot_array, logical(limits_use),...
+    'circ2square', true, 'base_adjust', adjust_base);
 
 %% Make batch_session_map if not done already
 neuron_reg_batch(sesh_use(1), sesh_use(2:end), 'name_append', '_trans');
 
 %% QC above
+sesh_use = G48_botharenas;
 figure(35)
 n = 1;
 rot_check = [45 330];
@@ -142,14 +150,28 @@ for j = 1:length(sesh_use)
 end
 linkaxes(ax);
 
+%% Double check you've copied over all the appropriate old Placefield files before
+% running the below
+sesh_use = G45_botharenas;
+archive_log = false(1,length(sesh_use));
+curr_dir = cd;
+for j = 1:length(sesh_use)
+    ChangeDirectory_NK(sesh_use(j));
+    cd('old placefields without MI')
+    temp = ls;
+    archive_log(j) = (size(temp,1) >= 6);
+end
+cd(curr_dir);
+
 %% Run immediately after above
-sesh_use = cat(2, G45_square(2:end), G48_square, G30_square, G31_square);
+sesh_use = cat(2,G48_square(5:6));
 rot_array_circle = 0:15:345;
-rot_array_square = 90:90:270;
+rot_array_square = 0:90:270; %0:90:270;
+run_win_too = true; % true = run square only and circle only too!
 for j = 1:length(sesh_use)
     [dirstr, full_sesh] = ChangeDirectory(sesh_use(j).Animal, sesh_use(j).Date, sesh_use(j).Session);
-    disp(['Running Circle2Square Rotated Placefield Analysis on ' sesh_use(j).Animal ...
-        ' - ' sesh_use(j).Date ' - session ' num2str(sesh_use(j).Session)])
+    disp(['Running Circle2Square Rotated Placefield Analysis on ' full_sesh.Animal ...
+        ' - ' full_sesh.Date ' - session ' num2str(full_sesh.Session)])
     
     if ~isempty(regexpi(full_sesh.Env,'octagon'))
         rot_array_use = rot_array_circle;
@@ -158,9 +180,18 @@ for j = 1:length(sesh_use)
     end
     
     for k = 1:length(rot_array_use)
-        Placefields(sesh_use(j),'minspeed',1,'name_append', ['_trans_rot' num2str(rot_array_use(k))],...
-            'Pos_data', ['Pos_align_trans_rot' num2str(rot_array_use(k))]);
-        PlacefieldStats(sesh_use(j),'name_append',['_trans_rot' num2str(rot_array_use(k))]);
+        Placefields(full_sesh,'minspeed',1,'name_append', ['_trans_rot' num2str(rot_array_use(k))],...
+            'Pos_data', ['Pos_align_trans_rot' num2str(rot_array_use(k))],...
+            'exclude_frames',full_sesh.exclude_frames);
+        PlacefieldStats(full_sesh,'name_append',['_trans_rot' num2str(rot_array_use(k))]);
+    end
+    
+    if run_win_too % Run within square or within circle sessions too!
+        disp(['Running ' full_sesh.Env ' Analysis'])
+        Placefields(full_sesh,'minspeed',1,'name_append', ['_rot' num2str(rot_array_use(k))],...
+            'Pos_data', ['Pos_align_rot' num2str(rot_array_use(k)) '.mat'], ...
+            'exclude_frames',sesh_full.exclude_frames);
+        PlacefieldStats(full_sesh,'name_append',['_rot' num2str(rot_array_use(k))]);
     end
 end
 
@@ -217,16 +248,16 @@ rot_array = 90:90:270;
 reg_sesh_full = sesh_use(1);
 man_limits_full = [];
 name_append_full = cell(1,length(sesh_use)*length(rot_array)+1);
-name_append_full{1} = '_trans_rot0';
+name_append_full{1} = '_trans_rot0'; %'_rot0';
 rot_full = [];
 n = 1;
 for j = 1:length(sesh_use)
     rot_to_std = get_rot_from_db(sesh_use(j));
     for k = 1:length(rot_array)
         reg_sesh_full(n) = sesh_use(j);
-        man_limits_full(n) = G48_manual_limits(j);
+        man_limits_full(n) = manual_limits_use(j);
         rot_full(n) = rot_array(k) + rot_to_std;
-        name_append_full{n+1} = ['_trans_rot' num2str(rot_array(k))];
+        name_append_full{n+1} = ['_trans_rot' num2str(rot_array(k))]; % '_rot'
         n = n + 1;
     end
 end
@@ -270,8 +301,9 @@ tic
 sesh_type = {'square', 'circle', 'circ2square'};
 num_shuffles = 1000;
 rot_array_use = {0:90:270, 0:15:345, 0:15:345};
-rotd_use = {-180:90:180, -180:15:180, -180:15:180};
+incr_use = [90, 15, 15];
 plot_comb = false;
+alpha = 0.05; % significance level
 
 % Pre-allocate figure axes
 if plot_comb
@@ -280,7 +312,7 @@ if plot_comb
     end
 end
 
-for mm = 1:num_animals
+for mm = 1 %1:num_animals
     Animal_use = Mouse(mm);
     sessions{1} = Animal_use.sesh.square;
     sessions{2} = Animal_use.sesh.circle;
@@ -293,8 +325,9 @@ for mm = 1:num_animals
         htemp = twoenv_squeeze(Animal_use.global_remap_stats.(sesh_type{j}).h_remap);
         sig_value = twoenv_squeeze(Animal_use.global_remap_stats.(sesh_type{j}).p_remap);
         sig_star = ~isnan(htemp) & htemp ~= 1;
-        [~, best_angle_all, ~, ~, corr_means, CI, hh] = twoenv_rot_analysis_full(sessions{j}, ...
-            sesh_type{j}, 'save_fig', true, 'num_shuffles', num_shuffles,...
+        [~, best_angle_all, ~, ~, corr_means, CI, hh, best_angle_shuf_all] = ...
+            twoenv_rot_analysis_full(sessions{j}, sesh_type{j}, 'save_fig', ...
+            true, 'num_shuffles', num_shuffles,...
             'sig_star', sig_star, 'sig_value', sig_value);
         close(hh)
         
@@ -316,9 +349,12 @@ for mm = 1:num_animals
         % Plot rotation difference
         rotd_save_name = [Animal_use.sesh.(sesh_type{j})(1).Animal ...
             ' - Rot Diffs - ' sesh_type{j} ' - ' num2str(num_shuffles) ' shuffle'];
-        coh_sig = Mouse(mm).global_remap_stats.(sesh_type{j}).h_remap;
-        coh_sig(~isnan(coh_sig)) = ~coh_sig(~isnan(coh_sig));
-        [rotd, h3] = twoenv_plot_rotd(best_angle_all, rotd_use{j}, coh_sig);
+%         coh_sig = Mouse(mm).global_remap_stats.(sesh_type{j}).h_remap;
+%         coh_sig(~isnan(coh_sig)) = ~coh_sig(~isnan(coh_sig));
+        num_comps = sum(~cellfun(@isempty, best_angle_all(:))); % number of comparisons
+        p_mat = calc_coherency2(best_angle_all, best_angle_shuf_all, sesh_type{j}, 1);
+        coh_sig = p_mat < alpha/num_comps;
+        [rotd, h3] = twoenv_plot_rotd(best_angle_all, incr_use(j), coh_sig, true);
         subplot(8,8,1); title([mouse_name_title(sessions{j}(1).Animal) ' - ' sesh_type{j}])
         set(h3,'PaperPositionMode','auto', 'PaperOrientation','landscape',...
             'PaperType', 'arch-b')
@@ -340,3 +376,49 @@ if plot_comb
 end
 toc
 
+%% Plot PVcorrs between arenas before, during, after for all mice
+% Looking for local changes in PV near hallway - don't really see
+% anything...
+PVcorrb_all = []; PVcorrd_all = []; PVcorra_all = [];
+figure(300);
+for k = 1:num_animals
+    
+    % Before
+    PVcorrb = []; 
+    for j = 1:4
+        PVcorrb = cat(3,PVcorrb,squeeze(Mouse(k).PV_corrs.circ2square.PV_corr(...
+            square_sesh(j),circ_sesh(j),:,:))); 
+    end
+    
+    % During
+    PVcorrd = []; 
+    for j = 5:6
+        PVcorrd = cat(3,PVcorrd,squeeze(Mouse(k).PV_corrs.circ2square.PV_corr(...
+            square_sesh(j),circ_sesh(j),:,:))); 
+    end
+    
+    % After
+    PVcorra = [];
+    for j = 7:8
+        PVcorra = cat(3,PVcorra,squeeze(Mouse(k).PV_corrs.circ2square.PV_corr(...
+            square_sesh(j),circ_sesh(j),:,:)));
+    end
+    subplot(5,3,3*(k-1)+1)
+    imagesc_nan(nanmean(PVcorrb,3)); colorbar
+    subplot(5,3,3*(k-1)+2)
+    imagesc_nan(nanmean(PVcorrd,3)); colorbar
+    subplot(5,3,3*(k-1)+3)
+    imagesc_nan(nanmean(PVcorra,3)); colorbar
+    
+    PVcorrb_all = cat(3,PVcorrb_all,PVcorrb);
+    PVcorrd_all = cat(3,PVcorrd_all,PVcorrd);
+    PVcorra_all = cat(3,PVcorra_all,PVcorra);
+
+end
+
+subplot(5,3,13)
+imagesc_nan(nanmean(PVcorrb_all,3)); colorbar
+subplot(5,3,14)
+imagesc_nan(nanmean(PVcorrd_all,3)); colorbar
+subplot(5,3,15)
+imagesc_nan(nanmean(PVcorra_all,3)); colorbar
