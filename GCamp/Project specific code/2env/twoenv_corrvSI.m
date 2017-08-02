@@ -111,7 +111,7 @@ histogram(sesh{2}.info_metric, 30);
 xlabel({metric_use, 'Session B'}); ylabel('Count');
 
 subplot(3,3,9)
-hist45(sesh{1}.info_metric, sesh{2}.info_metric, 30);
+hist45(info1, info2, 30);
 xlabel({metric_use, 'Session A-B projected'}); ylabel('Count');
 
 end
