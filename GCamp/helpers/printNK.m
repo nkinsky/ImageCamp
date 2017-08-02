@@ -10,7 +10,7 @@ function [  ] = printNK( filename, location, hfig, varargin )
 %
 %   varargin: can specify any flags valid for the print command here
 
-resolution_use = '-r600'; %'-r600' = 600 dpi
+resolution_use = '-r600'; %'-r600' = 600 dpi - might not be necessary
 
 if nargin < 2
     location = pwd;
@@ -43,7 +43,7 @@ end
 %     hfig.PaperOrientation = 'portrait';
 % end
 
-hfig.Renderer = 'painters';
+hfig.Renderer = 'painters'; % This makes sure weird stuff doesn't happen when you save lots of data points by using openGL rendering
 save_file = fullfile(location, filename);
 print(hfig, save_file,'-dpdf',resolution_use, varargin{:});
 % print(hfig, save_file,'-dpdf','-bestfit',resolution_use)
