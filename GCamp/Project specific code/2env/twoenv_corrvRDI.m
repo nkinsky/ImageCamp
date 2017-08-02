@@ -13,7 +13,9 @@ if nargin < 5
 end
 
 if h_plot == true
-    figure; h_plot = gca;
+    figure; 
+    set(gcf,'Position', [2260 270 850 635]); 
+    h_plot = gca;
 end
 plot_flag = ishandle(h_plot);
 
@@ -78,17 +80,17 @@ if plot_flag
     axes(h_plot);
     for j = 1:4
         cells_plot = cell_classes == j;
-        h = plot(corr_vec(cells_plot) ,RDIkit(cells_plot) ,'o');
+        h = plot(RDIkit(cells_plot) , corr_vec(cells_plot), 'o');
         try; h.MarkerEdgeColor = colors_use(j,:); end %#ok<TRYNC,NOSEM>
         hold on
     end
-    xlabel('Correlation'); ylabel('RDIkit')
+    ylabel('Correlation'); xlabel('RDIkit')
     title([sesh{1}.Animal([1 9:10]) ': ' sesh_str{1} ' ' ...
         num2str(sesh1ind) ' vs ' sesh_str{2} ' ' ...
         num2str(sesh2ind)])
     legend({'Session 1 Cell', 'Session 2 Cell', 'Both', 'Neither'},...
-        'Location','northwest')
-    xlim([-1 1]); ylim([-1 1])
+        'Location','southeast')
+    xlim([-1 1]); ylim([-1 1]); 
     hold off
 end
 
