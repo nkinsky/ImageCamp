@@ -1,5 +1,5 @@
-function [ ] = twoenv_DI_topo( DI_use, batch_session_map, sesh_ind, varargin )
-% twoenv_DI_topo( DI_use, batch_map, sesh1_ind, sesh2_ind, varargin )
+function [ h ] = twoenv_DI_topo( DI_use, batch_session_map, sesh_ind, varargin )
+% h = twoenv_DI_topo( DI_use, batch_map, sesh1_ind, sesh2_ind, varargin )
 %   Plot neuron ROIs with color coding for discrimination ratio.
 
 high_DI_thresh = 0.75;
@@ -43,7 +43,9 @@ end
 % active_both_log = (sesh(1).neurons ~= 0 & sesh(2).neurons ~= 0);
 
 %% Plot everything
-figure; h = gca;
+figure; 
+set(gcf,'Position', [2270, 50, 1100, 850]);
+h = gca;
 
 % Plot all neuron outlines
 for j=1:2
@@ -59,6 +61,7 @@ for j=1:2
 end
 
 legend(cat(2,h_high,h_low,h_neither),{'High DI','Low DI','tweener'})
+axis tight
 
 %% Potentially a bit cleaner looking plots, but not validated yet
 % 
