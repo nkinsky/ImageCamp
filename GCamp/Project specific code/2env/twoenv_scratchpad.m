@@ -152,7 +152,7 @@ linkaxes(ax);
 
 %% Double check you've copied over all the appropriate old Placefield files before
 % running the below
-sesh_use = G45_botharenas;
+sesh_use = G48_botharenas;
 archive_log = false(1,length(sesh_use));
 curr_dir = cd;
 for j = 1:length(sesh_use)
@@ -164,9 +164,9 @@ end
 cd(curr_dir);
 
 %% Run immediately after above
-sesh_use = cat(2,G48_square(5:6));
-rot_array_circle = 0:15:345;
-rot_array_square = 0:90:270; %0:90:270;
+sesh_use = cat(2,G30_botharenas, G31_botharenas, G45_botharenas, G48_botharenas);
+rot_array_circle = 0; %0:15:345;
+rot_array_square = 0; %0:90:270;
 run_win_too = true; % true = run square only and circle only too!
 for j = 1:length(sesh_use)
     [dirstr, full_sesh] = ChangeDirectory(sesh_use(j).Animal, sesh_use(j).Date, sesh_use(j).Session);
@@ -190,7 +190,7 @@ for j = 1:length(sesh_use)
         disp(['Running ' full_sesh.Env ' Analysis'])
         Placefields(full_sesh,'minspeed',1,'name_append', ['_rot' num2str(rot_array_use(k))],...
             'Pos_data', ['Pos_align_rot' num2str(rot_array_use(k)) '.mat'], ...
-            'exclude_frames',sesh_full.exclude_frames);
+            'exclude_frames',full_sesh.exclude_frames);
         PlacefieldStats(full_sesh,'name_append',['_rot' num2str(rot_array_use(k))]);
     end
 end
@@ -312,7 +312,7 @@ if plot_comb
     end
 end
 
-for mm = 1 %1:num_animals
+for mm = 3:4 % 1:num_animals
     Animal_use = Mouse(mm);
     sessions{1} = Animal_use.sesh.square;
     sessions{2} = Animal_use.sesh.circle;
