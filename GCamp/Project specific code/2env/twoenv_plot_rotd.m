@@ -50,6 +50,7 @@ if plot_flag
        subplot(size(best_angle_all,1), size(best_angle_all,2), ...
            (ii(j)-1)*size(best_angle_all,2) + jj(j));
        histogram(rotd{sesh_ind(j)}, rot_use)
+       xlim([-180 180])
        if coh_sig(ii(j),jj(j)); title('*'); end
     end
 end
