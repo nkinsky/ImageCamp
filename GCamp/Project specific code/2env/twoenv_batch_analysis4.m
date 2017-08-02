@@ -121,7 +121,7 @@ for j = 1:num_animals
         end
         [PV, PV_corrs] = get_PV_and_corr( Mouse(j).sesh.(sesh_type{k}), ...
             batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
-            Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput',false),...
+            Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput', false),...
             'output_flag',false, 'num_shuffles', num_shuffles);
         Mouse(j).PV.(sesh_type{k}) = PV;
         Mouse(j).PV_corrs.(sesh_type{k}) = PV_corrs;
@@ -130,6 +130,50 @@ for j = 1:num_animals
 end
 p.stop;
 
+%% Run PV analysis at best angle including only cells active in both sessions being correlated
+dispNK('Running PV analysis at best rotation angle - cells active in BOTH sessions being correlated')
+p = ProgressBar(num_animals*length(sesh_type));
+num_shuffles = 1;
+for j = 1%:num_animals
+    for k = 1%:length(sesh_type)
+        base_dir = ChangeDirectory_NK(Mouse(j).sesh.(sesh_type{k})(1),0);
+        if strcmpi(sesh_type{k},'circ2square')
+            load(fullfile(base_dir,'batch_session_map_trans'))
+        else
+            load(fullfile(base_dir,'batch_session_map'))
+        end
+        [~, PV_corrs] = get_PV_and_corr( Mouse(j).sesh.(sesh_type{k}), ...
+            batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
+            Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput', false),...
+            'output_flag',false, 'num_shuffles', num_shuffles, ...
+            'filter_type', 'active_both');
+        Mouse(j).PV_corrs.active_both.(sesh_type{k}) = PV_corrs;
+        p.progress;
+    end
+end
+p.stop;
+%% Run PV analysis at best angle including only cells active in ALL sessions
+dispNK('Running PV analysis at best rotation angle - cells active in ALL sessions')
+p = ProgressBar(num_animals*length(sesh_type));
+num_shuffles = 1;
+for j = 1%:num_animals
+    for k = 1%:length(sesh_type)
+        base_dir = ChangeDirectory_NK(Mouse(j).sesh.(sesh_type{k})(1),0);
+        if strcmpi(sesh_type{k},'circ2square')
+            load(fullfile(base_dir,'batch_session_map_trans'))
+        else
+            load(fullfile(base_dir,'batch_session_map'))
+        end
+        [~, PV_corrs] = get_PV_and_corr( Mouse(j).sesh.(sesh_type{k}), ...
+            batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
+            Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput', false),...
+            'output_flag',false, 'num_shuffles', num_shuffles, ...
+            'filter_type', 'active_all');
+        Mouse(j).PV_corrs.active_both.(sesh_type{k}) = PV_corrs;
+        p.progress;
+    end
+end
+p.stop;
 %% Generate tuning curves via PV analysis
 
 % rough start - might need to exclude and +1 or -1 DIs to validate...also,
@@ -356,7 +400,7 @@ for k = 1:length(sesh_type)
             Mouse(j).sesh.(sesh_type{k}), sesh_type{k}, 'num_shuffles' , 1000);  % These should all already be run so this should be fast
 %         close(hh); % close only those figures above
         [ chi2stat_mat, p_mat, df ] = calc_coherency( best_angle_all2, ...
-            rot_bins{k});
+            sesh_type{k}, 2);
         Mouse(j).coherency.(sesh_type{k}).pmat = p_mat;
         Mouse(j).coherency.(sesh_type{k}).chi2stat = chi2stat_mat;
         Mouse(j).coherency.(sesh_type{k}).df = df;
@@ -395,6 +439,7 @@ for j = 1:length(compare_type)
 end
 hold off
 
+title('Chi-squared without shuffling is not conservative - need a better statistical test')
 
 %% Remapping analysis
 alpha = 0.05; % p-value cutoff
@@ -585,6 +630,13 @@ for k = 1:length(sesh_type)
             temp = cat(3, temp, Mouse(j).remapping_type.(align_type{ll}).(sesh_type{k}));
         end
         sum_check.(sesh_type{k})(j,:,:) = nansum(temp,3);
+    end
+end
+
+% Spit these out - should equal 28 or 64
+for j = 1:3 
+    for k = 1:4
+        disp(num2str(sum(sum(sum(sum_check.(sesh_type{j})(k,:,:),3),2),1))); 
     end
 end
 
@@ -819,7 +871,7 @@ for k = 1:3 %length(sesh_type)
             % 4th col = num local cue coherent sessions
             Mouse(j).coherent_v_days.(rot_type{ll}).(sesh_type{k})(:,1) = days_bw;
             for mm = 1:length(days_bw)
-                days_log = time_diff_mat == days_bw(mm);
+                days_log = logical(twoenv_squeeze(time_diff_mat == days_bw(mm)));
                 Mouse(j).coherent_v_days.(rot_type{ll}).(sesh_type{k})(mm,2) = ...
                     nansum(temp_coherent(days_log));
                 Mouse(j).coherent_v_days.(rot_type{ll}).(sesh_type{k})(mm,3) = ...
@@ -836,7 +888,7 @@ end
 
 %% Plot Coherency proportion vs time
 
-plot_by_animal = true; %Suggest keeping false since not much is apparent on the animal level
+plot_by_animal = false; %Suggest keeping false since not much is apparent on the animal level
 
 coh_all = [];
 gr_all = [];
@@ -941,14 +993,16 @@ legend(cellfun(@mouse_name_title, align_type,'UniformOutput',false))
 title('Circle-to-square mapping breakdown')
 
 %% Take 2 - just plot local cue aligned sessions
-
-plot_mat2 = [All.bw_sesh.before(2) All.bw_sesh.during(2) All.bw_sesh.after(2)];
-figure;
-bar(1:length(time_comp), plot_mat2./[sum(plot_mat,2)]');
-set(gca,'XTickLabel',time_comp)
-ylabel('Proprotion of Sessions')
-% legend(cellfun(@mouse_name_title, align_type,'UniformOutput',false))
-title('Circle-to-square mapping breakdown') 
+bug_here = true;
+if ~bug_here
+    plot_mat2 = [All.bw_sesh.before(2) All.bw_sesh.during(2) All.bw_sesh.after(2)];
+    figure;
+    bar(1:length(time_comp), plot_mat2./[sum(plot_mat,2)]');
+    set(gca,'XTickLabel',time_comp)
+    ylabel('Proprotion of Sessions')
+    % legend(cellfun(@mouse_name_title, align_type,'UniformOutput',false))
+    title('Circle-to-square mapping breakdown')
+end
 
 %% Take 3 - just look at correlations with local cues aligned before/during/after
 % Something weird here - correlations for local cue aligned sessions are
