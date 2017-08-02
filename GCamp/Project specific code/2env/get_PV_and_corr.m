@@ -33,12 +33,19 @@ ip.addParameter('corr_type', 'Spearman', @(a) strcmp('Spearman',a) || ...
 ip.addParameter('num_shuffles', 1, @(a) a > 0 && round(a) == a);
 % ip.addParameter('disp_prog_bar', true, @(a) islogical(a) || a == 0 || a == 1);
 ip.addParameter('calc_half', false, @(a) islogical(a) || a == 0 || a == 1);
-ip.addParameter('alt_pos_file', 'Pos_align.mat', @(a) ischar(a) || iscell(a) && length(a) == num_sessions);
+ip.addParameter('alt_pos_file', 'Pos_align.mat', @(a) ischar(a) || ...
+    iscell(a) && length(a) == num_sessions);
 % ip.addParameter('neuron_filter', true(size(batch_map)), @islogical); %This is not finished yet - probably need some more fancy code to make it work
 ip.addParameter('version_use', 'T4', @(a) strcmp('T2',a) || strcmp('T4',a));
 ip.addParameter('minspeed', 1, @(a) isnumeric(a) && a >= 0);
-ip.addParameter('exclude_frames', [], @(a) isempty(a) || iscell(a) && length(a) == num_sessions);
+ip.addParameter('exclude_frames', [], @(a) isempty(a) || iscell(a) && ...
+    length(a) == num_sessions);
 ip.addParameter('output_flag',true, @islogical)
+ip.addParameter('filter_type', 'all_cells', @(a) strcmpi(a, 'all_cells')...
+    || strcmpi(a,'active_both') || strcmpi(a,'active_all')); % Cells to include - nan = all cells, 
+% active_both = only cells that are active in both sessions being compared,
+% and active_all = only cells that are active in ALL sessions being
+% considered
 ip.parse(session_struct, batch_session_map, varargin{:});
 
 rot_to_std = ip.Results.rot_to_std;
@@ -55,6 +62,7 @@ version_use = ip.Results.version_use;
 minspeed = ip.Results.minspeed;
 exclude_frames = ip.Results.exclude_frames;
 output_flag = ip.Results.output_flag;
+filter_type = ip.Results.filter_type;
 
 % Make position file into a cell if applicable
 if ischar(pos_file)
@@ -186,14 +194,29 @@ if output_flag
     p = ProgressBar(length(sesh));
 end
 
+if strcmpi(filter_type, 'all_cells')
+    PV_use = PV;
+elseif strcmpi(filter_type, 'active_all') % Get PV for cells that are active in ALL sessions
+    PV_collapse = squeeze(sum(sum(PV,2),3));
+    active_all_log = sum(PV_collapse > 0) == num_sessions;
+    PV_use = PV(:,:,:,active_all_log);
+end
+
 for m = 1:length(sesh)
     for ll = 1:length(sesh)
+        
+        % Get PV for cells active in sesh m AND sesh ll
+        if strcmpi(filter_type, 'active_both')
+            PV_collapse = squeeze(sum(sum(PV([m,ll],:,:,:),2),3));
+            active_both_log = sum(PV_collapse > 0) == 2;
+            PV_use = PV(:,:,:,active_both_log);
+        end
         for j = 1:NumXBins
             for k = 1:NumYBins             
                 % Get population vectors for each session in the
                 % appropriate bin.
-                PV1 = squeeze(PV(m,j,k,:));
-                PV2 = squeeze(PV(ll,j,k,:));
+                PV1 = squeeze(PV_use(m,j,k,:));
+                PV2 = squeeze(PV_use(ll,j,k,:));
                 
                 ind_use = ~isnan(PV1) & ~isnan(PV2); %Indices of neurons that are not NaN in both sessions
 %                 ind_use_both = ~isnan(PV1) | ~isnan(PV2); % Indices of neurons that are not NaN in either session
@@ -226,7 +249,7 @@ for m = 1:length(sesh)
                 parfor zzz = 1:num_shuffles
                     % Create shuffled distribution - randomly switch neuron
                     % identity in second session
-                    PV2_shuffle = PV2_use(randperm(length(PV2_use)));
+                    PV2_shuffle = PV2_use(randperm(length(PV2_use))); %#ok<PFBNS>
                     
                     if isempty(PV1_use) || isempty(PV2_shuffle)
                         PV_corr_shuffle(m,ll,j,k,zzz) = nan;
