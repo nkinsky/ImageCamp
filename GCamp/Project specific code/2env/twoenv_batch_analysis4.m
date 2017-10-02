@@ -119,13 +119,73 @@ for j = 1:num_animals
         else
             load(fullfile(base_dir,'batch_session_map'))
         end
+        % Get frames to exclude
+        [~, full_sesh_cell] = arrayfun(@(a) ChangeDirectory_NK(a,0), ...
+            Mouse(j).sesh.(sesh_type{k}),'UniformOutput',false);
+        exclude_frames_cell = cellfun(@(a) a.exclude_frames, full_sesh_cell, ...
+            'UniformOutput', false);
         [PV, PV_corrs] = get_PV_and_corr( Mouse(j).sesh.(sesh_type{k}), ...
             batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
             Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput', false),...
-            'output_flag',false, 'num_shuffles', num_shuffles);
+            'output_flag',false, 'num_shuffles', num_shuffles,...
+            'exclude_frames', exclude_frames_cell);
         Mouse(j).PV.(sesh_type{k}) = PV;
         Mouse(j).PV_corrs.(sesh_type{k}) = PV_corrs;
         p.progress;
+    end
+end
+p.stop;
+%% Run PV analysis at best angle for connected sessions
+dispNK('Running PV analysis at best angle for connected session by halves')
+p = ProgressBar(num_animals);
+for j = 1:num_animals
+    for k = 3
+        conn_sesh = Mouse(j).sesh.(sesh_type{k})(9:12);
+        base_dir = ChangeDirectory_NK(Mouse(j).sesh.(sesh_type{k})(1),0);
+        if strcmpi(sesh_type{k},'circ2square')
+            load(fullfile(base_dir,'batch_session_map_trans'))
+        else
+            load(fullfile(base_dir,'batch_session_map'))
+        end
+        % Get frames to exclude
+        [~, full_sesh_cell] = arrayfun(@(a) ChangeDirectory_NK(a,0), ...
+            conn_sesh,'UniformOutput',false);
+        [exclude_frames_cell, FToffset_array, end_array] = ...
+            align_exclude_frames(conn_sesh);
+        % Re-organize - day 5 1st 4 cols, day 6 2nd 4 cols
+        exclude_frames_cell = exclude_frames_cell([1 2 1 2 3 4 3 4]);
+        conn_sesh = Mouse(j).sesh.(sesh_type{k})([9 10 9 10 11 12 11 12]);
+        
+        % Adjust exclude_frames_cell
+        half_array = cellfun(@(a) a.half, full_sesh_cell) - ...
+            FToffset_array'; % Get halfpoint of each to start
+        for ll = 1:2
+            % Construct exclude array to include exclude frames AND
+            % halfpoint
+            if ll == 1 % 1st half
+                temp = arrayfun(@(a,b) (a+1):b, half_array, end_array',...
+                    'UniformOutput',false);
+                half_exclude_cell([1 2 5 6]) = temp(1:4);
+            elseif ll == 2 % 2nd half
+                temp = arrayfun(@(a) 1:a, half_array,...
+                    'UniformOutput',false);
+                half_exclude_cell([3 4 7 8]) = temp(1:4);
+            end
+            
+        end
+        exclude_frames_comb = cellfun(@(a,b) unique([a,b]),half_exclude_cell, ...
+            exclude_frames_cell,'UniformOutput',false); % Combine them!
+        
+        % Run Analysis
+        [PV, PV_corrs] = get_PV_and_corr( conn_sesh, ...
+            batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
+            Mouse(j).best_angle.(sesh_type{k})([9 10 9 10 11 12 11 12]), 'UniformOutput', false),...
+            'output_flag',false, 'num_shuffles', num_shuffles,...
+            'exclude_frames', exclude_frames_comb);
+        Mouse(j).PV.conn = PV;
+        Mouse(j).PV_corrs.conn = PV_corrs;
+        p.progress;
+        
     end
 end
 p.stop;
@@ -134,42 +194,49 @@ p.stop;
 dispNK('Running PV analysis at best rotation angle - cells active in BOTH sessions being correlated')
 p = ProgressBar(num_animals*length(sesh_type));
 num_shuffles = 1;
-for j = 1%:num_animals
-    for k = 1%:length(sesh_type)
+for j = 1:num_animals
+    for k = 1:length(sesh_type)
         base_dir = ChangeDirectory_NK(Mouse(j).sesh.(sesh_type{k})(1),0);
         if strcmpi(sesh_type{k},'circ2square')
             load(fullfile(base_dir,'batch_session_map_trans'))
         else
             load(fullfile(base_dir,'batch_session_map'))
         end
+        % Get frames to exclude
+        exclude_frames_cell = align_exclude_frames(Mouse(j).sesh.(sesh_type{k}));
+        
         [~, PV_corrs] = get_PV_and_corr( Mouse(j).sesh.(sesh_type{k}), ...
             batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
             Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput', false),...
             'output_flag',false, 'num_shuffles', num_shuffles, ...
-            'filter_type', 'active_both');
+            'filter_type', 'active_both', 'exclude_frames', exclude_frames_cell);
         Mouse(j).PV_corrs.active_both.(sesh_type{k}) = PV_corrs;
         p.progress;
     end
 end
 p.stop;
-%% Run PV analysis at best angle including only cells active in ALL sessions
+
+% Run PV analysis at best angle including only cells active in ALL sessions
 dispNK('Running PV analysis at best rotation angle - cells active in ALL sessions')
 p = ProgressBar(num_animals*length(sesh_type));
 num_shuffles = 1;
-for j = 1%:num_animals
-    for k = 1%:length(sesh_type)
+for j = 1:num_animals
+    for k = 1:length(sesh_type)
         base_dir = ChangeDirectory_NK(Mouse(j).sesh.(sesh_type{k})(1),0);
         if strcmpi(sesh_type{k},'circ2square')
             load(fullfile(base_dir,'batch_session_map_trans'))
         else
             load(fullfile(base_dir,'batch_session_map'))
         end
+        % Get frames to exclude
+        exclude_frames_cell = align_exclude_frames(Mouse(j).sesh.(sesh_type{k}));
+        
         [~, PV_corrs] = get_PV_and_corr( Mouse(j).sesh.(sesh_type{k}), ...
             batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
             Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput', false),...
             'output_flag',false, 'num_shuffles', num_shuffles, ...
-            'filter_type', 'active_all');
-        Mouse(j).PV_corrs.active_both.(sesh_type{k}) = PV_corrs;
+            'filter_type', 'active_all', 'exclude_frames', exclude_frames_cell);
+        Mouse(j).PV_corrs.active_all.(sesh_type{k}) = PV_corrs;
         p.progress;
     end
 end
@@ -248,6 +315,7 @@ hold on; plot(high_temp(logical(eye(8))),'r')
 for k = 1:length(sesh_type)
     All.days_v_corr2.(sesh_type{k}) = cell(length(days_diff.(sesh_type{k})),1);
     All.days_v_PVcorr.(sesh_type{k}) = cell(length(days_diff.(sesh_type{k})),1);
+    All.days_v_PVcorr.active_both.(sesh_type{k}) = cell(length(days_diff.(sesh_type{k})),1);
 end
 for j = 1:num_animals
     for k = 1:length(sesh_type)
@@ -269,28 +337,38 @@ for j = 1:num_animals
             Mouse(j).PV_corrs.(sesh_type{k}).PV_corr_mean(valid_comp)];
         Mouse(j).days_v_PVshuf.(sesh_type{k}) = [time_diff_mat(valid_comp),...
             Mouse(j).PV_corrs.(sesh_type{k}).PV_corr_shuffle_mean(valid_comp)];
+        Mouse(j).days_v_PVcorr.active_both.(sesh_type{k}) = [time_diff_mat(valid_comp),...
+            Mouse(j).PV_corrs.active_both.(sesh_type{k}).PV_corr_mean(valid_comp)];
+        Mouse(j).days_v_PVshuf.active_both.(sesh_type{k}) = [time_diff_mat(valid_comp),...
+            Mouse(j).PV_corrs.active_both.(sesh_type{k}).PV_corr_shuffle_mean(valid_comp)];
             
         % Put everything into a 2 column vector. 1: days between
         % comparison, 2 = mean correlation (Spearman)
         ttt = cell(length(days_diff_use),1);
         uuu = cell(length(days_diff_use),1);
         vvv = uuu;
-        www = uuu;
+        www = uuu; zzz = uuu; aaa = uuu;
         for ll = 1:length(days_diff_use)
             day_ind = Mouse(j).days_v_corr.(sesh_type{k})(:,1) == days_diff_use(ll);
             ttt{ll} = Mouse(j).days_v_corr.(sesh_type{k})(day_ind,2); 
             uuu{ll} = Mouse(j).days_v_shuf.(sesh_type{k})(day_ind,2);
             vvv{ll} = Mouse(j).days_v_PVcorr.(sesh_type{k})(day_ind,2);
             www{ll} = Mouse(j).days_v_PVshuf.(sesh_type{k})(day_ind,2);
+            zzz{ll} = Mouse(j).days_v_PVcorr.active_both.(sesh_type{k})(day_ind,2);
+            aaa{ll} = Mouse(j).days_v_PVshuf.active_both.(sesh_type{k})(day_ind,2);
             All.days_v_corr2.(sesh_type{k}){ll} = cat(1,...
                 All.days_v_corr2.(sesh_type{k}){ll}, ttt{ll});
             All.days_v_PVcorr.(sesh_type{k}){ll} = cat(1,...
                 All.days_v_PVcorr.(sesh_type{k}){ll}, vvv{ll});
+            All.days_v_PVcorr.active_both.(sesh_type{k}){ll} = cat(1,...
+                All.days_v_PVcorr.active_both.(sesh_type{k}){ll}, zzz{ll});
         end
         Mouse(j).days_v_corr2.(sesh_type{k}) = cellfun(@mean, ttt);
         Mouse(j).days_v_shuf2.(sesh_type{k}) = cellfun(@mean, uuu);
         Mouse(j).days_v_PVcorr2.(sesh_type{k}) = cellfun(@mean, vvv);
         Mouse(j).days_v_shuf2.(sesh_type{k}) = cellfun(@mean, www);
+        Mouse(j).days_v_PVcorr2.active.both.(sesh_type{k}) = cellfun(@mean, zzz);
+        Mouse(j).days_v_shuf2.active_both.(sesh_type{k}) = cellfun(@mean, aaa);
         
         
     end
@@ -356,38 +434,62 @@ for k = 1:length(sesh_type)
 end
 
 %% Plot mean correlations vs days for each comparison type for PV
-marker_type = {'ko', 'ko', 'ko'}; % marker_type = {'s', 'o', 'x'};
-plot_combined = false;
+marker_type = {'ko', 'ko', 'bx'}; % marker_type = {'s', 'o', 'x'};
+line_type = {'k-', 'k-', 'b--'};
+title_append = {' - All Cells (Silent Included)', ' - Active Cells Only (No Silent Cells)'};
+plot_combined = true;
 
-if plot_combined; figure; end
+if plot_combined; hcomb{1} = figure; hcomb{2} = figure; end
 for k = 1:length(sesh_type)
-    if ~plot_combined; figure; end
-    set(gcf,'Position',[488.2000  393.0000  784.8000  368.8000])
-    days_diff_use = days_diff.(sesh_type{k});
-    for j = 1:num_animals
-        hmouse = plot(Mouse(j).days_v_PVcorr.(sesh_type{k})(:,1), ...
-            Mouse(j).days_v_PVcorr.(sesh_type{k})(:,2),marker_type{k});
-        hmouse.Color = [0.67 0.67 0.67];
-        hold on
-%         plot(days_diff,Mouse(j).days_v_corr2.(sesh_type{k}))
-%         plot(days_diff,Mouse(j).days_v_shuf2.(sesh_type{k}),'k--')
-    end
-    for j = 1:num_animals
-        plot(Mouse(j).days_v_PVshuf.(sesh_type{k})(:,1), ...
-            Mouse(j).days_v_PVshuf.(sesh_type{k})(:,2),'k.');
-        hold on
-    end
-    plot(days_diff_use, cellfun(@mean, All.days_v_PVcorr.(sesh_type{k})),'b-')
-%     legend(cellfun(@mouse_name_title, animal_names,'UniformOutput',0),'Shuffled')
-    xlabel('Days between session'); 
-    ylabel('Mean Spearman Correlation b/w PVs')
-    title(sesh_type{k})
-    if strcmpi(sesh_type{k},'circ2square')
-        xlim([-1 8]); ylim([-0.1 0.6]);
-        set(gca,'XTick',0:7)
-    else
-        xlim([-1 7]); ylim([-0.1 0.6]);
-        set(gca,'XTick',0:6)
+    for m = 1:2
+        
+        if ~plot_combined; figure; elseif plot_combined; figure(hcomb{m}); end
+        set(gcf,'Position',[488.2000  393.0000  784.8000  368.8000])
+        days_diff_use = days_diff.(sesh_type{k});
+        for j = 1:num_animals
+            if m == 1 
+                struct_use = Mouse(j).days_v_PVcorr;
+                shuf_use = Mouse(j).days_v_PVshuf;
+            elseif m == 2
+                struct_use = Mouse(j).days_v_PVcorr.active_both;
+                shuf_use = Mouse(j).days_v_PVshuf.active_both;
+            end
+%             hmouse = plot(Mouse(j).days_v_PVcorr.(sesh_type{k})(:,1), ...
+%                 Mouse(j).days_v_PVcorr.(sesh_type{k})(:,2),marker_type{k});
+            hmouse = plot(struct_use.(sesh_type{k})(:,1), ...
+                struct_use.(sesh_type{k})(:,2),marker_type{k});
+            if k <= 2
+                hmouse.Color = [0.67 0.67 0.67];
+            elseif k == 3
+                hmouse.Color = [0 0 1 0.1];
+            end
+            hold on
+%             plot(Mouse(j).days_v_PVshuf.(sesh_type{k})(:,1), ...
+%                 Mouse(j).days_v_PVshuf.(sesh_type{k})(:,2),'k.');
+            plot(shuf_use.(sesh_type{k})(:,1), ...
+                shuf_use.(sesh_type{k})(:,2),'k.');
+        end
+        %     for j = 1:num_animals
+        %         plot(Mouse(j).days_v_PVshuf.(sesh_type{k})(:,1), ...
+        %             Mouse(j).days_v_PVshuf.(sesh_type{k})(:,2),'k.');
+        %         hold on
+        %     end
+        if m == 1
+            plot(days_diff_use, cellfun(@mean, All.days_v_PVcorr.(sesh_type{k})),line_type{k})
+        elseif m == 2
+            plot(days_diff_use, cellfun(@mean, All.days_v_PVcorr.active_both.(sesh_type{k})),line_type{k})
+        end
+        %     legend(cellfun(@mouse_name_title, animal_names,'UniformOutput',0),'Shuffled')
+        xlabel('Days between session');
+        ylabel('Mean Spearman Correlation b/w PVs')
+        title([sesh_type{k} title_append{m}])
+        if strcmpi(sesh_type{k},'circ2square')
+            xlim([-1 8]); ylim([-0.1 0.6]);
+            set(gca,'XTick',0:7)
+        else
+            xlim([-1 7]); ylim([-0.1 0.6]);
+            set(gca,'XTick',0:6)
+        end
     end
 end
 
@@ -519,9 +621,7 @@ for k = 1:length(sesh_type)
     end
 end
 
-%%
-
-% Get distal cue v local cue v incongruous comparisons
+%% Get distal cue v local cue v incongruous comparisons
 for k = 1:length(sesh_type)
     num_sessions = length(Mouse(1).sesh.(sesh_type{k}));
 %     circ2square_flag = strcmpi('circ2square',sesh_type{k});
