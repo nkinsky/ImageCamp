@@ -22,6 +22,7 @@ function [ h , colors_used, hline] = plot_neuron_outlines( base_image, NeuronIma
 %
 %       colors_used: color table, good for using with plot_neuron_traces
 
+%% Parse inputs
 num_neurons = length(NeuronImage);
 
 ip = inputParser;
@@ -34,6 +35,7 @@ ip.parse(base_image, NeuronImage, varargin{:});
 h = ip.Results.h;
 colors = ip.Results.colors;
 
+%% Set up variables and figures
 if ~ishandle(h)
     figure; h = gca;
 end
@@ -45,15 +47,18 @@ if ~isnan(colors)
    elseif size(colors,1) ~= num_neurons
        error('number of custom colors specified does not match number of neurons')
    end
+elseif isnan(colors)
+    cust_col_flag = false;
 end
 
+%% Plot base image
 axes(h)
 if ~isnan(sum(base_image(:)))
     imagesc_gray(base_image); colorbar off; 
 end
 hold on
 
-
+%% Plot neurons in red, custom colors on specified neurons
 colors_used = nan(num_neurons,3);
 
 for j = 1:num_neurons
@@ -66,9 +71,18 @@ for j = 1:num_neurons
     hline.LineWidth = 2;
     colors_used(j,:) = hline.Color;
 end
+
+%% Plot scale bar
+bar_size = 100; % microns at 2x downsampling
+y_loc = max(arrayfun(@(a) max(a.YData),h.Children))+25;
+plot([0 bar_size*1.1], [y_loc y_loc],'LineWidth',5,'Color','k');
+text(bar_size*1.1+5,double(y_loc),'100 \mum')
+
 hold off
 axis equal
 axis off
+
+
 
 end
 
