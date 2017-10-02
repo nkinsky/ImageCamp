@@ -76,16 +76,21 @@ for j = 1:num_neurons
 %     printNK(['testing' num2str(j)],'2env')
 end
 
+% y_data = arrayfun(@(a) max(a.XData),htraces.Children(2:end));
+
 if ~isnan(color_table)
     colors_used = color_table;
 end
 
 % Plot scale bar at bottom
-y_loc = min(trace_adj(1,:)) - 0.5*range(trace_adj(1,:));
+y_loc = min(trace_adj(1,:)) - 0.25*range(trace_adj(1,:));
 plot([time_plot(1) time_plot(30*SR)], [y_loc y_loc],'LineWidth',3,'Color','k');
 text(time_plot(10+30*SR),double(y_loc),'30 s')
 hold off
 axis tight
 axis off
+
+%% Scale traces properly
+
 end
 
