@@ -1,8 +1,18 @@
-function [ ] = plot_allROIs( ROIs, ref_image, h, extra_neurons_plot )
-% plot_allROIs( ROIs, ref_image )
+function [ h ] = plot_allROIs( ROIs, ref_image, h, extra_neurons_plot )
+% h = plot_allROIs( ROIs, ref_image, h, extra_neurons_plot )
 %   Plot all ROI outlines.  If ref_image is specified (typically the maximum
 %   projection of the motion corrected movie). Specify as imread(ref_image)
 %   to avoid most problems.
+%
+%   INPUTS
+%       ROIs: NeuronImage from FinalOutput.mat or selected subset
+%
+%       ref_image (optional): Reference image (min or max projection
+%       usually) to plot ROIs on
+%
+%       h (optional): axes handle to previous plot
+%
+%       extra_neurons_plot (optional): not really sure why I added this...
 
 num_neurons = length(ROIs);
 
@@ -33,7 +43,7 @@ axes(h)
 imagesc_gray(ref_image)
 hold on
 for j = 1:num_neurons
-    plot(b{j}(:,2),b{j}(:,1),'b')
+    plot(b{j}(:,2),b{j}(:,1),'r')
 end
 
 %%
@@ -41,10 +51,12 @@ if exist('extra_neurons_plot','var')
     hold on
     for k = 1:length(extra_neurons_plot)
         j = extra_neurons_plot(k);
-        plot(b{j}(:,2),b{j}(:,1),'r')
+        plot(b{j}(:,2),b{j}(:,1))
     end
     hold off
 end
+axis off
+colorbar off
 
 end
 

@@ -1,4 +1,4 @@
-function [corr_mat, shuffle_mat] = twoenv_best_rot_analysis(sesh_use, best_angle, circ2square_flag)
+function [corr_mat, shuffle_mat] = twoenv_best_rot_analysis(sesh_use, best_angle, circ2square_flag, num_shuffles)
 % [corr_mat, shuffle_mat] = twoenv_batch_rot_analysis(sesh_use, best_angle, circ2square)
 %
 % Get correlations between all TMaps at the best angle of rotation between
@@ -8,9 +8,11 @@ function [corr_mat, shuffle_mat] = twoenv_best_rot_analysis(sesh_use, best_angle
 
 if nargin < 3
     circ2square_flag = false;
+    num_shuffles = 10;
+elseif nargin < 4
+    num_shuffles = 10;
 end
 base_dir = ChangeDirectory(sesh_use(1).Animal, sesh_use(1).Date, sesh_use(1).Session, 0);
-num_shuffles = 10;
 
 if ~circ2square_flag
     load(fullfile(base_dir,'batch_session_map'));

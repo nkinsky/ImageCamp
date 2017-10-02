@@ -1,5 +1,8 @@
-function [best_angle] = twoenv_rot_analysis(base_session, rot_sessions, rot_type, varargin)
+function [best_angle, corr_at_best] = twoenv_rot_analysis(base_session, rot_sessions, rot_type, varargin)
 % best_angle = twoenv_rot_analysis(base_session, rot_sessions, rot_type)
+%
+%   NOT REALLY USED ANYMORE AND MIGHT NOT WORK WELL DUE TO CHANGES TO LOWER
+%   LEVEL FUNCTIONS
 %
 %   Plots rotation "tuning curves" for all the rot_sessions vs. the
 %   base_session.  Also spits out the best angle of rotation when compared
@@ -77,6 +80,7 @@ h2 = figure;
 h3 = figure;
 % Plot session 1 vs all others
 best_angle = nan(1, num_sessions);
+corr_at_best = nan(1,num_sessions);
 p = ProgressBar(length(sesh_use));
 for k = 2:length(sesh_use)
     figure(h1)
@@ -110,7 +114,7 @@ for k = 2:length(sesh_use)
     legend('Actual', 'Shuffled', 'Distal aligned')
     
     % Get best angle for all neurons together
-    [~, best_ind] = max(corr_means);
+    [corr_at_best(k), best_ind] = max(corr_means);
     best_angle(k) = rot_array(best_ind);
     
     % Get best angle for each individual cell

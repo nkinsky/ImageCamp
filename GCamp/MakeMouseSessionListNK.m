@@ -2485,7 +2485,51 @@ end
 MD(i).Notes = '8in square box';
 MD(i).Pix2CM = nan; % Need to figure this out...
 
+%% Other Folks Data
 
+i = i+1;
+MD(i).Animal = 'KC_DRG';
+MD(i).Date = '12_15_2016';
+MD(i).Session = 1;
+MD(i).Env = '';
+MD(i).Room = '';
+if (strcmp(userstr,'Natlaptop'))
+    MD(i).Location = 'C:\Users\Nat\Desktop\SummerSchool_2017\Kim Data';
+end
+MD(i).Notes = 'Kim Chisolm - DRG data';
+
+i = i+1;
+MD(i).Animal = 'Liya';
+MD(i).Date = '06_18_2017';
+MD(i).Session = 1;
+MD(i).Env = 'context1';
+MD(i).Room = '';
+if (strcmp(userstr,'Natlaptop'))
+    MD(i).Location = 'C:\Users\Nat\Desktop\SummerSchool_2017\Liya Data\context1_10min\movie_context1';
+end
+MD(i).Notes = 'Liya';
+
+i = i+1;
+MD(i).Animal = 'Selin';
+MD(i).Date = '09_28_2016';
+MD(i).Session = 1;
+MD(i).Env = 'nan';
+MD(i).Room = '';
+if (strcmp(userstr,'Natlaptop'))
+    MD(i).Location = 'C:\Users\Nat\Desktop\SummerSchool_2017\Data_Analysis_Session2\selin_data';
+end
+MD(i).Notes = 'Selin';
+
+i = i+1;
+MD(i).Animal = 'Tadpole';
+MD(i).Date = '06_19_2017';
+MD(i).Session = 1;
+MD(i).Env = 'nan';
+MD(i).Room = '';
+if (strcmp(userstr,'Natlaptop'))
+    MD(i).Location = 'C:\Users\Nat\Desktop\SummerSchool_2017\Tadpoles';
+end
+MD(i).Notes = '';
 
 %% Compile session_ref
 
