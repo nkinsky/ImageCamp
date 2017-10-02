@@ -288,6 +288,7 @@ end
 
 PV_corrs.PV_corr = PV_corr;
 PV_corrs.PV_corr_mean = PV_corr_mean;
+PV_corrs.PV_corr_shuffle = PV_corr_shuffle;
 PV_corrs.PV_corr_shuffle_mean = PV_corr_shuffle_mean;
 PV_corrs.PV_dist = PV_dist;
 PV_corrs.PV_dist_mean = PV_dist_mean;
