@@ -1,12 +1,13 @@
-function [corr_mat, shuffle_mat, shuffle_mat2 ] = corr_rot_analysis( session1, session2, batch_session_map, rot_array, varargin )
-% [corr_mat, shuffle_mat ] = corr_rot_analysis( session1, session2, batch_session_map, rot_array, num_shuffles)
+function [corr_mat, shuffle_mat, shuffle_mat2, shift_back ] = corr_rot_analysis( session1, session2, batch_session_map, rot_array, varargin )
+% [corr_mat, shuffle_mat, shuffle_mat2, shift_back ] = corr_rot_analysis( session1, session2, batch_session_map, rot_array, num_shuffles)
 %   
 % Compares session1 TMaps to TMaps in session2 that have been rotated as
 % specified in rot_array.  Requires running batch_rot_arena and
 % PlaceFields/PlacefieldStats on the data first.
 % Need to add in thresholding of some sort - currently ALL cells are
 % included.
-
+% OUTPUTS used are corr_mat, shuffle_mat2, and shift_back (which you can
+% use to circularly shift back each shuffle to the original orientation)
 ip = inputParser;
 ip.addRequired('session1', @isstruct);
 ip.addRequired('session2', @isstruct);
@@ -71,22 +72,9 @@ end
 
 shuffle_mat = [];
 
-% [~, j] = max(nanmean(corr_mat,1)); % Get index of best correlation
-% 
-% % Shuffle neuron id in last session and get correlations
-% good_ind = find(map_use);
-% load(fullfile(sesh(2).Location,['Placefields' trans_append '_rot' num2str(rot_array(j)) '.mat']),'TMap_gauss');
-% shuffle_mat = nan(num_neurons, num_shuffles);
-% for j = 1:num_shuffles
-%     shuf_map = map_use;
-%     shuf_map(good_ind) = map_use(good_ind(randperm(length(good_ind))));
-%     shuffle_mat(:,j) = corr_bw_TMap(sesh(1).TMap_gauss, TMap_gauss, shuf_map);
-% 
-% end
-
-% Shuffle neuron id in last session and then perform rotation analysis.
-% Best would be to do this, find the max value, then circularly shift each
-% shuffle to align the shuffled tuning curves
+%% Shuffle neuron id in last session and then perform rotation analysis.
+% Values are circularly shifted to align each shuffle to the peak
+% correlation.
 
 shuffle_mat2 = [];
 % if disp_progress
@@ -126,12 +114,22 @@ parfor k = 1:num_shuffles
     [~, imax] = max(nanmean(shuffle_mat2_temp,1));
     shuffle_mat2_temp = circshift(shuffle_mat2_temp,1-imax,2);
     shuffle_mat2 = [shuffle_mat2; shuffle_mat2_temp]; 
+    shift_back(k) = imax - 1;
     
 %     if disp_progress; p.progress; end
 end
 
+% Circularly shift shuffle_mat2 so that the highest values are always at
+% the rotation that matches the peak rotation of the actual data
+corr_means = nanmean(corr_mat,1);
+[~, idx] = max(corr_means);
+shuffle_mat2 = circshift(shuffle_mat2,idx-1,2);
 % if disp_progress; p.stop; end
+shift_back = shift_back + (1-idx);
     
+%%%
+% 
+%     shuf_mat_use = shuf_mat_temp(:,1); % Grab 1st row
 
 end
 

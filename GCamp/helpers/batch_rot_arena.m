@@ -9,10 +9,12 @@ p.addRequired('reg_struct', @(a) isstruct(a));
 p.addRequired('rot_array', @isnumeric)
 p.addOptional('manual_limits', false(size(rot_array)), @islogical);
 p.addParameter('circ2square', false, @(a) islogical(a) && length(a) == 1); 
+p.addParameter('base_adjust', true, @(a) islogical(a) && length(a) == 1);
 p.parse(base_struct, reg_struct, rot_array, varargin{:});
 
 manual_limits = p.Results.manual_limits;
 circ2square = p.Results.circ2square;
+base_adjust = p.Results.base_adjust;
 
 rot_array = flip_array(rot_array);
 manual_limits = flip_array(manual_limits);
@@ -90,11 +92,10 @@ elseif circ2square % Set up arrays so that you rotate just the circle, NOT the s
 end
 
 %% Step 2 - do batch align
-
 batch_align_pos(final_struct(1), final_struct(2:end), 'skip_skew_fix', true, ...
     'rotate_data', rot_final, 'manual_limits', limits_full, ...
     'name_append', rot_text, 'suppress_output', true, 'skip_trace_align', true,...
-    'circ2square_use', circ2square);
+    'circ2square_use', circ2square, 'base_adjust', base_adjust);
 
 
 end

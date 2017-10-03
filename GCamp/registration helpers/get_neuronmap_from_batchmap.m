@@ -3,6 +3,9 @@ function [ map_sesh1_sesh2 ] = get_neuronmap_from_batchmap( batch_map, sesh1_ind
 %  Takes batch_map and constructs a map between two arbitrary sessions from
 %  it
 
+if isstruct(batch_map) && isfield(batch_map,'map')
+    batch_map = batch_map.map;
+end
 %% Set up everything
 index = [sesh1_index, sesh2_index];
 

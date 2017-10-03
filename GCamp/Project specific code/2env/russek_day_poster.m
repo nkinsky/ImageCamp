@@ -1,4 +1,4 @@
-%% Russek Day poster script
+%% Rus sek Day poster script
 % Any code snippets necessary for creating and tweaking this poster
 save_dir = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Presentations\Russek Day 2017\Poster';
 %% All Neuron Plot
@@ -18,8 +18,9 @@ print([MD(sesh_use).Animal '_allneurons'],'-dpdf', '-bestfit')
 %% Plot cells across days
 % 1 = square, 2 = square rotated with cells following local cues, 3 =
 % square rotated, 4 = circle
-sesh_use = cat(2, G48_oct(1), G48_oct(2), G48_oct(3), G48_oct(4), G48_square(5), G48_oct(5)); % cat(2, G48_oct(1), G48_oct(2), G48_oct(5), G48_square(5), G48_oct(3)); % cat(2,G30_square(1), G30_square(3), G30_square(4), G30_oct(1), G30_square(6));
-base_sesh = G48_square(1); %G30_square(1);
+plot_local_aligned = true; % true = plot with local cues aligned, false = as presented to mouse
+sesh_use = cat(2,G45_square(1),G45_oct); cat(2, G48_oct(1), G48_oct(5), G48_oct(2), G48_oct(3), G48_square(5), G48_oct(4)); % cat(2, G48_oct(1), G48_oct(2), G48_oct(5), G48_square(5), G48_oct(3)); % cat(2,G30_square(1), G30_square(3), G30_square(4), G30_oct(1), G30_square(6));
+base_sesh = G45_square(1); % G48_square(1); %G30_square(1);
 num_cols = length(sesh_use);
 % num_rows = 3;
 
@@ -33,7 +34,13 @@ base_index = match_session(batch_session_map.session, base_sesh);
 PF_plot = cell(1,length(sesh_use));
 for j = 1:length(sesh_use)
     dirstr = ChangeDirectory_NK(sesh_use(j),0);
-    [~, rot] = get_rot_from_db(sesh_use(j));
+    if ~plot_local_aligned
+        [~, rot] = get_rot_from_db(sesh_use(j));
+    elseif plot_local_aligned
+%         [rot, ~] = get_rot_from_db(sesh_use(j)); 
+%         if rot < 0; rot = rot + 360; end
+        rot = 0;
+    end
     load(fullfile(dirstr,['Placefields_rot' num2str(rot) '.mat']),'TMap_gauss');
     sesh_use(j).tmap = TMap_gauss;
     sesh_use(j).nanmap = TMap_gauss{1};
@@ -42,18 +49,21 @@ for j = 1:length(sesh_use)
 end
 sparse_map = batch_session_map.map(:,arrayfun(@(a) a.sesh_index, sesh_use)+1); % get map for just the 4 days in question
 good_ind = find(sum(sparse_map ~= 0 & ~isnan(sparse_map),2) == num_cols); % neurons active on all 4 days
-good_ind = [63 7 42]; % [7 21 42 63 74 113 143]; % Use this code to get the
+% good_ind = [63 21 22 7 42];
+% good_ind = [63 7 42]; % [7 21 42 63 74 113 143]; % Use this code to get the
 % appropriate neurons from the base session for G48 (G48_square(1) which
 % isn't plotted: arrayfun(@(a) find(a == batch_session_map.map(:,4)), G48_oct1_good_neurons)
 % good_ind = [50 71 368]; %[71 135 50 303 368]; %[70 71 72 82 135 224 230
 % 242 89 122]; % [71 230 135]; % All for G30
-num_rows = length(good_ind);
+good_ind = [56 69 161 392]; %[37 50 56 69 161 180 207 323 361 392]; % G48 square(1) + all circle sessions
+num_rows = 4; 
+% num_rows = length(good_ind);
 
 figure
 
 neurons_plot = 1:num_rows;
 base_dir = ChangeDirectory_NK(sesh_use(1),0);
-for m = 1:20
+for m = 1:(floor(length(good_ind)/num_rows))
     for k = 1:length(sesh_use)
         map_use = get_neuronmap_from_batchmap(batch_session_map.map, ...
             base_index, sesh_use(k).sesh_index);
@@ -92,9 +102,10 @@ for m = 1:20
                     imagesc_nan(rot90(sesh_use(k).tmap{neuron_use},1));                    
                 end
                 if k == 1 % only label neuron in first session
-                    title(['Neuron ' num2str(neuron_use)])
+                       title(['Neuron ' num2str(neuron_use)])
                 end
             end
+            axis equal tight
             axis off
             if j == 1
                 dirstr = ChangeDirectory_NK(sesh_use(k),0);
@@ -104,7 +115,7 @@ for m = 1:20
                 ROI_reg = imwarp_quick(NeuronImage{neuron_use}, RegistrationInfoX);
                 b = bwboundaries(ROI_reg,'noholes');
                 
-                subplot(num_rows + 1, num_cols, num_cols*3+k)
+                subplot(num_rows + 1, num_cols, num_cols*num_rows+k)
                 plot(b{1}(:,2),b{1}(:,1));
                 if k == 1
                     cent_ROI = mean(b{1},1);
@@ -112,6 +123,8 @@ for m = 1:20
                     ylims = [cent_ROI(1) - 15, cent_ROI(1) + 15];
                 end
                 xlim(xlims); ylim(ylims);
+                axis equal
+                axis tight
                 axis off
 %                 axis off
             end
@@ -184,3 +197,32 @@ ylims = get(gca,'YLim');
 hold off
 axis tight
 axis off
+
+% Attempt to do above but sort by discrimination index instead...
+DI_use = squeeze(Mouse(3).DI(6,6,:));
+sesh_ind2 = [12 11]; % session indices in 16 session format, square always first
+base_sesh = Mouse(3).sesh.circ2square(1);
+base_dir = ChangeDirectory_NK(base_sesh,0);
+load(fullfile(base_dir,'batch_session_map_trans.mat'));
+map_use = batch_session_map.map(:,sesh_ind2(1)+1);
+valid_map_log = ~isnan(map_use) & map_use ~= 0;
+DI2 = nan(num_neurons,1);
+DI2(map_use(valid_map_log)) = DI_use(valid_map_log);
+
+[PSAbool_sortDI, sort_indDI] = sortPSA(PSAbool,'alt_sort',DI2);
+PSAbool_sort2DI = double(PSAbool_sortDI);
+% PSAbool_sort2DI(cells2,:) = PSAbool_sort2(cells2,:)*2;
+% LPtrace_sort = NeuronTraces.LPtrace(sort_ind,:);
+time_plot = (1:num_frames)/20;
+
+figure(101)
+imagesc(time_plot,1:num_neurons,PSAbool_sort2DI);
+hold on
+for j = 1:3
+    plot([env_t(j) env_t(j)],[1 num_neurons],'k--');
+end
+hold off
+xlabel('Time (s)')
+ylabel('Low DI bottom (circle pref) - High DI top (square pref)')
+title('PSAbool sorted by discrimination index')
+

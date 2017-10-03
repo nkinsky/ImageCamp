@@ -2207,6 +2207,8 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp Mice\G48\2env\08_29_2015\1 - square right\Working';
 elseif strcmpi(userstr,'Natlaptop')
     MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G48\2env duplication\day 1\1 - square\Working';
+elseif strcmpi(userstr,'eichentron2')
+    MD(i).Location = 'E:\Nat\G48\08_29_2015\1 - square right\Working';
 end
 MD(i).Notes = 'square right';
 MD(i).Pix2CM = 0.0874;
@@ -2468,6 +2470,20 @@ MD(i).Notes = '';
 
 G48.alternation(2) = i;
 G48.all(2) = i;
+
+%% G50
+
+i = i+1;
+MD(i).Animal = 'GCamp6f_50';
+MD(i).Date = '07_31_2017';
+MD(i).Session = 1;
+MD(i).Env = '';
+MD(i).Room = '721A';
+if strcmpi(userstr,'eichentron2')
+    MD(i).Location = 'E:\Evan\G50\07-31-17\Working';
+end
+MD(i).Notes = '8in square box';
+MD(i).Pix2CM = nan; % Need to figure this out...
 
 %% Other Folks Data
 
