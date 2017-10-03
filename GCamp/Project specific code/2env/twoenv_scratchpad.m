@@ -92,13 +92,19 @@ end
 linkaxes(ax);
 
 %% Run immediately after above
+cmperbin_use = 4;
+sesh_use = G45_square(1); %all_square; %all_oct; % all_sessions
+rot_use = 0:90; %0:15:345;
+if cmperbin_use ~= 1; cm_append = ['_cm' num2str(cmperbin_use)]; else ; cm_append = ''; end
 for j = 1:length(sesh_use)
     disp(['Running Rotated Placefield Analysis on ' sesh_use(j).Animal ' - ' sesh_use(j).Date ' - session ' num2str(sesh_use(j).Session)])
     sesh_full = ChangeDirectory_NK(sesh_use,0); % fill in partial struct
     for k = 1:length(rot_use)
-        Placefields(sesh_full,'minspeed',1,'name_append', ['_rot' num2str(rot_use(k))],...
-            'Pos_data', ['Pos_align_rot' num2str(rot_use(k)) '.mat'], 'exclude_frames',sesh_full.exclude_frames);
-        PlacefieldStats(sesh_use(j),'name_append',['_rot' num2str(rot_use(k))]);
+        name_append_full = ['_rot' num2str(rot_use(k)) cm_append];
+        keyboard
+        Placefields(sesh_full,'minspeed',1,'name_append', name_append_full,...
+            'Pos_data', ['Pos_align_rot' num2str(rot_use(k)) '.mat'], 'exclude_frames', sesh_full.exclude_frames);
+        PlacefieldStats(sesh_use(j),'name_append', name_append_full);
     end
 end
 
@@ -143,9 +149,11 @@ end
 linkaxes(ax);
 
 %% Run immediately after above
-sesh_use = cat(2, G45_square(2:end), G48_square, G30_square, G31_square);
+sesh_use = all_sessions; % cat(2, G45_square(2:end), G48_square, G30_square, G31_square);
+cmperbin_use = 4;
 rot_array_circle = 0:15:345;
 rot_array_square = 90:90:270;
+if cmperbin_use ~= 1; cm_append = ['_cm' num2str(cmperbin_use)]; else ; cm_append = ''; end
 for j = 1:length(sesh_use)
     [dirstr, full_sesh] = ChangeDirectory(sesh_use(j).Animal, sesh_use(j).Date, sesh_use(j).Session);
     disp(['Running Circle2Square Rotated Placefield Analysis on ' sesh_use(j).Animal ...
@@ -157,10 +165,11 @@ for j = 1:length(sesh_use)
         rot_array_use = rot_array_square;
     end
     
+    name_append_full = ['_trans_rot' num2str(rot_array_use(k)) cm_append];
     for k = 1:length(rot_array_use)
-        Placefields(sesh_use(j),'minspeed',1,'name_append', ['_trans_rot' num2str(rot_array_use(k))],...
+        Placefields(sesh_use(j),'minspeed',1,'name_append', cm_append,...
             'Pos_data', ['Pos_align_trans_rot' num2str(rot_array_use(k))]);
-        PlacefieldStats(sesh_use(j),'name_append',['_trans_rot' num2str(rot_array_use(k))]);
+        PlacefieldStats(sesh_use(j),'name_append',cm_append);
     end
 end
 
