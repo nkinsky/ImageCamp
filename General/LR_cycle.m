@@ -8,6 +8,9 @@ function [ n_out, stay_in] = LR_cycle( n_in, n_range)
 %   [n_min, n_max], the range of ns you want to scroll through. escape_flag
 %   is whatever you want to use to exit your while loop.
 %
+%   NOTE: typing 'k' allows you to enter keyboard mode (i.e. to print or
+%   save the figure). Type 'dbcont' to re-enter scroll mode.
+%
 %   Example:
 %
 %   figure
