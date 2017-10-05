@@ -229,3 +229,45 @@ for j = 1:4
         ylim([0 ymax])
     end
 end
+
+%% Aggregrate p-value distribution across all sessions
+sesh_use3 = cat(1,G45_botharenas, G48_botharenas); %cat(1,G30_botharenas, G31_botharenas, G45_botharenas, G48_botharenas);
+pthresh = 0.05;
+name_append = '_rot0';
+PFpct = nan(size(sesh_use3,1),size(sesh_use3,2));
+
+% Get percentages of PFs
+cmperbin_all = nan(1,size(sesh_use3,1));
+for k = 1:size(sesh_use3,1)
+    sesh_use_temp = sesh_use3(k,:);
+    for j = 1:length(sesh_use_temp)
+        dirstr = ChangeDirectory_NK(sesh_use_temp(j));
+        load(fullfile(dirstr,['Placefields' name_append '.mat']),...
+            'pval','cmperbin')
+        PFpct(k,j) = sum(pval < pthresh)/length(pval);    
+    end
+    cmperbin_all(k) = cmperbin;
+end
+
+% Plot pie charts of each
+PFmean_ind = mean(PFpct,2);
+PFmean_all = mean(PFpct(:));
+figure
+plot_ind = [ 1 2 4 5 ];
+for k = 1:size(sesh_use3,1)
+   subplot(2,3,plot_ind(k))
+   pie([PFmean_ind(k) 1 - PFmean_ind(k)])
+   title(['PF breakdown - ' mouse_name_title(sesh_use3(k,1).Animal)])
+end
+
+subplot(2,3,3)
+pie([PFmean_all 1 - PFmean_all])
+title(['PF breakdown - All Mice'])
+legend('Place Cells', 'Non-place cells')
+
+subplot(2,3,6)
+text(0.1,0.8,['pval thresh = ' num2str(pthresh)])
+text(0.1,0.6, ['cmperbin = ' num2str(mean(cmperbin_all))])
+text(0.1,0.4, ['mean = ' num2str(mean(PFpct(:)))])
+text(0.1,0.2, ['std = ' num2str(std(PFpct(:)))])
+axis off
