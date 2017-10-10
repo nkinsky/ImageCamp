@@ -231,9 +231,9 @@ for j = 1:4
 end
 
 %% Aggregrate p-value distribution across all sessions
-sesh_use3 = cat(1,G45_botharenas, G48_botharenas); %cat(1,G30_botharenas, G31_botharenas, G45_botharenas, G48_botharenas);
+sesh_use3 = cat(1,G30_botharenas, G31_botharenas, G45_botharenas, G48_botharenas);
 pthresh = 0.05;
-name_append = '_rot0';
+name_append = '_cm4_trans_rot0';
 PFpct = nan(size(sesh_use3,1),size(sesh_use3,2));
 
 % Get percentages of PFs
@@ -242,16 +242,20 @@ for k = 1:size(sesh_use3,1)
     sesh_use_temp = sesh_use3(k,:);
     for j = 1:length(sesh_use_temp)
         dirstr = ChangeDirectory_NK(sesh_use_temp(j));
-        load(fullfile(dirstr,['Placefields' name_append '.mat']),...
-            'pval','cmperbin')
-        PFpct(k,j) = sum(pval < pthresh)/length(pval);    
+        try
+            load(fullfile(dirstr,['Placefields' name_append '.mat']),...
+                'pval','cmperbin')
+            PFpct(k,j) = sum(pval < pthresh)/length(pval);
+        catch
+            disp(['No file for ' dirstr])
+        end
     end
     cmperbin_all(k) = cmperbin;
 end
 
 % Plot pie charts of each
-PFmean_ind = mean(PFpct,2);
-PFmean_all = mean(PFpct(:));
+PFmean_ind = nanmean(PFpct,2);
+PFmean_all = nanmean(PFpct(:));
 figure
 plot_ind = [ 1 2 4 5 ];
 for k = 1:size(sesh_use3,1)
@@ -262,12 +266,46 @@ end
 
 subplot(2,3,3)
 pie([PFmean_all 1 - PFmean_all])
-title(['PF breakdown - All Mice'])
+title('PF breakdown - All Mice')
 legend('Place Cells', 'Non-place cells')
 
 subplot(2,3,6)
 text(0.1,0.8,['pval thresh = ' num2str(pthresh)])
 text(0.1,0.6, ['cmperbin = ' num2str(mean(cmperbin_all))])
-text(0.1,0.4, ['mean = ' num2str(mean(PFpct(:)))])
-text(0.1,0.2, ['std = ' num2str(std(PFpct(:)))])
+text(0.1,0.4, ['mean = ' num2str(nanmean(PFpct(:)))])
+text(0.1,0.2, ['std = ' num2str(nanstd(PFpct(:)))])
+if any(isnan(PFpct(:))); title(['Incomplete Run - ' num2str(sum(isnan(PFpct(:)))) ...
+        ' missing sessions']); end
 axis off
+
+%% Silly plot to get mean # neurons per 10 min session for each animal - not a figure but a stat in paragraph 1
+sesh_use = cat(1,G30_botharenas, G31_botharenas, G45_botharenas,...
+    G48_botharenas);
+n_neurons = nan(size(sesh_use));
+for j = 1:size(sesh_use,1)
+    for k = 1:size(sesh_use,2)
+        loadvar(sesh_use(j,k),'FinalOutput.mat','NumNeurons');
+        n_neurons(j,k) = NumNeurons;
+    end
+end
+
+n_mean_sep = mean(n_neurons(:,[1:8 13:16]),2);
+n_mean_conn = mean(n_neurons(:,10:11),2);
+n_mean_sq = mean(n_neurons(:,[1 2 7 8 13 14]),2);
+n_mean_circ = mean(n_neurons(:,[3:6, 10 11 15 16]),2);
+n_std_sep = std(n_neurons(:,[1:8 13:16]),1,2);
+n_std_conn = std(n_neurons(:,10:11),1,2);
+n_std_sq = std(n_neurons(:,[1 2 7 8 13 14]),1,2);
+n_std_circ = std(n_neurons(:,[3:6, 10 11 15 16]),1,2);
+
+n_all_sep = n_neurons(:,[1:8 13:16]);
+n_all_conn = n_neurons(:,10:11);
+n_mean_sep_all = mean(n_all_sep(:));
+n_std_sep_all = std(n_all_sep(:));
+n_mean_conn_all = mean(n_all_conn(:));
+n_std_conn_all = std(n_all_conn(:));
+
+%% Neuron reg plot
+sesh_use = G45_botharenas;
+reg_qc_plot_batch(sesh_use(1), sesh_use(2:end), ...
+'batch_mode', 1, 'name_append', '_trans')
