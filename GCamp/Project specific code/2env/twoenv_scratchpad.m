@@ -95,13 +95,13 @@ linkaxes(ax);
 
 %% Run immediately after above - run square or circle PF analysis on aligned data
 cmperbin_use = 4;
-sesh_use = G30_square(1); %all_square; %all_oct; % all_sessions
-rot_array_use = 0:90:270; %0:15:345;
+sesh_use = all_square; % all_oct; % G30_square(1); %all_square; %all_oct; % all_sessions
+rot_array_use = 0:90:270; %0:15:345; %
 if cmperbin_use ~= 1; cm_append = ['_cm' num2str(cmperbin_use)]; else ; cm_append = ''; end
 tic
 for j = 1:length(sesh_use)
     disp(['Running Rotated Placefield Analysis on ' sesh_use(j).Animal ' - ' sesh_use(j).Date ' - session ' num2str(sesh_use(j).Session)])
-    [~,sesh_full] = ChangeDirectory_NK(sesh_use,0); % fill in partial struct
+    [~,sesh_full] = ChangeDirectory_NK(sesh_use(j),0); % fill in partial struct
     for k = 1:length(rot_array_use)
         name_append_full = [cm_append '_rot' num2str(rot_array_use(k))];
         Placefields(sesh_full,'minspeed',1,'name_append', name_append_full,...
