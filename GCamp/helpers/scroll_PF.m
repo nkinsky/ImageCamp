@@ -12,6 +12,7 @@ ip.addParameter('name_append2', '', @ischar); % Second PF row to display (option
 ip.addParameter('plot_time', false, @islogical); % Plot x and y vs time with spiking
 ip.addParameter('pfilt', 0.05, @(a) a >= 0 && a <= 1); % pval threshold of cells to view
 
+
 ip.parse(MD,varargin{:});
 name_append = ip.Results.name_append;
 name_append2 = ip.Results.name_append2;
