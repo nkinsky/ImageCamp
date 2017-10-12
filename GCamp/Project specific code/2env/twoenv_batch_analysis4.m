@@ -792,8 +792,10 @@ for k = 1:length(sesh_type)
 end
 
 %% Full Alignment Breakdown Plot - No Rotation Distinction, Coherent v Global only
+keep_circ2square = false;
 align_type = {'distal_align','local_align','other_align','global'};
 align_text = {'Coherent - Distal Cues', 'Coherent - Local Cues', 'Coherent - Other', 'Global Remapping'};
+legend_text = {'Within square', 'Within circle', 'Square to Circle'};
 
 % Assemble matrices
 square_mean = mean(All.ratio_plot_all.square,1);
@@ -801,15 +803,24 @@ circle_mean = mean(All.ratio_plot_all.circle,1);
 circ2square_mean = mean(All.ratio_plot_all.circ2square,1);
 
 figure(16)
+set(gcf,'Position',[2220 250 950 530])
 % Plot
-h = bar(1:length(align_type),[square_mean', circle_mean', circ2square_mean']);
+if keep_circ2square
+    h = bar(1:length(align_type),[square_mean', circle_mean', circ2square_mean']);
+elseif ~keep_circ2square
+    h = bar(1:length(align_type),[square_mean', circle_mean']);
+end
 set(gca,'XTickLabel',cellfun(@mouse_name_title,align_text,'UniformOutput',0))
-legend('Within square', 'Within circle', 'Square to Circle')
+if keep_circ2square; legend(legend_text); else; legend(legend_text(1:2)); end
 xlabel('Remapping Type')
 ylabel('Proprotion of Comparisons')
 
 % Now do each mouse
-compare_type = {'square','circle','circ2square'};
+if keep_circ2square
+    compare_type = {'square','circle','circ2square'};
+else
+    compare_type = {'square','circle'};
+end
 hold on
 for j = 1:length(compare_type)
     plot(repmat(h(j).XData + h(j).XOffset, num_animals,1),...
