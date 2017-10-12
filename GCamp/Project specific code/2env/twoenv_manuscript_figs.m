@@ -153,8 +153,8 @@ end
 %% Rubin et al replication for connected days only
 plot_all_mice = false;
 cm = 'jet';
-ticks = 9.5:2:11.5; % 1:16;
-ticklabels = arrayfun(@num2str,5:6,'UniformOutput',false);% {'s' 's' 'c' 'c' 'c' 'c' 's' 's' 's' 'c' 'c' 's' 's' 's' 'c' 'c' };
+ticks = 1:8; % 1:16;
+ticklabels = {'5s','5c','5s','5c','6c','6s','6c','6s'}; %arrayfun(@num2str,5:6,'UniformOutput',false);% {'s' 's' 'c' 'c' 'c' 'c' 's' 's' 's' 'c' 'c' 's' 's' 's' 'c' 'c' };
 
 mat_full = [];
 for j = 1:4
@@ -180,7 +180,7 @@ if plot_all_mice
 end
 
 figure(303)
-set(gcf,'Position',[1980 10 1310 990])
+set(gcf,'Position',[1980 10 800 700])
 mean_plot = mean(mat_full,3);
 % mean_plot(logical(eye(16))) = nan;
 imagesc_nan(mean_plot,cm);
@@ -201,6 +201,8 @@ set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
 axis equal tight
 hc = colorbar; hc.Ticks = [min(mean_plot(:)) 1]; hc.TickLabels = {'min' '1'};
 title('All Mice')
+
+
 
 %% p-value distribution by session
 sesh_use2 = cat(1,G30_botharenas, G31_botharenas, G45_botharenas, ...
@@ -306,6 +308,113 @@ n_mean_conn_all = mean(n_all_conn(:));
 n_std_conn_all = std(n_all_conn(:));
 
 %% Neuron reg plot
-sesh_use = G45_botharenas;
-reg_qc_plot_batch(sesh_use(1), sesh_use(2:end), ...
-'batch_mode', 1, 'name_append', '_trans')
+mouse_use = Mouse(3);
+sesh_use = mouse_use.sesh.circ2square;
+reg_stats = reg_qc_plot_batch(sesh_use(1), sesh_use(2:end), ...
+    'batch_mode', 1, 'name_append', '_trans');
+
+%% Bar plot of mean abs orientation diff for coherent v remapping 
+% Very rough - only looks at session 1 versus all the rest
+
+% Pull-out circ2square comparisons
+square_ind = [ 2 7 8 9 12 13 14]-1;
+circ_ind = [3 4 5 6 10 11 15 16]-1;
+maod = nan(3,15);
+maod(1,:) = cellfun(@(a) median(abs(a.orient_diff)), reg_stats)';
+maod(2,square_ind) = mouse_use.coherency.square.hmat(1,2:end);
+maod(2,circ_ind) = mouse_use.coherency.circ2square.hmat(1,:);
+maod(3,square_ind) = ~mouse_use.remapping_type.global.square(1,2:end);
+maod(3,circ_ind) = ~mouse_use.remapping_type.global.circ2square(1,:);
+
+figure
+set(gcf,'Position',[1980 200 1725 680])
+subplot(2,2,1)
+bar([0 1], [mean(maod(1,maod(2,:) == 0)), mean(maod(1,maod(2,:) == 0))])
+hold on
+
+plot(maod(2,:),maod(1,:),'o'); 
+set(gca,'XTick',[0 1],'XTickLabel',{'Remapping','Coherent'}); 
+xlim([-1 2])
+ylabel('Mean Absolute Orientation Difference')
+title({'Is Remapping a result of poor registration quality?', ...
+    '\chi^2 test'})
+
+subplot(2,2,2)
+bar([0 1], [mean(maod(1,maod(3,:) == 0)), mean(maod(1,maod(3,:) == 0))])
+hold on
+
+plot(maod(3,:),maod(1,:),'o'); 
+set(gca,'XTick',[0 1],'XTickLabel',{'Remapping','Coherent'}); 
+xlim([-1 2])
+ylabel('Mean Absolute Orientation Difference')
+title({'Is Remapping a result of poor registration quality?',...
+    'Tuning Curve Permutation Test'})
+
+
+subplot(2,2,3)
+[~,p] = ttest2(maod(1,maod(2,:) == 0), maod(1,maod(2,:) == 1));
+title(['Stats for ' mouse_name_title(mouse_use.sesh.circ2square(1).Animal)])
+text(0.1,0.7,'Un-paired t-test')
+text(0.1,0.5,['p = ' num2str(p)]) 
+axis off
+
+subplot(2,2,4)
+[~,p] = ttest2(maod(1,maod(3,:) == 0), maod(1,maod(3,:) == 1));
+title(['Stats for ' mouse_name_title(mouse_use.sesh.circ2square(1).Animal)])
+text(0.1,0.7,'Un-paired t-test')
+text(0.1,0.5,['p = ' num2str(p)]) 
+axis off
+
+% mean_mat = nan(16,16);
+% mean_mat(1,2:16) = cellfun(@(a) mean(abs(a.orient_diff)), reg_stats)'; % dump values into
+% mean_mat = twoenv_squeeze(mean_mat);
+
+%% Do Mice use stripes to align between arenas?
+h1 = figure; h2 = figure;
+best_angle_all_sesh = []; best_angle_all_neurons = [];
+for j = 1:num_animals
+    dirstr = ChangeDirectory_NK(Mouse(j).sesh.circ2square(1),0);
+    load(fullfile(dirstr,'full_rotation_analysis_circ2square_shuffle1000.mat'),...
+        'best_angle','best_angle_all')
+    
+   figure(h1)
+   subplot(2,3,j)
+   best_angle_plot = best_angle(:);
+   best_angle_all_sesh = [best_angle_all_sesh; best_angle_plot];
+   histogram(best_angle_plot,0:15:360)
+   xlabel('Local Cue Mismatch')
+   ylabel('Count')
+   title(['\theta_{max} Histogram - Session Mean: ' ...
+       mouse_name_title(Mouse(j).sesh.circ2square(1).Animal)])
+   
+   figure(h2)
+   subplot(2,3,j)
+   best_angle_neurons_plot = cat(1,best_angle_all{:});
+   best_angle_all_neurons = [best_angle_all_neurons; best_angle_neurons_plot];
+   histogram(best_angle_neurons_plot,0:15:360)
+   xlabel('Local Cue Mismatch')
+   ylabel('Count')
+   title(['\theta_{max} Histogram - All Neurons: ' ...
+       mouse_name_title(Mouse(j).sesh.circ2square(1).Animal)])
+end
+
+figure(h1)
+subplot(2,3,5)
+histogram(best_angle_all_sesh,0:15:360)
+xlabel('Local Cue Mismatch')
+ylabel('Count')
+title('\theta_{max} Histogram - Session Mean: All Mice')
+subplot(2,3,6)
+text(0.1,.5,'Stripes match at 135\circ and 225\circ')
+axis off
+
+figure(h2)
+subplot(2,3,5)
+histogram(best_angle_all_neurons,0:15:360)
+xlabel('Local Cue Mismatch')
+ylabel('Count')
+title('\theta_{max} Histogram - All Neurons: All Mice')
+subplot(2,3,6)
+text(0.1,.5,'Stripes match at 135\circ and 225\circ')
+axis off
+
