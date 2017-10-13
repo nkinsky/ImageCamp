@@ -418,3 +418,71 @@ subplot(2,3,6)
 text(0.1,.5,'Stripes match at 135\circ and 225\circ')
 axis off
 
+%% Generate PV correlation maps for sq only v circ only v both cells 
+disc_thresh = 0.5; % Cells above/below this are considered to fire preferentially in one arena over the other
+same_thresh = 0.5; % Cells with abs(DI) below this are considered to fire equally in each arena
+sq_ind = [9 12]; circ_ind = [10 11]; % Indices of square and circle sessions
+PVfilt_corrs = nan(num_animals,2,5,5,3); % # Animals x # sessions x #Xbins x # Ybins x #cell groups
+min_use = nan; max_use = nan;
+for j = 1:num_animals
+    for k = 1:2
+        % ID sq, circ, and both cells
+        DI_use = squeeze(Mouse(j).DI(k+4,k+4,:)); % Get discrimination index for connected day
+        cell_filt_bool{1} = DI_use > disc_thresh; % square cells
+        cell_filt_bool{2} = DI_use < -disc_thresh; % circle cells
+        cell_filt_bool{3} = abs(DI_use) <= same_thresh; % Both env cells
+        
+        PV_use = Mouse(j).PV.circ2square([sq_ind(k) circ_ind(k)],:,:,:);
+        for ll = 1:3
+            PV_env{ll} = PV_use(:, :, :, cell_filt_bool{ll});
+                        % Can't get below to work so I'm for looping it
+            %             PV_corrs = arrayfun(@(a,b) corr(a,b),squeeze(PV_env{ll}(1,:,:,:)),...
+            %                 squeeze(PV_env{ll}(2,:,:,:)));
+            for mm = 1:5
+                for nn = 1:5
+                    PV1 = squeeze(PV_env{ll}(1,mm,nn,:));
+                    PV2 = squeeze(PV_env{ll}(2,mm,nn,:));
+                    PVfilt_corrs(j,k,mm,nn,ll) = corr(PV1,PV2,'type','Spearman');
+                    
+                end
+            end
+        end
+        
+    end
+    min_use = nanmin([min_use PVfilt_corrs(j,:)]);
+    max_use = nanmax([max_use PVfilt_corrs(j,:)]);
+end
+
+% Now plot them all out
+clear h
+disc_type = {'Square Cells', 'Circle Cells', 'Both Arena Cells'};
+for day = 1:2
+    h{day} = figure;
+    for j = 1:3
+        for k = 1:4
+            mouse_name = Mouse(k).sesh.circ2square(1).Animal;
+            PV_plot = squeeze(PVfilt_corrs(k,day,:,:,j));
+            subplot(3,5,5*(j-1)+k)
+            imagesc_nan(PV_plot);
+            set(gca,'CLim',[min_use max_use])
+            title({['Day: ' num2str(day+4) ' ' mouse_name_title(mouse_name)...
+                ' - ' disc_type{j}],['Mean = ' num2str(nanmean(PV_plot(:)),'%0.2f')]})
+            axis off
+        end
+    end
+end
+
+for day = 1:2
+    figure(h{day})
+    for j = 1:3
+        subplot(3,5,5*j)
+        PV_plot = PVfilt_corrs(:,day,:,:,j);
+        imagesc_nan(squeeze(nanmean(PV_plot,1)));
+        set(gca,'CLim',[min_use max_use])
+        title({['Day: ' num2str(day+4) ' All Mice Combined'],...
+            ['Mean = ' num2str(nanmean(PV_plot(:)),'%0.2f')]})
+        axis off
+        colorbar
+        
+    end
+end
