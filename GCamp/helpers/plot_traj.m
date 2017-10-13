@@ -44,6 +44,5 @@ plot(x_adj,y_adj)
 xlim([xmin, xmax]);
 ylim([ymin, ymax]);
 
-
 end
 
