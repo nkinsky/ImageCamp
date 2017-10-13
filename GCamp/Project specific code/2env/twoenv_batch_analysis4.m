@@ -246,12 +246,18 @@ p.stop;
 % rough start - might need to exclude and +1 or -1 DIs to validate...also,
 % not sure if taking the mean is actually legit - might need to only use
 % peak FR for each...
-DI = get_discr_ratio(squeeze(max(max(Mouse(1).PV.square(1,:,:,:),[],2),[],3)),squeeze(max(max(Mouse(1).PV.square(2,:,:,:),[],2),[],3)));
-DI2 = get_discr_ratio(squeeze(max(max(Mouse(1).PV.square(1,:,:,:),[],2),[],3)),squeeze(max(max(Mouse(1).PV.square(8,:,:,:),[],2),[],3)));
-DI3 = get_discr_ratio(squeeze(max(max(Mouse(1).PV.circle(1,:,:,:),[],2),[],3)),squeeze(max(max(Mouse(1).PV.circle(2,:,:,:),[],2),[],3)));
-DI4 = get_discr_ratio(squeeze(max(max(Mouse(1).PV.circle(1,:,:,:),[],2),[],3)),squeeze(max(max(Mouse(1).PV.circle(8,:,:,:),[],2),[],3)));
-DI5 = get_discr_ratio(squeeze(max(max(Mouse(1).PV.circ2square(2,:,:,:),[],2),[],3)),squeeze(max(max(Mouse(1).PV.circ2square(3,:,:,:),[],2),[],3)));
-DI6 = get_discr_ratio(squeeze(max(max(Mouse(1).PV.circ2square(2,:,:,:),[],2),[],3)),squeeze(max(max(Mouse(1).PV.circ2square(15,:,:,:),[],2),[],3)));
+DI = get_discr_ratio(squeeze(max(max(Mouse(1).PV.square(1,:,:,:),[],2),[],3)),...
+    squeeze(max(max(Mouse(1).PV.square(2,:,:,:),[],2),[],3)));
+DI2 = get_discr_ratio(squeeze(max(max(Mouse(1).PV.square(1,:,:,:),[],2),[],3)),...
+    squeeze(max(max(Mouse(1).PV.square(8,:,:,:),[],2),[],3)));
+DI3 = get_discr_ratio(squeeze(max(max(Mouse(1).PV.circle(1,:,:,:),[],2),[],3)),...
+    squeeze(max(max(Mouse(1).PV.circle(2,:,:,:),[],2),[],3)));
+DI4 = get_discr_ratio(squeeze(max(max(Mouse(1).PV.circle(1,:,:,:),[],2),[],3)),...
+    squeeze(max(max(Mouse(1).PV.circle(8,:,:,:),[],2),[],3)));
+DI5 = get_discr_ratio(squeeze(max(max(Mouse(1).PV.circ2square(2,:,:,:),[],2),[],3)),...
+    squeeze(max(max(Mouse(1).PV.circ2square(3,:,:,:),[],2),[],3)));
+DI6 = get_discr_ratio(squeeze(max(max(Mouse(1).PV.circ2square(2,:,:,:),[],2),[],3)),...
+    squeeze(max(max(Mouse(1).PV.circ2square(15,:,:,:),[],2),[],3)));
 figure; subplot(1,3,1); histogram(DI,30); hold on; histogram(DI2,30); legend('DI','DI2')
 subplot(1,3,2); histogram(DI3,30); hold on; histogram(DI4,30); legend('DI3','DI4')
 subplot(1,3,3); histogram(DI5,30); hold on; histogram(DI6,30); legend('DI5','DI6')
@@ -441,33 +447,55 @@ plot_combined = true;
 
 if plot_combined; hcomb{1} = figure; hcomb{2} = figure; end
 for k = 1:length(sesh_type)
+    
     for m = 1:2
         
         if ~plot_combined; figure; elseif plot_combined; figure(hcomb{m}); end
         set(gcf,'Position',[488.2000  393.0000  784.8000  368.8000])
         days_diff_use = days_diff.(sesh_type{k});
         for j = 1:num_animals
+            
+            % Get time lag matrix
+            num_sesh = length(days.(sesh_type{k}));
+            time_diff_mat = twoenv_squeeze(repmat(days.(sesh_type{k}), num_sesh, 1) - ...
+                repmat(days.(sesh_type{k})', 1, num_sesh)); % Get time between sessions
+            corr_mat_temp = twoenv_squeeze(cellfun(@nanmean, Mouse(j).corr_mat.(sesh_type{k})));
+            valid_comp = ~isnan(corr_mat_temp);
+            time_diff_matb = time_diff_mat(valid_comp);
+            
             if m == 1 
-                struct_use = Mouse(j).days_v_PVcorr;
-                shuf_use = Mouse(j).days_v_PVshuf;
+%                 struct_use = Mouse(j).days_v_PVcorr;
+%                 shuf_use = Mouse(j).days_v_PVshuf;
+                struct_use = twoenv_squeeze(Mouse(j).PV_corrs.(sesh_type{k}).PV_corr_mean);
+                shuf_use = twoenv_squeeze(Mouse(j).PV_corrs.(sesh_type{k}).PV_corr_shuffle_mean);
             elseif m == 2
-                struct_use = Mouse(j).days_v_PVcorr.active_both;
-                shuf_use = Mouse(j).days_v_PVshuf.active_both;
+%                 struct_use = Mouse(j).days_v_PVcorr.active_both;
+%                 shuf_use = Mouse(j).days_v_PVshuf.active_both;
+                struct_use = twoenv_squeeze(Mouse(j).PV_corrs.active_both.(sesh_type{k}).PV_corr_mean);
+                shuf_use = twoenv_squeeze(Mouse(j).PV_corrs.active_both.(sesh_type{k}).PV_corr_shuffle_mean);
             end
 %             hmouse = plot(Mouse(j).days_v_PVcorr.(sesh_type{k})(:,1), ...
 %                 Mouse(j).days_v_PVcorr.(sesh_type{k})(:,2),marker_type{k});
-            hmouse = plot(struct_use.(sesh_type{k})(:,1), ...
-                struct_use.(sesh_type{k})(:,2),marker_type{k});
+            %%% NRK - work in connected day plots here
+%             hmouse = plot(struct_use.(sesh_type{k})(:,1), ...
+%                 struct_use.(sesh_type{k})(:,2),marker_type{k});
+            hmouse = plot(time_diff_matb(:), struct_use(valid_comp), marker_type{k});
+            hold on
             if k <= 2
                 hmouse.Color = [0.67 0.67 0.67];
             elseif k == 3
                 hmouse.Color = [0 0 1 0.1];
+                % Plot connected days in different color
+                hmousec = plot(time_diff_mat(5:6,:), struct_use(5:6,:), marker_type{k},...
+                    time_diff_mat(:,5:6), struct_use(:,5:6), marker_type{k});
+                [hmousec(:).Color] = deal([1 0 0 0.1]);
             end
-            hold on
+%             hold on
 %             plot(Mouse(j).days_v_PVshuf.(sesh_type{k})(:,1), ...
 %                 Mouse(j).days_v_PVshuf.(sesh_type{k})(:,2),'k.');
-            plot(shuf_use.(sesh_type{k})(:,1), ...
-                shuf_use.(sesh_type{k})(:,2),'k.');
+%             plot(shuf_use.(sesh_type{k})(:,1), ...
+%                 shuf_use.(sesh_type{k})(:,2),'k.');
+            plot(time_diff_matb(:), shuf_use(valid_comp), 'k.');
         end
         %     for j = 1:num_animals
         %         plot(Mouse(j).days_v_PVshuf.(sesh_type{k})(:,1), ...
