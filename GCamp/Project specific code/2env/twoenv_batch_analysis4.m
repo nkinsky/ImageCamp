@@ -1,4 +1,4 @@
-% 2env batch analysis
+% 2env batch analysis %
 
 %% Set-up everything
 twoenv_reference;

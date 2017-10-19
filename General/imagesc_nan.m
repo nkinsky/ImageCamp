@@ -1,4 +1,4 @@
-function [h, cm_out] = imagesc_nan(a,cm)
+function [h, cm_out] = imagesc_nan(a, varargin)
 % function [h, hcb] = imagesc_nan(a,...)
 %  Plots just like imagesc, but with any nans labeled as nanclr
 %
@@ -10,16 +10,35 @@ function [h, cm_out] = imagesc_nan(a,cm)
 % 'CLim',[cmin cmax]. If left blank the max and min values will be set by
 % the max and min of a.
 
-if nargin < 2
-    cm = 'jet';
-end
+%% Parse Inputs
+ip = inputParser;
+ip.addRequired('a', @isnumeric);
+ip.addOptional('cm', 'jet', @ischar);
+ip.addParameter('z', nan, @(a) isnumeric(a));
 
-h = imagesc(a);
-set(h,'alphadata',~isnan(a));
-cm_out = colormap(cm);
+ip.parse(a, varargin{:})
+cm = ip.Results.cm;
+z = ip.Results.z;
 
-if nansum(a(:)) == 0
-    caxis([0 1])
+%% Plot
+
+if isnan(z) % Plot in 2d using imagesc if no z-value specified
+    h = imagesc(a);
+    set(h,'alphadata',~isnan(a));
+    cm_out = colormap(cm);
+    
+    if nansum(a(:)) == 0
+        caxis([0 1])
+    end
+else
+    h = surf(a);
+    set(h,'CDataMode','manual','ZData',z*ones(size(h.ZData)),...
+        'EdgeAlpha',0,'AlphaData', ~isnan(a));
+    cm_out = colormap(cm);
+    
+    if nansum(a(:)) == 0
+        caxis([0 1])
+    end
 end
 
 %% Old try

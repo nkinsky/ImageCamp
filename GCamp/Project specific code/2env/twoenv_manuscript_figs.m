@@ -554,3 +554,33 @@ if plot_all_mice
         
     end
 end
+
+%% Generate PV plot (Figure 4D)
+sesh_use = G45_square(1);
+% num_cells = 5;
+% spacing = 20;
+% cm = 'jet';
+% norm_er = true; % flag to normalize calcium event rates to 1 for each neuron 
+% % - makes plot prettier but make sure it matches the way you calc PVs 
+% % (e.g. true if you z-score, false if you don't)
+
+dirstr = ChangeDirectory_NK(sesh_use,0);
+load(fullfile(dirstr,'Placefields_rot0.mat'),'TMap_gauss');
+
+hPV = makePVexample( TMap_gauss(1:5));
+
+% if exist('hPV','var'); try; close(hPV); catch; disp('some error closing hPV'); end; end
+% hPV = figure;
+% z_use = num_cells*spacing;
+% for j = 1:num_cells
+%     if norm_er
+%         tmap_use = TMap_gauss{j}/max(TMap_gauss{j}(:)); % Normalize it so that peak FR shows up as red for each cell...
+%     else
+%         tmap_use = TMap_gauss{j};
+%     end
+%     imagesc_nan(tmap_use,cm,'z',z_use)
+%     hold on
+%     z_use = z_use - spacing;
+% end
+% axis off
+>>>>>>> ImageCamp/master
