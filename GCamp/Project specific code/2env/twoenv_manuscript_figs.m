@@ -308,7 +308,7 @@ n_mean_conn_all = mean(n_all_conn(:));
 n_std_conn_all = std(n_all_conn(:));
 
 %% Neuron reg plot
-mouse_use = Mouse(3);
+mouse_use = Mouse(1);
 sesh_use = mouse_use.sesh.circ2square;
 reg_stats = reg_qc_plot_batch(sesh_use(1), sesh_use(2:end), ...
     'batch_mode', 1, 'name_append', '_trans');
@@ -421,8 +421,10 @@ axis off
 %% Generate PV correlation maps for sq only v circ only v both cells 
 disc_thresh = 0.5; % Cells above/below this are considered to fire preferentially in one arena over the other
 same_thresh = 0.5; % Cells with abs(DI) below this are considered to fire equally in each arena
-sq_ind = [9 12]; circ_ind = [10 11]; % Indices of square and circle sessions
-PVfilt_corrs = nan(num_animals,2,5,5,3); % # Animals x # sessions x #Xbins x # Ybins x #cell groups
+sq_ind = [9 12]; circ_ind = [10 11]; % Indices of square and circle sessions to compare
+num_comps = length(sq_ind);
+PVfilt_corrs = nan(num_animals,num_comps,5,5,3); % # Animals x # sessions x #Xbins x # Ybins x #cell groups
+DI_counts = nan(num_animals,num_comps);
 min_use = nan; max_use = nan;
 for j = 1:num_animals
     for k = 1:2
@@ -451,6 +453,8 @@ for j = 1:num_animals
     end
     min_use = nanmin([min_use PVfilt_corrs(j,:)]);
     max_use = nanmax([max_use PVfilt_corrs(j,:)]);
+    
+    DI_prop
 end
 
 % Now plot them all out
@@ -483,6 +487,70 @@ for day = 1:2
             ['Mean = ' num2str(nanmean(PV_plot(:)),'%0.2f')]})
         axis off
         colorbar
+        
+    end
+end
+
+%% Get number of sq v circ v both cells for each session
+try; close hh hm; clear hh hm; end % Close and clear figure handles
+% Indices of square and circle sessions to compare
+plot_all_mice = true;
+sq_ind_full = [2 7 8 9 12 13 14]; sq_ind_sm = [2 3 4 5 6 7 8];
+circ_ind_full = [3 6 10 10 11 11 15]; circ_ind_sm = [1 4 5 5 6 6 7];
+
+num_comps = length(sq_ind);
+
+% Calculate discrimination type proportions for before/during/after
+% connection
+discrim_count = nan(num_animals,num_comps,3);
+discrim_prop = nan(num_animals,num_comps,3);
+for j = 1:num_animals
+    for k = 1:num_comps
+        % ID sq, circ, and both cells
+        
+        DI_use = squeeze(Mouse(j).DI(sq_ind_sm(k),circ_ind_sm(k),:)); % Get discrimination index for connected day
+        cell_filt_bool{1} = DI_use > disc_thresh; % square cells
+        cell_filt_bool{2} = DI_use < -disc_thresh; % circle cells
+        cell_filt_bool{3} = abs(DI_use) <= same_thresh; % Both env cells
+        discrim_count(j,k,:) = cellfun(@sum,cell_filt_bool);
+        discrim_prop(j,k,:) = discrim_count(j,k,:)/sum(squeeze(discrim_count(j,k,:)));
+    end
+end
+    
+% Pie chart before/during/after of DI types of neurons - Pie charts are
+% silly but what the heck, simplest for now.
+h_all = figure;
+
+disc_prop_all = squeeze(mean(discrim_prop,1));
+title_use = {'Before','Before','Day4s-Day5c','Day5','Day6','Day6c-Day7s','After'};
+for j = 1:length(sq_ind_full)
+   subplot(2,4,j)
+   pie(disc_prop_all(j,:))
+   if j == 1
+       legend({'Square cells','Circle Cells','Both'})
+   end
+   title(title_use{j})
+   
+end
+subplot(2,4,8)
+text(0.1,0.5,'All Mice')
+axis off
+
+if plot_all_mice
+    for k = 1:num_animals
+        hm{k} = figure;
+        for j = 1:length(sq_ind_full)
+            subplot(2,4,j)
+            pie(squeeze(discrim_prop(k,j,:)))
+            if j == 1
+                legend({'Square cells','Circle Cells','Both'})
+            end
+            title(title_use{j})
+            
+        end
+        subplot(2,4,8)
+        text(0.1,0.5,mouse_name_title(Mouse(k).sesh.circ2square(1).Animal)) 
+        axis off
         
     end
 end
