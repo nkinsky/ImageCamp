@@ -7,19 +7,31 @@ function [ ] = scroll_PF(MD,varargin)
 %% Parse Inputs
 ip = inputParser;
 ip.addRequired('MD',@isstruct);
-ip.addParameter('name_append','',@ischar); % Primary PF row to display
-ip.addParameter('name_append2','',@ischar); % Second PF row to display (optional)
+ip.addParameter('name_append', '', @ischar); % Primary PF row to display
+ip.addParameter('name_append2', '', @ischar); % Second PF row to display (optional)
+ip.addParameter('plot_time', false, @islogical); % Plot x and y vs time with spiking
+ip.addParameter('pfilt', 0.05, @(a) a >= 0 && a <= 1); % pval threshold of cells to view
+
 
 ip.parse(MD,varargin{:});
 name_append = ip.Results.name_append;
 name_append2 = ip.Results.name_append2;
+plot_time = ip.Results.plot_time;
+pfilt = ip.Results.pfilt;
+
+if ~isempty(name_append2) && plot_time
+    disp('Cant have plot_time = true and use name_append2. Setting plot_time to false.')
+    plot_time = false;
+end
 
 %% Setup variables and subplots
+clear t1 t2 t3 t4 t5 t6
 
 [dirstr, ~] = ChangeDirectory(MD.Animal,MD.Date,MD.Session,0);
 load(fullfile(dirstr,['Placefields' name_append]),'TMap_gauss','pval','PSAbool','x','y');
 load(fullfile(dirstr,['PlacefieldStats' name_append]),'PFnHits');
 NumTransients = get_num_trans(PSAbool);
+neurons_use = find(pval < pfilt);
 
 figure
 h1(1) = subplot(1,3,1);
@@ -37,44 +49,62 @@ if ~isempty(name_append2)
     temp = load(fullfile(dirstr,['Placefields' name_append2]),'TMap_gauss','pval','PSAbool','x','y');
     temp2 = load(fullfile(dirstr,['PlacefieldStats' name_append2]),'PFnHits');
     NumTransients2 = get_num_trans(temp.PSAbool);
+    neurons_use = find(pval < pfilt | temp.pval < pfilt);
+elseif plot_time
+    h1(1) = subplot(4,3,[1 4]);
+    h1(2) = subplot(4,3,[2 5]);
+    h1(3) = subplot(4,3,[3 6]);
+    hx = subplot(4,3,7:9);
+    hy = subplot(4,3,10:12);
 end
 %%
 n_out = 1;
 stay_in = true;
-n_range = [1 length(TMap_gauss)];
+n_range = [1 length(neurons_use)];
 while stay_in
+    n_use = neurons_use(n_out);
     subplot(h1(1))
-    plot_traj(x,y,PSAbool(n_out,:));
-    title([mouse_name_title(MD.Animal) ' - ' mouse_name_title(MD.Date) ' - session ' num2str(MD.Session)])
+    plot_traj(x,y,PSAbool(n_use,:));
+    title([mouse_name_title(MD.Animal) ' - ' mouse_name_title(MD.Date) ...
+        ' - session ' num2str(MD.Session)])
     
     subplot(h1(2))
-    plot_PF(TMap_gauss{n_out});
-    title(['Neuron # ' num2str(n_out)])
+    plot_PF(TMap_gauss{n_use});
+    title(['Neuron # ' num2str(n_use)])
     
     subplot(h1(3))
-    plot_stats(pval(n_out), max(PFnHits(n_out,:)), NumTransients(n_out), false)
+    plot_stats(pval(n_use), max(PFnHits(n_use,:)), NumTransients(n_use), false)
     
     if plot2
         subplot(h2(1))
-        plot_traj(temp.x,temp.y,temp.PSAbool(n_out,:));
+        plot_traj(temp.x,temp.y,temp.PSAbool(n_use,:));
         
         subplot(h2(2))
-        plot_PF(temp.TMap_gauss{n_out});
+        plot_PF(temp.TMap_gauss{n_use});
         
         subplot(h2(3))
-        plot_stats(temp.pval(n_out), max(temp2.PFnHits(n_out,:)), NumTransients2(n_out), plot2)
+        plot_stats(temp.pval(n_use), max(temp2.PFnHits(n_use,:)), ...
+            NumTransients2(n_use), plot2)
+    elseif plot_time
+        subplot(hx)
+        plot(1:length(x),x,'-',find(PSAbool(n_use,:)),x(PSAbool(n_use,:)),'r*')
+        ylabel('x (cm)');
+        
+        subplot(hy)
+        plot(1:length(y),y,'-',find(PSAbool(n_use,:)),y(PSAbool(n_use,:)),'r*')
+        ylabel('y (cm)')
     end
     [n_out, stay_in] = LR_cycle(n_out, n_range);
 end
 
-clear t1 t2 t3 t4 t5 t6
+
 end
 
 %% Plot trajectory
 function [] = plot_traj(x,y,PSAuse)
 plot(y,x,'-',y(PSAuse),x(PSAuse),'r*');
 set(gca,'YDir','reverse');
-axis tight
+% axis tight
 axis off
 end
 
@@ -88,11 +118,11 @@ end
 %% Plot stats
 function [] = plot_stats( pval_use, PFnHits_use, ntrans_use, plot2)
 persistent t1 t2 t3 t4 t5 t6
-if isempty(t1) && ~plot2
+if isempty(t1) || ~isvalid(t1) && ~plot2
     t1 = text(0.1,0.9,'');
     t2 = text(0.1,0.7,'');
     t3 = text(0.1,0.5,'');
-elseif isempty(t4) && plot2
+elseif isempty(t4) || ~isvalid(t4) && plot2
     t4 = text(0.1,0.9,'');
     t5 = text(0.1,0.7,'');
     t6 = text(0.1,0.5,'');

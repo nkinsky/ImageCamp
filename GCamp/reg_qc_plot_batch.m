@@ -89,6 +89,31 @@ if num_shuffles > 0
     legend(updatelegend(gca,'Shuffled'));
 end
 
+%% Set colors from cool (nearest in time) to warm (furthest in time)
+ff = get(gcf);
+num_lines = length(ff.Children(8).Children); % Get number of lines drawn
+cm = flipud(colormap(jet(num_lines)));
+if num_shuffles > 0
+    for j = 2:2:4
+        cm_use = [0 0 0; cm];
+        for k = 1: size(cm_use,1)
+            ff.Children(j).Children(k).Color = cm_use(k,:);
+        end % Set Shuffled to black
+    end
+else
+    for j = 2:2:4
+        for k = 1: size(cm,1)
+            ff.Children(j).Children.Color = cm(k,:); % Set Shuffled to black
+        end
+    end
+end
+
+for j = 6:2:8
+    for k = 1: size(cm,1)
+        ff.Children(j).Children(k).Color = cm(k,:);
+    end
+end
+
 end
 
 %% Update legend string
