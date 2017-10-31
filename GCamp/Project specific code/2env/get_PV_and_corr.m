@@ -42,10 +42,15 @@ ip.addParameter('exclude_frames', [], @(a) isempty(a) || iscell(a) && ...
     length(a) == num_sessions);
 ip.addParameter('output_flag',true, @islogical)
 ip.addParameter('filter_type', 'all_cells', @(a) strcmpi(a, 'all_cells')...
-    || strcmpi(a,'active_both') || strcmpi(a,'active_all')); % Cells to include - nan = all cells, 
+    || strcmpi(a,'active_both') || strcmpi(a,'active_all') || ...
+    strcmpi(a,'good_map') || strcmpi(a,'pval')); % Cells to include - nan = all cells, 
 % active_both = only cells that are active in both sessions being compared,
 % and active_all = only cells that are active in ALL sessions being
 % considered
+ip.addParameter('pval_thresh', 0.05, @(a) a > 0 && a <= 1); % pval thresh to use if specified above
+ip.addParameter('use_TMap', '', @(a) isempty(a) || strcmpi(a,'gauss') || ...
+    strcmpi(a,'unsmoothed')); % '' = don't use TMap
+ip.addParameter('TMap_name_append', '', @(a) isempty(a) || iscell(a) || ischar(a));
 ip.parse(session_struct, batch_session_map, varargin{:});
 
 rot_to_std = ip.Results.rot_to_std;
@@ -63,6 +68,14 @@ minspeed = ip.Results.minspeed;
 exclude_frames = ip.Results.exclude_frames;
 output_flag = ip.Results.output_flag;
 filter_type = ip.Results.filter_type;
+use_TMap = ip.Results.use_TMap;
+TMap_name_append = ip.Results.TMap_name_append;
+pval_thresh = ip.Results.pval_thresh;
+
+silent_include = true;
+if strcmpi(filter_type,'good_map')
+    silent_include = false;
+end
 
 % Make position file into a cell if applicable
 if ischar(pos_file)
@@ -76,6 +89,14 @@ end
 if isempty(exclude_frames)
     clear exclude_frames
     exclude_frames = cell(1,num_sessions);
+end
+
+% Ditto for TMap_name_append
+if ischar(TMap_name_append)
+   temp = TMap_name_append;
+   clear TMap_name_append
+   TMap_name_append = cell(1,num_sessions);
+   [TMap_name_append{:}] = deal(temp);
 end
 
 %Get appropriate session indices
@@ -100,42 +121,62 @@ sesh = session_struct;
 %     pos_file = alt_pos_file;
 % end
 
-for j = 1:length(session_struct)
-    
-    % Load position data
-    dirstr = ChangeDirectory(session_struct(j).Animal,session_struct(j).Date,...
-        session_struct(j).Session,0);
-    if strcmpi(version_use,'T2')
-        load(fullfile(dirstr, pos_file{j}),'FT','x_adj_cm','y_adj_cm',...
-            'speed','xmin','xmax','ymin','ymax');
-        PSAbool = FT;
-    elseif strcmpi(version_use,'T4')
-        load(fullfile(dirstr, pos_file{j}),'PSAbool','x_adj_cm','y_adj_cm',...
-            'speed','xmin','xmax','ymin','ymax')
+if isempty(use_TMap)
+    for j = 1:length(session_struct)
+        
+        % Load position data
+        dirstr = ChangeDirectory(session_struct(j).Animal,session_struct(j).Date,...
+            session_struct(j).Session,0);
+        if strcmpi(version_use,'T2')
+            load(fullfile(dirstr, pos_file{j}),'FT','x_adj_cm','y_adj_cm',...
+                'speed','xmin','xmax','ymin','ymax');
+            PSAbool = FT;
+        elseif strcmpi(version_use,'T4')
+            load(fullfile(dirstr, pos_file{j}),'PSAbool','x_adj_cm','y_adj_cm',...
+                'speed','xmin','xmax','ymin','ymax')
+        end
+        x = x_adj_cm;
+        y = y_adj_cm;
+        
+        % Get running epochs
+        nFrames = size(PSAbool,2);
+        velocity = convtrim(speed,ones(1,2*20))./(2*20);    %Smooth velocity (cm/s).
+        good = true(1,nFrames);                             %Frames that are not excluded.
+        good(exclude_frames{j}) = false;                    %Exclude frames if indicated
+        isrunning = good;                                   %Running frames that were not excluded.
+        isrunning(velocity < minspeed) = false;             %Exclude epochs when mouse was not running
+        frames_include_log = x < xmax & x > xmin & y < ymax & y > ymin & isrunning;
+        
+        if calc_half
+            xmin = min(x); xmax = max(x);
+            ymin = min(y); ymax = max(y);
+        end
+        
+        sesh(j).PSAbool = PSAbool(:,frames_include_log);
+        sesh(j).frames_include_log = frames_include_log;
+        sesh(j).x = x(frames_include_log); % Get rid of x and y coordinates that are either outside of the limits or when the mouse is not running
+        sesh(j).y = y(frames_include_log);
+        
     end
-    x = x_adj_cm;
-    y = y_adj_cm;
-    
-    % Get running epochs
-    nFrames = size(PSAbool,2); 
-    velocity = convtrim(speed,ones(1,2*20))./(2*20);    %Smooth velocity (cm/s).
-    good = true(1,nFrames);                             %Frames that are not excluded.
-    good(exclude_frames{j}) = false;                    %Exclude frames if indicated
-    isrunning = good;                                   %Running frames that were not excluded. 
-    isrunning(velocity < minspeed) = false;             %Exclude epochs when mouse was not running
-    frames_include_log = x < xmax & x > xmin & y < ymax & y > ymin & isrunning;
-    
-    if calc_half
-        xmin = min(x); xmax = max(x);
-        ymin = min(y); ymax = max(y);
-    end
-    
-    sesh(j).PSAbool = PSAbool(:,frames_include_log);
-    sesh(j).frames_include_log = frames_include_log;
-    sesh(j).x = x(frames_include_log); % Get rid of x and y coordinates that are either outside of the limits or when the mouse is not running
-    sesh(j).y = y(frames_include_log);
-    
+else
+    dirstr = ChangeDirectory(session_struct(1).Animal,session_struct(1).Date,...
+        session_struct(1).Session,0);
+    load(fullfile(dirstr,['Placefields' TMap_name_append{1} '.mat']),'xEdges',...
+        'yEdges')
+    NumXBins = length(xEdges) - 1;
+    NumYBins = length(yEdges) - 1;
 end
+
+if strcmpi(filter_type,'pval')
+    for j = 1:length(session_struct)
+        dirstr = ChangeDirectory(session_struct(j).Animal,session_struct(j).Date,...
+            session_struct(j).Session,0);
+        load(fullfile(dirstr,['Placefields' TMap_name_append{j} '.mat']),...
+            'pval');
+        sesh(j).pval_filt = pval < pval_thresh;
+    end
+end
+
 
 % Split up session appropriately if calc_half is flagged.
 % if calc_half
@@ -160,24 +201,40 @@ num_neurons = size(batch_map,1);
 PV = nan(length(sesh),NumXBins,NumYBins,num_neurons); % Pre-allocate
 dispNK('Getting PV for each bin in each session', output_flag)
 
-% Get edges
-Xedges = xmin:(xmax-xmin)/NumXBins:xmax;
-Yedges = ymin:(ymax-ymin)/NumYBins:ymax;
+if isempty(use_TMap)
+    % Get edges
+    Xedges = xmin:(xmax-xmin)/NumXBins:xmax;
+    Yedges = ymin:(ymax-ymin)/NumYBins:ymax;
     
-for m = 1:length(sesh)
-    
-    % Get bin for each x and y point
-    [~,Xbin] = histc(sesh(m).x,Xedges);
-    [~,Ybin] = histc(sesh(m).y,Yedges);
-    
-    for j = 1:NumXBins
-        for k = 1:NumYBins
-            temp_FR = sum(sesh(m).PSAbool(:,Xbin == j & Ybin == k),2)/...
-                (length(sesh(m).x)/20); % Firing rate in Hz for each neuron - this only includes times when the mouse is running for calculating rate - is this legit?
-            map_use = batch_map(:,session_ind(m)+1);
-            
-            PV(m,j,k,:) = assign_FR( temp_FR, map_use );
-         
+    for m = 1:length(sesh)
+        
+        % Get bin for each x and y point
+        [~,Xbin] = histc(sesh(m).x,Xedges);
+        [~,Ybin] = histc(sesh(m).y,Yedges);
+        
+        map_use = batch_map(:,session_ind(m)+1);
+        for j = 1:NumXBins
+            for k = 1:NumYBins
+                temp_FR = sum(sesh(m).PSAbool(:,Xbin == j & Ybin == k),2)/...
+                    (length(sesh(m).x)/20); % Firing rate in Hz for each neuron - this only includes times when the mouse is running for calculating rate - is this legit?
+                
+                PV(m,j,k,:) = assign_FR( temp_FR, map_use, silent_include );
+                
+            end
+        end
+        
+        
+    end
+else
+    for m = 1:length(sesh)
+        map_use = batch_map(:,session_ind(m)+1);
+        temp_FR = get_PV_from_TMap(session_struct(m),...
+            'PFname_append', TMap_name_append{m},'TMap_use', use_TMap);
+        for j = 1:NumXBins
+            for k = 1:NumYBins
+                PV(m,j,k,:) = assign_FR( squeeze(temp_FR(j,k,:)), map_use,...
+                    silent_include );
+            end
         end
     end
 end
@@ -194,12 +251,18 @@ if output_flag
     p = ProgressBar(length(sesh));
 end
 
+rows_param = 'all'; % for later correlation calculations
 if strcmpi(filter_type, 'all_cells')
     PV_use = PV;
 elseif strcmpi(filter_type, 'active_all') % Get PV for cells that are active in ALL sessions
     PV_collapse = squeeze(sum(sum(PV,2),3));
     active_all_log = sum(PV_collapse > 0) == num_sessions;
     PV_use = PV(:,:,:,active_all_log);
+elseif strcmpi(filter_type, 'good_map')
+    PV_use = PV;
+    rows_param = 'complete';
+elseif strcmpi(filter_type, 'pval')
+    rows_param = 'pairwise';
 end
 
 for m = 1:length(sesh)
@@ -210,13 +273,29 @@ for m = 1:length(sesh)
             PV_collapse = squeeze(sum(sum(PV([m,ll],:,:,:),2),3));
             active_both_log = sum(PV_collapse > 0) == 2;
             PV_use = PV(:,:,:,active_both_log);
+        elseif strcmpi(filter_type, 'pval')
+            
+            % Get cells that are active in both sessions and pass pval
+            % thresh in at least ONE session
+            
+            %%% Easier way might be to just do pairwise comparisons...
+%             ppass_either = sesh(m).pval_filt & assignPV(
+            ppass1 = assignPV(sesh(m).pval_filt, get_neuronmap_from_batchmap(...
+                batch_map, 0, session_ind(m)));
+            ppass1(isnan(ppass1)) = false;
+            ppass2 = assignPV(sesh(ll).pval_filt, get_neuronmap_from_batchmap(...
+                batch_map, 0, session_ind(ll)));
+            ppass2(isnan(ppass2)) = false;
+            ppass_either =  ppass1 | ppass2;
+            PV_use = PV([m,ll],:,:,ppass_either);
+        else
         end
         for j = 1:NumXBins
             for k = 1:NumYBins             
                 % Get population vectors for each session in the
                 % appropriate bin.
-                PV1 = squeeze(PV_use(m,j,k,:));
-                PV2 = squeeze(PV_use(ll,j,k,:));
+                PV1 = squeeze(PV_use(1,j,k,:));
+                PV2 = squeeze(PV_use(2,j,k,:));
                 
                 ind_use = ~isnan(PV1) & ~isnan(PV2); %Indices of neurons that are not NaN in both sessions
 %                 ind_use_both = ~isnan(PV1) | ~isnan(PV2); % Indices of neurons that are not NaN in either session
@@ -235,7 +314,8 @@ for m = 1:length(sesh)
                 if isempty(PV1_use) || isempty(PV2_use)
                     PV_corr(m,ll,j,k) = nan;
                 else
-                    PV_corr(m,ll,j,k) = corr(PV1_use,PV2_use,'type',corr_type);
+                    PV_corr(m,ll,j,k) = corr(PV1_use,PV2_use,'type',corr_type,...
+                        'rows',rows_param);
 %                     PV_corr(m,ll,j,k) = corr(PV1_use, PV2_use,'type', corr_type, 'rows', 'complete');
                 end
 %                 if isnan(PV_corr(m,ll,j,k))
@@ -255,7 +335,7 @@ for m = 1:length(sesh)
                         PV_corr_shuffle(m,ll,j,k,zzz) = nan;
                     else
                         PV_corr_shuffle(m,ll,j,k,zzz) = corr(PV1_use,PV2_shuffle,...
-                            'type',corr_type);
+                            'type',corr_type,'rows',rows_param);
                     end
                     temp = dist([PV1_use, PV2_shuffle]);
                     PV_dist_shuffle(m,ll,j,k,zzz) = temp(1,2);
