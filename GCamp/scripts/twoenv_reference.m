@@ -61,8 +61,8 @@ G30_both_manual_limits = [0 0 0 0 0 0 0 0 1 1 1 1 0 0 0 0];
 % Note that 0 = local cues aligned
 G30_square_best_angle = [0 0 270 0 0 270 0 180]; % Note only session 6 looks sketchy/global remappery (still probably legit though)
 G30_circle_best_angle = [0 165 0 0 60 285 150 150]; % All good except session 5 - global remapping?
-G30_circ2square_best_angle = [300 105 300 315 30 240 105 90]; % Note all but session 5 have good mapping between circle and square
-G30_both_best_angle = [0 0 300 105 300 315 270 0 0 30 240 270 0 180 105 90];
+G30_circ2square_best_angle = [300 105 300 300 30 240 105 90]; % Note all but session 5 have good mapping between circle and square
+G30_both_best_angle = [0 0 300 105 300 300 270 0 0 30 240 270 0 180 105 90];
 
 % Hack to quantify global remapping!!! - Need to run kstest2 between each
 % session with a Bonferroni correction for 7(8)
@@ -98,9 +98,9 @@ G31_botharenas = G31_botharenas([1 2 9 10 11 12 3 4 5 13 14 6 7 8 15 16]);
 G31_both_manual_limits = [0 0 0 1 0 0 0 0 1 1 1 1 0 0 0 0]; 
 
 G31_square_best_angle = [0 0 0 0 0 180 0 0]; % Session 8 (and maybe 7) might be remappers, though it may just be the low number of cells...
-G31_circle_best_angle = [0 0 0 0 0 180 0 15]; % Session 6 appears to be a global remapping 
-G31_circ2square_best_angle = [15 30 15 30 30 225 0 15]; % Note that only sessions 3 and 4 appear to have circ2square mapping - very low numbers of cells active between the two environments...
-G31_both_best_angle = [0 0 15 30 15 30 0 0 0 30 225 180 0 0 0 15];
+G31_circle_best_angle = [0 0 0 0 0 195 0 15]; % Session 6 appears to be a global remapping 
+G31_circ2square_best_angle = [15 15 15 30 30 210 15 210]; % Note that only sessions 3 and 4 appear to have circ2square mapping - very low numbers of cells active between the two environments...
+G31_both_best_angle = [0 0 15 15 15 30 0 0 0 30 210 180 0 0 15 210];
 %% G45
 G45_square(1).Date = '08_28_2015'; G45_square(1).Session = 1;
 G45_square(2).Date = '08_28_2015'; G45_square(2).Session = 2;
