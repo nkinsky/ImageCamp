@@ -432,3 +432,16 @@ subplot(5,3,14)
 imagesc_nan(nanmean(PVcorrd_all,3)); colorbar
 subplot(5,3,15)
 imagesc_nan(nanmean(PVcorra_all,3)); colorbar
+
+%% Messing around with re-running PV analysis with pval thresh
+
+[PVpthresh,PVcorrs_pthresh] = get_PV_and_corr(G30_square,batch_session_map,...
+    'use_TMap','unsmoothed','TMap_name_append', arrayfun(@(a) ['_cm4_rot' num2str(a)],...
+    G30_square_best_angle,'UniformOutput',false),'filter_type', 'pval');
+
+%% Confirm best rotation angle for each session relative to 1st
+arena_type = {'square','circle','circ2square'};
+for m = 1:num_animals
+    
+    
+end
