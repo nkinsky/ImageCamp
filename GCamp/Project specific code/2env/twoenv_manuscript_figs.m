@@ -25,6 +25,43 @@ htraces = subplot(8,8,[5:8 (5:8)+8 (5:8)+16 (5:8)+24 (5:8)+32 (5:8)+40 (5:8)+48 
 plot_neuron_traces( NeuronTraces.(trace_plot)(neurons_plot,:), colors_used, htraces );
 hold off
 
+%% Figure 2b - example tuning curve metholodogy
+sesh_use = G45_square(1:2);
+neuron_use = 50;
+rot_array = 0:90:270;
+base_dir = ChangeDirectory_NK(sesh_use(1),0);
+load(fullfile(base_dir,'batch_session_map.mat'));
+batch_session_map = fix_batch_session_map(batch_session_map);
+corr_mat = corr_rot_analysis( sesh_use(1), sesh_use(2), batch_session_map, ...
+    rot_array );
+
+% plot all 4 rotations with correlation on them
+figure;
+set(gcf,'Position',[2100, 120, 450, 850]);
+subplot(4,2,1)
+load(fullfile(base_dir,'Placefields_rot0.mat'),'TMap_gauss')
+imagesc_nan(TMap_gauss{neuron_use});
+axis off
+title(['Base session - Neuron ' num2str(neuron_use)])
+
+sesh_index = arrayfun(@(a) get_session_index( a, batch_session_map.session ),...
+    sesh_use);
+map_use = get_neuronmap_from_batchmap(batch_session_map, sesh_index(1),...
+    sesh_index(2));
+sesh2_neuron = map_use(neuron_use);
+corrs_plot = corr_mat(neuron_use,:);
+for j = 1:length(rot_array)
+    load(fullfile(ChangeDirectory_NK(sesh_use(2),0),['Placefields_rot' ...
+        num2str(rot_array(j)) '.mat']),'TMap_gauss');
+    subplot(4,2,2*j)
+    imagesc_nan(TMap_gauss{sesh2_neuron});
+    axis off
+    title({['{\theta} = ' num2str(rot_array(j))],...
+        ['r^2 = ' num2str(corrs_plot(j),'%0.2f')]})
+end
+
+
+%% Figure 2c - example cells + locations - see russek_day_poster.m
 
 %% Figure 4 - connected occupancy maps with firing...
 mouse_use = 2;
@@ -66,24 +103,32 @@ if plot_all_mice
 
     for j = 1:4
         subplot(3,2,j);
+        mat_plot = Mouse(j).PV_corrs.circ2square.PV_corr_mean;
+        mat_plot(mat_plot == 1) = nan;
         imagesc_nan(Mouse(j).PV_corrs.circ2square.PV_corr_mean,cm);
        
         title(mouse_name_title(Mouse(j).sesh.circ2square(1).Animal));
         set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
             'YTick',ticks,'YTickLabel',ticklabels);
+        make_plot_pretty(gca); 
         
     end
     subplot(3,2,5);
-    imagesc_nan(mean(mat_full,3),cm);
+    mat_plot_all = mean(mat_full,3);
+    mat_plot_all(mat_plot_all == 1) = nan;
+    imagesc_nan(mat_plot_all,cm);
     set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
         'YTick',ticks,'YTickLabel',ticklabels);
     title('All Mice')
+    make_plot_pretty(gca)
 end
 
 figure(301)
 set(gcf,'Position',[1980 10 1310 990])
-mean_plot = mean(mat_full,3);
-imagesc_nan(mean_plot,cm);
+mat_plot_all = mean(mat_full,3);
+mat_plot_all(mat_plot_all == 1) = nan;
+imagesc_nan(mat_plot_all,cm);
+imagesc_nan(mat_plot_all,cm);
 hold on;
 lw_out = 1.5;
 lw_in = 3.5;
@@ -99,8 +144,9 @@ hold off
 set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
     'YTick',ticks,'YTickLabel',ticklabels);
 axis equal tight
-hc = colorbar; hc.Ticks = [min(mean_plot(:)) 1]; hc.TickLabels = {'min' '1'};
+hc = colorbar; hc.Ticks = hc.Limits;% hc.Ticks = [min(mean_plot(:)) 1]; hc.TickLabels = {'min' '1'};
 title('All Mice')
+make_plot_pretty(gca); make_plot_pretty(hc);
 
 %% Rubin et al replication for all days but comparing all cells vs. 
 % cells active both days vs. cells active ALL days...
@@ -131,6 +177,7 @@ title_text = {'All Mice - All Cells', 'All Mice - Cells Active Both Sessions' ,.
 for j = 1:3
     subplot(2,2,j)
     mean_plot = nanmean(mat_full2{j},3);
+    mean_plot(mean_plot == 1) = nan;
     imagesc_nan(mean_plot,cm);
     hold on;
     lw_out = 1.5;
@@ -149,6 +196,7 @@ for j = 1:3
     axis equal tight
     hc = colorbar; hc.Ticks = [min(mean_plot(:)) 1]; hc.TickLabels = {'min' '1'};
     title(title_text{j})
+    make_plot_pretty(gca); make_plot_pretty(hc);
 end
 %% Rubin et al replication for connected days only
 plot_all_mice = false;
@@ -312,6 +360,8 @@ mouse_use = Mouse(1);
 sesh_use = mouse_use.sesh.circ2square;
 reg_stats = reg_qc_plot_batch(sesh_use(1), sesh_use(2:end), ...
     'batch_mode', 1, 'name_append', '_trans');
+
+
 
 %% Bar plot of mean abs orientation diff for coherent v remapping 
 % Very rough - only looks at session 1 versus all the rest
@@ -555,32 +605,37 @@ if plot_all_mice
     end
 end
 
-%% Generate PV plot (Figure 4D)
-sesh_use = G45_square(1);
-% num_cells = 5;
-% spacing = 20;
-% cm = 'jet';
-% norm_er = true; % flag to normalize calcium event rates to 1 for each neuron 
-% % - makes plot prettier but make sure it matches the way you calc PVs 
-% % (e.g. true if you z-score, false if you don't)
+%% Generate PV Methodology plot (Figure 4D)
+Mouse_use = 4;
+arena_type = 'square';
+sesh_use = Mouse(Mouse_use).sesh.(arena_type)(1:2);
 
-dirstr = ChangeDirectory_NK(sesh_use,0);
+dirstr = ChangeDirectory_NK(sesh_use(1),0);
 load(fullfile(dirstr,'Placefields_rot0.mat'),'TMap_gauss');
+[Nybins, Nxbins] = size(TMap_gauss{1});
 
-hPV = makePVexample( TMap_gauss(1:5));
+figure
+set(gcf,'Position',[2000 100 1000 900])
+hPV = subplot(4,2,[1 3 5 7]);
+hPV = makePVexample( TMap_gauss(1:5), hPV);
 
-% if exist('hPV','var'); try; close(hPV); catch; disp('some error closing hPV'); end; end
-% hPV = figure;
-% z_use = num_cells*spacing;
-% for j = 1:num_cells
-%     if norm_er
-%         tmap_use = TMap_gauss{j}/max(TMap_gauss{j}(:)); % Normalize it so that peak FR shows up as red for each cell...
-%     else
-%         tmap_use = TMap_gauss{j};
-%     end
-%     imagesc_nan(tmap_use,cm,'z',z_use)
-%     hold on
-%     z_use = z_use - spacing;
-% end
-% axis off
->>>>>>> ImageCamp/master
+%%% PLOT example PV corr at ~1cm bin resolution (to match PFs above)
+% Load stuff
+load(fullfile(dirstr,'batch_session_map'))
+batch_session_map = fix_batch_session_map(batch_session_map);
+sesh_inds = arrayfun(@(a) get_session_index(a,batch_session_map.session),...
+    sesh_use);
+best_angle_use = Mouse(4).best_angle.(arena_type)(sesh_inds);
+pos_file_use = arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'],...
+    best_angle_use,'UniformOutput',false);
+[~, PVcorr_plot] = get_PV_and_corr(sesh_use, batch_session_map,...
+    'alt_pos_file', pos_file_use,'use_TMap','gauss','TMap_name_append',...
+    arrayfun(@(a) ['_rot' num2str(a)],Mouse(Mouse_use).best_angle.(arena_type),...
+    'UniformOutput',false)); % Get PVcorrs
+subplot(4,2,[4 6])
+imagesc_nan(squeeze(PVcorr_plot.PV_corr(1,2,:,:))); % plot it out
+axis off
+c = colorbar; set(c,'ytick',c.Limits,'TickLabels', arrayfun(@(a) sprintf(...
+    '%0.2g',a),c.Limits,'UniformOutput',false))
+
+
