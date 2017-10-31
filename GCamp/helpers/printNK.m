@@ -61,7 +61,7 @@ else
     paper_dims = [screen_height_in, round(screen_height_in*aspect_ratio,1)]*...
         scale_factor;
     hfig.PaperSize(1:2) = paper_dims;
-    hfig.PaperPosition = [0 0 paper_dims];
+    hfig.PaperPosition = [0 0 paper_dims]; % [0 0 paper_dims(1)/aspect_ratio paper_dims(2)]; %
 end
 
 hfig.Renderer = 'painters'; % This makes sure weird stuff doesn't happen when you save lots of data points by using openGL rendering
