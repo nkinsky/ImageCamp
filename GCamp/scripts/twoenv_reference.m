@@ -159,9 +159,9 @@ G48_botharenas = G48_botharenas([1 2 9 10 11 12 3 4 5 13 14 6 7 8 15 16]);
 G48_both_manual_limits = [0 0 0 0 0 0 0 0 1 1 1 1 1 0 0 0]; %%% Is this correct?  Manual limits on 1st square session?
 
 G48_square_best_angle = [0 180 0 0 90 90 180 90]; % All look good
-G48_circle_best_angle = [0 120 105 15 0 330 0 45]; % Session 3 and 4 appear to be global remappers
-G48_circ2square_best_angle = [105 240 240 90 90 75 90 150]; % Note that sessions 3,4, and 7 appear sketchy (no mapping between arenas)
-G48_both_best_angle = [0 180 105 240 240 90 0 0 90 90 75 90 180 90 90 150];
+G48_circle_best_angle = [0 120 0 330 0 330 0 45]; % Session 3 and 4 appear to be global remappers
+G48_circ2square_best_angle = [105 240 105 75 90 75 90 150]; % Note that sessions 3,4, and 7 appear sketchy (no mapping between arenas)
+G48_both_best_angle = [0 180 105 240 105 75 0 0 90 90 75 90 180 90 90 150];
 %% All sessions
 all_sessions = cat(2,G30_botharenas, G31_botharenas, G45_botharenas, G48_botharenas);
 all_square = cat(2,G30_square,G31_square,G45_square,G48_square);
