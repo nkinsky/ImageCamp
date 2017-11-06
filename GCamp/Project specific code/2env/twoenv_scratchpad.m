@@ -174,9 +174,9 @@ sesh_use = all_sessions; %cat(2,G31_square(1),G31_oct(1)); % cat(2, G45_square(2
 cmperbin_use = 4;
 rot_array_circle = 0:15:345;
 rot_array_square = 0:90:270;
-run_win_too = true; % true = run square only and circle only too!
+run_win_too = false; % true = run square only and circle only too!
 if cmperbin_use ~= 1; cm_append = ['_cm' num2str(cmperbin_use)]; else ; cm_append = ''; end
-for j = 1:length(sesh_use)
+for j = 7; %1:length(sesh_use)
     [dirstr, full_sesh] = ChangeDirectory(sesh_use(j).Animal, sesh_use(j).Date, sesh_use(j).Session);
     disp(['Running Circle2Square Rotated Placefield Analysis on ' full_sesh.Animal ...
         ' - ' full_sesh.Date ' - session ' num2str(full_sesh.Session)])
@@ -188,7 +188,7 @@ for j = 1:length(sesh_use)
     end
     
     
-    for k = 1:length(rot_array_use)
+    for k = length(rot_array_use) %1:length(rot_array_use)
         name_append_full = [cm_append '_trans_rot' num2str(rot_array_use(k))];
         Placefields(full_sesh,'minspeed',1,'name_append', name_append_full,...
             'Pos_data', ['Pos_align_trans_rot' num2str(rot_array_use(k))],...
@@ -435,13 +435,6 @@ imagesc_nan(nanmean(PVcorra_all,3)); colorbar
 
 %% Messing around with re-running PV analysis with pval thresh
 
-[PVpthresh,PVcorrs_pthresh] = get_PV_and_corr(G30_square,batch_session_map,...
+[PVpthresh2,PVcorrs_thresh2] = get_PV_and_corr(G30_square,batch_session_map,...
     'use_TMap','unsmoothed','TMap_name_append', arrayfun(@(a) ['_cm4_rot' num2str(a)],...
     G30_square_best_angle,'UniformOutput',false),'filter_type', 'pval');
-
-%% Confirm best rotation angle for each session relative to 1st
-arena_type = {'square','circle','circ2square'};
-for m = 1:num_animals
-    
-    
-end
