@@ -1,4 +1,4 @@
-function [ hout, unique_lags, mean_corr_cell, hmean_CI ] = twoenv_plot_PVcurve( PV_corrs, ...
+function [ hout, unique_lags, mean_corr_cell, hmean_CI , CI, day_lag] = twoenv_plot_PVcurve( PV_corrs, ...
     sesh_type, PV_corrs_shuffle, hin, plot_curves, filter )
 % hout = twoenv_plot_PVcurve( PV_corrs, sesh_type, PV_corrs_shuffle, hin, plot_curves )
 %  Plots PV vs time lag curves for 2env task.
@@ -14,6 +14,12 @@ if nargin < 6
             hin = gca;
         end
     end
+end
+
+% Hack to prevent plotting when I don't want it - set hin = 'dont_plot'
+dont_plot = false;
+if strcmpi(hin,'dont_plot')
+    dont_plot = true;
 end
 
 %% Determine days and session for each comparison
@@ -58,9 +64,9 @@ day_lag = tril(day_lag);
 day_lag(~isnan(day_lag)) = temp(~isnan(day_lag));
 
 %% Plot it
-[hout,~,hmean_CI, unique_lags, mean_corr_cell] = plot_PVcurve(PV_corrs, day_lag, 'PV_corrs_shuffle', PV_corrs_shuffle,...
+[hout,~,hmean_CI, unique_lags, mean_corr_cell, CI] = plot_PVcurve(PV_corrs, day_lag, 'PV_corrs_shuffle', PV_corrs_shuffle,...
     'hin', hin, 'plot_curves', plot_curves, 'marker', marker,...
-    'linetype', linetype, 'filter', filter);
+    'linetype', linetype, 'filter', filter, 'dont_plot', dont_plot);
 xlabel('Days')
 xlim([-0.5 7.5])
 % make_plot_pretty(hout)

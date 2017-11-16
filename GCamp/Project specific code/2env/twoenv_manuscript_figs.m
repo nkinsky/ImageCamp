@@ -211,6 +211,7 @@ for j = 1:4
     mat_full = cat(3,mat_full,mat_use);
 end
 
+mat_use(logical(eye(8))) = nan;
 if plot_all_mice
     figure(302)
     for j = 1:4
@@ -231,6 +232,7 @@ end
 figure(303)
 set(gcf,'Position',[1980 10 800 700])
 mean_plot = mean(mat_full,3);
+mean_plot(logical(eye(8))) = nan;
 % mean_plot(logical(eye(16))) = nan;
 imagesc_nan(mean_plot,cm);
 hold on;
@@ -248,8 +250,10 @@ hold off
 set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
     'YTick',ticks,'YTickLabel',ticklabels);
 axis equal tight
-hc = colorbar; hc.Ticks = [min(mean_plot(:)) 1]; hc.TickLabels = {'min' '1'};
+hc = colorbar; % hc.Ticks = [min(mean_plot(:)) 1]; hc.TickLabels = {'min' '1'};
 title('All Mice')
+make_plot_pretty(gca);
+make_plot_pretty(hc)
 
 
 
@@ -644,13 +648,14 @@ c = colorbar; set(c,'ytick',c.Limits,'TickLabels', arrayfun(@(a) sprintf(...
 overlap_num_thresh = 25; % Exclude all comparisons with less than 25 common cells between session.
 sesh_type = {'square', 'circle', 'circ2square'};
 shuffle_types = {'PV_corr_shuffle','PV_corr_binshuffle'};
+shuf_ind = 1;
 PV_corr_all.square = nan(8,8);
 PV_corr_all.circle = nan(8,8);
 PV_corr_all.circ2square = nan(16,16);
+PV_corr_local_all = PV_corr_all;
 PV_shuf_all = PV_corr_all;
 try; close 500; end; try; close 501; end; try; close 502; end
 hind = figure(500); hall = figure(501); hcomb = subplot(2,2,4);
-h
 for k = 1:length(sesh_type)
     for j = 1:length(Mouse)
         mouse_name = mouse_name_title(Mouse(j).sesh.square(1).Animal);
@@ -661,8 +666,9 @@ for k = 1:length(sesh_type)
         figure(hind);
         hax = subplot(4,4,4*(k-1)+j);
         PV_corr_use = Mouse(j).PV_corrs.(sesh_type{k}).PV_corr_mean;
+        PV_corr_local_use = Mouse(j).PV_corrs.local_aligned.(sesh_type{k}).PV_corr_mean;
         PV_shuf_use = squeeze(nanmean(nanmean(Mouse(j).PV_corrs.(sesh_type{k})...
-            .(shuffle_types{2}),3),4));
+            .(shuffle_types{shuf_ind}),3),4));
         [~,~,~, hCI{j,k}] = twoenv_plot_PVcurve(PV_corr_use, sesh_type{k}, PV_shuf_use, hax,...
             true, overlap_filter);
         title([mouse_name ' - ' sesh_type{k}])
@@ -673,6 +679,12 @@ for k = 1:length(sesh_type)
         PV_corr_filt(~overlap_filter) = nan; % Filter out sessions that don't have enough cells
         PV_corr_all.(sesh_type{k}) = cat(3,PV_corr_all.(sesh_type{k}), ...
             PV_corr_filt); %PV_corr_use);
+        
+        PV_corr_local_filt = PV_corr_local_use; 
+        PV_corr_local_filt(~overlap_filter) = nan; % Filter out sessions that don't have enough cells
+        PV_corr_local_all.(sesh_type{k}) = cat(3,PV_corr_local_all.(sesh_type{k}), ...
+            PV_corr_local_filt); %PV_corr_use);
+        
         PV_shuf_filt = reshape(PV_shuf_use, size(PV_shuf_use,1)*...
             size(PV_shuf_use,2),size(PV_shuf_use,3));
         PV_shuf_filt(reshape(~overlap_filter, length(overlap_filter(:)),1),:) = nan;
@@ -695,19 +707,25 @@ for k = 1:length(sesh_type)
     figure(hall);
 
     PV_corr_all_use = nanmean(PV_corr_all.(sesh_type{k}),3);
+    PV_corr_local_all_use = nanmean(PV_corr_local_all.(sesh_type{k}),3);
     
     PV_shuf_all_use = PV_shuf_all.(sesh_type{k});
-    [~, unique_lags_all{k}, mean_PVcorr_all{k}] = twoenv_plot_PVcurve(...
+    [~, unique_lags_all{k}, mean_PVcorr_all{k},~, ~, day_lag_all{k}] = twoenv_plot_PVcurve(...
         PV_corr_all_use, sesh_type{k}, PV_shuf_all_use, hax_all, true);
+    [~, unique_days_check{k}, mat_ind_all{k}] = group_mat(PV_corr_all_use, ...
+        day_lag_all{k});
     ylim([-0.1 0.7])
     title(['All Mice - ' sesh_type{k}])
     make_plot_pretty(gca)
-    
-    twoenv_plot_PVcurve(PV_corr_all_use, sesh_type{k}, PV_shuf_all_use,...
-        hcomb, true);
+%     keyboard
+    [~, CI_lags{k} ,~ ,~, CI{k}] = twoenv_plot_PVcurve(PV_corr_all_use, ...
+        sesh_type{k}, PV_shuf_all_use, hcomb, true);
     hold on
     ylim([-0.1 0.7])
     hold off
+    
+    [~, ~, mean_PVcorr_local_all{k}] = twoenv_plot_PVcurve(...
+        PV_corr_local_all_use, sesh_type{k}, [], 'dont_plot', true);
     
 end
 figure(hind)
@@ -722,20 +740,21 @@ CI_lines_ind = arrayfun(@(a) all(a.Color == [1 0 1]),...
     hcomb.Children(arrayfun(@(a) isgraphics(a,'line'),hcomb.Children)));
 CI_handles = hcomb.Children(arrayfun(@(a) isgraphics(a,'line'),hcomb.Children));
 CI_handles = CI_handles(CI_lines_ind);
-CImat = cell2mat(arrayfun(@(a) a.YData,CI_handles,'UniformOutput',false));
-CI_min = min(CImat,[],1);
-CI_max = max(CImat,[],1);
-CI_min_mean = nanmean(CImat([1 4 7],:),1);
-CI_max_mean = nanmean(CImat([2 5 8],:),1);
-CI_mean_mean = nanmean(CImat([3 6 9],:),1);
-CIx = CI_handles(1).XData;
-delete(CI_handles(3:end));
-CI_handles(1).YData = CI_max;
-CI_handles(2).YData = CI_min;
+% CImat = cell2mat(arrayfun(@(a) a.YData,CI_handles,'UniformOutput',false));
+% CI_min = min(CImat,[],1);
+% CI_max = max(CImat,[],1);
+% CI_min_mean = nanmean(CImat([1 4 7],:),1);
+% CI_max_mean = nanmean(CImat([2 5 8],:),1);
+% CI_mean_mean = nanmean(CImat([3 6 9],:),1);
+% CIx = CI_handles(1).XData;
+% delete(CI_handles(3:end));
+% CI_handles(1).YData = CI_max;
+% CI_handles(2).YData = CI_min;
 make_plot_pretty(hcomb)
 
 % Plot same env overlap and different env overlap
-figure(502); set(gcf,'Position',[2150 430 760 470]);
+figure(502); set(gcf,'Position',[2150 20 760 940]);
+subplot(2,1,1);
 same_env = cellfun(@(a,b) [a; b], mean_PVcorr_all{1}, mean_PVcorr_all{2},...
     'UniformOutput',false);
 diff_env = mean_PVcorr_all{3};
@@ -743,21 +762,197 @@ errorbar(unique_lags_all{1}, cellfun(@mean, same_env), ...
     cellfun(@std, same_env)./sqrt(cellfun(@length, same_env)), 'k.-');
 hold on
 errorbar(unique_lags_all{3}, cellfun(@mean, diff_env), ...
-    cellfun(@std, diff_env)./sqrt(cellfun(@length, diff_env)), 'g.--');
+    cellfun(@std, diff_env)./sqrt(cellfun(@length, diff_env)), 'r.-');
+
+local_mat = cell(8,3);
+for j = 1:3
+    local_mat(arrayfun(@(a) find(a == 0:7), unique_lags_all{j}),j) = ...
+        mean_PVcorr_local_all{j};
+end
+local_comb = cellfun(@(a,b,c) cat(1,a,b,c), local_mat(:,1), local_mat(:,2), ...
+    local_mat(:,3),'UniformOutput',false);
+errorbar((0:7)',cellfun(@mean, local_comb), cellfun(@std, local_comb)./...
+    sqrt(cellfun(@length,local_comb)), 'c:')
+% same_env_local = cellfun(@(a,b) [a; b], mean_PVcorr_local_all{1}, mean_PVcorr_local_all{2},...
+%     'UniformOutput',false);
+% diff_env_local = mean_PVcorr_local_all{3};
+% errorbar(unique_lags_all{1}, cellfun(@mean, same_env_local), ...
+%     cellfun(@std, same_env_local)./sqrt(cellfun(@length, same_env_local)), 'k.--');
+% hold on
+% errorbar(unique_lags_all{3}, cellfun(@mean, diff_env_local), ...
+%     cellfun(@std, diff_env_local)./sqrt(cellfun(@length, diff_env_local)), 'r.--');
+
+
 xlabel('Day lag')
 ylabel('Mean PV correlation')
+title(mouse_name_title(shuffle_types{shuf_ind}))
 xlim([-0.5 7.5]); ylim([-0.1 0.7])
-% % Copy over CIs from above
-% for j = 1:2
-%     hCI = plot(CI_handles(j).XData, CI_handles(j).YData);
-%     set(hCI,'Color',CI_handles(j).Color, 'LineStyle', ...
-%         CI_handles(j).LineStyle);
-% end
-hshufline = plot(CIx, CI_mean_mean);
-set(hshufline,'Color',CI_handles(1).Color, 'LineStyle', ...
-        CI_handles(1).LineStyle);
+
+% Hack to get mean CIs from all three comparisons
+CImin = nan(8,3); CImax = nan(8,3);
+for j = 1:3
+   CImin(arrayfun(@(a) find(a == 0:7),CI_lags{j}),j) = CI{j}(:,2);
+   CImax(arrayfun(@(a) find(a == 0:7),CI_lags{j}),j) = CI{j}(:,1);
+end
+
+% hshufline = plot(CIx, CI_mean_mean);
+hshufline = plot((0:7)',[nanmean(CImin,2) nanmean(CImax,2)],'Color',...
+    CI_handles(1).Color, 'LineStyle', CI_handles(1).LineStyle);
+% set(hshufline,'Color',CI_handles(1).Color, 'LineStyle', ...
+%         CI_handles(1).LineStyle);
 make_plot_pretty(gca)
-legend('Same Arena','Circle-to-square')
+legend('Same Arena','Circle-to-square','Local Cues Aligned',...
+    'Shuffled')
+
+%% GLM the above to pull out differences due to: day lag, same/diff arena, 
+% connected or not, before/during/after, and local cues aligned v best
+% angle
+
+
+% Make connected indices
+conn_indsep = false(8);
+conn_indsep(5:6,:) = true;
+conn_indsep(:,5:6) = true;
+conn_indsep = conn_indsep & ~isnan(day_lag_all{1});
+conn_indcomb = false(16);
+conn_indcomb(9:12,:) = true;
+conn_indcomb(:,9:12) = true;
+conn_indcomb = conn_indcomb & ~isnan(day_lag_all{3});
+conn_ind_cell{1} = conn_indsep; conn_ind_cell{2} = conn_indsep;
+conn_ind_cell{3} = conn_indcomb;
+
+temp = cat(1,mean_PVcorr_all{:});
+PVvec = cat(1,temp{:});
+
+% construct vectors of design matrix
+day_vec = [];
+% same_vec = [];
+conn_vec = [];
+bda_vec = []; % before/during/after is weird - ignore for now
+for j = 1:3
+    nsesh(j) = sum(cellfun(@length, mat_ind_all{j}));
+    day_vec = [day_vec; day_lag_all{j}(cat(1,mat_ind_all{j}{:}))];
+    conn_vec = [conn_vec; conn_ind_cell{j}(cat(1,mat_ind_all{j}{:}))];
+    
+end
+% 1s if the same, 0 if no
+same_vec = ones(length(day_vec),1);
+same_vec(sum([nsesh(1:2),1]):end) = 0;
+nsesh_cum = cumsum(nsesh);
+square_vec = zeros(sum(nsesh),1); square_vec(1:nsesh_cum(1)) = 1;
+circle_vec = zeros(sum(nsesh),1); circle_vec((nsesh_cum(1)+1):nsesh_cum(2)) = 1;
+diff_vec = ~same_vec;
+%% Perform GLM on day, same/diff arena, & connected/not (should probably include square v circle too...
+fittype = 'interactions'; % 'interactions' could be used also if we assume there is an interaction between same_arena and day_lag
+design_mat{1} = ones(size(PVvec));
+design_mat{2} = same_vec; %day_vec;
+design_mat{3} = [same_vec conn_vec]; % [day_vec same_vec];
+design_mat{4} = [same_vec conn_vec day_vec]; %[day_vec same_vec conn_vec];
+design_mat{5} = [design_mat{4} binornd(1,0.5,size(design_mat{4},1),1)];
+
+[B{1}, dev(1), stats{1}] = glmfit(design_mat{1}, PVvec, 'normal','constant',...
+    'off');
+GLM{1} = fitglm(design_mat{1}, PVvec, fittype, 'Intercept', false);
+for j = 2:length(design_mat)
+    [B{j}, dev(j), stats{j}] = glmfit(design_mat{j}, PVvec, 'normal');
+    GLM{j} = fitglm(design_mat{j}, PVvec, fittype);
+end
+
+% Do some sort of significance testing to determine if all the predictors
+% you added are actually legit
+for j = 1:length(B)-1
+    p2 = length(B{j+1}); % # parameters in model 1
+    p1 = length(B{j}); % # parameters in model 2
+    F(j) = (sum(stats{j}.resid.^2) - sum(stats{j+1}.resid.^2))/(p2-p1)/...
+        (sum(stats{j+1}.resid.^2)/stats{j+1}.dfe);
+    pval(j) = 1 - fcdf(F(j),p2-p1,stats{j+1}.dfe);
+end
+
+%% Model - need to include before, during, after AND
+fittype = 'linear'; % explicitly modeling interactions below
+% What is the mean of the data?
+design_mat = cell(0); GLM = cell(0);
+mm = 1;
+design_mat{mm} = ones(size(PVvec)); mm = mm + 1;
+% Are same v diff arena comparisons different?
+design_mat{mm} = same_vec; mm = mm + 1;
+% 2) Are square v circle different different?
+% design_mat{mm} = [design_mat{mm-1} circle_vec]; mm = mm + 1;
+% 3) Does connecting the arena affect coherency?
+design_mat{mm} = [design_mat{mm-1} conn_vec]; mm = mm + 1;
+% 4) Is there a drift with time overall?
+% design_mat{mm} = [design_mat{mm-1} day_vec]; mm = mm + 1;
+% 5) Is there a diferent drift in same arena than in different arenas?
+design_mat{mm} = [design_mat{mm-1} day_vec.*same_vec]; mm = mm + 1;
+ % 6) Control sanity check - does adding in some randomly designated group make 
+ % a better model? (Answer should be no)
+design_mat{mm} = [design_mat{mm-1} binornd(1,0.5,size(design_mat{4},1),1)]; mm = mm + 1;
+
+
+[B{1}, dev(1), stats{1}] = glmfit(design_mat{1}, PVvec, 'normal','constant',...
+    'off');
+GLM{1} = fitglm(design_mat{1}, PVvec, fittype, 'Intercept', false);
+for j = 2:length(design_mat)
+    [B{j}, dev(j), stats{j}] = glmfit(design_mat{j}, PVvec, 'normal');
+    GLM{j} = fitglm(design_mat{j}, PVvec, fittype);
+end
+
+% Do some sort of significance testing to determine if all the predictors
+% you added are actually legit
+for j = 1:length(B)-1
+    p2 = length(B{j+1}); % # parameters in model 1
+    p1 = length(B{j}); % # parameters in model 2
+    F(j) = (sum(stats{j}.resid.^2) - sum(stats{j+1}.resid.^2))/(p2-p1)/...
+        (sum(stats{j+1}.resid.^2)/stats{j+1}.dfe);
+    pval(j) = 1 - fcdf(F(j),p2-p1,stats{j+1}.dfe);
+end
+
+cellfun(@(a) a.ModelCriterion.AIC,GLM)
+[~, model_use] = min(cellfun(@(a) a.ModelCriterion.AIC,GLM))
+% Take home seems to be that model including square v circle v circ2square,
+% connected/not, and drift for same arena but NOT circ2square best explains
+% the data.  This means that the two main effects are same/different arena,
+% then connecting the arena, followed by a small drift with time for the
+% circle/square arenas. Need to vet this to see if there is a drift with
+% time for all arenas... Also need to do full model analysis (did a greedy
+% search by eliminating one predictor at a time) to look at ALL possible
+% combinations and see which set works best. Why is there no drift for the
+% circ2square? My guess is that in sessions close to one another there is
+% an acceleration of drift/separation. However, at longer time scales
+% generalization takes over and the environments become more similar. Could
+% explain how things happening in two different places a long time ago
+% might get confounded. Now need to run this on 5b and 5d (coherent
+% probability vs time by same/different, and % cell overlap vs time vs day
+% lag - quadratic?)
+%%
+figure(503); set(gcf,'Position',[1960 50 1730 930]);
+subplot(2,2,1)
+hold off
+plot(day_vec(same_vec & ~conn_vec), PVvec(same_vec & ~conn_vec),'bo'); hold on
+plot(day_vec(~same_vec & ~conn_vec), PVvec(~same_vec & ~conn_vec),'ro'); 
+legend('Same Arena - Not Connected', 'Different Arena - Not Connected')
+xlim([-0.5 7.5])
+
+subplot(2,2,2)
+plot(day_vec(same_vec & conn_vec), PVvec(same_vec & conn_vec),'bx'); hold on
+plot(day_vec(~same_vec & conn_vec), PVvec(~same_vec & conn_vec),'rx');
+legend('Same Arena - Connected', 'Different Arena - Connected')
+xlim([-0.5 7.5])
+
+subplot(2,2,3)
+hold off
+plot(day_vec(same_vec & ~conn_vec), PVvec(same_vec & ~conn_vec),'bo'); hold on
+plot(day_vec(same_vec & conn_vec), PVvec(same_vec & conn_vec),'bx');
+plot(day_vec(~same_vec & ~conn_vec), PVvec(~same_vec & ~conn_vec),'ro'); 
+plot(day_vec(~same_vec & conn_vec), PVvec(~same_vec & conn_vec),'rx');
+legend('Same Arena - Not Connected', 'Same Arena - Connected',...
+    'Different Arena - Not Connected', 'Different Arena - Connected')
+xlim([-0.5 7.5])
+
+yhat = glmval(B, design_mat, 'identity');
+
+% T
+% Now do it with local aligned data too
 
 %% Make Cell overlap ratio vs time plot
 try; close 505; end; try; close 506; end; try; close 507; end
