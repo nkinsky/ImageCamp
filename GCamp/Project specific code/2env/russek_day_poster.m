@@ -18,10 +18,11 @@ print([MD(sesh_use).Animal '_allneurons'],'-dpdf', '-bestfit')
 %% Plot cells across days
 % 1 = square, 2 = square rotated with cells following local cues, 3 =
 % square rotated, 4 = circle
-plot_local_aligned = false; % true = plot with local cues aligned, false = as presented to mouse
-sesh_use = cat(2,G30_oct([1:4,7]),G30_square(1)); %cat(2,G45_square([1:4, 7]),G45_oct(1)); % cat(2, G48_oct(1), G48_oct(5), G48_oct(2), G48_oct(3), G48_square(5), G48_oct(4)); % cat(2, G48_oct(1), G48_oct(2), G48_oct(5), G48_square(5), G48_oct(3)); % cat(2,G30_square(1), G30_square(3), G30_square(4), G30_oct(1), G30_square(6));
-base_sesh = G30_square(1); %G45_square(1); % G48_square(1); %G30_square(1);
+plot_local_aligned = 0; % true = plot with local cues aligned, false = as presented to mouse
+sesh_use = G30_square([1 6 7]); %cat(2,G45_square([1:4, 7]),G45_oct(1)); cat(2,G30_oct([1:4,7]),G30_square(1)); % % cat(2, G48_oct(1), G48_oct(5), G48_oct(2), G48_oct(3), G48_square(5), G48_oct(4)); % cat(2, G48_oct(1), G48_oct(2), G48_oct(5), G48_square(5), G48_oct(3)); % cat(2,G30_square(1), G30_square(3), G30_square(4), G30_oct(1), G30_square(6));
+base_sesh = G30_square(1); G45_square(1); % G48_square(1); %G30_square(1); % G30_square(1); 
 num_cols = length(sesh_use);
+best_angle_use = G30_square_best_angle([1 6 7]);% G45_both_best_angle([1 2 7 8 13 3]);
 % num_rows = 3;
 
 [base_dir, base_sesh_full] = ChangeDirectory_NK(base_sesh,0);
@@ -34,12 +35,12 @@ base_index = match_session(batch_session_map.session, base_sesh);
 PF_plot = cell(1,length(sesh_use));
 for j = 1:length(sesh_use)
     dirstr = ChangeDirectory_NK(sesh_use(j),0);
-    if ~plot_local_aligned
+    if plot_local_aligned == 0
         [~, rot] = get_rot_from_db(sesh_use(j));
-    elseif plot_local_aligned
-%         [rot, ~] = get_rot_from_db(sesh_use(j)); 
-%         if rot < 0; rot = rot + 360; end
+    elseif plot_local_aligned == 1
         rot = 0;
+    elseif plot_local_aligned == 2
+        rot = best_angle_use(j);
     end
     load(fullfile(dirstr,['Placefields_rot' num2str(rot) '.mat']),'TMap_gauss');
     sesh_use(j).tmap = TMap_gauss;
@@ -56,7 +57,7 @@ good_ind = find(sum(sparse_map ~= 0 & ~isnan(sparse_map),2) == num_cols); % neur
 % isn't plotted: arrayfun(@(a) find(a == batch_session_map.map(:,4)), G48_oct1_good_neurons)
 % good_ind = [50 71 368]; %[71 135 50 303 368]; %[70 71 72 82 135 224 230
 % 242 89 122]; % [71 230 135]; % All for G30
-good_ind = [50 224 268 174];% G45_square(1:4,7) + G45_oct(1)
+% good_ind = [50 128 212 268]; %[50 224 268 174];% G45_square(1:4,7) + G45_oct(1)
 % [56 69 161 392]; %[37 50 56 69 161 180 207 323 361 392]; % G48 square(1) + all circle sessions
 num_rows = 4; 
 % num_rows = length(good_ind);
