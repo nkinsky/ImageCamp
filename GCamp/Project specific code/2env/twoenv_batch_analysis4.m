@@ -48,10 +48,37 @@ for j = 1:num_animals
     animal_names{j} = Mouse(j).sesh.square(1).Animal;
 end
     
+% P-value thresholds for cell inclusion
+pval_filt = true;
+pval_thresh = 0.05;
+cmperbin_use = 4; 
+ntrans_thresh = 5;
+
+inclusion_criteria.pval_filt = pval_filt;
+inclusion_criteria.pval_thresh = 0.05;
+inclusion_criteria.cmperbin_use = cmperbin_use;
+inclusion_criteria.ntrans_thresh = ntrans_thresh;
+
+sesh_type = {'square', 'circle', 'circ2square'};
+
+%% Get overlap numbers and ratio for each mouse
+for j = 1:num_animals
+    for k = 1:length(sesh_type)
+        sesh_use = Mouse(j).sesh.(sesh_type{k});
+        dirstr = ChangeDirectory_NK(sesh_use(1),0);
+        if strcmpi(sesh_type{k},'circ2square')
+            load(fullfile(dirstr,'batch_session_map_trans'))
+        else
+            load(fullfile(dirstr,'batch_session_map'))
+        end
+        [Mouse(j).cell_overlap.(sesh_type{k}).overlap_num, ...
+            Mouse(j).cell_overlap.(sesh_type{k}).overlap_ratio] = ...
+            get_session_overlap(sesh_use,batch_session_map);
+    end
+end
 
 %% Run rotation analysis
 tic;
-sesh_type = {'square', 'circle', 'circ2square'};
 disp('Performing best angle rotation analysis')
 p = ProgressBar(length(sesh_type)*num_animals);
 for j = 1:num_animals
@@ -109,6 +136,7 @@ for k = 1:length(comp_type)
 end
 
 %% Run PV analysis at best angle
+tic
 dispNK('Running PV analysis at best rotation angle')
 p = ProgressBar(num_animals*length(sesh_type));
 for j = 1:num_animals
@@ -116,25 +144,36 @@ for j = 1:num_animals
         base_dir = ChangeDirectory_NK(Mouse(j).sesh.(sesh_type{k})(1),0);
         if strcmpi(sesh_type{k},'circ2square')
             load(fullfile(base_dir,'batch_session_map_trans'))
+            trans_append = '_trans';
         else
             load(fullfile(base_dir,'batch_session_map'))
+            trans_append = '';
         end
         % Get frames to exclude
         [~, full_sesh_cell] = arrayfun(@(a) ChangeDirectory_NK(a,0), ...
             Mouse(j).sesh.(sesh_type{k}),'UniformOutput',false);
         exclude_frames_cell = cellfun(@(a) a.exclude_frames, full_sesh_cell, ...
             'UniformOutput', false);
-        [PV, PV_corrs] = get_PV_and_corr( Mouse(j).sesh.(sesh_type{k}), ...
-            batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
-            Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput', false),...
-            'output_flag',false, 'num_shuffles', num_shuffles,...
-            'exclude_frames', exclude_frames_cell);
+        %%% OLD CODE - did not use TMaps nor did it filter cells by p-value
+%         [PV, PV_corrs] = get_PV_and_corr( Mouse(j).sesh.(sesh_type{k}), ...
+%             batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
+%             Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput', false),...
+%             'output_flag',false, 'num_shuffles', num_shuffles,...
+%             'exclude_frames', exclude_frames_cell);
+        [PV, PV_corrs] = get_PV_and_corr(Mouse(j).sesh.(sesh_type{k}),...
+            batch_session_map,'use_TMap','unsmoothed','TMap_name_append', ...
+            arrayfun(@(a) ['_cm' num2str(cmperbin_use) trans_append '_rot' ...
+            num2str(a)], Mouse(j).best_angle.(sesh_type{k}),'UniformOutput',...
+            false), 'filter_type','pval','pval_thresh',pval_thresh,...
+            'ntrans_thresh',ntrans_thresh,'output_flag',false,...
+            'num_shuffles', num_shuffles);
         Mouse(j).PV.(sesh_type{k}) = PV;
         Mouse(j).PV_corrs.(sesh_type{k}) = PV_corrs;
         p.progress;
     end
 end
 p.stop;
+disp(['PV analysis at best rotation angle ran in ' num2str(toc,'%0.0g') ' seconds'])
 %% Run PV analysis at best angle for connected sessions
 dispNK('Running PV analysis at best angle for connected session by halves')
 p = ProgressBar(num_animals);
