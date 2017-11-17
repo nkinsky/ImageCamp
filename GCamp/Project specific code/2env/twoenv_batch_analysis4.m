@@ -1,4 +1,4 @@
-% 2env batch analysis
+% 2env batch analysis %
 
 %% Set-up everything
 twoenv_reference;
@@ -48,10 +48,37 @@ for j = 1:num_animals
     animal_names{j} = Mouse(j).sesh.square(1).Animal;
 end
     
+% P-value thresholds for cell inclusion
+pval_filt = true;
+pval_thresh = 0.05;
+cmperbin_use = 4; 
+ntrans_thresh = 5;
+
+inclusion_criteria.pval_filt = pval_filt;
+inclusion_criteria.pval_thresh = 0.05;
+inclusion_criteria.cmperbin_use = cmperbin_use;
+inclusion_criteria.ntrans_thresh = ntrans_thresh;
+
+sesh_type = {'square', 'circle', 'circ2square'};
+
+%% Get overlap numbers and ratio for each mouse
+for j = 1:num_animals
+    for k = 1:length(sesh_type)
+        sesh_use = Mouse(j).sesh.(sesh_type{k});
+        dirstr = ChangeDirectory_NK(sesh_use(1),0);
+        if strcmpi(sesh_type{k},'circ2square')
+            load(fullfile(dirstr,'batch_session_map_trans'))
+        else
+            load(fullfile(dirstr,'batch_session_map'))
+        end
+        [Mouse(j).cell_overlap.(sesh_type{k}).overlap_num, ...
+            Mouse(j).cell_overlap.(sesh_type{k}).overlap_ratio] = ...
+            get_session_overlap(sesh_use,batch_session_map);
+    end
+end
 
 %% Run rotation analysis
 tic;
-sesh_type = {'square', 'circle', 'circ2square'};
 disp('Performing best angle rotation analysis')
 p = ProgressBar(length(sesh_type)*num_animals);
 for j = 1:num_animals
@@ -109,6 +136,8 @@ for k = 1:length(comp_type)
 end
 
 %% Run PV analysis at best angle
+rotations = 'best';
+tic
 dispNK('Running PV analysis at best rotation angle')
 p = ProgressBar(num_animals*length(sesh_type));
 for j = 1:num_animals
@@ -116,25 +145,51 @@ for j = 1:num_animals
         base_dir = ChangeDirectory_NK(Mouse(j).sesh.(sesh_type{k})(1),0);
         if strcmpi(sesh_type{k},'circ2square')
             load(fullfile(base_dir,'batch_session_map_trans'))
+            trans_append = '_trans';
         else
             load(fullfile(base_dir,'batch_session_map'))
+            trans_append = '';
         end
         % Get frames to exclude
         [~, full_sesh_cell] = arrayfun(@(a) ChangeDirectory_NK(a,0), ...
             Mouse(j).sesh.(sesh_type{k}),'UniformOutput',false);
         exclude_frames_cell = cellfun(@(a) a.exclude_frames, full_sesh_cell, ...
             'UniformOutput', false);
-        [PV, PV_corrs] = get_PV_and_corr( Mouse(j).sesh.(sesh_type{k}), ...
-            batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
-            Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput', false),...
-            'output_flag',false, 'num_shuffles', num_shuffles,...
-            'exclude_frames', exclude_frames_cell);
-        Mouse(j).PV.(sesh_type{k}) = PV;
-        Mouse(j).PV_corrs.(sesh_type{k}) = PV_corrs;
+        %%% OLD CODE - did not use TMaps nor did it filter cells by p-value
+%         [PV, PV_corrs] = get_PV_and_corr( Mouse(j).sesh.(sesh_type{k}), ...
+%             batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
+%             Mouse(j).best_angle.(sesh_type{k}), 'UniformOutput', false),...
+%             'output_flag',false, 'num_shuffles', num_shuffles,...
+%             'exclude_frames', exclude_frames_cell);
+        if strcmpi(rotations, 'local_only') || strcmpi(rotations,'best')
+            [PV, PV_corrs] = get_PV_and_corr(Mouse(j).sesh.(sesh_type{k}),...
+                batch_session_map,'use_TMap','unsmoothed','TMap_name_append', ...
+                ['_cm' num2str(cmperbin_use) trans_append '_rot0'],...
+                'filter_type','pval','pval_thresh',pval_thresh,...
+                'ntrans_thresh',ntrans_thresh,'output_flag',false,...
+                'num_shuffles', 1);
+            Mouse(j).PV.local_aligned.(sesh_type{k}) = PV;
+            Mouse(j).PV_corrs.local_aligned.(sesh_type{k}) = PV_corrs;
+            if strcmpi(rotations,'best')
+                [PV, PV_corrs] = get_PV_and_corr(Mouse(j).sesh.(sesh_type{k}),...
+                    batch_session_map,'use_TMap','unsmoothed','TMap_name_append', ...
+                    arrayfun(@(a) ['_cm' num2str(cmperbin_use) trans_append '_rot' ...
+                    num2str(a)], Mouse(j).best_angle.(sesh_type{k}),'UniformOutput',...
+                    false), 'filter_type','pval','pval_thresh',pval_thresh,...
+                    'ntrans_thresh',ntrans_thresh,'output_flag',false,...
+                    'num_shuffles', num_shuffles);
+                Mouse(j).PV.(sesh_type{k}) = PV;
+                Mouse(j).PV_corrs.(sesh_type{k}) = PV_corrs;
+            end
+        end
+        
         p.progress;
     end
 end
 p.stop;
+disp(['PV analysis at best rotation angle ran in ' num2str(toc,'%0.0g') ' seconds'])
+savename = ['2env_PV_' num2str(num_shuffles) 'shuffles-' datestr(now,29) '.mat'];
+save(savename,'Mouse','inclusion_criteria')
 %% Run PV analysis at best angle for connected sessions
 dispNK('Running PV analysis at best angle for connected session by halves')
 p = ProgressBar(num_animals);
@@ -1032,6 +1087,9 @@ plot_by_animal = false; %Suggest keeping false since not much is apparent on the
 coh_all = [];
 gr_all = [];
 loc_all = [];
+hcomb = figure(34);
+days_ref =  0:7;
+coh_prop_all = nan(8,3);
 for mm = 1:length(sesh_type)
     
     days_plot = Mouse(1).coherent_v_days.rotation.(sesh_type{mm})(:,1);
@@ -1099,7 +1157,59 @@ for mm = 1:length(sesh_type)
     xlabel('Days b/w'); ylabel('Probability')
     title(['Rotation Agnostic Coherency v Time Breakdown - ' sesh_type{mm}])
     legend('Coherent','Coherent - Local Cues')
+    coh_prop_all(arrayfun(@(a) find(a == days_ref),days_plot),mm) = ...
+        coh_total_comb./total_comb2; % Dump into combined mat
 end
+figure(hcomb)
+% bar(days_ref',coh_prop_all)
+win_env = mean(coh_prop_all(:,1:2),2); diff_env = coh_prop_all(:,3);
+plot(days_ref(~isnan(win_env))', win_env(~isnan(win_env)), 'bo-', ...
+    days_ref(~isnan(diff_env))', diff_env(~isnan(diff_env)), 'ro--')
+ylim([0 1.1])
+xlim([-0.5 7.5]); xlabel('Day lag'); ylabel('Coherent Ratio')
+legend('Same Arena', 'Different Arena')
+make_plot_pretty(gca)
+
+%% Do some stats on above to determine if each day is different than each 
+% other day - Very rough test to determine if each day comes from a
+% different binomial distribution than all the other days assuming the
+% probability can be calculated as the mean probability of coherency across
+% all mice
+alpha = 0.05; % Null is p1 = p2 (could see good reason for either greater 
+% or lesser probability with time - greater due to more generalization
+% between events/dulling of details, and lesser due to drift with time)
+zthresh = norminv(alpha,0,1); % Get z score threshold
+num_by_lag(1:7,1) = 4*(sum(Mouse(1).coherent_v_days.no_rotation.square(:,2:3),2)+...
+    sum(Mouse(1).coherent_v_days.rotation.square(:,2:3),2)+...
+    sum(Mouse(1).coherent_v_days.no_rotation.circle(:,2:3),2)+...
+    sum(Mouse(1).coherent_v_days.rotation.circle(:,2:3),2)); % Same Arena
+
+num_by_lag([1:6 8],2) = 4*(sum(Mouse(1).coherent_v_days.no_rotation.circ2square(:,2:3),2)...
+    +sum(Mouse(1).coherent_v_days.rotation.circ2square(:,2:3),2)); % Different Arena
+
+coh_prob(:,1) = win_env; coh_prob(:,2) = diff_env;
+num_lags = size(coh_prob,1);
+
+% z = (p1hat - p2hat)/(sqrt(phat*(1-phat)*(1/n1 + 1/n2)) where phat =
+% (n1*p1 + n2*p2)/(n1 + n2)
+pmat_coh_by_day = nan(2,num_lags,num_lags);
+for m = 1:2
+    for j = 1:num_lags-1
+        p1hat(m,j) = coh_prob(j,m);
+        n1(m,j) = num_by_lag(j,m);
+        for k = j+1:num_lags
+
+            p2hat(m,k) = coh_prob(k,m);
+            n2(m,k) = num_by_lag(k,m);
+            phat(m,j,k) = (n1(m,j)*p1hat(m,j) + n2(m,k)*p2hat(m,k))/...
+                (n1(m,j)+n2(m,k));
+            z(m,j,k) = (p1hat(m,j) - p2hat(m,k))/...
+                (sqrt(phat(m,j,k)*(1-phat(m,j,k))*(1/n1(m,j) + 1/n2(m,k))));
+            pmat_coh_by_day(m,j,k) = 1 - normcdf(abs(z(m,j,k)),0,1);
+        end
+    end
+end
+
 
 %% Plot Breakdown of alignment before, during, after
 % Must run twoenv_reference beforehand to get bw_before, bw_during, &

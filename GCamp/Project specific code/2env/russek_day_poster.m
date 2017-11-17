@@ -18,10 +18,11 @@ print([MD(sesh_use).Animal '_allneurons'],'-dpdf', '-bestfit')
 %% Plot cells across days
 % 1 = square, 2 = square rotated with cells following local cues, 3 =
 % square rotated, 4 = circle
-plot_local_aligned = true; % true = plot with local cues aligned, false = as presented to mouse
-sesh_use = cat(2,G45_square(1),G45_oct); cat(2, G48_oct(1), G48_oct(5), G48_oct(2), G48_oct(3), G48_square(5), G48_oct(4)); % cat(2, G48_oct(1), G48_oct(2), G48_oct(5), G48_square(5), G48_oct(3)); % cat(2,G30_square(1), G30_square(3), G30_square(4), G30_oct(1), G30_square(6));
-base_sesh = G45_square(1); % G48_square(1); %G30_square(1);
+plot_local_aligned = 0; % true = plot with local cues aligned, false = as presented to mouse
+sesh_use = G30_square([1 6 7]); %cat(2,G45_square([1:4, 7]),G45_oct(1)); cat(2,G30_oct([1:4,7]),G30_square(1)); % % cat(2, G48_oct(1), G48_oct(5), G48_oct(2), G48_oct(3), G48_square(5), G48_oct(4)); % cat(2, G48_oct(1), G48_oct(2), G48_oct(5), G48_square(5), G48_oct(3)); % cat(2,G30_square(1), G30_square(3), G30_square(4), G30_oct(1), G30_square(6));
+base_sesh = G30_square(1); G45_square(1); % G48_square(1); %G30_square(1); % G30_square(1); 
 num_cols = length(sesh_use);
+best_angle_use = G30_square_best_angle([1 6 7]);% G45_both_best_angle([1 2 7 8 13 3]);
 % num_rows = 3;
 
 [base_dir, base_sesh_full] = ChangeDirectory_NK(base_sesh,0);
@@ -34,18 +35,19 @@ base_index = match_session(batch_session_map.session, base_sesh);
 PF_plot = cell(1,length(sesh_use));
 for j = 1:length(sesh_use)
     dirstr = ChangeDirectory_NK(sesh_use(j),0);
-    if ~plot_local_aligned
+    if plot_local_aligned == 0
         [~, rot] = get_rot_from_db(sesh_use(j));
-    elseif plot_local_aligned
-%         [rot, ~] = get_rot_from_db(sesh_use(j)); 
-%         if rot < 0; rot = rot + 360; end
+    elseif plot_local_aligned == 1
         rot = 0;
+    elseif plot_local_aligned == 2
+        rot = best_angle_use(j);
     end
     load(fullfile(dirstr,['Placefields_rot' num2str(rot) '.mat']),'TMap_gauss');
     sesh_use(j).tmap = TMap_gauss;
     sesh_use(j).nanmap = TMap_gauss{1};
     sesh_use(j).nanmap(~isnan(TMap_gauss{1})) = 0;
     sesh_use(j).sesh_index = match_session(batch_session_map.session, sesh_use(j));
+    sesh_use(j).rot = rot;
 end
 sparse_map = batch_session_map.map(:,arrayfun(@(a) a.sesh_index, sesh_use)+1); % get map for just the 4 days in question
 good_ind = find(sum(sparse_map ~= 0 & ~isnan(sparse_map),2) == num_cols); % neurons active on all 4 days
@@ -55,11 +57,12 @@ good_ind = find(sum(sparse_map ~= 0 & ~isnan(sparse_map),2) == num_cols); % neur
 % isn't plotted: arrayfun(@(a) find(a == batch_session_map.map(:,4)), G48_oct1_good_neurons)
 % good_ind = [50 71 368]; %[71 135 50 303 368]; %[70 71 72 82 135 224 230
 % 242 89 122]; % [71 230 135]; % All for G30
-good_ind = [56 69 161 392]; %[37 50 56 69 161 180 207 323 361 392]; % G48 square(1) + all circle sessions
+% good_ind = [50 128 212 268]; %[50 224 268 174];% G45_square(1:4,7) + G45_oct(1)
+% [56 69 161 392]; %[37 50 56 69 161 180 207 323 361 392]; % G48 square(1) + all circle sessions
 num_rows = 4; 
 % num_rows = length(good_ind);
 
-figure
+figure; set(gcf,'Position',[2100 20 750 875]);
 
 neurons_plot = 1:num_rows;
 base_dir = ChangeDirectory_NK(sesh_use(1),0);
@@ -102,31 +105,43 @@ for m = 1:(floor(length(good_ind)/num_rows))
                     imagesc_nan(rot90(sesh_use(k).tmap{neuron_use},1));                    
                 end
                 if k == 1 % only label neuron in first session
-                       title(['Neuron ' num2str(neuron_use)])
+                       title({['Neuron ' num2str(neuron_use)], ['Rot = ' ...
+                           num2str(sesh_use(k).rot)]})
+                elseif j == 1 && k ~= 1
+                    title(['Rot = ' num2str(sesh_use(k).rot)])
                 end
             end
-            axis equal tight
+%             axis equal 
+            axis tight
             axis off
+            try
             if j == 1
                 dirstr = ChangeDirectory_NK(sesh_use(k),0);
                 load(fullfile(dirstr,'FinalOutput.mat'),'NeuronImage');
                 reg_filename = fullfile(base_dir,['RegistrationInfo-' sesh_use(k).Animal '-' sesh_use(k).Date '-session' num2str(sesh_use(k).Session) '.mat']);
                 load(reg_filename);
-                ROI_reg = imwarp_quick(NeuronImage{neuron_use}, RegistrationInfoX);
-                b = bwboundaries(ROI_reg,'noholes');
-                
-                subplot(num_rows + 1, num_cols, num_cols*num_rows+k)
-                plot(b{1}(:,2),b{1}(:,1));
-                if k == 1
-                    cent_ROI = mean(b{1},1);
-                    xlims = [cent_ROI(2) - 15, cent_ROI(2) + 15];
-                    ylims = [cent_ROI(1) - 15, cent_ROI(1) + 15];
+                if neuron_use ~= 0 && ~isnan(neuron_use)
+                    ROI_reg = imwarp_quick(NeuronImage{neuron_use}, RegistrationInfoX);
+                    b = bwboundaries(ROI_reg,'noholes');
+                    
+                    subplot(num_rows + 1, num_cols, num_cols*num_rows+k)
+                    plot(b{1}(:,2),b{1}(:,1));
+                    if k == 1
+                        cent_ROI = mean(b{1},1);
+                        xlims = [cent_ROI(2) - 15, cent_ROI(2) + 15];
+                        ylims = [cent_ROI(1) - 15, cent_ROI(1) + 15];
+                    end
+                    xlim(xlims); ylim(ylims);
+                elseif neuron_use == 0 || isnan(neuron_use)
+                    subplot(num_rows + 1, num_cols, num_cols*num_rows+k)
+                    text(0.1,0.5,'Bad Neuron Mapping - no ROI out')
                 end
-                xlim(xlims); ylim(ylims);
-                axis equal
+%                 axis equal
                 axis tight
                 axis off
-%                 axis off
+            end
+            catch
+                disp('Some error in plotting ROIs')
             end
                 
         end
@@ -136,6 +151,19 @@ for m = 1:(floor(length(good_ind)/num_rows))
     waitforbuttonpress
 end
 
+% Plot figure showing neuron outlines from above
+ncolors = [1 0 0; 0 1 0; 0 0 1; 1 0 1]; % Plot example neurons as r g b cyan
+ncolors = resize(ncolors, [length(good_ind), 3]); % Add in more intermediate colors if needed
+figure; set(gcf,'Position',[2500 150 950 770])
+h = gca;
+load(fullfile(base_dir,'FinalOutput.mat'),'NeuronImage')
+hall = plot_neuron_outlines(nan,NeuronImage,h,'colors',[0.5 0.5 0.5]);
+hold on
+[~, ~, hneuron] = plot_neuron_outlines(nan,NeuronImage(good_ind((end-3):end)),hall,...
+    'colors', ncolors, 'scale_bar', false);
+legend(hneuron,arrayfun(@(a) ['Neuron ' num2str(a)], ...
+    good_ind,'UniformOutput',false))
+axis tight
 %% Plot cell recruitment 1st v 2nd environment
 sesh_use = G45_square(6); %G45_square(5);
 
