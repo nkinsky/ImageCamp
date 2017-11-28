@@ -8,6 +8,7 @@ success_bool = false(1,length(MD));
 for j= 1:length(MD)
     try
         Placefields(MD(j),varargin{:});
+        success_bool(j) = true;
     catch
         success_bool(j) = false;
     end
