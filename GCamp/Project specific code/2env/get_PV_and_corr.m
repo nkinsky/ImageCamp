@@ -43,7 +43,8 @@ ip.addParameter('exclude_frames', [], @(a) isempty(a) || iscell(a) && ...
 ip.addParameter('output_flag',true, @islogical)
 ip.addParameter('filter_type', 'all_cells', @(a) strcmpi(a, 'all_cells')...
     || strcmpi(a,'active_both') || strcmpi(a,'active_all') || ...
-    strcmpi(a,'good_map') || strcmpi(a,'pval')); % Cells to include - nan = all cells, 
+    strcmpi(a,'good_map') || strcmpi(a,'pval') || strcmpi(a,'custom')); % Cells to include - nan = all cells, 
+ip.addParameter('custom_filter',nan, @isnumeric);
 % active_both = only cells that are active in both sessions being compared,
 % and active_all = only cells that are active in ALL sessions being
 % considered
@@ -73,6 +74,7 @@ use_TMap = ip.Results.use_TMap;
 TMap_name_append = ip.Results.TMap_name_append;
 pval_thresh = ip.Results.pval_thresh;
 ntrans_thresh = ip.Results.ntrans_thresh;
+custom_filter = ip.Results.custom_filter;
 
 silent_include = true;
 if strcmpi(filter_type,'good_map')
@@ -270,6 +272,8 @@ elseif strcmpi(filter_type, 'good_map')
     rows_param = 'complete';
 elseif strcmpi(filter_type, 'pval')
     rows_param = 'pairwise';
+elseif strcmpi(filter_type, 'custom')
+    PV_use = PV(:,:,:,custom_filter);
 end
 
 for m = 1:length(sesh)
