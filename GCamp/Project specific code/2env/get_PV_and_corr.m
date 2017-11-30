@@ -24,8 +24,6 @@ num_sessions = length(session_struct);
 ip = inputParser;
 ip.addRequired('session_struct',@isstruct);
 ip.addRequired('batch_session_map',@isstruct);
-ip.addParameter('rot_to_std', false, @(a) islogical(a) || a == 0 || a == 1);
-ip.addParameter('use_trans', false, @(a) islogical(a) || a == 0 || a == 1);
 ip.addParameter('NumXBins', 5, @(a) a > 0 && round(a) == a)
 ip.addParameter('NumYBins', 5, @(a) a > 0 && round(a) == a)
 ip.addParameter('corr_type', 'Spearman', @(a) strcmp('Spearman',a) || ...
@@ -53,10 +51,9 @@ ip.addParameter('use_TMap', '', @(a) isempty(a) || strcmpi(a,'gauss') || ...
     strcmpi(a,'unsmoothed')); % '' = don't use TMap
 ip.addParameter('TMap_name_append', '', @(a) isempty(a) || iscell(a) || ischar(a));
 ip.addParameter('ntrans_thresh', 5, @(a) a >= 0 && round(a) == a);
+ip.addParameter('half_use',nan, @(a) all(isnan(a)) || all(a == 1 | a == 2)); % If non nan, specifies which half of PFhalf to use
 ip.parse(session_struct, batch_session_map, varargin{:});
 
-rot_to_std = ip.Results.rot_to_std;
-use_trans = ip.Results.use_trans;
 NumXBins = ip.Results.NumXBins;
 NumYBins = ip.Results.NumYBins;
 corr_type = ip.Results.corr_type;
@@ -75,6 +72,9 @@ TMap_name_append = ip.Results.TMap_name_append;
 pval_thresh = ip.Results.pval_thresh;
 ntrans_thresh = ip.Results.ntrans_thresh;
 custom_filter = ip.Results.custom_filter;
+half_use = ip.Results.half_use;
+
+half_flag = ~isnan(half_use);
 
 silent_include = true;
 if strcmpi(filter_type,'good_map')
@@ -166,8 +166,14 @@ if isempty(use_TMap)
 else
     dirstr = ChangeDirectory(session_struct(1).Animal,session_struct(1).Date,...
         session_struct(1).Session,0);
-    load(fullfile(dirstr,['Placefields' TMap_name_append{1} '.mat']),'xEdges',...
-        'yEdges')
+    if ~half_flag
+        load(fullfile(dirstr,['Placefields' TMap_name_append{1} '.mat']),'xEdges',...
+            'yEdges')
+    elseif half_flag
+        load(fullfile(dirstr,['Placefields' TMap_name_append{1} '.mat']))
+        xEdges = Placefields_halves{half_use(1)}.xEdges;
+        yEdges = Placefields_halves{half_use(1)}.yEdges;
+    end
     NumXBins = length(xEdges) - 1;
     NumYBins = length(yEdges) - 1;
 end
@@ -176,28 +182,19 @@ if strcmpi(filter_type,'pval')
     for j = 1:length(session_struct)
         dirstr = ChangeDirectory(session_struct(j).Animal,session_struct(j).Date,...
             session_struct(j).Session,0);
-        load(fullfile(dirstr,['Placefields' TMap_name_append{j} '.mat']),...
-            'pval','PSAbool');
+        if ~half_flag
+            load(fullfile(dirstr,['Placefields' TMap_name_append{j} '.mat']),...
+                'pval','PSAbool');
+        elseif half_flag
+            load(fullfile(dirstr,['Placefields' TMap_name_append{j} '.mat']))
+            pval = Placefields_halves{half_use(j)}.pval;
+            PSAbool = Placefields_halves{half_use(j)}.PSAbool;
+        end
+            
         sesh(j).pval_filt = pval < pval_thresh;
         sesh(j).ntrans_filt = get_num_trans(PSAbool)' >= ntrans_thresh;
     end
 end
-
-
-% Split up session appropriately if calc_half is flagged.
-% if calc_half
-%     if length(sesh) > 1
-%         error('Within session correlations only work for one session at at time.')
-%     end
-%     sesh(2) = sesh(1);
-%     for j = 1:2
-%         sesh(j).PSAbool = sesh(j).PSAbool(:,half_indices{j});
-%         sesh(j).frames_include = true(1,length(half_indices{j}));
-%         sesh(j).x = sesh(j).x(half_indices{j});
-%         sesh(j).y = sesh(j).y(half_indices{j});
-%     end
-%     batch_map = repmat((1:size(FT,1))',1,3); % Make mapping the exact same for each half.
-% end
 
 %% Get population vectors for a NumXBins x NumYBins grid for each arena
 
@@ -227,15 +224,17 @@ if isempty(use_TMap)
                 PV(m,j,k,:) = assign_FR( temp_FR, map_use, silent_include );
                 
             end
-        end
-        
-        
+        end 
     end
 else
     for m = 1:length(sesh)
         map_use = batch_map(:,session_ind(m)+1);
         temp_FR = get_PV_from_TMap(session_struct(m),...
-            'PFname_append', TMap_name_append{m},'TMap_use', use_TMap);
+            'PFname_append', TMap_name_append{m},'TMap_use', use_TMap, ...
+            'half_flag', half_flag);
+        if half_flag % Grab approriate half if specified
+            temp_FR = squeeze(temp_FR(half_use(m),:,:,:));
+        end
         sesh(m).PV_TMap = temp_FR;
         for j = 1:NumXBins
             for k = 1:NumYBins
@@ -284,8 +283,8 @@ for m = 1:length(sesh)
         if strcmpi(filter_type, 'active_both')
             PV_collapse = squeeze(sum(sum(PV([m,ll],:,:,:),2),3));
             active_both_log = sum(PV_collapse > 0) == 2;
-            PV_use = PV(:,:,:,active_both_log);
-        elseif strcmpi(filter_type, 'pval')
+            PV_use = PV([m,ll],:,:,active_both_log);
+        elseif strcmpi(filter_type, 'pval') % || strcmpi(filter_type,'no_coherent'
             
             % Get cells that are active in both sessions and pass pval
             % thresh in at least ONE session
@@ -336,6 +335,7 @@ for m = 1:length(sesh)
 %             ppass_either(silent_cells) = false; % Get rid of silent cells
 %             PV_use = PV([m,ll],:,:,ppass_either);
         else
+            PV_use = PV([m,ll],:,:,:);
         end
         PV_use1 = squeeze(PV_use(1,:,:,:)); % Slicing and dicing to help out parfor loop
         PV_use2 = squeeze(PV_use(2,:,:,:));
@@ -345,8 +345,7 @@ for m = 1:length(sesh)
                 % appropriate bin.
                 PV1 = squeeze(PV_use1(j,k,:));
                 PV2 = squeeze(PV_use2(j,k,:));
-                
-                [PV_corr(m,ll,j,k), PV_dist(m,ll,j,k)] = ...
+               [PV_corr(m,ll,j,k), PV_dist(m,ll,j,k)] = ...
                     calc_corr_and_dist(PV1, PV2, corr_type, rows_param, false);
 %                 ind_use = ~isnan(PV1) & ~isnan(PV2); %Indices of neurons that are not NaN in both sessions
 % %                 ind_use_both = ~isnan(PV1) | ~isnan(PV2); % Indices of neurons that are not NaN in either session
