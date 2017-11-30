@@ -189,8 +189,8 @@ end
 p.stop;
 disp(['PV analysis at best rotation angle ran in ' num2str(toc,'%0.0g') ' seconds'])
 savename = ['2env_PV_' num2str(num_shuffles) 'shuffles-' datestr(now,29) '.mat'];
-save(savename,'Mouse','inclusion_criteria')
-%% Run PV analysis at best angle for connected sessions
+save(savename,'Mouse','inclusion_criteria','-v7.3')
+%% Run PV analysis at best angle for connected sessions - not using TMaps
 dispNK('Running PV analysis at best angle for connected session by halves')
 p = ProgressBar(num_animals);
 for j = 1:num_animals
@@ -237,11 +237,40 @@ for j = 1:num_animals
             Mouse(j).best_angle.(sesh_type{k})([9 10 9 10 11 12 11 12]), 'UniformOutput', false),...
             'output_flag',false, 'num_shuffles', num_shuffles,...
             'exclude_frames', exclude_frames_comb);
-        Mouse(j).PV.conn = PV;
-        Mouse(j).PV_corrs.conn = PV_corrs;
+        Mouse(j).PV.conn.allcells = PV;
+        Mouse(j).PV_corrs.conn.allcells = PV_corrs;
         p.progress;
         
     end
+end
+p.stop;
+
+%% Run PV analysis at best angle for connected sessions - USING TMaps
+dispNK('Running PV analysis at best angle for connected session by halves')
+p = ProgressBar(num_animals);
+half_use = [1 1 2 2 1 1 2 2];
+filters_use = '';
+for j = 1:num_animals
+    base_dir = ChangeDirectory_NK(Mouse(j).sesh.circ2square(1),0);
+    load(fullfile(base_dir,'batch_session_map_trans'))
+    
+    % Re-organize - day 5 1st 4 cols, day 6 2nd 4 cols
+    conn_sesh = Mouse(j).sesh.circ2square([9 10 9 10 11 12 11 12]);
+    best_angle_use = Mouse(j).best_angle.circ2square([9 10 9 10 11 12 11 12]);
+    
+    % Run Analysis
+    [PV, PV_corrs] = get_PV_and_corr( conn_sesh, ...
+        batch_session_map, 'use_TMap','unsmoothed','TMap_name_append', ...
+        arrayfun(@(a) ['_half_cm' num2str(cmperbin_use) '_trans_rot' ...
+        num2str(a) '_inMD'], best_angle_use,'UniformOutput', false), ...
+        'filter_type','pval','pval_thresh',pval_thresh,...
+        'ntrans_thresh',ntrans_thresh,'output_flag',false,...
+        'num_shuffles', num_shuffles,'half_use', half_use);
+    Mouse(j).PV.conn.filt = PV;
+    Mouse(j).PV_corrs.conn.filt = PV_corrs;
+    p.progress;
+    
+    
 end
 p.stop;
 
@@ -324,10 +353,10 @@ for ii = 1:num_animals
     Mouse(ii).DI = nan(8,8,size(Mouse(ii).PV.circ2square,4)); % Pre-allocate
     for j = 1:8
         % NK note - shouldn't this be max? I think so...
-        PV_square = squeeze(max(max(Mouse(ii).PV.circ2square(square_sesh(j),:,:,:),...
+        PV_square = squeeze(nanmax(nanmax(Mouse(ii).PV.circ2square(square_sesh(j),:,:,:),...
             [],2),[],3)); % Activity across all bins in the square
         for k = 1:8
-            PV_circle = squeeze(max(max(Mouse(ii).PV.circ2square(circ_sesh(k),:,:,:),...
+            PV_circle = squeeze(nanmax(nanmax(Mouse(ii).PV.circ2square(circ_sesh(k),:,:,:),...
                 [],2),[],3));
             active_cells = PV_square ~= 0 | PV_circle ~= 0;
             DI_temp = (PV_square(active_cells) - PV_circle(active_cells))...
