@@ -33,7 +33,7 @@ for j = 1:length(sesh_use)
 end
 
 %% Run Placefields_half
-sesh_use = G48_square(5);
+sesh_use = cat(2,G30_botharenas(9:12));
 
 for j = 1
     [~, MD_use] = ChangeDirectory_NK(sesh_use(j),0);
@@ -192,7 +192,7 @@ for j = 7; %1:length(sesh_use)
         name_append_full = [cm_append '_trans_rot' num2str(rot_array_use(k))];
         Placefields(full_sesh,'minspeed',1,'name_append', name_append_full,...
             'Pos_data', ['Pos_align_trans_rot' num2str(rot_array_use(k))],...
-            'cmperbin', cmperbin_use);
+            'cmperbin', cmperbin_use, 'exclude_frames', full_sesh.exclude_frames);
         PlacefieldStats(full_sesh,'name_append',name_append_full);
     end
     
@@ -203,6 +203,30 @@ for j = 7; %1:length(sesh_use)
             'exclude_frames',full_sesh.exclude_frames, 'cmperbin', cmperbin_use);
         PlacefieldStats(full_sesh,'name_append',name_append_full);
     end
+end
+
+%% Run on connected sessions for each half at best angle only
+sesh_use = cat(2,G30_botharenas(9:12),G31_botharenas(9:12),G45_botharenas(9:12),...
+    G48_botharenas(9:12));
+cmperbin_use = 4;
+rot_array = cat(2,G30_both_best_angle(9:12), G31_both_best_angle(9:12),...
+    G45_both_best_angle(9:12),G48_both_best_angle(9:12));
+run_win_too = false; % true = run square only and circle only too!
+if cmperbin_use ~= 1; cm_append = ['_cm' num2str(cmperbin_use)]; else ; cm_append = ''; end
+for j = 1:length(sesh_use)
+    [dirstr, full_sesh] = ChangeDirectory(sesh_use(j).Animal, sesh_use(j).Date, ...
+        sesh_use(j).Session);
+    disp(['Running Circle2Square Rotated Placefield Analysis on ' full_sesh.Animal ...
+        ' - ' full_sesh.Date ' - session ' num2str(full_sesh.Session)])
+    
+    rot_array_use = rot_array(j);
+    name_append_full = ['_half' cm_append '_trans_rot' num2str(rot_array_use)];
+    Placefields_half(full_sesh,'inMD', full_sesh.exclude_frames, name_append_full,...
+        'minspeed',1,'Pos_data', ['Pos_align_trans_rot' num2str(rot_array_use)],...
+        'cmperbin', cmperbin_use);
+    PlacefieldStats(full_sesh,'name_append',[name_append_full '_inMD'],...
+        'halfPF',true);
+    
 end
 
 %% Fix batch_align_pos
