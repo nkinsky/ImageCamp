@@ -509,7 +509,6 @@ for j = 1:num_animals
     min_use = nanmin([min_use PVfilt_corrs(j,:)]);
     max_use = nanmax([max_use PVfilt_corrs(j,:)]);
     
-    DI_prop
 end
 
 % Now plot them all out
