@@ -23,6 +23,7 @@ ip.addParameter('num_shuffles', 10, @(a) a >= 0 && round(a) == a);
 ip.addParameter('sig_star', false(length(sessions)), @islogical); % Puts a star and p-value by each non-nan value
 ip.addParameter('sig_value', nan(length(sessions)), @isnumeric); % Puts the value of anything in sig_stars on the graph
 ip.addParameter('save_fig', false, @islogical);
+ip.addParameter('name_append','',@ischar); % Name to append to end of .mat and .pdf files
 ip.parse(sessions, rot_type, varargin{:});
 
 map_session = ip.Results.map_session;
@@ -31,6 +32,7 @@ num_shuffles = ip.Results.num_shuffles;
 save_fig = ip.Results.save_fig;
 sig_star = ip.Results.sig_star;
 sig_value = ip.Results.sig_value;
+name_append = ip.Results.name_append;
 
 alpha = 0.05; % Significance level before Bonferroni correction
 
@@ -203,11 +205,12 @@ end
 if ~isempty(save_fig)
 %     ext_type = '.png';
         file_name = {[sessions(1).Animal ' - ' rot_type ...
-            ' - Population Rotation Analysis - ' num2str(num_shuffles) ' shuffles'],...
+            ' - Population Rotation Analysis - ' num2str(num_shuffles) ...
+            ' shuffles' name_append],...
         [sessions(1).Animal ' - ' rot_type ' - Population Best Angle Histogram - ' ...
-        num2str(num_shuffles) ' shuffles'],...
+        num2str(num_shuffles) ' shuffles' name_append],...
         [sessions(1).Animal ' - ' rot_type ' - Neuron Best Angle Histogram - '...
-        num2str(num_shuffles) ' shuffles']};
+        num2str(num_shuffles) ' shuffles' name_append]};
     for j = 1:3
        figure(hh(j)); set(gcf,'Visible', 'on'); 
        set(gcf,'Position',[1921 1 1920 1004])
@@ -218,7 +221,7 @@ end
 
 % Save relevant variables
 file_save_name = fullfile(batch_dir,['full_rotation_analysis_' rot_type ...
-    '_shuffle' num2str(num_shuffles)]);
+    '_shuffle' num2str(num_shuffles) name_append]);
 save(file_save_name, 'best_angle', 'best_angle_all', 'corr_at_best', ...
     'sig_test', 'corr_means', 'CI', 'num_shuffles', 'best_angle_shuf_all')
 
