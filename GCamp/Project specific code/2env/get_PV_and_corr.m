@@ -15,8 +15,6 @@ function [ PV, PV_corrs ] = get_PV_and_corr( session_struct, batch_session_map, 
 %   spits out the raw population vectors (num_sessions x num_Xbins x
 %   num_Ybins)
 
-%%% NEED TO ADD IN ABILITY TO FILTER OUT NEURONS
-
 %% Parse inputs
 
 num_sessions = length(session_struct);
@@ -29,40 +27,35 @@ ip.addParameter('NumYBins', 5, @(a) a > 0 && round(a) == a)
 ip.addParameter('corr_type', 'Spearman', @(a) strcmp('Spearman',a) || ...
     strcmp('Kendall',a) || strcmp('Pearson',a));
 ip.addParameter('num_shuffles', 1, @(a) a > 0 && round(a) == a);
-% ip.addParameter('disp_prog_bar', true, @(a) islogical(a) || a == 0 || a == 1);
 ip.addParameter('calc_half', false, @(a) islogical(a) || a == 0 || a == 1);
 ip.addParameter('alt_pos_file', 'Pos_align.mat', @(a) ischar(a) || ...
     iscell(a) && length(a) == num_sessions);
-% ip.addParameter('neuron_filter', true(size(batch_map)), @islogical); %This is not finished yet - probably need some more fancy code to make it work
-ip.addParameter('version_use', 'T4', @(a) strcmp('T2',a) || strcmp('T4',a));
 ip.addParameter('minspeed', 1, @(a) isnumeric(a) && a >= 0);
 ip.addParameter('exclude_frames', [], @(a) isempty(a) || iscell(a) && ...
     length(a) == num_sessions); % not necessary/used if use_TMap is true
 ip.addParameter('output_flag',true, @islogical)
-ip.addParameter('filter_type', 'all_cells', @(a) strcmpi(a, 'all_cells')...
-    || strcmpi(a,'active_both') || strcmpi(a,'active_all') || ...
-    strcmpi(a,'good_map') || strcmpi(a,'pval') || strcmpi(a,'custom')); % Cells to include - nan = all cells, 
-ip.addParameter('custom_filter',nan, @isnumeric);
+ip.addParameter('filter_type', 'all_cells', @(a) any(strcmpi(a, {'all_cells',...
+    'active_both', 'active_all', 'good_map' 'pval', 'custom',...
+    'no_coherent', 'no_remap', 'no_silent','coherent_only'}))); % Cells to include - nan = all cells, 
 % active_both = only cells that are active in both sessions being compared,
 % and active_all = only cells that are active in ALL sessions being
 % considered
+ip.addParameter('custom_filter',nan, @isnumeric);
 ip.addParameter('pval_thresh', 0.05, @(a) a > 0 && a <= 1); % pval thresh to use if specified above
 ip.addParameter('use_TMap', '', @(a) isempty(a) || strcmpi(a,'gauss') || ...
     strcmpi(a,'unsmoothed')); % '' = don't use TMap
 ip.addParameter('TMap_name_append', '', @(a) isempty(a) || iscell(a) || ischar(a));
 ip.addParameter('ntrans_thresh', 5, @(a) a >= 0 && round(a) == a);
 ip.addParameter('half_use',nan, @(a) all(isnan(a)) || all(a == 1 | a == 2)); % If non nan, specifies which half of PFhalf to use
+ip.addParameter('comp_type', '', @ischar); % Must be 'square' or 'circle' or 'circ2square'
 ip.parse(session_struct, batch_session_map, varargin{:});
 
 NumXBins = ip.Results.NumXBins;
 NumYBins = ip.Results.NumYBins;
 corr_type = ip.Results.corr_type;
 num_shuffles = ip.Results.num_shuffles;
-% disp_prog_bar = ip.Results.disp_prog_bar;
 calc_half = ip.Results.calc_half;
 pos_file = ip.Results.alt_pos_file;
-% neuron_filter = ip.Results.neuron_filter;
-version_use = ip.Results.version_use;
 minspeed = ip.Results.minspeed;
 exclude_frames = ip.Results.exclude_frames;
 output_flag = ip.Results.output_flag;
@@ -73,6 +66,7 @@ pval_thresh = ip.Results.pval_thresh;
 ntrans_thresh = ip.Results.ntrans_thresh;
 custom_filter = ip.Results.custom_filter;
 half_use = ip.Results.half_use;
+comp_type = ip.Results.comp_type;
 
 half_flag = ~isnan(half_use);
 
@@ -107,38 +101,22 @@ end
 session_map = nan(1, num_sessions);
 batch_session_map = fix_batch_session_map(batch_session_map);
 for j = 1:num_sessions
-   session_ind(j) = find(arrayfun(@(a) strcmp(a.Animal, session_struct(j).Animal)...
-       & strcmp(a.Date,session_struct(j).Date)...
-       & a.Session == session_struct(j).Session, batch_session_map.session));
-end
+    session_ind(j) = find(arrayfun(@(a) strcmp(a.Animal, session_struct(j).Animal)...
+        & strcmp(a.Date,session_struct(j).Date)...
+        & a.Session == session_struct(j).Session, batch_session_map.session));
+    end
 
 batch_map = batch_session_map.map;
 
 %% Load required variables from session_struct
-sesh = session_struct;
+sesh = add_workdir(session_struct); % Add in working directory to all sessions
 
-% Get appropriate PlaceMap and Pos file to load
-% if ~use_alt_file
-%     [PM_file, pos_file] = get_PM_name(rot_to_std, use_trans, version_use);
-% elseif use_alt_file
-%     PM_file = alt_PM_file;
-%     pos_file = alt_pos_file;
-% end
-
-if isempty(use_TMap)
+if isempty(use_TMap) % Do tons of stuff if calculating PVs directly from PSAbool and position data
     for j = 1:length(session_struct)
         
-        % Load position data
-        dirstr = ChangeDirectory(session_struct(j).Animal,session_struct(j).Date,...
-            session_struct(j).Session,0);
-        if strcmpi(version_use,'T2')
-            load(fullfile(dirstr, pos_file{j}),'FT','x_adj_cm','y_adj_cm',...
-                'speed','xmin','xmax','ymin','ymax');
-            PSAbool = FT;
-        elseif strcmpi(version_use,'T4')
-            load(fullfile(dirstr, pos_file{j}),'PSAbool','x_adj_cm','y_adj_cm',...
-                'speed','xmin','xmax','ymin','ymax')
-        end
+        % Load position data       
+        load(fullfile(sesh(j).dirstr, pos_file{j}),'PSAbool','x_adj_cm','y_adj_cm',...
+            'speed','xmin','xmax','ymin','ymax')
         x = x_adj_cm;
         y = y_adj_cm;
         
@@ -160,10 +138,9 @@ if isempty(use_TMap)
         sesh(j).frames_include_log = frames_include_log;
         sesh(j).x = x(frames_include_log); % Get rid of x and y coordinates that are either outside of the limits or when the mouse is not running
         sesh(j).y = y(frames_include_log);
-%         sesh(j).ntrans = get_num_trans(PSAbool)';
         
     end
-else
+else % Less stuff to load if calculating from TMaps (probably the better way to go)
     dirstr = ChangeDirectory(session_struct(1).Animal,session_struct(1).Date,...
         session_struct(1).Session,0);
     if ~half_flag
@@ -178,55 +155,36 @@ else
     NumYBins = length(yEdges) - 1;
 end
 
-if strcmpi(filter_type,'pval')
-    for j = 1:length(session_struct)
-        dirstr = ChangeDirectory(session_struct(j).Animal,session_struct(j).Date,...
-            session_struct(j).Session,0);
-        if ~half_flag
-            load(fullfile(dirstr,['Placefields' TMap_name_append{j} '.mat']),...
-                'pval','PSAbool');
-        elseif half_flag
-            load(fullfile(dirstr,['Placefields' TMap_name_append{j} '.mat']))
-            pval = Placefields_halves{half_use(j)}.pval;
-            PSAbool = Placefields_halves{half_use(j)}.PSAbool;
-        end
-            
-        sesh(j).pval_filt = pval < pval_thresh;
-        sesh(j).ntrans_filt = get_num_trans(PSAbool)' >= ntrans_thresh;
+% Get pval and transient data for later filtering if necessary
+for j = 1:length(session_struct)
+    dirstr = sesh(j).dirstr;
+    if ~half_flag
+        load(fullfile(dirstr,['Placefields' TMap_name_append{j} '.mat']),...
+            'pval','PSAbool');
+    elseif half_flag
+        load(fullfile(dirstr,['Placefields' TMap_name_append{j} '.mat']))
+        pval = Placefields_halves{half_use(j)}.pval;
+        PSAbool = Placefields_halves{half_use(j)}.PSAbool;
     end
+    
+    sesh(j).pval_filt = pval < pval_thresh;
+    sesh(j).ntrans_filt = get_num_trans(PSAbool)' >= ntrans_thresh;
 end
 
-%% Get population vectors for a NumXBins x NumYBins grid for each arena
+%% Get population vectors (4D array: session_num x Xbin x YBin x master_neuron_num)
 
 num_neurons = size(batch_map,1);
-% Get PV for each bin in each session!!! array is 4D (session_num x Xbin x
-% YBin x master_neuron_num)
 PV = nan(length(sesh),NumXBins,NumYBins,num_neurons); % Pre-allocate
 dispNK('Getting PV for each bin in each session', output_flag)
 
-if isempty(use_TMap)
-    % Get edges
-    Xedges = xmin:(xmax-xmin)/NumXBins:xmax;
-    Yedges = ymin:(ymax-ymin)/NumYBins:ymax;
-    
+if isempty(use_TMap) % Calculate directly from PSAbool and position data
     for m = 1:length(sesh)
-        
-        % Get bin for each x and y point
-        [~,Xbin] = histc(sesh(m).x,Xedges);
-        [~,Ybin] = histc(sesh(m).y,Yedges);
-        
         map_use = batch_map(:,session_ind(m)+1);
-        for j = 1:NumXBins
-            for k = 1:NumYBins
-                temp_FR = sum(sesh(m).PSAbool(:,Xbin == j & Ybin == k),2)/...
-                    (length(sesh(m).x)/20); % Firing rate in Hz for each neuron - this only includes times when the mouse is running for calculating rate - is this legit?
-                
-                PV(m,j,k,:) = assign_FR( temp_FR, map_use, silent_include );
-                
-            end
-        end 
+        sesh(m).PV = make_PV_direct(sesh(m).PSAbool, sesh(m).x, sesh(m).y, ...
+            [xmin xmax], [ymin ymax], NumXBins, NumYBins, 20);
+        PV(m,:,:,:) = register_PV(sesh(m).PV , map_use, silent_include);
     end
-else
+else % Calculate from existing TMaps
     for m = 1:length(sesh)
         map_use = batch_map(:,session_ind(m)+1);
         temp_FR = get_PV_from_TMap(session_struct(m),...
@@ -236,18 +194,14 @@ else
             temp_FR = squeeze(temp_FR(half_use(m),:,:,:));
         end
         sesh(m).PV_TMap = temp_FR;
-        for j = 1:NumXBins
-            for k = 1:NumYBins
-                PV(m,j,k,:) = assign_FR( squeeze(temp_FR(j,k,:)), map_use,...
-                    silent_include );
-            end
-        end
+        PV(m,:,:,:) = register_PV(temp_FR, map_use, silent_include);
     end
 end
 
 %% Get PV correlations for all comparisons!
-
 dispNK('Calculating PV correlations between all sessions', output_flag);
+
+% pre-allocate everything
 PV_corr = nan(length(sesh),length(sesh),NumXBins,NumYBins);
 PV_corr_shuffle = nan(length(sesh),length(sesh),NumXBins,NumYBins,num_shuffles);
 PV_corr_binshuffle = nan(length(sesh),length(sesh),NumXBins,NumYBins,num_shuffles);
@@ -259,6 +213,7 @@ if output_flag
     p = ProgressBar(length(sesh)^2);
 end
 
+% Set up filters and PVs
 rows_param = 'all'; % for later correlation calculations
 if strcmpi(filter_type, 'all_cells')
     PV_use = PV;
@@ -284,15 +239,16 @@ for m = 1:length(sesh)
             PV_collapse = squeeze(sum(sum(PV([m,ll],:,:,:),2),3));
             active_both_log = sum(PV_collapse > 0) == 2;
             PV_use = PV([m,ll],:,:,active_both_log);
-        elseif strcmpi(filter_type, 'pval') % || strcmpi(filter_type,'no_coherent'
+        elseif any(strcmpi(filter_type, {'pval','no_coherent','no_remap',...
+                'no_silent','coherent_only'})) % Really should move ALL filtering outside of this function to make the function more general!!!
             
             % Get cells that are active in both sessions and pass pval
             % thresh in at least ONE session
             
-            %%% Easier way might be to just do pairwise comparisons...
-            % Get map from sesh ll to sesh m
-            map_use = get_neuronmap_from_batchmap(batch_map,session_ind(m),...
-                session_ind(ll));
+            % Get map from sesh ll to sesh m & neuron types
+            [ coh_bool, remap_bool, silent_bool, valid_bool, map_use] = ...
+                twoenv_filter_cells2( batch_session_map.session(1), sesh(m), sesh(ll), comp_type ); % NRK - really need to move this outside of here.
+            
             % fix potential bug in neuron_reg_batch by doing registration
             % directly
             if length(map_use) ~= length(sesh(m).pval_filt)
@@ -303,41 +259,43 @@ for m = 1:length(sesh)
                 ind_use = cellfun(@(a) ~isempty(a) && ~isnan(a), map_temp.neuron_id);
                 map_use(ind_use) = cell2mat(map_temp.neuron_id(ind_use));
             end
-            valid_ind = ~isnan(map_use) & map_use ~= 0; % Identify cells active in both sessions!
+            
             % make 2-column vector - 1st column is FR from 1st sesh, 2nd
             % column is FR from second sesh.
             PV_use = nan([2,size(sesh(m).PV_TMap)]);
             PV_use(1,:,:,:) = sesh(m).PV_TMap;
-            PV_use(2,:,:,valid_ind) = sesh(ll).PV_TMap(:,:,map_use(valid_ind));
+            PV_use(2,:,:,valid_bool) = sesh(ll).PV_TMap(:,:,map_use(valid_bool));
+            
             % make 2-column inclusion boolean for p-val and num_trans
-%             ppass_either = sesh(m).pval_filt & assignPV(ppass, map_use)
             ppass1 = sesh(m).pval_filt & sesh(m).ntrans_filt;
             ppass2 = assignPV(sesh(ll).pval_filt & sesh(ll).ntrans_filt,...
                 map_use)';
             ppass2(isnan(ppass2)) = false;
-            ppass_either = (ppass1 | ppass2) & valid_ind'; % Include cells that pass inclusion criteria in EITHER session and that are active in both
-            % Set everything that passes as PV_use.
-            PV_use = PV_use(:,:,:,ppass_either);
-%             if m == 1 && ll == 2
-%                 keyboard
-%                 disp('keyboard in get_PV_and_corr')
-%             end
-            
-            %% Older more complicated way using full PV
-%             ppass1 = assignPV(sesh(m).pval_filt & sesh(m).ntrans_filt, ...
-%                 get_neuronmap_from_batchmap(batch_map, 0, session_ind(m)));
-%             ppass2 = assignPV(sesh(ll).pval_filt & sesh(ll).ntrans_filt, ...
-%                 get_neuronmap_from_batchmap(batch_map, 0, session_ind(ll)));
-%             silent_cells = isnan(ppass1) | isnan(ppass2);
-%             ppass1(isnan(ppass1)) = false; % Mark no/sketchy mapped neurons
-%             ppass2(isnan(ppass2)) = false;
-%             ppass_either =  ppass1 | ppass2;
-%             ppass_either(silent_cells) = false; % Get rid of silent cells
-%             PV_use = PV([m,ll],:,:,ppass_either);
+            ppass_either = (ppass1 | ppass2) & valid_bool'; % Include cells that pass inclusion criteria in EITHER session and that are active in both
+            % Set everything that passes as PV_use. 
+            if strcmpi(filter_type,'pval')
+                filter_final = ppass_either';
+            elseif strcmpi(filter_type,'no_coherent') % Exclude coherent cells
+                filter_final = ppass_either' & ~coh_bool;
+            elseif strcmpi(filter_type,'no_remap') % Exclude remapping cells
+                filter_final = ppass_either' & ~remap_bool;
+            elseif strcmpi(filter_type,'no_silent') % Exclude silent cells
+                filter_final = ppass_either' & ~silent_bool;
+            elseif strcmpi(filter_type,'coherent_only') % Exclude coherent cells
+                filter_final = ppass_either' & coh_bool;
+            elseif strcmpi(filter_type,'remap_only') % Exclude remapping cells
+                filter_final = ppass_either' & remap_bool;
+            elseif strcmpi(filter_type,'silent_only') % Exclude silent cells
+                filter_final = ppass_either' & silent_bool;
+            end
+            PV_use = PV_use(:,:,:,filter_final);
         else
             PV_use = PV([m,ll],:,:,:);
         end
-        PV_use1 = squeeze(PV_use(1,:,:,:)); % Slicing and dicing to help out parfor loop
+        
+        % Actually calculate everything finally
+        % Slicing and dicing to help out parfor loop
+        PV_use1 = squeeze(PV_use(1,:,:,:)); 
         PV_use2 = squeeze(PV_use(2,:,:,:));
         for j = 1:NumXBins
             for k = 1:NumYBins             
@@ -347,56 +305,15 @@ for m = 1:length(sesh)
                 PV2 = squeeze(PV_use2(j,k,:));
                [PV_corr(m,ll,j,k), PV_dist(m,ll,j,k)] = ...
                     calc_corr_and_dist(PV1, PV2, corr_type, rows_param, false);
-%                 ind_use = ~isnan(PV1) & ~isnan(PV2); %Indices of neurons that are not NaN in both sessions
-% %                 ind_use_both = ~isnan(PV1) | ~isnan(PV2); % Indices of neurons that are not NaN in either session
-% %                 ind_only{1} = ~isnan(PV1) & ~ind_use; % Indices of neurons that are active in session 1 only
-% %                 ind_only{2} = ~isnan(PV2) & ~ind_use; % Indices of neurons that are active in session 2 only
-% %                 
-% %                 % Change indices from NaN to zeros for those neurons that
-% %                 % are active in the other session
-% %                 PV1(ind_only{2}) = zeros(sum(ind_only{2}),1);
-% %                 PV2(ind_only{1}) = zeros(sum(ind_only{1}),1);
-%                 
-%                 PV1_use = PV1(ind_use);
-%                 PV2_use = PV2(ind_use);
-%                 
-%                 % Get correlations and distances
-%                 if isempty(PV1_use) || isempty(PV2_use)
-%                     PV_corr(m,ll,j,k) = nan;
-%                 else
-%                     PV_corr(m,ll,j,k) = corr(PV1_use,PV2_use,'type',corr_type,...
-%                         'rows',rows_param);
-% %                     PV_corr(m,ll,j,k) = corr(PV1_use, PV2_use,'type', corr_type, 'rows', 'complete');
-%                 end
-% %                 if isnan(PV_corr(m,ll,j,k))
-% %                     disp('Getting a NaN correlation - error catching')
-% %                     keyboard
-% %                 end
-%                 temp = dist([ PV1_use, PV2_use]);
-%                 if isempty(temp)
-%                     PV_dist(m,ll,j,k) = nan;
-%                 else
-%                     PV_dist(m,ll,j,k) = temp(1,2);
-%                 end            
-               
+         
                 % Shuffle cell identity
                 parfor zzz = 1:num_shuffles
                     % Create shuffled distribution - randomly switch neuron
                     % identity in second session
-%                     PV2_shuffle = PV2_use(randperm(length(PV2_use))); 
                     
                     [PV_corr_shuffle(m,ll,j,k,zzz), PV_dist_shuffle(m,ll,j,k,zzz)] = ...
                         calc_corr_and_dist(PV1,PV2,corr_type,rows_param,true);
-                    
-%                     if isempty(PV1_use) || isempty(PV2_shuffle)
-%                         PV_corr_shuffle(m,ll,j,k,zzz) = nan;
-%                     else
-%                         PV_corr_shuffle(m,ll,j,k,zzz) = corr(PV1_use,PV2_shuffle,...
-%                             'type',corr_type,'rows',rows_param);
-%                     end
-%                     temp = dist([PV1_use, PV2_shuffle]);
-%                     PV_dist_shuffle(m,ll,j,k,zzz) = temp(1,2);
-                        
+                                            
                 end
             end
         end
@@ -428,7 +345,7 @@ if output_flag
     p.stop;
 end
 
-% Aggregate
+%% Aggregate everything 
 PV_corr_mean = zeros(length(sesh),length(sesh));
 PV_corr_shuffle_mean = zeros(length(sesh),length(sesh));
 PV_corr_binshuffle_mean = zeros(length(sesh),length(sesh));
@@ -460,49 +377,6 @@ PV_corrs.PV_dist_shuffle_mean = PV_dist_shuffle_mean;
 PV_corrs.PV_dist_binshuffle_mean = PV_dist_binshuffle_mean;
 PV_corrs.num_shuffles = num_shuffles;
 end
-
-% %% Sub-function - shouldn't really be used though except for legacy to T2 purposes!
-% function [map_load, pos_load] = get_PM_name(rot_to_std,use_trans,Tversion)
-% switch Tversion
-%     case 'T2'
-%         if use_trans == 0
-%             if rot_to_std == 1
-%                 map_load = 'PlaceMaps_rot_to_std.mat';
-%                 pos_load = 'Pos_align_std_corr.mat';
-%             elseif rot_to_std == 0
-%                 map_load = 'PlaceMaps.mat';
-%                 pos_load = 'Pos_align.mat';
-%             end
-%         elseif use_trans == 1
-%             if rot_to_std == 1
-%                 map_load = 'PlaceMaps_rot_to_std_trans.mat';
-%                 pos_load = 'Pos_align_std_corr_trans.mat';
-%             elseif rot_to_std == 0
-%                 map_load = 'PlaceMaps_trans.mat';
-%                 pos_load = 'Pos_align_trans.mat';
-%             end
-%         end
-%     case 'T4'
-%         if use_trans == 0
-%             if rot_to_std == 1
-%                 map_load = 'Placefields_rot_to_std.mat';
-%                 pos_load = 'Pos_align_std_corr.mat';
-%             elseif rot_to_std == 0
-%                 map_load = 'Placefields.mat';
-%                 pos_load = 'Pos_align.mat';
-%             end
-%         elseif use_trans == 1
-%             if rot_to_std == 1
-%                 map_load = 'Placefields_rot_to_std_trans.mat';
-%                 pos_load = 'Pos_align_std_corr_trans.mat';
-%             elseif rot_to_std == 0
-%                 map_load = 'Placefields_trans.mat';
-%                 pos_load = 'Pos_align_trans.mat';
-%             end
-%         end
-%     otherwise
-% end
-% end
 
 %% Sub-function to calculate correlation and distance between PVs 
 function [corr_out, dist_out] = calc_corr_and_dist(PV1, PV2, corr_type, ...
