@@ -236,7 +236,7 @@ for j = 1:num_animals
             batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
             Mouse(j).best_angle.(sesh_type{k})([9 10 9 10 11 12 11 12]), 'UniformOutput', false),...
             'output_flag',false, 'num_shuffles', num_shuffles,...
-            'exclude_frames', exclude_frames_comb);
+            'exclude_frames', exclude_frames_comb, 'comp_type', sesh_type{k});
         Mouse(j).PV.conn.allcells = PV;
         Mouse(j).PV_corrs.conn.allcells = PV_corrs;
         p.progress;
@@ -247,32 +247,38 @@ p.stop;
 
 %% Run PV analysis at best angle for connected sessions - USING TMaps
 dispNK('Running PV analysis at best angle for connected session by halves')
-p = ProgressBar(num_animals);
 half_use = [1 1 2 2 1 1 2 2];
-filters_use = '';
+filters_use = {'no_coherent','pval','coherent_only'}; %{'no_remap','no_silent','all_cells','active_both'}; %'no_coherent','pval',
+p = ProgressBar(num_animals*length(filters_use));
 for j = 1:num_animals
-    base_dir = ChangeDirectory_NK(Mouse(j).sesh.circ2square(1),0);
-    load(fullfile(base_dir,'batch_session_map_trans'))
-    
-    % Re-organize - day 5 1st 4 cols, day 6 2nd 4 cols
-    conn_sesh = Mouse(j).sesh.circ2square([9 10 9 10 11 12 11 12]);
-    best_angle_use = Mouse(j).best_angle.circ2square([9 10 9 10 11 12 11 12]);
-    
-    % Run Analysis
-    [PV, PV_corrs] = get_PV_and_corr( conn_sesh, ...
-        batch_session_map, 'use_TMap','unsmoothed','TMap_name_append', ...
-        arrayfun(@(a) ['_half_cm' num2str(cmperbin_use) '_trans_rot' ...
-        num2str(a) '_inMD'], best_angle_use,'UniformOutput', false), ...
-        'filter_type','pval','pval_thresh',pval_thresh,...
-        'ntrans_thresh',ntrans_thresh,'output_flag',false,...
-        'num_shuffles', num_shuffles,'half_use', half_use);
-    Mouse(j).PV.conn.filt = PV;
-    Mouse(j).PV_corrs.conn.filt = PV_corrs;
-    p.progress;
+    for k = 1: length(filters_use)
+        base_dir = ChangeDirectory_NK(Mouse(j).sesh.circ2square(1),0);
+        load(fullfile(base_dir,'batch_session_map_trans'))
+        
+        % Re-organize - day 5 1st 4 cols, day 6 2nd 4 cols
+        conn_sesh = Mouse(j).sesh.circ2square([9 10 9 10 11 12 11 12]);
+        best_angle_use = Mouse(j).best_angle.circ2square([9 10 9 10 11 12 11 12]);
+        
+        % Run Analysis
+        [PV, PV_corrs] = get_PV_and_corr( conn_sesh, ...
+            batch_session_map, 'use_TMap','unsmoothed','TMap_name_append', ...
+            arrayfun(@(a) ['_half_cm' num2str(cmperbin_use) '_trans_rot' ...
+            num2str(a) '_inMD'], best_angle_use,'UniformOutput', false), ...
+            'filter_type',filters_use{k},'pval_thresh',pval_thresh,...
+            'ntrans_thresh',ntrans_thresh,'output_flag',false,...
+            'num_shuffles', num_shuffles,'half_use', half_use,...
+            'comp_type', 'circ2square');
+        Mouse(j).PV.connfilt.(filters_use{k}) = PV;
+        Mouse(j).PV_corrs.conn.(filters_use{k}) = PV_corrs;
+        p.progress;
+    end
     
     
 end
 p.stop;
+
+savename = ['2env_PV_conn_' num2str(num_shuffles) 'shuffles-' datestr(now,29) '.mat'];
+save(savename,'Mouse','inclusion_criteria','-v7.3')
 
 %% Run PV analysis at best angle including only cells active in both sessions being correlated
 dispNK('Running PV analysis at best rotation angle - cells active in BOTH sessions being correlated')
