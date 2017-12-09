@@ -37,4 +37,13 @@ for j = 1:length(sesh_use)
     
 end
 
-%% Run placefields on a bunch of data
+%% Register all sessions to one another pair-wise fashion
+for j = 1:4
+    MD_use = alt_all_cell{j};
+    num_sessions = length(MD_use);
+    for k = 1:num_sessions - 1
+        for ll = k+1:num_sessions
+            neuron_map_simple(MD_use
+        end
+    end
+end
