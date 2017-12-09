@@ -336,8 +336,11 @@ sesh_type = {'square', 'circle', 'circ2square'};
 num_shuffles = 1000;
 rot_array_use = {0:90:270, 0:15:345, 0:15:345};
 incr_use = [90, 15, 15];
-plot_comb = false;
+plot_comb = true;
 alpha = 0.05; % significance level
+cm_append = '_cm4';
+TMap_append = 'unsmoothed';
+TMap_type = ['TMap_' TMap_append];
 
 % Pre-allocate figure axes
 if plot_comb
@@ -346,7 +349,7 @@ if plot_comb
     end
 end
 
-for mm = 3:4 % 1:num_animals
+for mm = 1:num_animals
     Animal_use = Mouse(mm);
     sessions{1} = Animal_use.sesh.square;
     sessions{2} = Animal_use.sesh.circle;
@@ -354,7 +357,8 @@ for mm = 3:4 % 1:num_animals
     % Run analysis and save individual plots for each comparison
     for j = 1:length(sesh_type)
         file_save_name = [Animal_use.sesh.(sesh_type{j})(1).Animal ...
-            ' - Combined Tuning Curves - ' sesh_type{j} ' - ' num2str(num_shuffles) ' shuffle'];
+            ' - Combined Tuning Curves - ' sesh_type{j} cm_append TMap_append...
+            ' - ' num2str(num_shuffles) ' shuffle'];
 
         htemp = twoenv_squeeze(Animal_use.global_remap_stats.(sesh_type{j}).h_remap);
         sig_value = twoenv_squeeze(Animal_use.global_remap_stats.(sesh_type{j}).p_remap);
@@ -362,7 +366,8 @@ for mm = 3:4 % 1:num_animals
         [~, best_angle_all, ~, ~, corr_means, CI, hh, best_angle_shuf_all] = ...
             twoenv_rot_analysis_full(sessions{j}, sesh_type{j}, 'save_fig', ...
             true, 'num_shuffles', num_shuffles,...
-            'sig_star', sig_star, 'sig_value', sig_value);
+            'sig_star', sig_star, 'sig_value', sig_value,...
+            'cm_append',cm_append,'TMap_type',TMap_type);
         close(hh)
         
         % Plot combined curve and save
@@ -402,8 +407,8 @@ end
 
 if plot_comb
     for j = 1:3
-        file_save_name = ['All Mice - Combined Tuning Curves - ' sesh_type{j} ' - ' ...
-            num2str(num_shuffles) ' shuffle'];
+        file_save_name = ['All Mice - Combined Tuning Curves - ' sesh_type{j} ...
+            cm_append TMap_append ' - ' num2str(num_shuffles) ' shuffle'];
         figure(hcomb(j))
         printNK(file_save_name,'2env_rot')
     end
