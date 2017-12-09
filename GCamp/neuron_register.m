@@ -411,7 +411,7 @@ end
 
 num_same = sum(same_neuron(:));
 num_notassigned = n;
-%% 7: Plot out combined sessions
+%% 7: Plot out combined sessions - NK make this into a function
 if ~suppress_output
     for k = 1:2
         sesh(k).AllNeuronMask = create_AllICmask(sesh(k).NeuronImage_reg);

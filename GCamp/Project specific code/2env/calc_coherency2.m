@@ -3,7 +3,8 @@ function [ p_mat, chi2_real, chi2_shuf, df ] = calc_coherency2( best_angle_all, 
 %  [ p_mat, chi2_mat, chi2_mat_shuf ] = calc_coherency2( best_angle_all, ...
 %       best_angle_shuf_all, method )
 %   Calculates coherency by comparing chi-squared stat for real data to
-%   shuffled.  Wrapper function for calc_coherency.
+%   shuffled.  Wrapper function for calc_coherency. Is this valid
+%   statistics?
 
 % % Identify sesh_type
 % sesh_log = cellfun(@(a) strcmpi(sesh_type,a),{'square','circle','circ2square'});

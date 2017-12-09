@@ -13,6 +13,5 @@ diff_temp(diff_temp > 180) = diff_temp(diff_temp > 180) - 360;
 abs_diff = abs(diff_temp);
 coherent_bool = abs_diff <= cutoff;
 
-
 end
 
