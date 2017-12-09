@@ -30,6 +30,8 @@ elseif nargin >= 2
             location = 'C:\Users\Nat\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
         case '2env_laptop'
             location = 'C:\Users\Nat\Dropbox\Imaging Project\Manuscripts\2env\Figures';
+        case 'alt'
+            location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\Alternation\Figures';
         otherwise
     end
 end
