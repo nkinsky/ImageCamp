@@ -24,6 +24,9 @@ ip.addParameter('sig_star', false(length(sessions)), @islogical); % Puts a star 
 ip.addParameter('sig_value', nan(length(sessions)), @isnumeric); % Puts the value of anything in sig_stars on the graph
 ip.addParameter('save_fig', false, @islogical);
 ip.addParameter('name_append','',@ischar); % Name to append to end of .mat and .pdf files
+ip.addParameter('cm_append','',@ischar);
+ip.addParameter('TMap_type', 'TMap_gauss', @(a) strcmpi(a,'TMap_gauss') || ...
+    strcmpi(a,'TMap_unsmoothed'));
 ip.parse(sessions, rot_type, varargin{:});
 
 map_session = ip.Results.map_session;
@@ -33,6 +36,8 @@ save_fig = ip.Results.save_fig;
 sig_star = ip.Results.sig_star;
 sig_value = ip.Results.sig_value;
 name_append = ip.Results.name_append;
+cm_append = ip.Results.cm_append;
+TMap_type = ip.Results.TMap_type;
 
 alpha = 0.05; % Significance level before Bonferroni correction
 
@@ -87,7 +92,7 @@ hh(3) = figure; set(gcf,'Visible', 'off');
 
 % Check if already run
 file_save_name = fullfile(batch_dir,['full_rotation_analysis_' rot_type ...
-    '_shuffle' num2str(num_shuffles)]);
+    cm_append '_' TMap_type '_shuffle' num2str(num_shuffles) name_append]);
 try
     load(file_save_name)
     disp('Loading previously saved file with these parameters - delete or re-name to re-run')
@@ -111,7 +116,7 @@ if ~trans
             % Do analysis
             [corr_mat, ~, shuffle_mat2, shift_back] = corr_rot_analysis(sessions(j), ...
                 sessions(k), batch_session_map, rot_array, num_shuffles, ...
-                'trans', trans); % do rotation analysis
+                'trans', trans,'cm_append', cm_append,'TMap_type',TMap_type); % do rotation analysis
             
             % Plot everything            
             [~, sesh2_rot] = get_rot_from_db(sessions(k));
@@ -167,7 +172,8 @@ elseif trans
             
             [corr_mat, ~, shuffle_mat2, shift_back] = corr_rot_analysis(sessions(square_ind(j)), ...
                 sessions(circle_ind(k)), batch_session_map, rot_array, ...
-                num_shuffles, 'trans', trans); % do rotation analysis
+                num_shuffles, 'trans', trans,'cm_append', cm_append,...
+                'TMap_type',TMap_type); % do rotation analysis
             
             % Plot everything            
             [~, sesh2_rot] = get_rot_from_db(sessions(circle_ind(k)));
@@ -221,9 +227,10 @@ end
 
 % Save relevant variables
 file_save_name = fullfile(batch_dir,['full_rotation_analysis_' rot_type ...
-    '_shuffle' num2str(num_shuffles) name_append]);
+    cm_append '_' TMap_type '_shuffle' num2str(num_shuffles) name_append]);
 save(file_save_name, 'best_angle', 'best_angle_all', 'corr_at_best', ...
-    'sig_test', 'corr_means', 'CI', 'num_shuffles', 'best_angle_shuf_all')
+    'sig_test', 'corr_means', 'CI', 'num_shuffles', 'best_angle_shuf_all',...
+    'TMap_type','cm_append')
 
 end
 
