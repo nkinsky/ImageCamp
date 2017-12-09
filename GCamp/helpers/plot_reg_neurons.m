@@ -1,10 +1,10 @@
-function [ ha ] = plot_reg_neurons( neuron_map, tform, base_ref, ROIs1, ROIs2 )
+function [ ha ] = plot_reg_neurons( neuron_map, reginfo, ROIs1, ROIs2 )
 % ha = plot_reg_neurons( neuron_map, tform, base_ref, ROIs1, ROIs2 )
 %   Plots neurons overlaid on top of one another. neuron_map maps neurons
-%   in session 2 to session 1. tform registers ROIs2 to ROIs1.
+%   in session 2 to session 1. reginfo comes from image_registerX
 
 sesh.ROIs = ROIs1;
-ROIs_reg = register_ROIs(ROIs2, tform, base_ref);
+ROIs_reg = register_ROIs(ROIs2, reginfo);
 sesh(2).ROIs = ROIs_reg;
 
 for k = 1:2
@@ -25,8 +25,6 @@ for j = 1:length(neuron_map)
     end
 end
 hold off
-% xlabel([mouse_name_title(mouse_name) ' ' mouse_name_title(base_date) ' session ' num2str(base_session) ...
-%     ' to ' mouse_name_title(reg_date) ' session ' num2str(reg_session)]);
 ha = gca;
 
 end
