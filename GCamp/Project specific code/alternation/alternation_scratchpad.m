@@ -38,12 +38,33 @@ for j = 1:length(sesh_use)
 end
 
 %% Register all sessions to one another pair-wise fashion
+fail_bool = cell(4,1);
 for j = 1:4
     MD_use = alt_all_cell{j};
     num_sessions = length(MD_use);
+    fail_bool{j} = false(num_sessions, num_sessions);
     for k = 1:num_sessions - 1
         for ll = k+1:num_sessions
-            neuron_map_simple(MD_use
+            try
+                neuron_map_simple(MD_use(k),MD_use(ll));
+            catch
+                fail_bool{j}(k,ll) = true;
+            end
         end
     end
 end
+
+%% When done with above, run to qc registrations - use plot_registration
+for j = 1:4
+    MD_use = alt_all_cell{j};
+    num_sessions = length(MD_use);
+    fail_bool{j} = false(num_sessions, num_sessions);
+    for k = 1:num_sessions - 1
+        for ll = k+1:num_sessions
+            plot_registration(MD_use(k),MD_use(ll));
+        end
+    end
+end
+
+
+
