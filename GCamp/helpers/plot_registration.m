@@ -12,9 +12,10 @@ end
 sesh = complete_MD(MD1);
 sesh(2) = complete_MD(MD2);
 
-neuron_map = neuron_map_simple(MD1, MD2, 'name_append', name_append);
+neuron_map = neuron_map_simple(MD1, MD2, 'name_append', name_append,...
+    'suppress_output',true);
 reginfo = image_registerX(MD1.Animal, MD1.Date, MD1.Session, MD2.Date,...
-    MD2.Session, 'name_append', name_append);
+    MD2.Session, 'name_append', name_append,'suppress_output',true);
 
 for j = 1:2
    load(fullfile(sesh(j).Location,'FinalOutput.mat'),'NeuronImage');
