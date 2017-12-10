@@ -4,7 +4,9 @@ function [ TMap1, TMap2 ] = register_tmaps( MDbase, MDreg, PFname, smoothing )
 %   row. PFname indicates placefield file name to load, smoothing = 'gauss'
 %   or 'unsmoothed'
 
-neuron_map = neuron_map_simple(MDbase,MDreg); % get map between the two sessions
+% get map between the two sessions
+neuron_map = neuron_map_simple(MDbase, MDreg, 'suppress_output', true); 
+
 % load tmaps
 sesh = complete_MD(MDbase);
 sesh(2) = complete_MD(MDreg);
