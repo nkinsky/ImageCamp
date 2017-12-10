@@ -17,7 +17,7 @@ imagesc(sesh(1).AllNeuronMask + 2*sesh(2).AllNeuronMask); colorbar
 title('1 = session 1, 2 = session 2, red outline = both')
 hold on
 for j = 1:length(neuron_map)
-    neuron_use = neuron_id(j);
+    neuron_use = neuron_map(j);
     if neuron_use ~= 0 && ~isnan(neuron_use)
         b1 = bwboundaries(sesh(1).ROIs{j},'noholes');
         b2 = bwboundaries(sesh(2).ROIs{neuron_use},'noholes');
