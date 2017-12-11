@@ -14,13 +14,14 @@ ip.addParameter('PFname', 'Placefields.mat', @ischar);
 ip.addParameter('smoothing','gauss',@(a) any(strcmpi(a,{'gauss','unsmoothed'})));
 ip.addParameter('pval_thresh',0.05,@(a) a > 0 & a <= 1);
 ip.addParameter('ntrans_thresh',5 ,@(a) a >= 0);
+ip.addParameter('sigthresh', 3, @(a) a >= 1); % specify minimum number of signicant splitting bins required to be considered a splitter
 ip.parse(MDbase,MDreg,varargin{:});
 
 PFname = ip.Results.PFname;
 smoothing = ip.Results.smoothing;
 pval_thresh = ip.Results.pval_thresh;
 ntrans_thresh = ip.Results.ntrans_thresh;
-
+sigthresh = ip.Results.sigthresh;
 %% Step 1: register sessions
 % Get map and cells the go silent or become active
 neuron_map = neuron_map_simple(MDbase, MDreg, 'suppress_output', true);
@@ -37,7 +38,7 @@ rhos = cellfun(@(a,b) corr(a(:),b(:),'type','Spearman','rows','complete'),...
 % arm PCs(4) ,and arm NPCs(5), 0 = doesn't pass ntrans threshold
 
 categories = arrayfun(@(a) alt_parse_cell_category(a, pval_thresh, ...
-    ntrans_thresh, PFname), sesh, 'UniformOutput', false);
+    ntrans_thresh, sigthresh, PFname), sesh, 'UniformOutput', false);
 
 % Dump these into an array for all the validly mapped cells between each
 % session
