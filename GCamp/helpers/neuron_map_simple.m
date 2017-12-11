@@ -10,20 +10,16 @@ function [ neuron_map_out, becomes_silent, new_cells ] = neuron_map_simple(MDbas
 %
 %   INPUT = neuron_m
 
-neuron_map = neuron_registerMD(MDbase, MDreg, varargin{:}); % Do registration and/or get neuron_map
+% Do registration and/or get neuron_map
+neuron_map = neuron_registerMD(MDbase, MDreg, varargin{:}); 
+
+% Make map an array if not already done
+neuron_map_out = neuronmap_cell2mat(neuron_map); 
 
 % Identify all cells in each class and parse them out
-map_cell = neuron_map.neuron_id;
-neuron_map_out = zeros(length(map_cell),1);
-good_cell_bool = cellfun(@(a) ~isempty(a) && ~isnan(a),map_cell);
-empty_bool = cellfun(@isempty,map_cell);
-nan_bool = cellfun(@(a) ~isempty(a) && isnan(a),map_cell);
-
-% Make legit map in array form - 0s = silent cells, nan = ambiguous
-% registration (2 cells very close to cell in question)
-neuron_map_out(good_cell_bool) = cell2mat(map_cell(good_cell_bool));
-neuron_map_out(empty_bool) = 0;
-neuron_map_out(nan_bool) = nan;
+good_cell_bool = ~isnan(neuron_map_out) & neuron_map_out ~= 0;
+empty_bool = isempty(neuron_map_out);
+nan_bool = isnan(neuron_map_out);
 
 % Get cells in session 1 going silent in session 2
 becomes_silent = find(empty_bool);

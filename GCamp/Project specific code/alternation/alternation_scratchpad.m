@@ -55,17 +55,17 @@ for j = 1:4
 end
 
 %% When done with above, run to qc registrations - use plot_registration
-for j = 4
+for j = 3
     MD_use = alt_all_cell{j};
     num_sessions = length(MD_use);
     fail_bool{j} = false(num_sessions, num_sessions);
     num_comps = (num_sessions-1)*num_sessions/2;
     disp(['Running pair-wise registration check for Mouse ' num2str(j)])
-    hw = waitbar(0,'Wait!');
+    hw = waitbar(0,'Registration Check Progress!');
     n = 0;
-    for k = 1:num_sessions - 1
+    for k = 1%:num_sessions - 1
         hfig = figure;
-        for ll = k+1:num_sessions
+        for ll = k+1%:num_sessions
             plot_registration(MD_use(k) ,MD_use(ll));
             if ll == num_sessions %&& k == (num_sessions - 1)
                 num_shuffles = 100;
@@ -77,6 +77,9 @@ for j = 4
         end
         reg_qc_plot_batch(MD_use(k), MD_use(k+1:num_sessions), 'hfig', hfig,...
             'num_shuffles', num_shuffles);
+        make_figure_pretty(hfig)
+        printNK([MD_use(1).Animal ' - Registration QC plot' ...
+            num2str(k)],'alt')
     end
     close(hw)
 end
