@@ -1,20 +1,32 @@
-function [ ha ] = plot_reg_neurons( neuron_map, reginfo, ROIs1, ROIs2 )
-% ha = plot_reg_neurons( neuron_map, tform, base_ref, ROIs1, ROIs2 )
+function [ ha ] = plot_reg_neurons( neuron_map, reginfo, ROIs1, ROIs2, do_reg )
+% ha = plot_reg_neurons( neuron_map, tform, base_ref, ROIs1, ROIs2, do_reg )
 %   Plots neurons overlaid on top of one another. neuron_map maps neurons
-%   in session 2 to session 1. reginfo comes from image_registerX
+%   in session 2 to session 1. reginfo comes from image_registerX. do_reg =
+%   false does NOT register ROIs2 to ROIs1 (default = true).
+
+if nargin < 5
+    do_reg = true;
+end
 
 sesh.ROIs = ROIs1;
-ROIs_reg = register_ROIs(ROIs2, reginfo);
-sesh(2).ROIs = ROIs_reg;
+if do_reg
+    ROIs_reg = register_ROIs(ROIs2, reginfo);
+    sesh(2).ROIs = ROIs_reg;
+elseif ~do_reg
+    sesh(2).ROIs = ROIs2;
+end
 
 for k = 1:2
     sesh(k).AllNeuronMask = create_AllICmask(sesh(k).ROIs);
 end
 
 % This is sort-of a hack
-figure;
-imagesc(sesh(1).AllNeuronMask + 2*sesh(2).AllNeuronMask); colorbar
-title('1 = session 1, 2 = session 2, red outline = both')
+figure; set(gcf,'Position',[700 220 980 720]);
+comb_mask = sesh(1).AllNeuronMask + 2*sesh(2).AllNeuronMask;
+comb_mask(comb_mask == 0) = nan;
+cm = [0 0 1; 0 1 0; 1 1 0];
+imagesc_nan(comb_mask, cm)
+title('blue = session 1, green = session 2, yellow = overlapping ROIs, red outline = both')
 hold on
 for j = 1:length(neuron_map)
     neuron_use = neuron_map(j);
@@ -26,6 +38,7 @@ for j = 1:length(neuron_map)
 end
 hold off
 ha = gca;
+axis off;
 
 end
 
