@@ -89,9 +89,9 @@ end
 
 if num_shuffles > 0
     subplot(2,2,2)
-    legend(updatelegend(gca,'Shuffled'));
+    legend(updatelegend(gca,[num2str(num_shuffles) ' Shuffles']));
     subplot(2,2,4)
-    legend(updatelegend(gca,'Shuffled'));
+    legend(updatelegend(gca,[num2str(num_shuffles) ' Shuffles']));
 end
 
 subplot(2,2,4)
