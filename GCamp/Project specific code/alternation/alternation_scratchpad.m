@@ -84,5 +84,50 @@ for j = 3
     close(hw)
 end
 
+%% Run sigSpliterplots
+binthresh = 3;
+success_bool = false(1,length(alt_all));
+for j = 1:length(alt_all)
+    try
+        close all
+        sesh_use = alt_all(j);
+        filename =  fullfile(sesh_use.Location, ['Splitters - ' ...
+            sesh_to_text(sesh_use,'file') ' - binthresh' num2str(binthresh) '.ps']);
+        if ~exist(filename,'file')
+            plotSigSplitters(sesh_use, 'plot_type', 7, 'invert_raster_color',2)
+        end
+        success_bool(j) = true;
+    catch
+    end
+    
+end
+
+%% First attempt to get group stats on corrs_v_cat
+
+rhos_all = [];
+coactive_all = [];
+for j = 1:4
+    sesh_use = alt_all_cell{j};
+    num_sessions = length(sesh_use);
+    for k = 1:num_sessions - 1
+        for ll = k+1:num_sessions
+            [~, rho_mean] = alt_plot_corrs_v_cat(sesh_use(k),sesh_use(ll),...
+                'plot_flag',false);
+            rhos_all = [rhos_all; rho_mean];
+            
+            [~, ~, coactive_prop] = alt_stability_v_cat(sesh_use(k),sesh_use(ll),...
+                'plot_flag',false);
+            coactive_all = [coactive_all; coactive_prop];
+        end
+    end
+end
+
+% Might be better to not use scatterBox if this is plotting means and not
+% individual points
+cats = repmat(1:5,size(rhos_all,1),1);
+scatterBox(rho_all(:), cats(:))
+cat2 = repmat(1:5,size(coactive_all,1),1);
+scatterBox(coactive_all(:),cats2(:))
+
 
 
