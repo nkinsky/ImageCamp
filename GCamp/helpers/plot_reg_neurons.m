@@ -25,7 +25,7 @@ figure; set(gcf,'Position',[700 220 980 720]);
 comb_mask = sesh(1).AllNeuronMask + 2*sesh(2).AllNeuronMask;
 comb_mask(comb_mask == 0) = nan;
 cm = [0 0 1; 0 1 0; 1 1 0];
-imagesc_nan(comb_mask, cm)
+imagesc_nan(comb_mask, cm);
 title('blue = session 1, green = session 2, yellow = overlapping ROIs, red outline = both')
 hold on
 for j = 1:length(neuron_map)
