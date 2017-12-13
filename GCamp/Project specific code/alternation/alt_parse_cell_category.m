@@ -36,11 +36,11 @@ stem_cells(neuronID) = true;
 categories(stem_cells & cellfun(@(a) sum(a) >= sigthresh, sigcurve) & ...
     ntrans_pass) = 1;
 categories(stem_cells & pctemp & ~cellfun(@any,sigcurve) & ...
-    ntrans_pass) = 2;
+    ntrans_pass) = 4;
 categories(stem_cells & ~pctemp & ~cellfun(@any,sigcurve) & ...
-    ntrans_pass) = 3;
-categories(~stem_cells & pctemp & ntrans_pass) = 4;
-categories(~stem_cells & ~pctemp & ntrans_pass) = 5;
+    ntrans_pass) = 5;
+categories(~stem_cells & pctemp & ntrans_pass) = 2;
+categories(~stem_cells & ~pctemp & ntrans_pass) = 3;
 
 end
 
