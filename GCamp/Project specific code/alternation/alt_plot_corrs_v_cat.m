@@ -1,4 +1,4 @@
-function [ ha ] = alt_plot_corrs_v_cat( MDbase, MDreg, varargin )
+function [ ha, rho_mean, day_lag ] = alt_plot_corrs_v_cat( MDbase, MDreg, varargin )
 % ha  = alt_plot_corrs_v_cat( MDbase, MDreg,... )
 %   Plots correlations between neurons in MDbase and MDreg broken down by
 %   category: stem place cells (PCs), stem non-place cells (NPCs),
@@ -15,6 +15,7 @@ ip.addParameter('smoothing','gauss',@(a) any(strcmpi(a,{'gauss','unsmoothed'})))
 ip.addParameter('pval_thresh',0.05,@(a) a > 0 & a <= 1);
 ip.addParameter('ntrans_thresh',5 ,@(a) a >= 0);
 ip.addParameter('sigthresh', 3, @(a) a >= 1); % specify minimum number of signicant splitting bins required to be considered a splitter
+ip.addParameter('plot_flag', true, @islogical);
 ip.parse(MDbase,MDreg,varargin{:});
 
 PFname = ip.Results.PFname;
@@ -22,6 +23,7 @@ smoothing = ip.Results.smoothing;
 pval_thresh = ip.Results.pval_thresh;
 ntrans_thresh = ip.Results.ntrans_thresh;
 sigthresh = ip.Results.sigthresh;
+plot_flag = ip.Results.plot_flag;
 %% Step 1: register sessions
 % Get map and cells the go silent or become active
 neuron_map = neuron_map_simple(MDbase, MDreg, 'suppress_output', true);
@@ -45,17 +47,29 @@ categories = arrayfun(@(a) alt_parse_cell_category(a, pval_thresh, ...
 category_array(:,1) = categories{1}(coactive_bool);
 category_array(:,2) = categories{2}(neuron_map(coactive_bool));
 
-%% Step 5: Do breakdown plot!
-cat_names = {'Splitters','Stem PCs', 'Stem NPCs', 'Arm PCs', 'Arm NPCs'};
-position = [230 360 780 430];
+% Get mean rho for each category
 good_cells = category_array(:,1) ~= 0;
-ha = scatterBox(rhos(good_cells), category_array(good_cells,1),'xLabels',...
-    cat_names, 'yLabel', '\rho (Spearman)','position',position,...
-    'transparency', 0.6);
-title({[mouse_name_title(MDbase.Animal) ': ' num2str(get_time_bw_sessions(MDbase, MDreg)) ... 
-    ' day lag'], [mouse_name_title(MDbase.Date) 's' ...
-    num2str(MDbase.Session) ' to ' mouse_name_title(MDreg.Date) 's' ...
-    num2str(MDreg.Session)]})
+cats_good = category_array(good_cells,1);
+rhos_good = rhos(good_cells);
+rho_mean = arrayfun(@(a) nanmean(rhos_good(cats_good == a)),1:5);
+day_lag = get_time_bw_sessions(MDbase,MDreg);
+
+%% Step 5: Do breakdown plot!
+if plot_flag
+    cat_names = {'Splitters','Arm PCs', 'Arm NPCs', 'Stem PCs', 'Stem NPCs'};
+    position = [230 360 780 430];
+    ha = scatterBox(rhos(good_cells), category_array(good_cells,1),'xLabels',...
+        cat_names, 'yLabel', '\rho (Spearman)','position',position,...
+        'transparency', 0.6);
+    title({[mouse_name_title(MDbase.Animal) ': ' num2str(day_lag) ' day lag'], ...
+        [mouse_name_title(MDbase.Date) 's' num2str(MDbase.Session) ' to ' ...
+        mouse_name_title(MDreg.Date) 's' num2str(MDreg.Session)]})
+    make_plot_pretty(gca);
+else
+    ha = nan;
+end
+
+
 
 %% Step 6: do an ANOVA on all the categories!!!
 
