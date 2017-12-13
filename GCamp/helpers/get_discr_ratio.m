@@ -1,4 +1,4 @@
-function [ DI ] = get_discr_ratio( PV1, PV2 )
+function [ DI, active_cells ] = get_discr_ratio( PV1, PV2 )
 % DI = get_discr_ratio( PV1, PV2 )
 %   Get discrimination ratio for all cells in a given population vector.  
 %   DI = (FR1-FR2)/(FR1+FR2) for each cell.
