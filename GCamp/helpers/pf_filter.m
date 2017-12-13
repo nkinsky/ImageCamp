@@ -10,7 +10,7 @@ end
 
 dirstr = ChangeDirectory_NK(MD,0);
 load(fullfile(dirstr,PFname),'pval','PSAbool')
-ntrans_bool = (get_num_trans(PSAbool) > ntrans_thresh);
+ntrans_bool = (get_num_trans(PSAbool) >= ntrans_thresh);
 pc_bool = (pval < pval_thresh)';
 
 end
