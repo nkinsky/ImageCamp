@@ -48,3 +48,4 @@ G48_alt(j).Date = '10_16_2015'; G48_alt(j).Session = 2; j = j+1;
 alt_all_cell{1} = G30_alt; alt_all_cell{2} = G31_alt; %Parsed out by mouse
 alt_all_cell{3} = G45_alt; alt_all_cell{4} = G48_alt;
 alt_all = cat(2,alt_all_cell{:}); % All together
+alt_all = complete_MD(alt_all);
