@@ -4,7 +4,10 @@ function [ ha, stay_prop, coactive_prop ] = alt_stability_v_cat( MDbase, MDreg, 
 %   staying in the same category vs category for alternation task (stem 
 %   place cells (PCs), stem non-place cells (NPCs), splitters, non-stem PCs, 
 %   and non-stem NPCs. set name-value pair 'plot_flag' to false to just
-%   spit out stability metrics.
+%   spit out stability metrics. 
+%
+%   stay_prop and coactive_prop are ordered as follows: [splitters, armPCs,
+%       armNPCs stemPCs stemNPCs num_trans < ntrans_thresh]
 
 sesh = complete_MD(MDbase);
 sesh(2) = complete_MD(MDreg);
@@ -42,14 +45,17 @@ categories = arrayfun(@(a) alt_parse_cell_category(a, pval_thresh, ...
 %% Step 3: Get category stability metrics
 
 [ stay_prop, coactive_prop] = get_cat_stability(categories, neuron_map, 0:5);
+stay_prop = circshift(stay_prop,-1); % Shift so discarded cells are at the right
+coactive_prop = circshift(coactive_prop,-1);
 %% Step 5: Plot it
 if plot_flag
     if isempty(ha)
         figure; ha = gca; set(gcf,'Position',[270 230 960 550])
     end
-    stay_prop = circshift(stay_prop,-1); % Shift so discarded cells are at the right
-    coactive_prop = circshift(coactive_prop,-1);
-    xlabels = {'Splitters', 'Stem PCs', 'Stem NPCs', 'Arm PCs', 'Arm NPCs', ...
+    
+%     xlabels = {'Splitters', 'Stem PCs', 'Stem NPCs', 'Arm PCs', 'Arm NPCs', ...
+%         [ 'ntrans < ' num2str(ntrans_thresh)]};
+    xlabels = {'Splitters','Arm PCs', 'Arm NPCs', 'Stem PCs', 'Stem NPCs',...
         [ 'ntrans < ' num2str(ntrans_thresh)]};
     if ~coactive_only
         [ha, h1, h2] = plotyy(ha, 1:6, stay_prop, 1:6, coactive_prop);
