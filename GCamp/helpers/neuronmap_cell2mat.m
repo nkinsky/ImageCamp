@@ -27,8 +27,5 @@ elseif isnumeric(neuron_map_cell) % Don't do anything if array is the input
     neuron_map_array = neuron_map_cell;
 end
 
-
-
-
 end
 
