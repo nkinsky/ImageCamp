@@ -1,5 +1,5 @@
-function [ ha, rho_mean, day_lag ] = alt_plot_corrs_v_cat( MDbase, MDreg, varargin )
-% ha  = alt_plot_corrs_v_cat( MDbase, MDreg,... )
+function [ ha, rhos, cats, rho_mean, rho_median, day_lag ] = alt_plot_corrs_v_cat( MDbase, MDreg, varargin )
+% [ ha, rho_mean, rho_median, day_lag ]  = alt_plot_corrs_v_cat( MDbase, MDreg,... )
 %   Plots correlations between neurons in MDbase and MDreg broken down by
 %   category: stem place cells (PCs), stem non-place cells (NPCs),
 %   splitters, non-stem PCs, and non-stem NPCs
@@ -39,7 +39,7 @@ rhos = cellfun(@(a,b) corr(a(:),b(:),'type','Spearman','rows','complete'),...
 %% Step 4: Parse cells into splitters (1), stem PCs(2), stem NPCs (3), 
 % arm PCs(4) ,and arm NPCs(5), 0 = doesn't pass ntrans threshold
 
-categories = arrayfun(@(a) alt_parse_cell_category(a, pval_thresh, ...
+[categories, cat_nums, names] = arrayfun(@(a) alt_parse_cell_category(a, pval_thresh, ...
     ntrans_thresh, sigthresh, PFname), sesh, 'UniformOutput', false);
 
 % Dump these into an array for all the validly mapped cells between each
@@ -49,18 +49,18 @@ category_array(:,2) = categories{2}(neuron_map(coactive_bool));
 
 % Get mean rho for each category
 good_cells = category_array(:,1) ~= 0;
-cats_good = category_array(good_cells,1);
-rhos_good = rhos(good_cells);
-rho_mean = arrayfun(@(a) nanmean(rhos_good(cats_good == a)),1:5);
+cats = category_array(good_cells,1);
+rhos = rhos(good_cells);
+rho_mean = arrayfun(@(a) nanmean(rhos(cats == a)),1:5);
+rho_median = arrayfun(@(a) nanmedian(rhos(cats == a)),1:5);
 day_lag = get_time_bw_sessions(MDbase,MDreg);
 
 %% Step 5: Do breakdown plot!
 if plot_flag
-    cat_names = {'Splitters','Arm PCs', 'Arm NPCs', 'Stem PCs', 'Stem NPCs'};
+    cat_names = names{1}(arrayfun(@(a) find(cat_nums{1} == a),1:5));
     position = [230 360 780 430];
-    ha = scatterBox(rhos(good_cells), category_array(good_cells,1),'xLabels',...
-        cat_names, 'yLabel', '\rho (Spearman)','position',position,...
-        'transparency', 0.6);
+    ha = scatterBox(rhos, cats, 'xLabels', cat_names, 'yLabel', ...
+        '\rho (Spearman)', 'position', position, 'transparency', 0.6);
     title({[mouse_name_title(MDbase.Animal) ': ' num2str(day_lag) ' day lag'], ...
         [mouse_name_title(MDbase.Date) 's' num2str(MDbase.Session) ' to ' ...
         mouse_name_title(MDreg.Date) 's' num2str(MDreg.Session)]})

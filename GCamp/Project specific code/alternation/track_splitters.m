@@ -1,7 +1,7 @@
-function [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray ] = track_splitters( ...
-    MDbase, MDreg, sigthresh )
-% [ relymat, deltamax_mat, delta_mat, onsetsesh, day_lag ] = track_splitters( MDbase, MDreg, ...
-%       sigthresh )
+function [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
+    p_anova, cmat, daydiff_mean  ] = track_splitters( MDbase, MDreg, sigthresh, xlims)
+% [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
+%     p_anova, cmat, daydiff_mean  ] = track_splitters( MDbase, MDreg, sigthresh)
 %   track splitters across days by spitting out relymat and deltamat that
 %   tracks 1-pval and deltacurve from sigsplitters.mat for each neuron, and
 %   onsetmat which identifies the day the neuron first achieves significant
@@ -11,14 +11,19 @@ function [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray ] = track
 %   number of bins on the stem that must exhibit signicant splitting to be
 %   considered a splitter. deltamax_mat spits out the max deltacurve value
 %   for each cell, wherease delta_mat spits out the whole curve for each
-%   cell
+%   cell. cmat output is results from a post-hoc anova. daydiff_mean is two
+%   rows - day difference and mean deltamax.
 
 %%% NRK Note - scrap deltamat for now since num stem bins is not the same
 %%% across all sessions - need to change this somehow! or maybe just
-%%% resize?
+%%% resize? This function is undergoing some serious hacking on 12/14 and
+%%% needs some cleanup/attention
 
-if nargin < 3
-    sigthresh = 3;
+if nargin < 4
+    xlims = [-1.25, 1.25];
+    if nargin < 3
+        sigthresh = 3;
+    end
 end
 
 %% Step 1: Load batch neuron map and identify session indices for each
@@ -110,14 +115,14 @@ figure('Position',[560 100 1060 890]);
 ha = subplot(2,1,1);
 scatterBox(deltamaxmat2(valid_bool),days_aligned(valid_bool), 'xLabels', day_labels, ...
     'yLabel', '\Deltacurve', 'h', ha);
-xlim([-3.5 3.5])
+xlim(xlims)
 xlabel('Days From Splitter Onset')
 title(['Splitter Ontogeny - ' mouse_name_title(sesh(1).Animal)])
 
 ha = subplot(2,1,2);
 scatterBox(relymat2(valid_bool(:)),days_aligned(valid_bool(:)), 'xLabels', day_labels, ...
     'yLabel', 'reliability (1-p)', 'h', ha);
-xlim([-3.5 3.5])
+xlim(xlims)
 xlabel('Days From Splitter Onset')
 make_figure_pretty(gcf);
 
@@ -125,6 +130,18 @@ make_figure_pretty(gcf);
 %     'UniformOutput',false);
 % rely_by_day = arrayfun(@(a) relymat2(days_aligned == a), unique(days_aligned),...
 %     'UniformOutput',false);
+
+%% Step 6: Run ANOVA on the 1 days before and after and Tukey test
+days_ba = -1.5:0.5:1.5;
+daysvalid = days_aligned(valid_bool);
+deltavalid = deltamaxmat2(valid_bool);
+ba_bool = arrayfun(@(a) ismember(a,days_ba),daysvalid);
+
+[p_anova, ~, stats] = anova1(deltavalid(ba_bool), daysvalid(ba_bool),'off');
+[cmat,mmat] = multcompare(stats,'Display','off');
+unique_days = unique(daysvalid(ba_bool));
+cmat(:,1) = unique_days(cmat(:,1));
+cmat(:,2) = unique_days(cmat(:,2));
 
 end
 
