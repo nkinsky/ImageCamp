@@ -1,11 +1,11 @@
-function [ categories ] = alt_parse_cell_category( sesh, pval_thresh,...
+function [ categories, cat_nums, cat_names ] = alt_parse_cell_category( sesh, pval_thresh,...
     ntrans_thresh, sigthresh, PFname )
-% categories = alt_parse_cell_category( sesh, pval_thresh, ntrans_thresh, sigthresh... )
+% [categories, names] = alt_parse_cell_category( sesh, pval_thresh, ntrans_thresh, sigthresh... )
 %
 %   Breaks out cells in sesh into 6 categories identified by number in
-%   categories (num_neurons x 1 vector): 1 = splitters, 2 = stem place
-%   cells (sPCs), 3 = stem non-place cells (sNPCS), 4 = arm PCs, 5 = arm
-%   NPCs, 0 = does not pass number transients threshold.
+%   categories (num_neurons x 1 vector): splitters, stem place
+%   cells (sPCs), stem non-place cells (sNPCS), arm PCs, arm
+%   NPCs, does not pass number transients threshold.
 %
 %   INPUTS
 %
@@ -27,6 +27,10 @@ if nargin < 5
     PFname = 'Placefields.mat';
 end
 
+cat_nums = 0:5;
+cat_names = {['ntrans < ' num2str(ntrans_thresh)], 'Splitters',...
+    'Stem PCs', 'Arm PCs', 'Stem NPCs', 'Arm NPCs'};
+
 load(fullfile(sesh.Location,'sigSplitters.mat'),'neuronID','sigcurve');
 stem_cells = false(length(sigcurve),1);
 categories = zeros(length(sigcurve),1);
@@ -34,13 +38,13 @@ stem_cells(neuronID) = true;
 [pctemp, ntrans_pass] = pf_filter(sesh, pval_thresh, ntrans_thresh, ...
     PFname);
 categories(stem_cells & cellfun(@(a) sum(a) >= sigthresh, sigcurve) & ...
-    ntrans_pass) = 1;
+    ntrans_pass) = 1; % Splitters
 categories(stem_cells & pctemp & ~cellfun(@any,sigcurve) & ...
-    ntrans_pass) = 4;
+    ntrans_pass) = 4; % Stem PCs
+categories(~stem_cells & pctemp & ntrans_pass) = 2; % Arm PCs
 categories(stem_cells & ~pctemp & ~cellfun(@any,sigcurve) & ...
-    ntrans_pass) = 5;
-categories(~stem_cells & pctemp & ntrans_pass) = 2;
-categories(~stem_cells & ~pctemp & ntrans_pass) = 3;
+    ntrans_pass) = 5; % Stem NPCs
+categories(~stem_cells & ~pctemp & ntrans_pass) = 3; % Arm NPCs
 
 end
 
