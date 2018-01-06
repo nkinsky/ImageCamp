@@ -413,7 +413,7 @@ end
 %% Spatial bin shuffle function for nx x ny x nneurons PV
 function [PVshuf] = shuffle_bin(PVin)
 
-% Reshape PV so each column is a neuron and each ro is a spatial bin
+% Reshape PV so each column is a neuron and each row is a spatial bin
 PVtemp = reshape(PVin,size(PVin,1)*size(PVin,2),size(PVin,3)); 
 
 % Shuffle rows (spatial bins)
