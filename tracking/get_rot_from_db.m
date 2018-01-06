@@ -12,7 +12,8 @@ function [ rot_to_corr_to_std, rot_from_std] = get_rot_from_db(db_struct )
 %   CW, it spits out -90
 
 % Complete partial db_struct
-[~, db_struct] = ChangeDirectory(db_struct(1).Animal, db_struct(1).Date, db_struct(1).Session,0);
+[~, db_struct] = ChangeDirectory(db_struct(1).Animal, db_struct(1).Date, ...
+    db_struct(1).Session,0);
 
 if regexpi(db_struct(1).Notes,'90CW')
     rot_to_corr_to_std = 90;
