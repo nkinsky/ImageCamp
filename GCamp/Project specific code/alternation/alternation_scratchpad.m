@@ -37,6 +37,42 @@ for j = 1:length(sesh_use)
     
 end
 
+%% Run placefields on a bunch of data
+
+%% Make Example splitting plots for ontogeny diagram
+figure; set(gcf,'Position',[34 200 1020 425]);
+curve = 0.02*randn(2,50);
+for j = 1:5
+    if j == 2 || j == 3
+        curve(1,20:30) = curve(1,20:30) + 0.2;
+    elseif j == 4 || j == 5
+        curve(1,20:30) = curve(1,20:30) - 0.2;
+    end
+%     curve = curve + 0.05*rand(2,50);
+    ha = subplot(3,5,j);
+    plot_smooth_curve(curve,ha);
+end
+
+for j = 1:5
+    if j == 3
+        curve(1,20:30) = curve(1,20:30) + 0.4;
+    elseif j == 4 
+        curve(1,20:30) = curve(1,20:30) - 0.4;
+    end
+%     curve = curve + 0.05*rand(2,50);
+    ha = subplot(3,5,5+j);
+    plot_smooth_curve(curve,ha);
+end
+
+for j = 1:5
+    if j == 3
+        curve(1,20:30) = curve(1,20:30) + 0.4;
+    end
+    curve(2,:) = circshift(curve(2,:),10);
+%     curve = curve + 0.05*rand(2,50);
+    ha = subplot(3,5,10+j);
+    plot_smooth_curve(curve,ha);
+end
 %% Register all sessions to one another pair-wise fashion
 fail_bool = cell(4,1);
 for j = 1:4
@@ -102,6 +138,29 @@ for j = 1:length(alt_all)
     
 end
 
-%% First attempt to 
+%% First attempt to get group stats on corrs_v_cat
 
+rhos_all = [];
+coactive_all = [];
+for j = 1:4
+    sesh_use = alt_all_cell{j};
+    num_sessions = length(sesh_use);
+    for k = 1:num_sessions - 1
+        for ll = k+1:num_sessions
+            [~, rho_mean] = alt_plot_corrs_v_cat(sesh_use(k),sesh_use(ll),...
+                'plot_flag',false);
+            rhos_all = [rhos_all; rho_mean];
+            
+            [~, ~, coactive_prop] = alt_stability_v_cat(sesh_use(k),sesh_use(ll),...
+                'plot_flag',false);
+            coactive_all = [coactive_all; coactive_prop];
+        end
+    end
+end
 
+% Might be better to not use scatterBox if this is plotting means and not
+% individual points
+cats = repmat(1:5,size(rhos_all,1),1);
+scatterBox(rho_all(:), cats(:))
+cat2 = repmat(1:5,size(coactive_all,1),1);
+scatterBox(coactive_all(:),cats2(:))

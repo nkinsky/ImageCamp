@@ -1,3 +1,4 @@
+
 function [best_angle, best_angle_all, corr_at_best, sig_test, corr_means, CI, hh,...
     best_angle_shuf_all] = twoenv_rot_analysis_full(sessions, rot_type, varargin)
 %  [best_angle, best_angle_all, corr_at_best, sig_test, corr_means, CI, hh, ...
@@ -23,6 +24,11 @@ ip.addParameter('num_shuffles', 10, @(a) a >= 0 && round(a) == a);
 ip.addParameter('sig_star', false(length(sessions)), @islogical); % Puts a star and p-value by each non-nan value
 ip.addParameter('sig_value', nan(length(sessions)), @isnumeric); % Puts the value of anything in sig_stars on the graph
 ip.addParameter('save_fig', false, @islogical);
+ip.addParameter('local_ref', true, @islogical); % true = use local cues as 
+% reference and plot in terms of local cue mismatch, false = use distal
+% cues as reference and plot rotation of curves in reference to the room
+% and plot red triangle at the rotation of local cues from session 1 to
+% session 2
 ip.addParameter('name_append','',@ischar); % Name to append to end of .mat and .pdf files
 ip.addParameter('cm_append','',@ischar);
 ip.addParameter('TMap_type', 'TMap_gauss', @(a) strcmpi(a,'TMap_gauss') || ...
@@ -35,12 +41,16 @@ num_shuffles = ip.Results.num_shuffles;
 save_fig = ip.Results.save_fig;
 sig_star = ip.Results.sig_star;
 sig_value = ip.Results.sig_value;
+local_ref = ip.Results.local_ref;
 name_append = ip.Results.name_append;
 cm_append = ip.Results.cm_append;
 TMap_type = ip.Results.TMap_type;
 
 alpha = 0.05; % Significance level before Bonferroni correction
 
+sessions = complete_MD(sessions);
+square_bool = arrayfun(@(a) ~isempty(regexpi(a.Env,'square')), test);
+circ_bool = arrayfun(@(a) ~isempty(regexpi(a.Env,'octagon')), test);
 %% Set up variables
 
 batch_dir = ChangeDirectory(map_session.Animal, map_session.Date, ...
@@ -120,18 +130,26 @@ if ~trans
             
             % Plot everything            
             [~, sesh2_rot] = get_rot_from_db(sessions(k));
-            distal_rot = sesh2_rot - base_rot;
+            cue_rot = sesh2_rot - base_rot; % ID how much local cues have rotated from session 1 to session 2
+            
+            % NRK - adjust here to shift corr_mat - NEEDS checking...
+            if ~local_ref
+                % Identify how much to shift curves back
+                if square_bool(j) && square_bool(k)
+                    local_shift_back = -cue_rot/90;
+                else
+                    local_shift_back = -cue_rot/15; 
+                end
+                corr_mat = circshift(corr_mat, local_shift_back);
+                shuffle_mat2 = circshift(shuffle_mat2, local_shift_back);
+            end
             subplot_ind = (j-1)*num_sessions + k;
             [best_angle(j,k), best_angle_all{j,k}, corr_lims, corr_at_best(j,k), ...
                 sig_test(j,k), corr_means(j,k,:), CI(j,k,:,:), best_angle_shuf_all{j,k}] = ...
                 plot_func(corr_mat, shuffle_mat2, rot_array, shift_back, ...
-                distal_rot, edges, edges2, hh, num_sessions, subplot_ind, ...
+                cue_rot, edges, edges2, hh, num_sessions, subplot_ind, ...
                 j, k, j, k, sessions, rot_type, alpha_corr,...
                 sig_star(j,k), sig_value(j,k));
-            % NK - adjust shuffle_mat2 in corr_rot_analysis to be
-            % num_neurons x num_shuffles, then run here as shuffle_mat(:).
-            % should keep everything the same.  Then I should be able to do
-            % a shuffle analysis on my coherency calculation
             
             ylims(1) = min([ylims(1) corr_lims(1)]);
             ylims(2) = max([ylims(2) corr_lims(2)]);
@@ -177,12 +195,25 @@ elseif trans
             
             % Plot everything            
             [~, sesh2_rot] = get_rot_from_db(sessions(circle_ind(k)));
-            distal_rot = sesh2_rot - base_rot;
+            cue_rot = sesh2_rot - base_rot;
+            
+            % NRK - adjust here to shift corr_mat - NEEDS checking...
+            if ~local_ref
+                % Identify how much to shift curves back
+                if square_bool(j) && square_bool(k)
+                    local_shift_back = -cue_rot/90;
+                else
+                    local_shift_back = -cue_rot/15; 
+                end
+                corr_mat = circshift(corr_mat, local_shift_back);
+                shuffle_mat2 = circshift(shuffle_mat2, local_shift_back);
+            end
+            
             subplot_ind = (j-1)*num_sessions/2 + k;
             [best_angle(j,k), best_angle_all{j,k}, corr_lims,...
                 corr_at_best(j,k), sig_test(j,k), corr_means(j,k,:),...
                 CI(j,k,:,:), best_angle_shuf_all{j,k}] = ...
-                plot_func(corr_mat, shuffle_mat2, rot_array, shift_back, distal_rot, ...
+                plot_func(corr_mat, shuffle_mat2, rot_array, shift_back, cue_rot, ...
                 edges, edges2, hh, num_sessions/2, subplot_ind, square_ind(j),...
                 circle_ind(k), j, k, sessions, rot_type, alpha_corr,...
                 sig_star(j,k), sig_value(j,k));
@@ -239,13 +270,16 @@ end
 %% plotting sub-function
 function [best_angle, best_angle_all2, corr_lims, corr_at_best, sig_test, ...
     corr_means, CI, best_angle_shuf_all] = ...
-    plot_func(corr_mat, shuffle_mat2, rot_array, shift_back, distal_rot, ...
+    plot_func(corr_mat, shuffle_mat2, rot_array, shift_back, cue_rot, ...
     edges, edges2, fig_h, num_sessions, subplot_ind, sesh1_ind, sesh2_ind, ...
     row, col, sesh_use, rot_type, alpha_corr, sig_star, sig_value)
 
-%%% How do I do stats here? %%% K-S test on distributions? Or compare to
-%%% shuffled means and look for means greater than shuffled (1-alpha)*100%
-%%% of the time?  I'm doing the latter here...
+%%% NRK Note: look through this function for all calls to "plot" and
+%%% "histogram" and then rewrite it into two separate functions - one that
+%%% calculates all the necessary inputs to the plot functions, and the plot
+%%% functions themselves.  Then you can load the saved full rotation
+%%% analyses and plot these all shifted.
+
 set(groot, 'CurrentFigure', fig_h(1)); % figure(fig_h(1))
 
 try
@@ -263,13 +297,13 @@ best_angle = rot_array(idx);
 
 hold on
 
-% Get and plot global rotation - needs sanity check!!!
-if distal_rot < 0
-    distal_rot = distal_rot + 360;
-elseif distal_rot >= 360
-    distal_rot = distal_rot < 360;
+% Get and plot cue rotation
+if cue_rot < 0
+    cue_rot = cue_rot + 360;
+elseif cue_rot >= 360
+    cue_rot = cue_rot < 360;
 end
-rot_log = rot_array == distal_rot;
+rot_log = rot_array == cue_rot;
 plot( rot_array(rot_log), corr_means(rot_log), 'r^')
 
 % Put significance star on plot
