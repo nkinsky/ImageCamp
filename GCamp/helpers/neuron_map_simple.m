@@ -1,4 +1,5 @@
-function [ neuron_map_out, becomes_silent, new_cells ] = neuron_map_simple(MDbase, MDreg, varargin)
+function [ neuron_map_out, becomes_silent, new_cells ] = neuron_map_simple(...
+    MDbase, MDreg, varargin)
 % [ neuron_map_out, becomes_silent, new_cell ]  = neuron_map_simple(MDbase, MDreg,...)
 %   Spits out an array where each entry is the neuron in the registered
 %   session that corresponds to the cell index in the base session.
@@ -10,23 +11,41 @@ function [ neuron_map_out, becomes_silent, new_cells ] = neuron_map_simple(MDbas
 %
 %   INPUT = neuron_m
 
+ip = inputParser;
+ip.addRequired('MDbase',@isstruct);
+ip.addRequired('MDreg',@isstruct);
+ip.addParameter('batch_map',[], @(a) isempty(a) || isstruct(a)); % specify to use batch map instead of pairwise reg
+ip.KeepUnmatched = true;
+ip.parse(MDbase,MDreg,varargin{:});
+batch_map = ip.Results.batch_map;
+
 % Do registration and/or get neuron_map
-neuron_map = neuron_registerMD(MDbase, MDreg, varargin{:}); 
+if isempty(batch_map)
+    neuron_map = neuron_registerMD(MDbase, MDreg, varargin{:});
+else
+    batch_map = fix_batch_session_map(batch_map);
+    sesh_index(1) = get_session_index(MDbase, batch_map.session);
+    sesh_index(2) = get_session_index(MDreg, batch_map.session);
+    neuron_map = get_neuronmap_from_batchmap(batch_map, sesh_index(1),...
+        sesh_index(2));
+end
 
 % Make map an array if not already done
 neuron_map_out = neuronmap_cell2mat(neuron_map); 
 
 % Identify all cells in each class and parse them out
 good_cell_bool = ~isnan(neuron_map_out) & neuron_map_out ~= 0;
-empty_bool = isempty(neuron_map_out);
+empty_bool = neuron_map_out == 0;
 nan_bool = isnan(neuron_map_out);
 
 % Get cells in session 1 going silent in session 2
 becomes_silent = find(empty_bool);
 % Get number of neurons in session 2
-num_neurons2 = size(neuron_map.same_neuron,2); 
+load(fullfile(ChangeDirectory_NK(MDreg,0),'FinalOutput.mat'),'NumNeurons');
+num_neurons2 = NumNeurons;
+% num_neurons2 = size(neuron_map.same_neuron,2); % old broken code
 % Get cells that become active in session 2
-new_cells = find(ismember(1:num_neurons2, neuron_map_out(good_cell_bool)))'; 
+new_cells = find(~ismember(1:num_neurons2, neuron_map_out(good_cell_bool)))'; 
 
 % Needs de-bugging/checking - plot allICmasks then plot outlines over in
 % each category!
