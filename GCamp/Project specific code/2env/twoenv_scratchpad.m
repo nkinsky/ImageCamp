@@ -1,11 +1,113 @@
-%%
-Tenaspis2_profile('GCamp6f_45','08_05_2015',3,'PF_only',1,'calc_half',1)
-Tenaspis2_profile('GCamp6f_45','08_05_2015',3,'PF_only',1,'calc_half',2)
-Tenaspis2_profile('GCamp6f_45','08_05_2015',4,'PF_only',1,'calc_half',1)
-Tenaspis2_profile('GCamp6f_45','08_05_2015',4,'PF_only',1,'calc_half',2)
-Tenaspis2_profile('GCamp6f_45','08_11_2015',1,'PF_only',1,'calc_half',1)
-Tenaspis2_profile('GCamp6f_45','08_11_2015',1,'PF_only',1,'calc_half',2)
+%% Set-up everything
+twoenv_reference;
 
+num_shuffles = 1000;
+
+Mouse(1).sesh.square = G30_square;
+Mouse(1).sesh.circle = G30_oct;
+Mouse(1).sesh.circ2square = G30_botharenas;
+Mouse(1).best_angle.square = G30_square_best_angle;
+Mouse(1).best_angle.circle = G30_circle_best_angle;
+Mouse(1).best_angle.circ2square = G30_both_best_angle;
+
+Mouse(2).sesh.square = G31_square;
+Mouse(2).sesh.circle = G31_oct;
+Mouse(2).sesh.circ2square = G31_botharenas;
+Mouse(2).best_angle.square = G31_square_best_angle;
+Mouse(2).best_angle.circle = G31_circle_best_angle;
+Mouse(2).best_angle.circ2square = G31_both_best_angle;
+
+Mouse(3).sesh.square = G45_square;
+Mouse(3).sesh.circle = G45_oct;
+Mouse(3).sesh.circ2square = G45_botharenas;
+Mouse(3).best_angle.square = G45_square_best_angle;
+Mouse(3).best_angle.circle = G45_circle_best_angle;
+Mouse(3).best_angle.circ2square = G45_both_best_angle;
+
+Mouse(4).sesh.square = G48_square;
+Mouse(4).sesh.circle = G48_oct;
+Mouse(4).sesh.circ2square = G48_botharenas;
+Mouse(4).best_angle.square = G48_square_best_angle;
+Mouse(4).best_angle.circle = G48_circle_best_angle;
+Mouse(4).best_angle.circ2square = G48_both_best_angle;
+
+days.square = square_days;
+days.circle = circle_days;
+days.circ2square = all_days;
+
+days_diff.square = 0:6;
+days_diff.circle = 0:6;
+days_diff.circ2square = [0:5 7];
+
+num_animals = length(Mouse);
+
+animal_names = cell(1,num_animals);
+for j = 1:num_animals
+    animal_names{j} = Mouse(j).sesh.square(1).Animal;
+end
+    
+% P-value thresholds for cell inclusion
+pval_filt = true;
+pval_thresh = 0.05;
+cmperbin_use = 4; 
+ntrans_thresh = 5;
+
+inclusion_criteria.pval_filt = pval_filt;
+inclusion_criteria.pval_thresh = 0.05;
+inclusion_criteria.cmperbin_use = cmperbin_use;
+inclusion_criteria.ntrans_thresh = ntrans_thresh;
+
+sesh_type = {'square', 'circle', 'circ2square'};
+
+%% Calc PVs w/o silent cell, with all silent cells, and with only non-ambiguous
+% silent cells. square only to start
+silent_thresh = [nan 0 1];
+same_bool = [true true false];
+local_aligned = [false true];
+tic
+basedir = ChangeDirectory_NK(G30_square(1),0);
+for pp = 2 %1:2 % 1 is at optimal rotation, 2 is at local cue rotation
+    if pp == 1
+        nshuf = num_shuffles;
+        sil_thresh_use = silent_thresh;
+        animal_start = 2;
+    elseif pp == 2
+        nshuf = 0;
+        sil_thresh_use = silent_thresh;
+        animal_start = 1;
+    end
+    for j = animal_start:num_animals
+        for m = 1:3 % square, circ, circ2square
+            for k = 1:length(sil_thresh_use) % 1:3 silenthresh = nan, 0, or 1
+                
+                sesh_use = Mouse(j).sesh.(sesh_type{m});
+                best_angle_use = Mouse(j).best_angle.(sesh_type{m});
+                f = tic;
+                [PVcorrs, PVshuf_corrs, ~, ~, PV, filter] = twoenv_PVbatch(sesh_use, best_angle_use, ...
+                    same_bool(m), nshuf, sil_thresh_use(k), pval_thresh,...
+                    ntrans_thresh, local_aligned(pp), cmperbin_use);
+                toc(f);
+                Mouse(j).PVcorrs.(sesh_type{m})(k).PV = PV;
+                Mouse(j).PVcorrs.(sesh_type{m})(k).PVcorrs = PVcorrs;
+                Mouse(j).PVcorrs.(sesh_type{m})(k).PVshuf_corrs = PVshuf_corrs;
+                Mouse(j).PVcorrs.(sesh_type{m})(k).silent_thresh = sil_thresh_use(k);
+                Mouse(j).PVcorrs.(sesh_type{m})(k).pval_thresh = pval_thresh;
+                Mouse(j).PVcorrs.(sesh_type{m})(k).ntrans_thresh = ntrans_thresh;
+                Mouse(j).PVcorrs.(sesh_type{m})(k).local_aligned = local_aligned(pp);
+                Mouse(j).PVcorrs.(sesh_type{m})(k).cmperbin = cmperbin_use;
+                Mouse(j).PVcorrs.(sesh_type{m})(k).filter = filter;
+                
+            end
+        end
+    end
+    savename = fullfile(basedir,['2env_PVsilent_cm' num2str(cmperbin_use) '_local' ...
+        num2str(local_aligned(pp)) '-' num2str(num_shuffles) ...
+        'shuffles-' datestr(now,29) '.mat']);
+    save(savename,'Mouse','-v7.3')
+end
+disp(['PV analysis at best rotation angle ran in ' num2str(toc,'%0.0g') ' seconds'])
+% savename = ['2env_PVsilent_' num2str(num_shuffles) 'shuffles-' datestr(now,29) '.mat'];
+% save(savename,'Mouse','-v7.3')
 %%
 sesh_use = all_sessions;
 for j = 1:length(sesh_use)
@@ -467,3 +569,11 @@ imagesc_nan(nanmean(PVcorra_all,3)); colorbar
 [PVpthresh2,PVcorrs_thresh2] = get_PV_and_corr(G30_square,batch_session_map,...
     'use_TMap','unsmoothed','TMap_name_append', arrayfun(@(a) ['_cm4_rot' num2str(a)],...
     G30_square_best_angle,'UniformOutput',false),'filter_type', 'pval');
+
+%%
+% Tenaspis2_profile('GCamp6f_45','08_05_2015',3,'PF_only',1,'calc_half',1)
+% Tenaspis2_profile('GCamp6f_45','08_05_2015',3,'PF_only',1,'calc_half',2)
+% Tenaspis2_profile('GCamp6f_45','08_05_2015',4,'PF_only',1,'calc_half',1)
+% Tenaspis2_profile('GCamp6f_45','08_05_2015',4,'PF_only',1,'calc_half',2)
+% Tenaspis2_profile('GCamp6f_45','08_11_2015',1,'PF_only',1,'calc_half',1)
+% Tenaspis2_profile('GCamp6f_45','08_11_2015',1,'PF_only',1,'calc_half',2)
