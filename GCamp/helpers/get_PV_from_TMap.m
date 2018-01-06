@@ -1,12 +1,12 @@
 function [ PV, minspeed, xEdges, yEdges ] = get_PV_from_TMap( session, varargin )
-% [PV = get_PV_and_corr2( sessions )
+% [PV = get_PV_from_tmap( sessions,... )
 %   Uses already calculated placefields to calculated population vectors
 %   with same bin size and speed threshold
 
 %% Parse Inputs
 ip = inputParser;
 ip.addRequired('session',@isstruct);
-ip.addParameter('PFname_append','',@(a) ischar(a))
+ip.addParameter('PFname_append','',@(a) ischar(a) || isempty(a))
 ip.addParameter('TMap_use','gauss',@(a) ischar(a) && strcmpi(a,'gauss') || ...
     strcmpi(a,'unsmoothed'));
 ip.addParameter('half_flag',false, @islogical); % true = calculate PV for each half of the session

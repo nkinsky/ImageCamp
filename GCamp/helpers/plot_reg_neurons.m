@@ -1,11 +1,17 @@
-function [ ha ] = plot_reg_neurons( neuron_map, reginfo, ROIs1, ROIs2, do_reg )
-% ha = plot_reg_neurons( neuron_map, tform, base_ref, ROIs1, ROIs2, do_reg )
+function [ ha ] = plot_reg_neurons( neuron_map, reginfo, ROIs1, ROIs2, do_reg, ha )
+% ha = plot_reg_neurons( neuron_map, tform, base_ref, ROIs1, ROIs2, do_reg, ha )
 %   Plots neurons overlaid on top of one another. neuron_map maps neurons
 %   in session 2 to session 1. reginfo comes from image_registerX. do_reg =
 %   false does NOT register ROIs2 to ROIs1 (default = true).
 
+if nargin < 6 || isempty(ha) || ~ishandle(ha)
+    figure; set(gcf,'Position',[700 220 980 720]);
+    ha = gca;
+end
+
 if nargin < 5
     do_reg = true;
+    
 end
 
 sesh.ROIs = ROIs1;
@@ -21,7 +27,7 @@ for k = 1:2
 end
 
 % This is sort-of a hack
-figure; set(gcf,'Position',[700 220 980 720]);
+axes(ha);
 comb_mask = sesh(1).AllNeuronMask + 2*sesh(2).AllNeuronMask;
 comb_mask(comb_mask == 0) = nan;
 cm = [0 0 1; 0 1 0; 1 1 0];
