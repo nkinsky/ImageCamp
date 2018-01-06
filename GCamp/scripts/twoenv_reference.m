@@ -188,17 +188,17 @@ for j = 1:length(time_comp)
     bw_sesh.(time_comp{j}) = sort(bw_sesh.(time_comp{j}),2);
 end
 
-%% Check script
-sesh_check = G48_square;
-fo_exist = false(1,length(sesh_check));
-min_exist = false(1,length(sesh_check));
-pf_exist = false(1,length(sesh_check));
-for j = 1:length(sesh_check) 
-    dirstr = ChangeDirectory(sesh_check(j).Animal, sesh_check(j).Date, ...
-        sesh_check(j).Session,0); 
-    disp(dirstr);
-    fo_exist(j) = exist(fullfile(dirstr,'FinalOutput.mat'),'file');
-    min_exist(j) = exist(fullfile(dirstr,'ICmovie_min_proj.tif'),'file');
-    pf_exist(j) = exist(fullfile(dirstr,'Placefields.mat'),'file');
-    
-end
+% %% Check script
+% sesh_check = G48_square;
+% fo_exist = false(1,length(sesh_check));
+% min_exist = false(1,length(sesh_check));
+% pf_exist = false(1,length(sesh_check));
+% for j = 1:length(sesh_check) 
+%     dirstr = ChangeDirectory(sesh_check(j).Animal, sesh_check(j).Date, ...
+%         sesh_check(j).Session,0); 
+%     disp(dirstr);
+%     fo_exist(j) = exist(fullfile(dirstr,'FinalOutput.mat'),'file');
+%     min_exist(j) = exist(fullfile(dirstr,'ICmovie_min_proj.tif'),'file');
+%     pf_exist(j) = exist(fullfile(dirstr,'Placefields.mat'),'file');
+%     
+% end

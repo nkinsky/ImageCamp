@@ -33,7 +33,7 @@ for j = 1:length(sesh_use)
 end
 
 %% Run Placefields_half
-sesh_use = G48_square(5);
+sesh_use = cat(2,G30_botharenas(9:12));
 
 for j = 1
     [~, MD_use] = ChangeDirectory_NK(sesh_use(j),0);
@@ -192,7 +192,7 @@ for j = 7; %1:length(sesh_use)
         name_append_full = [cm_append '_trans_rot' num2str(rot_array_use(k))];
         Placefields(full_sesh,'minspeed',1,'name_append', name_append_full,...
             'Pos_data', ['Pos_align_trans_rot' num2str(rot_array_use(k))],...
-            'cmperbin', cmperbin_use);
+            'cmperbin', cmperbin_use, 'exclude_frames', full_sesh.exclude_frames);
         PlacefieldStats(full_sesh,'name_append',name_append_full);
     end
     
@@ -203,6 +203,30 @@ for j = 7; %1:length(sesh_use)
             'exclude_frames',full_sesh.exclude_frames, 'cmperbin', cmperbin_use);
         PlacefieldStats(full_sesh,'name_append',name_append_full);
     end
+end
+
+%% Run on connected sessions for each half at best angle only
+sesh_use = cat(2,G30_botharenas(9:12),G31_botharenas(9:12),G45_botharenas(9:12),...
+    G48_botharenas(9:12));
+cmperbin_use = 4;
+rot_array = cat(2,G30_both_best_angle(9:12), G31_both_best_angle(9:12),...
+    G45_both_best_angle(9:12),G48_both_best_angle(9:12));
+run_win_too = false; % true = run square only and circle only too!
+if cmperbin_use ~= 1; cm_append = ['_cm' num2str(cmperbin_use)]; else ; cm_append = ''; end
+for j = 1:length(sesh_use)
+    [dirstr, full_sesh] = ChangeDirectory(sesh_use(j).Animal, sesh_use(j).Date, ...
+        sesh_use(j).Session);
+    disp(['Running Circle2Square Rotated Placefield Analysis on ' full_sesh.Animal ...
+        ' - ' full_sesh.Date ' - session ' num2str(full_sesh.Session)])
+    
+    rot_array_use = rot_array(j);
+    name_append_full = ['_half' cm_append '_trans_rot' num2str(rot_array_use)];
+    Placefields_half(full_sesh,'inMD', full_sesh.exclude_frames, name_append_full,...
+        'minspeed',1,'Pos_data', ['Pos_align_trans_rot' num2str(rot_array_use)],...
+        'cmperbin', cmperbin_use);
+    PlacefieldStats(full_sesh,'name_append',[name_append_full '_inMD'],...
+        'halfPF',true);
+    
 end
 
 %% Fix batch_align_pos
@@ -312,8 +336,11 @@ sesh_type = {'square', 'circle', 'circ2square'};
 num_shuffles = 1000;
 rot_array_use = {0:90:270, 0:15:345, 0:15:345};
 incr_use = [90, 15, 15];
-plot_comb = false;
+plot_comb = true;
 alpha = 0.05; % significance level
+cm_append = '_cm4';
+TMap_append = 'unsmoothed';
+TMap_type = ['TMap_' TMap_append];
 
 % Pre-allocate figure axes
 if plot_comb
@@ -322,7 +349,7 @@ if plot_comb
     end
 end
 
-for mm = 3:4 % 1:num_animals
+for mm = 1:num_animals
     Animal_use = Mouse(mm);
     sessions{1} = Animal_use.sesh.square;
     sessions{2} = Animal_use.sesh.circle;
@@ -330,7 +357,8 @@ for mm = 3:4 % 1:num_animals
     % Run analysis and save individual plots for each comparison
     for j = 1:length(sesh_type)
         file_save_name = [Animal_use.sesh.(sesh_type{j})(1).Animal ...
-            ' - Combined Tuning Curves - ' sesh_type{j} ' - ' num2str(num_shuffles) ' shuffle'];
+            ' - Combined Tuning Curves - ' sesh_type{j} cm_append TMap_append...
+            ' - ' num2str(num_shuffles) ' shuffle'];
 
         htemp = twoenv_squeeze(Animal_use.global_remap_stats.(sesh_type{j}).h_remap);
         sig_value = twoenv_squeeze(Animal_use.global_remap_stats.(sesh_type{j}).p_remap);
@@ -338,7 +366,8 @@ for mm = 3:4 % 1:num_animals
         [~, best_angle_all, ~, ~, corr_means, CI, hh, best_angle_shuf_all] = ...
             twoenv_rot_analysis_full(sessions{j}, sesh_type{j}, 'save_fig', ...
             true, 'num_shuffles', num_shuffles,...
-            'sig_star', sig_star, 'sig_value', sig_value);
+            'sig_star', sig_star, 'sig_value', sig_value,...
+            'cm_append',cm_append,'TMap_type',TMap_type);
         close(hh)
         
         % Plot combined curve and save
@@ -378,8 +407,8 @@ end
 
 if plot_comb
     for j = 1:3
-        file_save_name = ['All Mice - Combined Tuning Curves - ' sesh_type{j} ' - ' ...
-            num2str(num_shuffles) ' shuffle'];
+        file_save_name = ['All Mice - Combined Tuning Curves - ' sesh_type{j} ...
+            cm_append TMap_append ' - ' num2str(num_shuffles) ' shuffle'];
         figure(hcomb(j))
         printNK(file_save_name,'2env_rot')
     end

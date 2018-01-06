@@ -36,8 +36,8 @@ p.KeepUnmatched = true;
 p.addRequired('base_struct', @(a) isstruct(a) && length(a) == 1);
 p.addRequired('reg_struct', @(a) isstruct(a) && length(a) == 1);
 p.addParameter('name_append', '', @ischar); % default = ''
-p.addParameter('shuffle', 0, @(a) isnumeric(a));
-p.addParameter('shift', false, @isnumeric);
+p.addParameter('shuffle', 0, @(a) isnumeric(a) && round(a) == a && a >= 0);
+p.addParameter('shift', false, @(a) isnumeric(a) || islogical(a) && ~a);
 p.addParameter('plot', false, @(a) islogical(a) || (isnumeric(a) && ...
     a == 0 || a == 1) || ishandle(a));
 p.addParameter('shift_dist',4, @(a) isnumeric(a) && a > 0 );

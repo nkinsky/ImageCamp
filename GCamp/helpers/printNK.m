@@ -1,42 +1,51 @@
-function [  ] = printNK( filename, location, hfig, varargin )
-% printNK( filename, location, hfig, varargin )
+function [  ] = printNK( filename, varargin )
+% printNK( filename, location, ... )
 %   Prints current figure to filename in location on NORVAL as a pdf with '-bestfit'
 %   option specified.
 %
-%   Location: pwd if unspecified, see below for other options.
+%   Location(optional): pwd if unspecified, see below for other options.
 %
-%   hfig (optional): assumes current figure (gcf) if left unspecfied or
+%   'hfig' (name-value pair): assumes current figure (gcf) if left unspecfied or
 %   empty
 %
-%   varargin: can specify any flags valid for the print command here
+%   'append' (name-value pair): default = false; append into one file. Note
+%   that this is a .ps file that you can easily convert to a pdf with Adobe
+%   Distiller.
+%
 
 screen_height_in = 11; % inches: User-specific - set for proper output scaling
 screen_height_pix = 1000; % pixels, same as above
-resolution_use = '-r600'; %'-r600' = 600 dpi - might not be necessary
+% resolution_use = '-r600'; %'-r600' = 600 dpi - might not be necessary
 
-if nargin < 2
-    location = pwd;
-elseif nargin >= 2
-    switch location
-        case 'russek'
-            location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Presentations\Russek Day 2017\Poster';
-        case '2env'
-            location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\2env\Figures';
-        case '2env_rot' % 2env rotation analysis figures
-            location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\2env\Figures\Rotation Analysis';
-        case 'NO'
-            location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
-        case 'NOlaptop'
-            location = 'C:\Users\Nat\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
-        case '2env_laptop'
-            location = 'C:\Users\Nat\Dropbox\Imaging Project\Manuscripts\2env\Figures';
-        otherwise
-    end
+ip = inputParser;
+ip.addRequired('filename', @ischar);
+ip.addOptional('location', '', @ischar); % See below for valid locations
+ip.addParameter('hfig', gcf, @ishandle);
+ip.addParameter('append', false, @islogical);
+ip.parse(filename, varargin{:});
+location = ip.Results.location;
+hfig = ip.Results.hfig;
+append = ip.Results.append;
+
+%%
+switch location
+    case 'russek'
+        location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Presentations\Russek Day 2017\Poster';
+    case '2env'
+        location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\2env\Figures';
+    case '2env_rot' % 2env rotation analysis figures
+        location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\2env\Figures\Rotation Analysis';
+    case 'NO'
+        location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
+    case 'NOlaptop'
+        location = 'C:\Users\Nat\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
+    case '2env_laptop'
+        location = 'C:\Users\Nat\Dropbox\Imaging Project\Manuscripts\2env\Figures';
+    case 'alt'
+        location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\Alternation\Figures';
+    otherwise
 end
 
-if nargin < 3 || isempty(hfig)
-    hfig = gcf;
-end
 
 % set to landscape or portrait
 if hfig.Position(3) > hfig.Position(4)
@@ -66,9 +75,11 @@ end
 
 hfig.Renderer = 'painters'; % This makes sure weird stuff doesn't happen when you save lots of data points by using openGL rendering
 save_file = fullfile(location, filename);
-% print(hfig, save_file,'-dpdf',resolution_use, varargin{:});
-print(hfig, save_file,'-dpdf')
-% print(hfig, save_file,'-dpdf','-bestfit',resolution_use)
+if ~append
+    print(hfig, save_file, '-dpdf')
+elseif append
+    print(hfig, save_file, '-dpsc', '-append');
+end
 
 end
 

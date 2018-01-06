@@ -18,6 +18,7 @@ elseif num_groups > 1
         errorbar(h(j).XData + h(j).XOffset, x(:,j), err_bars(:,j),'k.');
     end
 end
+hold off
 
 
 end
