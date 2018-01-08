@@ -3,10 +3,10 @@
 %% Load Data
 % optimal aligned data
 opt_data = fullfile(ChangeDirectory_NK(G30_square(1),0),...
-    '2env_PVsilent_cm4_local0-0shuffles-2018-01-03.mat');
+    '2env_PVsilent_cm4_local0-1000shuffles-2018-01-06.mat'); % '2env_PVsilent_cm4_local0-0shuffles-2018-01-03.mat' % works
 % local aligned data
 loc_data = fullfile(ChangeDirectory_NK(G30_square(1),0),...
-    '2env_PVsilent_cm4_local1-0shuffles-2018-01-05.mat');
+    '2env_PVsilent_cm4_local1-0shuffles-2018-01-05.mat'); 
 
 load(loc_data); Mouseloc = Mouse;
 load(opt_data); %stays in Mouse variable
@@ -17,9 +17,10 @@ load(opt_data); %stays in Mouse variable
 sesh_type = {'square','circle','circ2square'};
 sesh_simple = {'', 'Same Arena', 'Different Arena'};
 
-hcomb = figure;
-hsep2 = figure;
+for k = 1:3; hcomb(k) = figure; end
+hsep2 = figure; % Plots for silent_thresh = nan only for each mouse
 for m = 1:length(sesh_type)
+
     hsep = figure;
     for k = 1:3% 1:3 % different silent_cell thresholds
         % Pre-allocate arrays for same vs different curves
@@ -31,9 +32,9 @@ for m = 1:length(sesh_type)
         corrs_all = []; shuf_all = []; local_all = [];
         for j = 1:length(Mouse)
             figure(hsep); hin = subplot(3,4,j + 4*(k-1)); % Ind. Mouse handle
-            if k == 1
-                figure(hcomb); hinc = subplot(2,2,m); hold on; % Combined handle
-            end
+%             if k == 1
+                figure(hcomb(k)); hinc = subplot(2,2,m); hold on; % Combined handle
+%             end
             if k == 1; figure(hsep2); hin2 = subplot(3,4,j+4*(m-1)); end
             
             % Make relevant variables small
@@ -87,13 +88,18 @@ for m = 1:length(sesh_type)
                
         % Get local aligned correlations for later comparison
         local_mean = nanmean(local_all,3);
-        [~, ~, mean_PVlocal_all{m,k}] = twoenv_plot_PVcurve(local_mean,...
-            sesh_type{m}, [], 'dont_plot', true);
+        [~, ~, mean_PVlocal_all{m,k}, ~, ~] = ...
+            twoenv_plot_PVcurve(local_mean, sesh_type{m}, [], 'dont_plot', true);
             
     end
 end
 
-figure(hcomb); subplot(2,2,4); text(0.2,0.5,'Silent = nan');
+for k = 1:3
+    silent_thresh = Mouse(j).PVcorrs.(sesh_type{1})(k).silent_thresh;
+    figure(hcomb(k)); subplot(2,2,4); 
+    text(0.2,0.5,['Silent = ' num2str(silent_thresh)]);
+    axis off
+end
 %% Plot same env overlap and different env overlap
 load(opt_data);
 silent_thresh_array = [nan 0 1];
@@ -127,49 +133,38 @@ for silent_ind = 1:3% 1:3
         cellfun(@std, diff_env)./sqrt(cellfun(@length, diff_env)), 'r.-');
     h3 = errorbar(unique_lags_all{1,silent_ind}, cellfun(@mean, local_same_env), ...
         cellfun(@std, local_same_env)./sqrt(cellfun(@length, local_same_env)), 'c.--');
-    
-    % local_mat = cell(8,3);
-    % for j = 1:3
-    %     local_mat(arrayfun(@(a) find(a == 0:7), unique_lags_all{j}),j) = ...
-    %         mean_PVcorr_local_all{j};
-    % end
-    % local_comb = cellfun(@(a,b,c) cat(1,a,b,c), local_mat(:,1), local_mat(:,2), ...
-    %     local_mat(:,3),'UniformOutput',false);
-    % errorbar((0:7)',cellfun(@mean, local_comb), cellfun(@std, local_comb)./...
-    %     sqrt(cellfun(@length,local_comb)), 'c:')
-    
     xlabel('Day lag')
     ylabel('Mean PV correlation')
     title(['PV Correlations - silent\_thresh = ' num2str(silent_thresh)])
     xlim([-0.5 7.5]); % ylim([-0.1 0.7])
     
     % Hack to get mean CIs from all three comparisons
-    try
-    CImin = nan(8,3); CImax = nan(8,3);
-    for j = 1:2
-        CImin(arrayfun(@(a) find(a == 0:7),unique_lags_all{j,silent_ind}),j) = ...
-            CI{j,silent_ind}(:,2);
-        CImax(arrayfun(@(a) find(a == 0:7),unique_lags_all{j,silent_ind}),j) = ...
-            CI{j,silent_ind}(:,1);
-    end
+    n = 1;
+    CIalltemp = cat(2,cat(1,unique_lags_all{:,silent_ind}), ...
+        cat(1,CI{:,silent_ind})); % 1st col = lags, 2/3 = max/min CI at each lag
+    CIplot = nan(8,2);
+    for ll = 0:7
+       CIplot(n,:) = nanmean(CIalltemp(CIalltemp(:,1) == ll,2:3),1);
+       n = n+1;
     end
     
-    % hshufline = plot(CIx, CI_mean_mean);
-%     hshufline = plot((0:7)',[nanmean(CImin,2) nanmean(CImax,2)],'Color',...
-%         'c', 'LineStyle', '--');
-    % set(hshufline,'Color',CI_handles(1).Color, 'LineStyle', ...
-    %         CI_handles(1).LineStyle);
+    hshufline = plot((0:7)', CIplot(:,1), 'Color', [1 0 1 0.7], 'LineStyle', ':');
+    legend(cat(1,h1,h2,h3,hshufline), {'Same Arena', 'Different Arena', ...
+        'Local Aligned', 'Shuffled'})
     make_plot_pretty(gca)
-    legend(cat(1,h1,h2,h3), {'Same Arena', 'Different Arena', 'Local Aligned'})
-%     legend('Same Arena','Different Arena','Shuffled')
-    % legend('Same Arena','Circle-to-square','Local Cues Aligned',...
-    %     'Shuffled')
+
 end
 subplot(2,2,4)
-text(0.5,0.5,['Lccal aligned = ' ...
+text(0.2,0.8,['Lccal aligned = ' ...
     num2str(Mouse(1).PVcorrs.square(1).local_aligned) ' for subplot 1'])
-text(0.5,0.3, 'Local aligned = 0 for subplot 2 and 3')
+text(0.2,0.65, 'Local aligned = 0 for subplot 2 and 3')
+text(0.2,0.5, 'Silent thresh = nan -> no silent cells included')
+text(0.2,0.35, 'Silent thresh = 0 -> only silent cells with non-overlapping ROIs included')
+text(0.2,0.2, 'Silent thresh = 1 -> all silent cells included')
+
 axis off
+
+%%
 
 %% Code to get pval for PV correlation vs shuffled
 % 1 - sum(Mouse(1).PVcorrs.square.PVcorrs - ...
