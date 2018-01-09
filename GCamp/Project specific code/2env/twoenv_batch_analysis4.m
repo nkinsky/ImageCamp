@@ -745,14 +745,12 @@ for k = 1:length(sesh_type)
 %     circ2square_flag = strcmpi('circ2square',sesh_type{k});
     for j = 1:num_animals
         Mouse(j).distal_rot_mat.(sesh_type{k}) = nan(num_sessions,num_sessions);
-%         angle_diff_mat = twoenv_squeeze(repmat(Mouse(j).best_angle.(sesh_type{k}), num_sessions, 1) - ...
-%             repmat(Mouse(j).best_angle.(sesh_type{k})', 1, num_sessions));
-        
-        % NK fix - above is not exact for all sessions because it does not
-        % directly compare the two sessions!
         angle_diff_mat = twoenv_rot_analysis_full(Mouse(j).sesh.(sesh_type{k}),...
             sesh_type{k},'num_shuffles',1000);
-        if strcmpi(sesh_type{k},'circ2square') % Fix to flip some values to make sure we are always referencing later session to the earlier session
+        
+        % Fix to flip some values to make sure we are always referencing 
+        % later session to the earlier session
+        if strcmpi(sesh_type{k},'circ2square') 
             temp = [false(1,8); false(1,8); true(1,4), false(1,4); true(1,4), ...
                 false(1,4); true(1,4), false(1,4); true(1,6), false(1,2); ...
                 true(1,6), false(1,2); true(1,6), false(1,2)];
@@ -765,7 +763,7 @@ for k = 1:length(sesh_type)
 %             if circ2square_flag; start_ind = 1; else; start_ind = ll+1; end
             for mm = ll+1:num_sessions
                 [~, sesh2_rot] = get_rot_from_db(Mouse(j).sesh.(sesh_type{k})(mm));
-                distal_rot = sesh2_rot - sesh1_rot;
+                distal_rot = sesh1_rot - sesh2_rot;
                 if distal_rot < 0
                     distal_rot = distal_rot + 360;
                 elseif distal_rot >= 360
@@ -780,7 +778,7 @@ for k = 1:length(sesh_type)
         global_remap = zeros(8, 8);
         global_remap(valid_comp) = Mouse(j).global_remap_stats.(sesh_type{k}).h_remap(valid_comp);
         
-        %%% Breakdown with no regard for where comparisons are rotated or
+        %%% Breakdown with no regard for whether comparisons are rotated or
         %%% not
         %  Note that this is super-conservative for designating session
         %  comparisons as tracking local cues - when there is NO
