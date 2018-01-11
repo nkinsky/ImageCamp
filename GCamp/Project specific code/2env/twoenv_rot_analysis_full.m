@@ -22,7 +22,7 @@ ip.addParameter('alt_map_file', '', @ischar); % alternate batch_map filename if 
 ip.addParameter('num_shuffles', 10, @(a) a >= 0 && round(a) == a);
 ip.addParameter('sig_star', false(length(sessions)), @islogical); % Puts a star and p-value by each non-nan value
 ip.addParameter('sig_value', nan(length(sessions)), @isnumeric); % Puts the value of anything in sig_stars on the graph
-ip.addParameter('save_fig', false, @islogical);
+ip.addParameter('save_fig', true, @islogical);
 ip.addParameter('local_ref', true, @islogical); % true = use local cues as 
 % reference and plot in terms of local cue mismatch, false = use distal
 % cues as reference and plot rotation of curves in reference to the room
@@ -32,6 +32,7 @@ ip.addParameter('name_append','',@ischar); % Name to append to end of .mat and .
 ip.addParameter('cm_append','',@ischar);
 ip.addParameter('TMap_type', 'TMap_gauss', @(a) strcmpi(a,'TMap_gauss') || ...
     strcmpi(a,'TMap_unsmoothed'));
+ip.addParameter('plot_flag', true, @islogical);
 ip.parse(sessions, rot_type, varargin{:});
 
 map_session = ip.Results.map_session;
@@ -45,6 +46,7 @@ name_append = ip.Results.name_append;
 cm_append = ip.Results.cm_append;
 TMap_type = ip.Results.TMap_type;
 local_ref = ip.Results.local_ref;
+plot_flag = ip.Results.plot_flag;
 
 alpha = 0.05; % Significance level before Bonferroni correction
 
@@ -92,14 +94,6 @@ end
 
 %% Do the analysis and plot everything
 
-edges = -1:0.05:1; % bin edges for neuron correlation plots
-angle_incr = mean(diff(rot_array));
-edges2 = (rot_array(1)-angle_incr/2):angle_incr:(rot_array(end)+angle_incr/2);
-
-hh(1) = figure; set(gcf,'Visible', 'off'); 
-% hh(2) = figure; set(gcf,'Visible', 'off'); 
-hh(2) = figure; set(gcf,'Visible', 'off'); 
-
 % Check if already run
 file_save_name = fullfile(batch_dir,['full_rotation_analysis_' rot_type ...
     cm_append '_' TMap_type '_shuffle' num2str(num_shuffles) name_append]);
@@ -111,11 +105,18 @@ try
 catch
     already_ran = false;
 end
+ 
+% Set up variables for plots
+edges = -1:0.05:1; % bin edges for neuron correlation plots
+angle_incr = mean(diff(rot_array));
+edges2 = (rot_array(1)-angle_incr/2):angle_incr:(rot_array(end)+angle_incr/2);
+
+hh(1) = figure; set(gcf,'Visible', 'off'); 
+hh(2) = figure; set(gcf,'Visible', 'off'); 
 ylims = [0 0];
 
-% keyboard
-
 % Plot all sessions vs each other
+if plot_flag
 if ~trans
     if ~already_ran % pre-allocate if analysis part not already ran
         num_comp = num_sessions*(num_sessions-1)/2;
@@ -159,8 +160,10 @@ if ~trans
                 else % 15 degree increments otherwise
                     local_shift_back = cue_rot/15; 
                 end
+                cue_rot_add = cue_rot;
             elseif local_ref
                 local_shift_back = 0;
+                cue_rot_add = 0;
             end
             
             % Plot each session-pair
@@ -169,13 +172,15 @@ if ~trans
             CI_use = circshift(squeeze(CI(j,k,:,:)), local_shift_back);
             plot_tuning_curve(rot_array, corr_mean_use, CI_use, cue_rot, ...
                 hh(1), num_sessions, subplot_ind, j, k, j, k, sessions, ...
-                rot_type, sig_star(j,k), sig_value(j,k));
-            best_ang_use = circshift(best_angle_all{j,k}, local_shift_back);
-            best_ang_shuf_use = circshift(best_angle_shuf_all{j,k}, ...
-                local_shift_back);
+                rot_type, sig_star(j,k), sig_value(j,k), local_ref);
+            best_ang_use = wrapTo360(best_angle_all{j,k} + cue_rot_add);
+            best_ang_use(best_ang_use == 360) = 0;
+            best_ang_shuf_use = wrapTo360(best_angle_shuf_all{j,k} + ...
+                cue_rot_add);
+            best_ang_shuf_use(best_ang_shuf_use == 360) = 0;
             plot_bestang_hist(rot_array, best_ang_use, best_ang_shuf_use, ...
                 edges2, hh(2), num_sessions, subplot_ind, j, k, j, k, ...
-                sessions, rot_type);
+                sessions, rot_type, local_ref);
             
             % Aggregate data limits to set y-axis the same for tuning curve
             % plots
@@ -205,13 +210,15 @@ elseif trans
     
     alpha_corr = alpha/(length(square_ind)*length(circle_ind));
     
-    best_angle = nan(num_sessions/2, num_sessions/2);
-    best_angle_all = cell(num_sessions/2, num_sessions/2);
-    best_angle_shuf_all = cell(num_sessions/2, num_sessions/2);
-    corr_at_best = nan(num_sessions/2, num_sessions/2);
-    sig_test = nan(num_sessions/2, num_sessions/2);
-    corr_means = nan(num_sessions/2, num_sessions/2, length(rot_array));
-    CI = nan(num_sessions/2, num_sessions/2, 2, length(rot_array));
+    if ~already_ran % pre-allocate if analysis part not already ran
+        best_angle = nan(num_sessions/2, num_sessions/2);
+        best_angle_all = cell(num_sessions/2, num_sessions/2);
+        best_angle_shuf_all = cell(num_sessions/2, num_sessions/2);
+        corr_at_best = nan(num_sessions/2, num_sessions/2);
+        sig_test = nan(num_sessions/2, num_sessions/2);
+        corr_means = nan(num_sessions/2, num_sessions/2, length(rot_array));
+        CI = nan(num_sessions/2, num_sessions/2, 2, length(rot_array));
+    end
     p = ProgressBar((num_sessions/2)^2);
     for j = 1:length(square_ind)
         [~, base_rot] = get_rot_from_db(sessions(square_ind(j)));
@@ -238,8 +245,10 @@ elseif trans
             if ~local_ref
                 % Identify how much to shift curves back
                 local_shift_back = -cue_rot/15;
+                cue_rot_add = cue_rot;
             elseif local_ref
                 local_shift_back = 0;
+                cue_rot_add = 0;
             end
             
             % Plot each session-pair
@@ -247,31 +256,21 @@ elseif trans
             corr_mean_use = circshift(squeeze(corr_means(j,k,:)), local_shift_back);
             CI_use = circshift(squeeze(CI(j,k,:,:)), local_shift_back);
             plot_tuning_curve(rot_array, corr_mean_use, CI_use, cue_rot, ...
-                hh(1), num_sessions, subplot_ind, square_ind(j), circle_ind(k),...
-                j, k, sessions, rot_type, sig_star(j,k), sig_value(j,k));
-            best_ang_use = circshift(best_angle_all{j,k}, local_shift_back);
-            best_ang_shuf_use = circshift(best_angle_shuf_all{j,k}, ...
-                local_shift_back);
+                hh(1), num_sessions/2, subplot_ind, square_ind(j), circle_ind(k),...
+                j, k, sessions, rot_type, sig_star(j,k), sig_value(j,k),...
+                local_ref);
+            best_ang_use = wrapTo360(best_angle_all{j,k} + cue_rot_add);
+            best_ang_use(best_ang_use == 360) = 0;
+            best_ang_shuf_use = wrapTo360(best_angle_shuf_all{j,k} + ...
+                cue_rot_add);
             plot_bestang_hist(rot_array, best_ang_use, best_ang_shuf_use, ...
-                edges2, hh(2), num_sessions, subplot_ind, square_ind(j), ...
-                circle_ind(k), j, k, sessions, rot_type);
+                edges2, hh(2), num_sessions/2, subplot_ind, square_ind(j), ...
+                circle_ind(k), j, k, sessions, rot_type, local_ref);
             
             % Aggregate data limits to set y-axis the same for tuning curve
             % plots
             ylims(1) = min([ylims(1) min(corr_mean_use)]);
             ylims(2) = max([ylims(2) max(corr_mean_use)]);
-            
-%             subplot_ind = (j-1)*num_sessions/2 + k;
-%             [best_angle(j,k), best_angle_all{j,k}, corr_lims,...
-%                 corr_at_best(j,k), sig_test(j,k), corr_means(j,k,:),...
-%                 CI(j,k,:,:), best_angle_shuf_all{j,k}] = ...
-%                 plot_func(corr_mat, shuffle_mat2, rot_array, shift_back, cue_rot, ...
-%                 edges, edges2, hh, num_sessions/2, subplot_ind, square_ind(j),...
-%                 circle_ind(k), j, k, sessions, rot_type, alpha_corr,...
-%                 sig_star(j,k), sig_value(j,k));
-%             
-%             ylims(1) = min([ylims(1) corr_lims(1)]);
-%             ylims(2) = max([ylims(2) corr_lims(2)]);
 
             p.progress;
         end
@@ -290,31 +289,36 @@ elseif trans
     end
     
 end
+end
 
 %% Save Figures 1-3
-if ~isempty(save_fig)
-%     ext_type = '.png';
+ref_type = {'distalref','localref'};
+ref_text = ref_type{local_ref + 1};
+
+if save_fig && plot_flag
         file_name = {[sessions(1).Animal ' - ' rot_type ...
             ' - Population Rotation Analysis - ' num2str(num_shuffles) ...
-            ' shuffles' name_append],...
-        [sessions(1).Animal ' - ' rot_type ' - Population Best Angle Histogram - ' ...
-        num2str(num_shuffles) ' shuffles' name_append],...
+            ' shuffles' name_append '_' ref_text],...
         [sessions(1).Animal ' - ' rot_type ' - Neuron Best Angle Histogram - '...
-        num2str(num_shuffles) ' shuffles' name_append]};
+        num2str(num_shuffles) ' shuffles' name_append '_' ref_text]};
+    % %         [sessions(1).Animal ' - ' rot_type ' - Population Best Angle Histogram - ' ...
+    %         num2str(num_shuffles) ' shuffles' name_append '_' ref_text ],...
+
     for j = 1:2
        figure(hh(j)); set(gcf,'Visible', 'on'); 
        set(gcf,'Position',[1921 1 1920 1004])
-%        export_fig(fullfile(save_dir),file_name{j})
        printNK(file_name{j},'2env_rot')
     end
 end
 
 % Save relevant variables
-file_save_name = fullfile(batch_dir,['full_rotation_analysis_' rot_type ...
-    cm_append '_' TMap_type '_shuffle' num2str(num_shuffles) name_append]);
-save(file_save_name, 'best_angle', 'best_angle_all', 'corr_at_best', ...
-    'sig_test', 'corr_means', 'CI', 'num_shuffles', 'best_angle_shuf_all',...
-    'TMap_type','cm_append')
+if ~already_ran
+    file_save_name = fullfile(batch_dir,['full_rotation_analysis_' rot_type ...
+        cm_append '_' TMap_type '_shuffle' num2str(num_shuffles) name_append]);
+    save(file_save_name, 'best_angle', 'best_angle_all', 'corr_at_best', ...
+        'sig_test', 'corr_means', 'CI', 'num_shuffles', 'best_angle_shuf_all',...
+        'TMap_type','cm_append')
+end
 
 end
 
@@ -371,10 +375,10 @@ end
 %% plotting sub-function: plot population tuning curve
 function plot_tuning_curve(rot_array, corr_means, CI, cue_rot, fig_h, ...
     num_sessions, subplot_ind, sesh1_ind, sesh2_ind, row, col, sesh_use, ...
-    rot_type, sig_star, sig_value)
+    rot_type, sig_star, sig_value, local_ref)
 
 % Plot tuning curves
-set(groot, 'CurrentFigure', fig_h); % figure(fig_h(1))
+set(groot, 'CurrentFigure', fig_h);
 h = subplot(num_sessions, num_sessions, subplot_ind);
 plot([rot_array 360], [corr_means' corr_means(1)]) % plot data
 hold on
@@ -411,29 +415,37 @@ plot([rot_array 360], [CI CI(:,1)],'k:')
 hold off
 title_label(subplot_ind, sesh1_ind, sesh2_ind, row, col, rot_type, sesh_use)
 
+if local_ref
+    xlabel('Local Cue Mismatch (\theta)')
+elseif ~local_ref
+    xlabel('Rotation (\theta)')
 end
 
-%% plotting sub-function: plot histogram of correlations at optimum rotation
-function plot_opt_corrs(corr_mat, edges, fig_h, num_sessions, subplot_ind, ...
-    sesh1_ind, sesh2_ind, row, col, sesh_use, rot_type)
-
-% Get best angle for all neurons together and correlation at this value
-[~, idx] = max(corr_means);
-
-% Plot histogram breakdown of correlation values at best rotation
-% vs. shuffle
-set(groot, 'CurrentFigure', fig_h); % figure(fig_h(2))
-subplot(num_sessions, num_sessions, subplot_ind);
-histogram(corr_mat(:, idx), edges, 'Normalization', 'probability'); hold on;
-% histogram(shuffle_mat2(:,1), edges, 'Normalization', 'probability');
-title_label(subplot_ind, sesh1_ind, sesh2_ind, row, col, rot_type, sesh_use)
+ylabel('Mean Corr')
 
 end
+
+%% LEGACY CODE (NOT CURRENTLY USED): plotting sub-function: plot histogram of correlations at optimum rotation
+% function plot_opt_corrs(corr_mat, edges, fig_h, num_sessions, subplot_ind, ...
+%     sesh1_ind, sesh2_ind, row, col, sesh_use, rot_type)
+% 
+% % Get best angle for all neurons together and correlation at this value
+% [~, idx] = max(corr_means);
+% 
+% % Plot histogram breakdown of correlation values at best rotation
+% % vs. shuffle
+% set(groot, 'CurrentFigure', fig_h); % figure(fig_h(2))
+% subplot(num_sessions, num_sessions, subplot_ind);
+% histogram(corr_mat(:, idx), edges, 'Normalization', 'probability'); hold on;
+% % histogram(shuffle_mat2(:,1), edges, 'Normalization', 'probability');
+% title_label(subplot_ind, sesh1_ind, sesh2_ind, row, col, rot_type, sesh_use)
+% 
+% end
 
 %% plotting sub-function: plot histogram of best/optimal rotation counts
 function plot_bestang_hist(rot_array, best_angle_all, best_ang_shuf_all,  ...
     edges2, fig_h, num_sessions, subplot_ind, sesh1_ind, sesh2_ind, ...
-    row, col, sesh_use, rot_type)
+    row, col, sesh_use, rot_type, local_ref)
 
 num_shuffles = size(best_ang_shuf_all,2);
 % Plot histogram of best angle counts for all neurons
@@ -453,6 +465,14 @@ plot(rot_array, nanmean(shuf_count,1),'k-', rot_array, CI_count, 'k:');
 xlim([rot_array(1)-mean(diff(rot_array))/2 rot_array(end)+mean(diff(rot_array))/2])
 set(gca,'XTick',0:90:270);
 title_label(subplot_ind, sesh1_ind, sesh2_ind, row, col, rot_type, sesh_use)
+
+if local_ref
+    xlabel('\theta_{opt} (Local Cue Mismatch)')
+elseif ~local_ref
+    xlabel('\theta_{opt}')
+end
+
+ylabel('# Neurons')
 
 end
 
@@ -483,6 +503,7 @@ else
 end
 
 end
+
 
 %% old plotting sub-function: archived here just in case
 % function [best_angle, best_angle_all2, corr_lims, corr_at_best, sig_test, ...
