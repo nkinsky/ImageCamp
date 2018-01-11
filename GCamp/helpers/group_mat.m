@@ -2,8 +2,8 @@ function [group_means,  unique_groups, mat_in_ind] = group_mat(mat_in, group_mat
 % [group_means,  unique_groups, mat_in_ind] = group_mat(mat_in, group_mat)
 %
 % Takes data in mat_in and organizes into a cell based on its group
-% membership in group_mat.  Also spits out indices for the grouped data in
-% group_means.
+% membership in group_means.  Also spits out indices for the grouped data in
+% mat_in_ind
 %
 % Example:
 % x = [1 2; 3 4]; groups = [ 0 0; 1 2];
