@@ -230,9 +230,10 @@ elseif strcmpi(filter_type, 'custom')
     PV_use = PV(:,:,:,custom_filter);
 end
 
+skipped_comps = [];
 for m = 1:length(sesh)
     for ll = 1:length(sesh)
-        
+        try
         % Get PV for cells active in sesh m AND sesh ll based on inclusion
         % criteria
         if strcmpi(filter_type, 'active_both')
@@ -247,7 +248,8 @@ for m = 1:length(sesh)
             
             % Get map from sesh ll to sesh m & neuron types
             [ coh_bool, remap_bool, silent_bool, valid_bool, map_use] = ...
-                twoenv_filter_cells2( batch_session_map.session(1), sesh(m), sesh(ll), comp_type ); % NRK - really need to move this outside of here.
+                twoenv_filter_cells2( batch_session_map.session(1), sesh(m), ...
+                sesh(ll), comp_type ); % NRK - really need to move this outside of here.
             
             % fix potential bug in neuron_reg_batch by doing registration
             % directly
@@ -338,11 +340,18 @@ for m = 1:length(sesh)
         if output_flag
             p.progress;
         end
-    end
+        catch
+            skipped_comps = cat(1,skipped_comps, [ll m]);
+        end
+    end    
 end
 
 if output_flag
     p.stop;
+end
+if ~isempty(skipped_comps)
+    disp('Could not run the following comparisons:')
+    disp(skipped_comps)
 end
 
 %% Aggregate everything 
