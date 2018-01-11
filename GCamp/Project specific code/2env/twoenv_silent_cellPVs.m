@@ -2,6 +2,7 @@
 
 %% Load Data
 % optimal aligned data
+twoenv_reference
 opt_data = fullfile(ChangeDirectory_NK(G30_square(1),0),...
     '2env_PVsilent_cm4_local0-1000shuffles-2018-01-06.mat'); % '2env_PVsilent_cm4_local0-0shuffles-2018-01-03.mat' % works
 % local aligned data
@@ -82,6 +83,8 @@ for m = 1:length(sesh_type)
         [~, unique_lags_all{m,k}, mean_PVcorr_all{m,k},~, CI{m,k}, day_lag_all{m,k}] = ...
             twoenv_plot_PVcurve(corrs_mean, sesh_type{m}, shuf_all, hinc,...
             true); hold off
+        [~, unique_days_check{m,k}, mat_ind_all{m,k}] = group_mat(corrs_mean, ...
+            day_lag_all{m,k});
         title(['Combined - ' sesh_type{m} ' silent\_thresh = ' ...
             num2str(silent_thresh)]);
         make_plot_pretty(gca);
@@ -164,7 +167,145 @@ text(0.2,0.2, 'Silent thresh = 1 -> all silent cells included')
 
 axis off
 
+%% Run GLM to get stats on everything
+%%% NRK - to re-run this you need to change k from 1 to 3 below manually
+%%% and comment out the non-significant predictors (e.g. don't include # 3
+%%% (square ~= circle) for k = 1).  Hence the keyboard statement.  I've
+%%% gone through and done this to minimize the AIC and noted the
+%%% significant predictors below.
+keyboard
 %%
+fittype = 'linear'; % interactions are explicitly modeled in design_mat below
+
+% Make connected indices
+conn_indsep = false(8);
+conn_indsep(5:6,:) = true;
+conn_indsep(:,5:6) = true;
+conn_indsep = conn_indsep & ~isnan(day_lag_all{1});
+conn_indcomb = false(16);
+conn_indcomb(9:12,:) = true;
+conn_indcomb(:,9:12) = true;
+conn_indcomb = twoenv_squeeze(conn_indcomb) & ~isnan(day_lag_all{3});
+conn_ind_cell{1} = conn_indsep; conn_ind_cell{2} = conn_indsep;
+conn_ind_cell{3} = conn_indcomb;
+
+PVvec_all = [];
+design_mat_all = [];
+for k = 1:3
+    temp = cat(1,mean_PVcorr_all{:,k});
+    PVvec = cat(1,temp{:});
+    
+    % construct vectors of design matrix
+    day_vec = [];
+    conn_vec = [];
+    bda_vec = []; % before/during/after is weird - ignore for now
+    for m = 1:length(sesh_type)
+        nsesh(m) = sum(cellfun(@length, mat_ind_all{m,k})); %number of sessions
+        day_vec = [day_vec; day_lag_all{m,k}(cat(1,mat_ind_all{m,k}{:}))]; % day lag
+        conn_vec = [conn_vec; conn_ind_cell{m}(cat(1,mat_ind_all{m,k}{:}))]; % boolean (1 = connected in one session, 0 = not)
+    end
+    
+    % Create boolean for same arena or different arena
+    % 1s if the same, 0 if no
+    same_vec = ones(length(day_vec),1);
+    same_vec(sum([nsesh(1:2),1]):end) = 0;
+    nsesh_cum = cumsum(nsesh);
+    square_vec = zeros(sum(nsesh),1); square_vec(1:nsesh_cum(1)) = 1;
+    circle_vec = zeros(sum(nsesh),1); circle_vec((nsesh_cum(1)+1):nsesh_cum(2)) = 1;
+    diff_vec = ~same_vec;
+    
+    % Construct Design Matrices - add in covariates and evaluate
+    % 1) What is the mean of all the data?
+    design_mat = cell(0); GLM = cell(0);
+    mm = 1;
+    design_mat{mm} = ones(size(PVvec)); mm = mm + 1;
+    % 2) Are same v diff arena comparisons different?
+    design_mat{mm} = same_vec; mm = mm + 1;
+    % 3) Are square v circle different different?
+    design_mat{mm} = [design_mat{mm-1} circle_vec]; mm = mm + 1;
+    % 4) Does connecting the arena change the PV correlations?
+    design_mat{mm} = [design_mat{mm-1} conn_vec]; mm = mm + 1;
+    % 5) Is there a drift with time overall?
+    design_mat{mm} = [design_mat{mm-1} day_vec]; mm = mm + 1;
+    % 6) Is there a diferent drift in same arena than in different arenas?
+    design_mat{mm} = [design_mat{mm-1} day_vec.*same_vec]; mm = mm + 1;
+    % 7) Control sanity check - does adding in some randomly designated group make
+    % a better model? (Answer should be no)
+%     design_mat{mm} = [design_mat{mm-1} binornd(1,0.5,size(design_mat{4},1),1)]; 
+%     mm = mm + 1;
+%     % 8) Are square v circle different different?
+%     design_mat{mm} = [design_mat{mm-1} circle_vec]; mm = mm + 1;
+%     % 9) Does connecting the arena change the PV correlations?
+%     design_mat{mm} = [design_mat{mm-1} conn_vec]; mm = mm + 1;
+    
+    % Include only covariates that actually improve GLM for each silent
+    % cell threshold
+    predictor_names = {'Constant', 'Same Arena > Diff Arena', 'Square ~= Circle',...
+        'Connected vs Not', 'Temporal Drift', 'Temporal Drift x Same/Diff Arena',...
+        'Noise - Sanity Check'};
+%     included_predictors = 1:7;
+    if k == 1
+        included_predictors = [1 2 4 5 6];
+    elseif k == 2
+        included_predictors = [1 2 3 4 5 6];
+    elseif k == 3
+        included_predictors = [1 2 3 4 5 6];
+    end
+    
+    clear B dev stats pval
+    design_mat_use = design_mat; %design_mat(included_predictors);
+    % Do constant term explicitly
+    [B{1}, dev(1), stats{1}] = glmfit(design_mat_use{1}, PVvec, 'normal','constant',...
+        'off');
+    GLM{1} = fitglm(design_mat_use{1}, PVvec, fittype, 'Intercept', false);
+    
+    % Evaluate the rest normally
+    for j = 2:length(design_mat_use)
+        [B{j}, dev(j), stats{j}] = glmfit(design_mat_use{j}, PVvec, 'normal');
+        GLM{j} = fitglm(design_mat_use{j}, PVvec, fittype);
+    end
+    
+    % Calculate F-stat and pvalue for adding in each successive covariate
+    for j = 1:length(B)-1
+        p2 = length(B{j+1}); % # parameters in model 1
+        p1 = length(B{j}); % # parameters in model 2
+        F(j) = (sum(stats{j}.resid.^2) - sum(stats{j+1}.resid.^2))/(p2-p1)/...
+            (sum(stats{j+1}.resid.^2)/stats{j+1}.dfe);
+        pval(j) = 1 - fcdf(F(j),p2-p1,stats{j+1}.dfe);
+    end
+    
+    GLMall(k).F = F;
+    GLMall(k).pval = pval;
+    GLMall(k).B = B;
+    GLMall(k).dev = dev;
+    GLMall(k).stats = stats;
+    
+    
+    cellfun(@(a) a.ModelCriterion.AIC,GLM)
+    [~, model_use] = min(cellfun(@(a) a.ModelCriterion.AIC,GLM));
+    GLMall(k).model = model_use;
+    GLMall(k).GLM = GLM;
+    GLMall(k).significant_predictors = predictor_names(included_predictors);
+
+    if k == 1 || k == 2
+        % Add in a silent = nan vs silent = 0 term AND an interaction term 
+        % between silent cells included and temporal drift 
+        design_mat_all = cat(1,design_mat_all, ...
+            [design_mat{end} ones(size(design_mat{end},1),1)*(k-1) design_mat{end}(:,5)*(k-1)]);
+        PVvec_all = cat(1,PVvec_all, PVvec);
+    end
+end
+
+% Now do a comparison between active only PVs and silent_cell_thresh = 0
+% PVs
+GLM2 = fitglm(design_mat_all, PVvec_all, fittype);
+silent_v_not_coefCIs_summary = cat(2,num2cell(GLM2.coefCI),...
+        cat(1,predictor_names(1:6)',{'Silent'; 'Silent x Temporal Drift'}));
+
+%% Save
+file_name = fullfile(ChangeDirectory_NK(G30_square(1),0),...
+    ['PV_GLMs-' datestr(now,29) '.mat']);
+save(file_name,'GLMall')
 
 %% Code to get pval for PV correlation vs shuffled
 % 1 - sum(Mouse(1).PVcorrs.square.PVcorrs - ...
