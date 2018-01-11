@@ -140,6 +140,7 @@ rotations = 'best';
 tic
 dispNK('Running PV analysis at best rotation angle')
 p = ProgressBar(num_animals*length(sesh_type));
+num_shuffles = 1;
 for j = 1:num_animals
     for k = 1:length(sesh_type)
         base_dir = ChangeDirectory_NK(Mouse(j).sesh.(sesh_type{k})(1),0);
@@ -167,7 +168,7 @@ for j = 1:num_animals
                 ['_cm' num2str(cmperbin_use) trans_append '_rot0'],...
                 'filter_type','pval','pval_thresh',pval_thresh,...
                 'ntrans_thresh',ntrans_thresh,'output_flag',false,...
-                'num_shuffles', 1);
+                'num_shuffles', 1, 'comp_type', sesh_type{k});
             Mouse(j).PV.local_aligned.(sesh_type{k}) = PV;
             Mouse(j).PV_corrs.local_aligned.(sesh_type{k}) = PV_corrs;
             if strcmpi(rotations,'best')
@@ -250,6 +251,7 @@ dispNK('Running PV analysis at best angle for connected session by halves')
 half_use = [1 1 2 2 1 1 2 2];
 filters_use = {'no_coherent','pval','coherent_only'}; %{'no_remap','no_silent','all_cells','active_both'}; %'no_coherent','pval',
 p = ProgressBar(num_animals*length(filters_use));
+num_shuffles = 1000;
 for j = 1:num_animals
     for k = 1: length(filters_use)
         base_dir = ChangeDirectory_NK(Mouse(j).sesh.circ2square(1),0);
@@ -614,7 +616,7 @@ end
 %% Alternate Coherency Analysis - Based off of best angle distribution
 rot_bins = {0:90:360, 0:15:360, 0:15:360};
 alpha = 0.05;
-for k = 1:length(sesh_type)
+for k = 3
     for j = 1:num_animals
         [~, best_angle_all2, ~, ~, ~, ~, hh] = twoenv_rot_analysis_full(...
             Mouse(j).sesh.(sesh_type{k}), sesh_type{k}, 'num_shuffles' , 1000);  % These should all already be run so this should be fast
@@ -746,7 +748,7 @@ for k = 1:length(sesh_type)
     for j = 1:num_animals
         Mouse(j).distal_rot_mat.(sesh_type{k}) = nan(num_sessions,num_sessions);
         angle_diff_mat = twoenv_rot_analysis_full(Mouse(j).sesh.(sesh_type{k}),...
-            sesh_type{k},'num_shuffles',1000);
+            sesh_type{k},'num_shuffles', 1000, 'plot_flag', false);
         
         % Fix to flip some values to make sure we are always referencing 
         % later session to the earlier session
@@ -1543,7 +1545,7 @@ end
 
 %% Look at coherent local designation during days 5/6
 
-%% Plot DI versus days
+%% Plot DI versus days - garbage
 sesh_pairs = [2 1; 3 4; 4 5; 5 5; 6 5; 5 6; 6 6; 7 6; 8 7]; % Session-pairs to look at for DI
 figure(171)
 for k = 1:num_animals
@@ -1565,7 +1567,7 @@ for k = 1:num_animals
     hold off
 end
 
-%% Plot DI distribution versus days
+%% Plot DI distribution versus days - garbage
 figure(172); 
 for j = 1:9
     n = histcounts(DI_temp(j,:),-0.95:0.1:0.95,'normalization','probability'); 
@@ -1574,6 +1576,7 @@ for j = 1:9
 end
 
 %% Get/plot cell classification between all pairs of sessions in different environments
+% Currently broken
 plot_classify = true;
 
 if plot_classify
