@@ -20,7 +20,9 @@ function [ ] = combine_tracking( varargin )
 %
 %   Saves Pos_comb.mat in current directory with combined xpos_interp,
 %   ypos_interp, and time_interp, as well as x1,y1,t1,... (these get dumped
-%   into cell arrays x_use, y_use, t_use)
+%   into cell arrays x_use, y_use, t_use). IMPORTANT NOTE: any "filler"
+%   frames between sessions (introduced due to slight drift between
+%   tracking and imaging systems) send the mouse to (x,y) = (1,1).
 
 
 %%% Need to add in MoMtime and start_time from 1st file to the saved

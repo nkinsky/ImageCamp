@@ -140,6 +140,7 @@ rotations = 'best';
 tic
 dispNK('Running PV analysis at best rotation angle')
 p = ProgressBar(num_animals*length(sesh_type));
+num_shuffles = 1;
 for j = 1:num_animals
     for k = 1:length(sesh_type)
         base_dir = ChangeDirectory_NK(Mouse(j).sesh.(sesh_type{k})(1),0);
@@ -167,7 +168,7 @@ for j = 1:num_animals
                 ['_cm' num2str(cmperbin_use) trans_append '_rot0'],...
                 'filter_type','pval','pval_thresh',pval_thresh,...
                 'ntrans_thresh',ntrans_thresh,'output_flag',false,...
-                'num_shuffles', 1);
+                'num_shuffles', 1, 'comp_type', sesh_type{k});
             Mouse(j).PV.local_aligned.(sesh_type{k}) = PV;
             Mouse(j).PV_corrs.local_aligned.(sesh_type{k}) = PV_corrs;
             if strcmpi(rotations,'best')
@@ -189,8 +190,8 @@ end
 p.stop;
 disp(['PV analysis at best rotation angle ran in ' num2str(toc,'%0.0g') ' seconds'])
 savename = ['2env_PV_' num2str(num_shuffles) 'shuffles-' datestr(now,29) '.mat'];
-save(savename,'Mouse','inclusion_criteria')
-%% Run PV analysis at best angle for connected sessions
+save(savename,'Mouse','inclusion_criteria','-v7.3')
+%% Run PV analysis at best angle for connected sessions - not using TMaps
 dispNK('Running PV analysis at best angle for connected session by halves')
 p = ProgressBar(num_animals);
 for j = 1:num_animals
@@ -236,14 +237,50 @@ for j = 1:num_animals
             batch_session_map, 'alt_pos_file', arrayfun(@(a) ['Pos_align_rot' num2str(a) '.mat'], ...
             Mouse(j).best_angle.(sesh_type{k})([9 10 9 10 11 12 11 12]), 'UniformOutput', false),...
             'output_flag',false, 'num_shuffles', num_shuffles,...
-            'exclude_frames', exclude_frames_comb);
-        Mouse(j).PV.conn = PV;
-        Mouse(j).PV_corrs.conn = PV_corrs;
+            'exclude_frames', exclude_frames_comb, 'comp_type', sesh_type{k});
+        Mouse(j).PV.conn.allcells = PV;
+        Mouse(j).PV_corrs.conn.allcells = PV_corrs;
         p.progress;
         
     end
 end
 p.stop;
+
+%% Run PV analysis at best angle for connected sessions - USING TMaps
+dispNK('Running PV analysis at best angle for connected session by halves')
+half_use = [1 1 2 2 1 1 2 2];
+filters_use = {'no_coherent','pval','coherent_only'}; %{'no_remap','no_silent','all_cells','active_both'}; %'no_coherent','pval',
+p = ProgressBar(num_animals*length(filters_use));
+num_shuffles = 1000;
+for j = 1:num_animals
+    for k = 1: length(filters_use)
+        base_dir = ChangeDirectory_NK(Mouse(j).sesh.circ2square(1),0);
+        load(fullfile(base_dir,'batch_session_map_trans'))
+        
+        % Re-organize - day 5 1st 4 cols, day 6 2nd 4 cols
+        conn_sesh = Mouse(j).sesh.circ2square([9 10 9 10 11 12 11 12]);
+        best_angle_use = Mouse(j).best_angle.circ2square([9 10 9 10 11 12 11 12]);
+        
+        % Run Analysis
+        [PV, PV_corrs] = get_PV_and_corr( conn_sesh, ...
+            batch_session_map, 'use_TMap','unsmoothed','TMap_name_append', ...
+            arrayfun(@(a) ['_half_cm' num2str(cmperbin_use) '_trans_rot' ...
+            num2str(a) '_inMD'], best_angle_use,'UniformOutput', false), ...
+            'filter_type',filters_use{k},'pval_thresh',pval_thresh,...
+            'ntrans_thresh',ntrans_thresh,'output_flag',false,...
+            'num_shuffles', num_shuffles,'half_use', half_use,...
+            'comp_type', 'circ2square');
+        Mouse(j).PV.connfilt.(filters_use{k}) = PV;
+        Mouse(j).PV_corrs.conn.(filters_use{k}) = PV_corrs;
+        p.progress;
+    end
+    
+    
+end
+p.stop;
+
+savename = ['2env_PV_conn_' num2str(num_shuffles) 'shuffles-' datestr(now,29) '.mat'];
+save(savename,'Mouse','inclusion_criteria','-v7.3')
 
 %% Run PV analysis at best angle including only cells active in both sessions being correlated
 dispNK('Running PV analysis at best rotation angle - cells active in BOTH sessions being correlated')
@@ -324,10 +361,10 @@ for ii = 1:num_animals
     Mouse(ii).DI = nan(8,8,size(Mouse(ii).PV.circ2square,4)); % Pre-allocate
     for j = 1:8
         % NK note - shouldn't this be max? I think so...
-        PV_square = squeeze(max(max(Mouse(ii).PV.circ2square(square_sesh(j),:,:,:),...
+        PV_square = squeeze(nanmax(nanmax(Mouse(ii).PV.circ2square(square_sesh(j),:,:,:),...
             [],2),[],3)); % Activity across all bins in the square
         for k = 1:8
-            PV_circle = squeeze(max(max(Mouse(ii).PV.circ2square(circ_sesh(k),:,:,:),...
+            PV_circle = squeeze(nanmax(nanmax(Mouse(ii).PV.circ2square(circ_sesh(k),:,:,:),...
                 [],2),[],3));
             active_cells = PV_square ~= 0 | PV_circle ~= 0;
             DI_temp = (PV_square(active_cells) - PV_circle(active_cells))...
@@ -579,7 +616,7 @@ end
 %% Alternate Coherency Analysis - Based off of best angle distribution
 rot_bins = {0:90:360, 0:15:360, 0:15:360};
 alpha = 0.05;
-for k = 1:length(sesh_type)
+for k = 3
     for j = 1:num_animals
         [~, best_angle_all2, ~, ~, ~, ~, hh] = twoenv_rot_analysis_full(...
             Mouse(j).sesh.(sesh_type{k}), sesh_type{k}, 'num_shuffles' , 1000);  % These should all already be run so this should be fast
@@ -710,14 +747,12 @@ for k = 1:length(sesh_type)
 %     circ2square_flag = strcmpi('circ2square',sesh_type{k});
     for j = 1:num_animals
         Mouse(j).distal_rot_mat.(sesh_type{k}) = nan(num_sessions,num_sessions);
-%         angle_diff_mat = twoenv_squeeze(repmat(Mouse(j).best_angle.(sesh_type{k}), num_sessions, 1) - ...
-%             repmat(Mouse(j).best_angle.(sesh_type{k})', 1, num_sessions));
-        
-        % NK fix - above is not exact for all sessions because it does not
-        % directly compare the two sessions!
         angle_diff_mat = twoenv_rot_analysis_full(Mouse(j).sesh.(sesh_type{k}),...
-            sesh_type{k},'num_shuffles',1000);
-        if strcmpi(sesh_type{k},'circ2square') % Fix to flip some values to make sure we are always referencing later session to the earlier session
+            sesh_type{k},'num_shuffles', 1000, 'plot_flag', false);
+        
+        % Fix to flip some values to make sure we are always referencing 
+        % later session to the earlier session
+        if strcmpi(sesh_type{k},'circ2square') 
             temp = [false(1,8); false(1,8); true(1,4), false(1,4); true(1,4), ...
                 false(1,4); true(1,4), false(1,4); true(1,6), false(1,2); ...
                 true(1,6), false(1,2); true(1,6), false(1,2)];
@@ -730,7 +765,7 @@ for k = 1:length(sesh_type)
 %             if circ2square_flag; start_ind = 1; else; start_ind = ll+1; end
             for mm = ll+1:num_sessions
                 [~, sesh2_rot] = get_rot_from_db(Mouse(j).sesh.(sesh_type{k})(mm));
-                distal_rot = sesh2_rot - sesh1_rot;
+                distal_rot = sesh1_rot - sesh2_rot;
                 if distal_rot < 0
                     distal_rot = distal_rot + 360;
                 elseif distal_rot >= 360
@@ -745,7 +780,7 @@ for k = 1:length(sesh_type)
         global_remap = zeros(8, 8);
         global_remap(valid_comp) = Mouse(j).global_remap_stats.(sesh_type{k}).h_remap(valid_comp);
         
-        %%% Breakdown with no regard for where comparisons are rotated or
+        %%% Breakdown with no regard for whether comparisons are rotated or
         %%% not
         %  Note that this is super-conservative for designating session
         %  comparisons as tracking local cues - when there is NO
@@ -1510,7 +1545,7 @@ end
 
 %% Look at coherent local designation during days 5/6
 
-%% Plot DI versus days
+%% Plot DI versus days - garbage
 sesh_pairs = [2 1; 3 4; 4 5; 5 5; 6 5; 5 6; 6 6; 7 6; 8 7]; % Session-pairs to look at for DI
 figure(171)
 for k = 1:num_animals
@@ -1532,7 +1567,7 @@ for k = 1:num_animals
     hold off
 end
 
-%% Plot DI distribution versus days
+%% Plot DI distribution versus days - garbage
 figure(172); 
 for j = 1:9
     n = histcounts(DI_temp(j,:),-0.95:0.1:0.95,'normalization','probability'); 
@@ -1541,6 +1576,7 @@ for j = 1:9
 end
 
 %% Get/plot cell classification between all pairs of sessions in different environments
+% Currently broken
 plot_classify = true;
 
 if plot_classify

@@ -87,7 +87,7 @@ p.addParameter('check_multiple_mapping', false, @(a) islogical(a) ...
 p.addParameter('multi_reg', 0, @isnumeric) % default = 0
 p.addParameter('use_neuron_masks', false, @(a) islogical(a) ...
     || a == 1 || a == 0);  %default = false
-p.addParameter('name_append', '', @ischar); % default = ''
+p.addParameter('name_append', '', @(a) isempty(a) || ischar(a)); % default = ''
 p.addParameter('alt_reg', [], @(x) isempty(x) || ...
     size(x,1) == 3 && size(x,2) == 3); % default = no alternative tform
 p.addParameter('add_jitter', [], @(x) isempty(x) || ...
@@ -97,7 +97,7 @@ p.addParameter('multi_map_method', 2, ...
 p.addParameter('min_thresh', 3, @isnumeric);
 p.addParameter('save_on', true, @(a) islogical(a) || a == 0 || a == 1);
 p.addParameter('suppress_output', false, @(a) islogical(a) || a == 0 || a == 1);
-
+p.KeepUnmatched = true;
 p.parse(mouse_name, base_date, base_session, reg_date, reg_session, ...
     varargin{:});
 
@@ -413,24 +413,9 @@ num_same = sum(same_neuron(:));
 num_notassigned = n;
 %% 7: Plot out combined sessions
 if ~suppress_output
-    for k = 1:2
-        sesh(k).AllNeuronMask = create_AllICmask(sesh(k).NeuronImage_reg);
-    end
-    
-    % This is sort-of a hack
-    figure;
-    imagesc(sesh(1).AllNeuronMask + 2*sesh(2).AllNeuronMask); colorbar
-    title('1 = session 1, 2 = session 2, red outline = both')
-    hold on
-    for j = 1:length(neuron_id)
-        nid = neuron_id{j};
-        if ~isempty(nid) && ~isnan(nid)
-            b1 = bwboundaries( sesh(1).NeuronImage_reg{j},'noholes');
-            b2 = bwboundaries(sesh(2).NeuronImage_reg{nid},'noholes');
-            plot(b1{1}(:,2),b1{1}(:,1),'r',b2{1}(:,2),b2{1}(:,1),'r');
-        end
-    end
-    hold off
+    map_use = neuronmap_cell2mat(neuron_id);
+    plot_reg_neurons(map_use, RegistrationInfoX, sesh(1).NeuronImage_reg,...
+        sesh(2).NeuronImage_reg, false);
     xlabel([mouse_name_title(mouse_name) ' ' mouse_name_title(base_date) ' session ' num2str(base_session) ...
             ' to ' mouse_name_title(reg_date) ' session ' num2str(reg_session)]);
 end

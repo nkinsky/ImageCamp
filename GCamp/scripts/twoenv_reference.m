@@ -166,6 +166,8 @@ G48_both_best_angle = [0 180 105 240 105 75 0 0 90 90 75 90 180 90 90 150];
 all_sessions = cat(2,G30_botharenas, G31_botharenas, G45_botharenas, G48_botharenas);
 all_square = cat(2,G30_square,G31_square,G45_square,G48_square);
 all_oct = cat(2,G30_oct,G31_oct,G45_oct,G48_oct);
+all_sesh2 = cat(1,G30_botharenas, G31_botharenas, G45_botharenas,...
+    G48_botharenas);
 square_days = [ 1 1 4 4 5 6 7 7];
 circle_days = [2 2 3 3 5 6 8 8];
 all_days = [1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8];
@@ -188,17 +190,17 @@ for j = 1:length(time_comp)
     bw_sesh.(time_comp{j}) = sort(bw_sesh.(time_comp{j}),2);
 end
 
-%% Check script
-sesh_check = G48_square;
-fo_exist = false(1,length(sesh_check));
-min_exist = false(1,length(sesh_check));
-pf_exist = false(1,length(sesh_check));
-for j = 1:length(sesh_check) 
-    dirstr = ChangeDirectory(sesh_check(j).Animal, sesh_check(j).Date, ...
-        sesh_check(j).Session,0); 
-    disp(dirstr);
-    fo_exist(j) = exist(fullfile(dirstr,'FinalOutput.mat'),'file');
-    min_exist(j) = exist(fullfile(dirstr,'ICmovie_min_proj.tif'),'file');
-    pf_exist(j) = exist(fullfile(dirstr,'Placefields.mat'),'file');
-    
-end
+% %% Check script
+% sesh_check = G48_square;
+% fo_exist = false(1,length(sesh_check));
+% min_exist = false(1,length(sesh_check));
+% pf_exist = false(1,length(sesh_check));
+% for j = 1:length(sesh_check) 
+%     dirstr = ChangeDirectory(sesh_check(j).Animal, sesh_check(j).Date, ...
+%         sesh_check(j).Session,0); 
+%     disp(dirstr);
+%     fo_exist(j) = exist(fullfile(dirstr,'FinalOutput.mat'),'file');
+%     min_exist(j) = exist(fullfile(dirstr,'ICmovie_min_proj.tif'),'file');
+%     pf_exist(j) = exist(fullfile(dirstr,'Placefields.mat'),'file');
+%     
+% end

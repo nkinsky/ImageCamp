@@ -1,6 +1,7 @@
-function [hout, hmean_shuf, hmean_CI, unique_lags, mean_corr_cell, CI] = ...
-    plot_PVcurve(PV_corrs, lag, varargin)
-% hout = plot_PVcurve(PV_corrs, lag, PV_corrs_shuffle, hin, plot_curves)
+function [hout, hmean_shuf, hmean_CI, unique_lags, mean_corr_cell, CI,...
+    hcurve] = plot_PVcurve(PV_corrs, lag, varargin)
+% [hout, hmean_shuf, hmean_CI, unique_lags, mean_corr_cell, CI,...
+%     hcurve] = plot_PVcurve(PV_corrs, lag,...)
 %   Plots data in PV_corrs vs lags.  If PV_corrs_shuffle are non-NaN it also
 %   plots 95% CIs for shuffled data.  plot_curves = true plots mean curve.
 
@@ -12,13 +13,13 @@ ip.addParameter('PV_corrs_shuffle', [], @(a) isempty(a) || (~isempty(a) && ...
     (size(a,1) == size(PV_corrs,1) &&...
     size(a,2) == size(PV_corrs,2))));
 ip.addParameter('hin', nan, @(a) all(ishandle(a)) || all(isnan(a)) || strcmpi(a,'dont_plot'));
-ip.addParameter('plot_curves', true, @islogical)
+ip.addParameter('plot_curves', true, @islogical); % plot curves over ind points
 ip.addParameter('CI_level', 0.95, @(a) a >= 0 && a <= 1);
 ip.addParameter('marker', 'b.', @ischar);
 ip.addParameter('linetype','b-', @ischar);
 ip.addParameter('filter', true(size(PV_corrs)),@(a) all(size(a) == ...
     size(PV_corrs)));
-ip.addParameter('dont_plot',false,@islogical);
+ip.addParameter('dont_plot',false,@islogical); % Don't plot anything
 ip.parse(PV_corrs,lag,varargin{:});
 
 PV_corrs_shuffle = ip.Results.PV_corrs_shuffle;
@@ -69,7 +70,7 @@ if ~dont_plot
     hpts.MarkerEdgeAlpha = 0.2;
     hold on
     if plot_curves
-        plot(unique_lags,mean_mean_array,linetype);
+        hcurve = plot(unique_lags,mean_mean_array,linetype);
     end
     
     if num_shuffles > 0 && plot_curves

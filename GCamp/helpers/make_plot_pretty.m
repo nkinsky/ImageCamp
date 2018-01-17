@@ -47,18 +47,24 @@ end
 if axes_flag
     set(h_ax,'LineWidth',linewidth,'FontSize',fontsize);
 end
-
 if ~isempty(h_obj)
    for j = 1:length(h_obj)
        try
-           set(h_obj(j),'LineWidth',linewidth);
+           if strcmpi(h_obj(j).LineStyle,'none') &&  strcmpi(h_obj(j).Marker,'*')
+               % Skip adjusting for * because then it becomes a dot
+           else
+               set(h_obj(j),'LineWidth',linewidth);
+           end
            set(h_obj(j),'FontSize',fontsize);
-           
+       catch
+       end
+       try
            % Set colorbar to min max ticks only and fatten lines up
            if isgraphics(h_obj(j),'colorbar')
                h_obj(j).Ticks = h_obj(j).Limits;
                h_obj(j).TickLabels = arrayfun(@(a) num2str(a,'%0.2f'),...
                    h_obj(j).Limits,'UniformOutput',false);
+               h_obj(j).LineWidth = linewidth;
            end
        catch
        end
