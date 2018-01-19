@@ -247,34 +247,79 @@ end
 p.stop;
 
 %% Run PV analysis at best angle for connected sessions - USING TMaps
+% dispNK('Running PV analysis at best angle for connected session by halves')
+% half_use = [1 1 2 2 1 1 2 2];
+% filters_use = {'no_silent'}; %{'no_coherent','pval','coherent_only','no_silent'}; %{'no_remap','no_silent','all_cells','active_both'}; %'no_coherent','pval',
+% p = ProgressBar(num_animals*length(filters_use));
+% num_shuffles = 1000;
+% for j = 1:num_animals
+%     for k = 1: length(filters_use)
+%         base_dir = ChangeDirectory_NK(Mouse(j).sesh.circ2square(1),0);
+%         load(fullfile(base_dir,'batch_session_map_trans'))
+%         
+%         % Re-organize - day 5 1st 4 cols, day 6 2nd 4 cols
+%         conn_sesh = Mouse(j).sesh.circ2square([9 10 9 10 11 12 11 12]);
+%         best_angle_use = Mouse(j).best_angle.circ2square([9 10 9 10 11 12 11 12]);
+%         
+%         % Run Analysis
+%         [PV, PV_corrs] = get_PV_and_corr( conn_sesh, ...
+%             batch_session_map, 'use_TMap','unsmoothed','TMap_name_append', ...
+%             arrayfun(@(a) ['_half_cm' num2str(cmperbin_use) '_trans_rot' ...
+%             num2str(a) '_inMD'], best_angle_use,'UniformOutput', false), ...
+%             'filter_type',filters_use{k},'pval_thresh',pval_thresh,...
+%             'ntrans_thresh',ntrans_thresh,'output_flag',false,...
+%             'num_shuffles', num_shuffles,'half_use', half_use,...
+%             'comp_type', 'circ2square');
+%         Mouse(j).PV.connfilt.(filters_use{k}) = PV;
+%         Mouse(j).PV_corrs.conn.(filters_use{k}) = PV_corrs;
+%         p.progress;
+%     end
+%     
+%     
+% end
+% p.stop;
+% 
+% savename = ['2env_PV_conn_' num2str(num_shuffles) 'shuffles-' datestr(now,29) '.mat'];
+% save(savename,'Mouse','inclusion_criteria','-v7.3')
+
+%% Run PV analysis at best angle for connected sessions - USING TMaps
 dispNK('Running PV analysis at best angle for connected session by halves')
 half_use = [1 1 2 2 1 1 2 2];
-filters_use = {'no_coherent','pval','coherent_only'}; %{'no_remap','no_silent','all_cells','active_both'}; %'no_coherent','pval',
+filters_use = {'pval', 'coherent_only', 'remap_only', 'silent_only', 'no_coherent',...
+    'no_remap', 'no_silent'}; 
 p = ProgressBar(num_animals*length(filters_use));
-num_shuffles = 1000;
+num_shuffles = 0;
 for j = 1:num_animals
-    for k = 1: length(filters_use)
+    for k = 1:length(filters_use)
+        if strcmpi(filters_use{k},'pval')
+            num_shuffles = 1000;
+        else
+            num_shuffles = 1;
+        end
         base_dir = ChangeDirectory_NK(Mouse(j).sesh.circ2square(1),0);
         load(fullfile(base_dir,'batch_session_map_trans'))
         
         % Re-organize - day 5 1st 4 cols, day 6 2nd 4 cols
         conn_sesh = Mouse(j).sesh.circ2square([9 10 9 10 11 12 11 12]);
-        best_angle_use = Mouse(j).best_angle.circ2square([9 10 9 10 11 12 11 12]);
+        best_angle_use = Mouse(j).best_angle.circ2square(...
+            [9 10 9 10 11 12 11 12]);
         
+        % Filter cells
+        custom_filt = twoenv_make_conn_filt(Mouse(j).sesh.circ2square(1),...
+            filters_use{k});
         % Run Analysis
         [PV, PV_corrs] = get_PV_and_corr( conn_sesh, ...
             batch_session_map, 'use_TMap','unsmoothed','TMap_name_append', ...
             arrayfun(@(a) ['_half_cm' num2str(cmperbin_use) '_trans_rot' ...
             num2str(a) '_inMD'], best_angle_use,'UniformOutput', false), ...
-            'filter_type',filters_use{k},'pval_thresh',pval_thresh,...
+            'filter_type', 'custom_pairwise', 'pval_thresh', pval_thresh,...
             'ntrans_thresh',ntrans_thresh,'output_flag',false,...
             'num_shuffles', num_shuffles,'half_use', half_use,...
-            'comp_type', 'circ2square');
+            'comp_type', 'circ2square', 'custom_filter', custom_filt);
         Mouse(j).PV.connfilt.(filters_use{k}) = PV;
         Mouse(j).PV_corrs.conn.(filters_use{k}) = PV_corrs;
         p.progress;
     end
-    
     
 end
 p.stop;
@@ -665,7 +710,7 @@ title('Chi-squared without shuffling is not conservative - need a better statist
 
 %% Remapping analysis
 alpha = 0.05; % p-value cutoff
-align_cutoff = 30; % Angle difference for which the circle is considered aligned, e.g. if you think anything <=15 degrees different should count, set it to 15.
+align_cutoff = 45; % Angle difference for which the circle is considered aligned, e.g. if you think anything <=15 degrees different should count, set it to 15.
 num_cell_thresh = 20; % Exclude any comparisons where the number of cells registered is less than this
 
 % Find global remappers
@@ -973,73 +1018,73 @@ for j = 1:length(compare_type)
 end
 hold off
 
-%% Alignment Breakdown Plot - Rotation and No Rotation Distinctions
-rot_type = {'rotation','no_rotation'}; rot_text = {'Rotation', 'No Rotation'};
-breakdown_type = {'Full', 'Simple'};
-
-figure(18)
-for m = 1:length(rot_type)
-    
-    %%% Full Breakdown %%%
-    subplot(2, 2, (m-1)*2 + 1)
-    
-    % Assemble Matrices
-    square_mean = mean(All.ratio_plot_all2.(rot_type{m}).square,1);
-    circle_mean = mean(All.ratio_plot_all2.(rot_type{m}).circle,1);
-    circ2square_mean = mean(All.ratio_plot_all2.(rot_type{m}).circ2square,1);
-    
-    h = bar(1:length(align_type),[square_mean', circle_mean', circ2square_mean']);
-    set(gca,'XTickLabel',align_text)
-    legend('Within square', 'Within circle', 'Square to Circle')
-    xlabel('Remapping Type')
-    ylabel('Proprotion of Comparisons')
-    
-    % Now do each mouse
-    compare_type = {'square','circle','circ2square'};
-    hold on
-    for j = 1:length(compare_type)
-        plot(repmat(h(j).XData + h(j).XOffset, num_animals,1),...
-            All.ratio_plot_all2.(rot_type{m}).(compare_type{j}),'ko')
-    end
-    hold off
-    if m == 2
-        set(gca,'XTickLabel', {'', 'Coherent - Local/Distal Cues', 'Coherent - Other', 'Global Remapping'})
-    end
-    title([rot_text{m} ' - ' breakdown_type{1} ' Breakdown'])
-    
-    %%% Simple Breakdown %%%
-    subplot(2, 2, (m-1)*2 + 2)
-    
-    % Assemble matrices
-    square_mean2 = mean([sum(All.ratio_plot_all2.(rot_type{m}).square(:,1:3),2) ...
-        All.ratio_plot_all2.(rot_type{m}).square(:,4)]);
-    circle_mean2 = mean([sum(All.ratio_plot_all2.(rot_type{m}).circle(:,1:3),2) ....
-        All.ratio_plot_all2.(rot_type{m}).circle(:,4)]);
-    circ2square_mean2 = mean([sum(All.ratio_plot_all2.(rot_type{m}).circ2square(:,1:3),2) ....
-        All.ratio_plot_all2.(rot_type{m}).circ2square(:,4)]);
-    
-    % Plot
-    h = bar(1:2,[square_mean2', circle_mean2', circ2square_mean2']);
-    set(gca,'XTickLabel',cellfun(@mouse_name_title,{'Coherent','Global Remapping'},'UniformOutput',0))
-    legend('Within square', 'Within circle', 'Square to Circle')
-    xlabel('Remapping Type')
-    ylabel('Proprotion of Comparisons')
-    
-    % Now do each mouse
-    compare_type = {'square','circle','circ2square'};
-    hold on
-    for j = 1:length(compare_type)
-        plot_mat = [sum(All.ratio_plot_all2.(rot_type{m}).(compare_type{j})(:,1:3),2) ...
-            All.ratio_plot_all2.(rot_type{m}).(compare_type{j})(:,4)];
-        plot_mat2 = plot_mat./sum(plot_mat,2); % Hack to fix an error above where I'm dividing by the wrong number to get my ratios - need to fix later
-        plot(repmat(h(j).XData + h(j).XOffset, num_animals,1),...
-            plot_mat2,'ko')
-    end
-    hold off
-
-    title([rot_text{m} ' - ' breakdown_type{2} ' Breakdown'])
-
-end
+%% see twoenv_makefig2:Alignment Breakdown Plot - Rotation and No Rotation Distinctions
+% rot_type = {'rotation','no_rotation'}; rot_text = {'Rotation', 'No Rotation'};
+% breakdown_type = {'Full', 'Simple'};
+% 
+% figure(18)
+% for m = 1:length(rot_type)
+%     
+%     %%% Full Breakdown %%%
+%     subplot(2, 2, (m-1)*2 + 1)
+%     
+%     % Assemble Matrices
+%     square_mean = mean(All.ratio_plot_all2.(rot_type{m}).square,1);
+%     circle_mean = mean(All.ratio_plot_all2.(rot_type{m}).circle,1);
+%     circ2square_mean = mean(All.ratio_plot_all2.(rot_type{m}).circ2square,1);
+%     
+%     h = bar(1:length(align_type),[square_mean', circle_mean', circ2square_mean']);
+%     set(gca,'XTickLabel',align_text)
+%     legend('Within square', 'Within circle', 'Square to Circle')
+%     xlabel('Remapping Type')
+%     ylabel('Proprotion of Comparisons')
+%     
+%     % Now do each mouse
+%     compare_type = {'square','circle','circ2square'};
+%     hold on
+%     for j = 1:length(compare_type)
+%         plot(repmat(h(j).XData + h(j).XOffset, num_animals,1),...
+%             All.ratio_plot_all2.(rot_type{m}).(compare_type{j}),'ko')
+%     end
+%     hold off
+%     if m == 2
+%         set(gca,'XTickLabel', {'', 'Coherent - Local/Distal Cues', 'Coherent - Other', 'Global Remapping'})
+%     end
+%     title([rot_text{m} ' - ' breakdown_type{1} ' Breakdown'])
+%     
+%     %%% Simple Breakdown %%%
+%     subplot(2, 2, (m-1)*2 + 2)
+%     
+%     % Assemble matrices
+%     square_mean2 = mean([sum(All.ratio_plot_all2.(rot_type{m}).square(:,1:3),2) ...
+%         All.ratio_plot_all2.(rot_type{m}).square(:,4)]);
+%     circle_mean2 = mean([sum(All.ratio_plot_all2.(rot_type{m}).circle(:,1:3),2) ....
+%         All.ratio_plot_all2.(rot_type{m}).circle(:,4)]);
+%     circ2square_mean2 = mean([sum(All.ratio_plot_all2.(rot_type{m}).circ2square(:,1:3),2) ....
+%         All.ratio_plot_all2.(rot_type{m}).circ2square(:,4)]);
+%     
+%     % Plot
+%     h = bar(1:2,[square_mean2', circle_mean2', circ2square_mean2']);
+%     set(gca,'XTickLabel',cellfun(@mouse_name_title,{'Coherent','Global Remapping'},'UniformOutput',0))
+%     legend('Within square', 'Within circle', 'Square to Circle')
+%     xlabel('Remapping Type')
+%     ylabel('Proprotion of Comparisons')
+%     
+%     % Now do each mouse
+%     compare_type = {'square','circle','circ2square'};
+%     hold on
+%     for j = 1:length(compare_type)
+%         plot_mat = [sum(All.ratio_plot_all2.(rot_type{m}).(compare_type{j})(:,1:3),2) ...
+%             All.ratio_plot_all2.(rot_type{m}).(compare_type{j})(:,4)];
+%         plot_mat2 = plot_mat./sum(plot_mat,2); % Hack to fix an error above where I'm dividing by the wrong number to get my ratios - need to fix later
+%         plot(repmat(h(j).XData + h(j).XOffset, num_animals,1),...
+%             plot_mat2,'ko')
+%     end
+%     hold off
+% 
+%     title([rot_text{m} ' - ' breakdown_type{2} ' Breakdown'])
+% 
+% end
 
 %% Paired Coherent Proportion Breakdown
 figure(19)
@@ -1115,95 +1160,95 @@ for k = 1:3 %length(sesh_type)
     
 end
 
-%% Plot Coherency proportion vs time
-
-plot_by_animal = false; %Suggest keeping false since not much is apparent on the animal level
-
-coh_all = [];
-gr_all = [];
-loc_all = [];
-hcomb = figure(34);
-days_ref =  0:7;
-coh_prop_all = nan(8,3);
-for mm = 1:length(sesh_type)
-    
-    days_plot = Mouse(1).coherent_v_days.rotation.(sesh_type{mm})(:,1);
-    coh_total_comb = zeros(size(days_plot));
-    gr_total_comb = zeros(size(days_plot));
-    local_total_comb = zeros(size(days_plot));
-    
-    if plot_by_animal; figure(20+mm); end
-    for j = 1:num_animals
-
-        coh_total = zeros(size(days_plot));
-        gr_total = zeros(size(days_plot));
-        local_total = zeros(size(days_plot));
-        for k = 1:length(rot_type)
-            mat_temp = Mouse(j).coherent_v_days.(rot_type{k}).(sesh_type{mm});
-            
-            % Get coherent/global remapping probabilities for rotation/no
-            % rotation
-            total_sesh = sum(mat_temp(:,2:3),2);
-            coh_prop = mat_temp(:,2)./total_sesh; 
-            gr_prop = mat_temp(:,3)./total_sesh;
-            local_prop = mat_temp(:,4)./total_sesh;
-            
-            % Aggregate coherent/global probs. agnostic to rotation/no
-            % rotation
-            coh_total = coh_total + mat_temp(:,2);
-            gr_total = gr_total + mat_temp(:,3);
-            local_total = local_total + mat_temp(:,4);
-            
-            % Plot rotation/no-rotation breakdown
-            if plot_by_animal
-                subplot(3,4,4*(k-1)+j)
-                bar(days_plot,[coh_prop, local_prop]);
-                xlabel('Days b/w'); ylabel('Probability')
-                title(['Mouse ' num2str(j) ' ' sesh_type{mm} ' ' mouse_name_title(rot_type{k})])
-                ylim([0 1.5])
-                xlim([-1 8])
-                set(gca,'XTick',0:7)
-            end
-        end
-        % Compute agnostic probs and plot
-        total_comb = coh_total + gr_total;
-        if plot_by_animal
-            subplot(3,4,8+j)
-            bar(days_plot,[coh_total./total_comb, local_total./total_comb])
-            xlabel('Days b/w'); ylabel('Probability')
-            title(['Mouse ' num2str(j) ' ' sesh_type{mm} ' Rotation Agnostic'])
-            ylim([0 1.5])
-            xlim([-1 8])
-            set(gca,'XTick',0:7)
-        end
-        
-        % Aggregate across all mice!
-        coh_total_comb = coh_total_comb + coh_total;
-        gr_total_comb = gr_total_comb + gr_total;
-        local_total_comb = local_total_comb + local_total;
-    end
-    total_comb2 = coh_total_comb + gr_total_comb;
-    figure(24)
-    subplot(3,1,mm)
-    bar(days_plot,[coh_total_comb./total_comb2, local_total_comb./total_comb2])
-    ylim([0 1.5])
-    xlim([-1 8])
-    set(gca,'XTick',0:7)
-    xlabel('Days b/w'); ylabel('Probability')
-    title(['Rotation Agnostic Coherency v Time Breakdown - ' sesh_type{mm}])
-    legend('Coherent','Coherent - Local Cues')
-    coh_prop_all(arrayfun(@(a) find(a == days_ref),days_plot),mm) = ...
-        coh_total_comb./total_comb2; % Dump into combined mat
-end
-figure(hcomb)
-% bar(days_ref',coh_prop_all)
-win_env = mean(coh_prop_all(:,1:2),2); diff_env = coh_prop_all(:,3);
-plot(days_ref(~isnan(win_env))', win_env(~isnan(win_env)), 'bo-', ...
-    days_ref(~isnan(diff_env))', diff_env(~isnan(diff_env)), 'ro--')
-ylim([0 1.1])
-xlim([-0.5 7.5]); xlabel('Day lag'); ylabel('Coherent Ratio')
-legend('Same Arena', 'Different Arena')
-make_plot_pretty(gca)
+% %% Plot Coherency proportion vs time
+% 
+% plot_by_animal = false; %Suggest keeping false since not much is apparent on the animal level
+% 
+% coh_all = [];
+% gr_all = [];
+% loc_all = [];
+% hcomb = figure(34);
+% days_ref =  0:7;
+% coh_prop_all = nan(8,3);
+% for mm = 1:length(sesh_type)
+%     
+%     days_plot = Mouse(1).coherent_v_days.rotation.(sesh_type{mm})(:,1);
+%     coh_total_comb = zeros(size(days_plot));
+%     gr_total_comb = zeros(size(days_plot));
+%     local_total_comb = zeros(size(days_plot));
+%     
+%     if plot_by_animal; figure(20+mm); end
+%     for j = 1:num_animals
+% 
+%         coh_total = zeros(size(days_plot));
+%         gr_total = zeros(size(days_plot));
+%         local_total = zeros(size(days_plot));
+%         for k = 1:length(rot_type)
+%             mat_temp = Mouse(j).coherent_v_days.(rot_type{k}).(sesh_type{mm});
+%             
+%             % Get coherent/global remapping probabilities for rotation/no
+%             % rotation
+%             total_sesh = sum(mat_temp(:,2:3),2);
+%             coh_prop = mat_temp(:,2)./total_sesh; 
+%             gr_prop = mat_temp(:,3)./total_sesh;
+%             local_prop = mat_temp(:,4)./total_sesh;
+%             
+%             % Aggregate coherent/global probs. agnostic to rotation/no
+%             % rotation
+%             coh_total = coh_total + mat_temp(:,2);
+%             gr_total = gr_total + mat_temp(:,3);
+%             local_total = local_total + mat_temp(:,4);
+%             
+%             % Plot rotation/no-rotation breakdown
+%             if plot_by_animal
+%                 subplot(3,4,4*(k-1)+j)
+%                 bar(days_plot,[coh_prop, local_prop]);
+%                 xlabel('Days b/w'); ylabel('Probability')
+%                 title(['Mouse ' num2str(j) ' ' sesh_type{mm} ' ' mouse_name_title(rot_type{k})])
+%                 ylim([0 1.5])
+%                 xlim([-1 8])
+%                 set(gca,'XTick',0:7)
+%             end
+%         end
+%         % Compute agnostic probs and plot
+%         total_comb = coh_total + gr_total;
+%         if plot_by_animal
+%             subplot(3,4,8+j)
+%             bar(days_plot,[coh_total./total_comb, local_total./total_comb])
+%             xlabel('Days b/w'); ylabel('Probability')
+%             title(['Mouse ' num2str(j) ' ' sesh_type{mm} ' Rotation Agnostic'])
+%             ylim([0 1.5])
+%             xlim([-1 8])
+%             set(gca,'XTick',0:7)
+%         end
+%         
+%         % Aggregate across all mice!
+%         coh_total_comb = coh_total_comb + coh_total;
+%         gr_total_comb = gr_total_comb + gr_total;
+%         local_total_comb = local_total_comb + local_total;
+%     end
+%     total_comb2 = coh_total_comb + gr_total_comb;
+%     figure(24)
+%     subplot(3,1,mm)
+%     bar(days_plot,[coh_total_comb./total_comb2, local_total_comb./total_comb2])
+%     ylim([0 1.5])
+%     xlim([-1 8])
+%     set(gca,'XTick',0:7)
+%     xlabel('Days b/w'); ylabel('Probability')
+%     title(['Rotation Agnostic Coherency v Time Breakdown - ' sesh_type{mm}])
+%     legend('Coherent','Coherent - Local Cues')
+%     coh_prop_all(arrayfun(@(a) find(a == days_ref),days_plot),mm) = ...
+%         coh_total_comb./total_comb2; % Dump into combined mat
+% end
+% figure(hcomb)
+% % bar(days_ref',coh_prop_all)
+% win_env = mean(coh_prop_all(:,1:2),2); diff_env = coh_prop_all(:,3);
+% plot(days_ref(~isnan(win_env))', win_env(~isnan(win_env)), 'bo-', ...
+%     days_ref(~isnan(diff_env))', diff_env(~isnan(diff_env)), 'ro--')
+% ylim([0 1.1])
+% xlim([-0.5 7.5]); xlabel('Day lag'); ylabel('Coherent Ratio')
+% legend('Same Arena', 'Different Arena')
+% make_plot_pretty(gca)
 
 %% Do some stats on above to determine if each day is different than each 
 % other day - Very rough test to determine if each day comes from a
