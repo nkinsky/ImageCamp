@@ -15,7 +15,7 @@ function [  ] = printNK( filename, varargin )
 
 screen_height_in = 11; % inches: User-specific - set for proper output scaling
 screen_height_pix = 1000; % pixels, same as above
-% resolution_use = '-r600'; %'-r600' = 600 dpi - might not be necessary
+resolution_use = '-r300'; % >= 300dpi required by Nature Neuro, so that's what I'm using.
 
 ip = inputParser;
 ip.addRequired('filename', @ischar);
@@ -76,9 +76,9 @@ end
 hfig.Renderer = 'painters'; % This makes sure weird stuff doesn't happen when you save lots of data points by using openGL rendering
 save_file = fullfile(location, filename);
 if ~append
-    print(hfig, save_file, '-dpdf')
+    print(hfig, save_file, '-dpdf', resolution_use)
 elseif append
-    print(hfig, save_file, '-dpsc', '-append');
+    print(hfig, save_file, '-dpsc', resolution_use, '-append');
 end
 
 end

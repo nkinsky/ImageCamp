@@ -50,7 +50,7 @@ ip.addParameter('map_name_append',cell(1,2),@iscell); % name appened to neuron_m
 ip.addParameter('PFname_append',cell(1,2),@iscell);
 ip.addParameter('TMap_use','unsmoothed',@(a) ischar(a) && strcmpi(a,'gauss') || ...
     strcmpi(a,'unsmoothed'));
-ip.addParameter('half_flag',false, @islogical); % functionality not enabled yet
+ip.addParameter('half_flag',false, @islogical); 
 % nan = don't include silent cells, a = include only those with < a%
 % overlapping pixels with the second session
 ip.addParameter('silent_thresh', nan, @(a) isnan(a) || a >=0 && a <= 1); 
@@ -58,6 +58,7 @@ ip.addParameter('pval_thresh', 0.05, @(a) a > 0 & a <= 1);
 ip.addParameter('ntrans_thresh', 3, @(a) a >= 0 & round(a) == a);
 ip.addParameter('batch_map',[], @(a) isempty(a) || isstruct(a)); % specify to use batch map instead of pairwise reg
 % ip.addParameter('skip_corr'
+ip.addParameter('custom_filter', nan, @(a) islogical(a) || isnan(a)); % nan = don't use custom filter
 ip.KeepUnmatched = true;
 ip.parse(MD1, MD2, varargin{:});
 map_name_append = ip.Results.map_name_append;
@@ -67,7 +68,8 @@ half_flag = ip.Results.half_flag;
 silent_thresh = ip.Results.silent_thresh;
 pval_thresh = ip.Results.pval_thresh;
 ntrans_thresh = ip.Results.ntrans_thresh;
-% batch_map = ip.Results.batch_map;
+custom_filter = ip.Results.custom_filter;
+
 
 %% Step 1: Complete MDs and load in tmaps
 sesh = complete_MD(MD1); sesh(2) = complete_MD(MD2);
@@ -90,7 +92,6 @@ nnew = length(new_cells); % number of good new cells
 %% Step 3: Create paired PVs consisting of all cells (active each + become 
 % silent mixed at top of array, new cells at bottom of array)
 [nBinsx, nBinsy, n1] = size(sesh(1).PV);
-% n2 = size(sesh(2).PV,3);
 
 % Neurons mapped between each session and all cells going silent in session
 % 2 are mixed at the top, new cells in session 2 at the bottom
