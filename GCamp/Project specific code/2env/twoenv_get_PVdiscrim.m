@@ -1,5 +1,7 @@
-function [ deltaPVmean, deltaPVstd ] = twoenv_get_PVdiscrim( PVcorr,same_bool,diff_bool )
-% deltaPV = twoenv_get_PVdiscrim( PVcorr, same_ind, diff_ind )
+function [ deltaPVmean, deltaPVstd, PVsame, PVdiff ] = twoenv_get_PVdiscrim( PVcorr,same_bool,...
+    diff_bool )
+% [ deltaPVmean, deltaPVstd, PVsame, PVdiff ]  = twoenv_get_PVdiscrim( ...
+%       PVcorr, same_bool, diff_bool )
 % Gets change in PV between arenas versus within arena for all sessions in
 % PVcorr.
 
