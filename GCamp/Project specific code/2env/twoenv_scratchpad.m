@@ -108,6 +108,54 @@ end
 disp(['PV analysis at best rotation angle ran in ' num2str(toc,'%0.0g') ' seconds'])
 % savename = ['2env_PVsilent_' num2str(num_shuffles) 'shuffles-' datestr(now,29) '.mat'];
 % save(savename,'Mouse','-v7.3')
+
+%% Calc PVs w/o silent cell, with all silent cells, and with only non-ambiguous
+% silent cells. square only to start
+silent_thresh = [nan 0 1];
+same_bool = [true true false];
+local_aligned = [false true];
+tic
+basedir = ChangeDirectory_NK(G30_square(1),0);
+for pp = 2 %1:2 % 1 is at optimal rotation, 2 is at local cue rotation
+    if pp == 1
+        nshuf = num_shuffles;
+        sil_thresh_use = silent_thresh;
+        animal_start = 2;
+    elseif pp == 2
+        nshuf = 0;
+        sil_thresh_use = silent_thresh;
+        animal_start = 1;
+    end
+    for j = animal_start:num_animals
+        for m = 1:3 % square, circ, circ2square
+            for k = 1:length(sil_thresh_use) % 1:3 silenthresh = nan, 0, or 1
+                
+                sesh_use = Mouse(j).sesh.(sesh_type{m});
+                best_angle_use = Mouse(j).best_angle.(sesh_type{m});
+                f = tic;
+                [PVcorrs, PVshuf_corrs, ~, ~, PV, filter] = twoenv_PVbatch(sesh_use, best_angle_use, ...
+                    same_bool(m), nshuf, sil_thresh_use(k), pval_thresh,...
+                    ntrans_thresh, local_aligned(pp), cmperbin_use);
+                toc(f);
+                Mouse(j).PVcorrs.(sesh_type{m})(k).PV = PV;
+                Mouse(j).PVcorrs.(sesh_type{m})(k).PVcorrs = PVcorrs;
+                Mouse(j).PVcorrs.(sesh_type{m})(k).PVshuf_corrs = PVshuf_corrs;
+                Mouse(j).PVcorrs.(sesh_type{m})(k).silent_thresh = sil_thresh_use(k);
+                Mouse(j).PVcorrs.(sesh_type{m})(k).pval_thresh = pval_thresh;
+                Mouse(j).PVcorrs.(sesh_type{m})(k).ntrans_thresh = ntrans_thresh;
+                Mouse(j).PVcorrs.(sesh_type{m})(k).local_aligned = local_aligned(pp);
+                Mouse(j).PVcorrs.(sesh_type{m})(k).cmperbin = cmperbin_use;
+                Mouse(j).PVcorrs.(sesh_type{m})(k).filter = filter;
+                
+            end
+        end
+    end
+    savename = fullfile(basedir,['2env_PVsilent_cm' num2str(cmperbin_use) '_local' ...
+        num2str(local_aligned(pp)) '-' num2str(num_shuffles) ...
+        'shuffles-' datestr(now,29) '.mat']);
+    save(savename,'Mouse','-v7.3')
+end
+disp(['PV analysis at best rotation angle ran in ' num2str(toc,'%0.0g') ' seconds']
 %%
 sesh_use = all_sessions;
 for j = 1:length(sesh_use)
