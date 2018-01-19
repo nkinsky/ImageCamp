@@ -20,10 +20,15 @@ sesh_simple = {'', 'Same Arena', 'Different Arena'};
 
 for k = 1:3; hcomb(k) = figure; end
 hsep2 = figure; % Plots for silent_thresh = nan only for each mouse
+corrs_byday_all = cell(length(sesh_type),3);
+shuf_byday_all = cell(length(sesh_type),3);
 for m = 1:length(sesh_type)
-
+    
     hsep = figure;
-    for k = 1:3% 1:3 % different silent_cell thresholds
+    for k = 1:3% different silent_cell thresholds
+        % Pre-allocate for later stats collection
+        corrs_byday_all{m,k} = cell(7,1);
+        shuf_byday_all{m,k} = cell(7,1);
         % Pre-allocate arrays for same vs different curves
         if ismember(k,[1 3])
             corr_simp_all = []; shuf_simp_all = [];
@@ -47,10 +52,17 @@ for m = 1:length(sesh_type)
                 .Animal);
             
             % Plot it
-            twoenv_plot_PVcurve(corrs_use, sesh_type{m}, shuf_use, hin);
+            [~, ~, corrs_byday ,~, ~, ~, shuf_byday] = twoenv_plot_PVcurve(...
+                corrs_use, sesh_type{m}, shuf_use, hin);
             title([Animal_text ' - ' sesh_type{m} ' silent\_thresh = ' ...
                 num2str(silent_thresh)]);
             make_plot_pretty(gca);
+            
+            % Aggregate for later stats
+            corrs_byday_all{m,k} = cellfun(@(a,b) cat(2,a,b), ...
+                corrs_byday_all{m,k}, corrs_byday,'UniformOutput',false);
+            shuf_byday_all{m,k} = cellfun(@(a,b) cat(2,a,b), ...
+                shuf_byday_all{m,k}, shuf_byday,'UniformOutput',false);
             
             % Same as above but only for silent_thresh = nan and all mice
             % on one plot
@@ -93,7 +105,7 @@ for m = 1:length(sesh_type)
         local_mean = nanmean(local_all,3);
         [~, ~, mean_PVlocal_all{m,k}, ~, ~] = ...
             twoenv_plot_PVcurve(local_mean, sesh_type{m}, [], 'dont_plot', true);
-            
+        
     end
 end
 
@@ -141,7 +153,7 @@ for silent_ind = 1:3% 1:3
     title(['PV Correlations - silent\_thresh = ' num2str(silent_thresh)])
     xlim([-0.5 7.5]); % ylim([-0.1 0.7])
     
-    % Hack to get mean CIs from all three comparisons
+    % Get mean CIs from all three comparisons
     n = 1;
     CIalltemp = cat(2,cat(1,unique_lags_all{:,silent_ind}), ...
         cat(1,CI{:,silent_ind})); % 1st col = lags, 2/3 = max/min CI at each lag
@@ -167,14 +179,14 @@ text(0.2,0.2, 'Silent thresh = 1 -> all silent cells included')
 
 axis off
 
+
 %% Run GLM to get stats on everything
 %%% NRK - to re-run this you need to change k from 1 to 3 below manually
 %%% and comment out the non-significant predictors (e.g. don't include # 3
 %%% (square ~= circle) for k = 1).  Hence the keyboard statement.  I've
 %%% gone through and done this to minimize the AIC and noted the
 %%% significant predictors below.
-keyboard
-%%
+%% NRK Note - play around with stepwiseglm to see if you get the same results as below!!!
 fittype = 'linear'; % interactions are explicitly modeled in design_mat below
 
 % Make connected indices
@@ -306,6 +318,21 @@ silent_v_not_coefCIs_summary = cat(2,num2cell(GLM2.coefCI),...
 file_name = fullfile(ChangeDirectory_NK(G30_square(1),0),...
     ['PV_GLMs-' datestr(now,29) '.mat']);
 save(file_name,'GLMall')
+
+%% Make tables for later plotting
+table_both = GLMall(1).GLM{5}.Coefficients(:,1);
+table_both = horzcat(table_both, array2table(GLMall(1).GLM{5}.coefCI));
+table_both.Properties.RowNames = GLMall(1).significant_predictors';
+table_both.Properties.VariableNames = {'Mean', 'CIlower', 'CIupper'};
+writetable(table_both, fullfile(ChangeDirectory_NK(G30_square(1),0),...
+    'PVtable_activeboth.xls'),'WriteRowNames', true);
+
+table_sil0 = GLMall(2).GLM{6}.Coefficients(:,1);
+table_sil0 = horzcat(table_sil0, array2table(GLMall(2).GLM{6}.coefCI));
+table_sil0.Properties.RowNames = GLMall(2).significant_predictors';
+table_sil0.Properties.VariableNames = {'Mean', 'CIlower', 'CIupper'};
+writetable(table_sil0, fullfile(ChangeDirectory_NK(G30_square(1),0),...
+    'PVtable_sil0.xls'),'WriteRowNames', true);
 
 %% Code to get pval for PV correlation vs shuffled
 % 1 - sum(Mouse(1).PVcorrs.square.PVcorrs - ...
