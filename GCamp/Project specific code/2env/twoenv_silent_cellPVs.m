@@ -14,6 +14,7 @@ load(opt_data); %stays in Mouse variable
 
 %% 1st plot all 4 animals PV curves for each condition (no silent cells, only 
 % unambiguous silent cells, and any silent cells)
+num_animals = length(Mouse);
 
 sesh_type = {'square','circle','circ2square'};
 sesh_simple = {'', 'Same Arena', 'Different Arena'};
@@ -66,7 +67,7 @@ for m = 1:length(sesh_type)
             
             % Same as above but only for silent_thresh = nan and all mice
             % on one plot
-            if k == 1
+          e  if k == 1
                 twoenv_plot_PVcurve(corrs_use, sesh_type{m}, shuf_use, hin2);
                 title([Animal_text ' - ' sesh_type{m}])
                 make_plot_pretty(gca);
@@ -179,6 +180,27 @@ text(0.2,0.2, 'Silent thresh = 1 -> all silent cells included')
 
 axis off
 
+%% Get rudimentary stats for all mice - ttest of real vs shuffled data
+pmat_comb = nan(3,3,7);
+for m = 1:3
+    for k = 1:3
+        [~, pmat_comb(m,k,:)] = cellfun(@(a,b) ttest2(a(:),b(:),'tail','right'), ...
+            corrs_byday_all{m,k},shuf_byday_all{m,k});
+    end
+end
+
+hmat_comb = pmat_comb < 0.05/7; % Check significance level after Bonferroni connection
+
+num_animals = length(Mouse);
+pmat_comb_bymouse = nan(num_animals,3,3,7);
+for m = 1:3
+    for k = 1:3
+        for j = 1:num_animals
+            [~, pmat_comb_bymouse(j, m, k, :)] = cellfun(@(a,b) ttest2(a(:,j),b(:,j),...
+                'tail','right'), corrs_byday_all{m,k},shuf_byday_all{m,k});
+        end
+    end
+end
 
 %% Run GLM to get stats on everything
 %%% NRK - to re-run this you need to change k from 1 to 3 below manually
