@@ -1,6 +1,6 @@
-function [ h ] = twoenv_coherent_topo(best_angle_corrs, batch_session_map,...
-    sesh_ind1, sesh_ind2, coh_thresh, plot_coh_only)
-% h = twoenv_coherent_topo(best_angle_corrs, batch_session_map, sesh_ind1, sesh_ind2, ...
+function [ h ] = twoenv_coherent_topo(best_angle_or_corrs, batch_session_map,...
+    sesh_ind1, sesh_ind2, thresh_type, plot_coh_only)
+% h = twoenv_coherent_topo(best_angle_or_corrs, batch_session_map, sesh_ind1, sesh_ind2, ...
 %   coh_thresh, plot_coh_only)
 %   Plots cells with correlations above coh_thresh in red, with the rest in
 %   blue.
@@ -9,9 +9,16 @@ function [ h ] = twoenv_coherent_topo(best_angle_corrs, batch_session_map,...
 
 if nargin < 6
     plot_coh_only = false;
+    coh_thresh = 30;
     if nargin < 5
-        coh_thresh = 0.75;
+        thresh_type = 'angle';
     end
+end
+
+if strcmpi(thresh_type,'angle')
+    coh_thresh = 30; % degrees
+elseif strcmpi(thresh_type,'corr')
+   coh_thresh = 0.75; % correlation 
 end
 
 sesh_ind = [sesh_ind1 sesh_ind2];
@@ -44,11 +51,17 @@ only{2} = (~ismember(1:sesh(2).num_neurons, neuron_map))';
 
 %% Step 2: Threshold correlations to identify good cells
 
-% Identify all cells with non-nan correlations for potential plotting
-valid_neurons = ~isnan(best_angle_corrs); % Should be all neurons active in both sessions...
+if strcmpi(thresh_type,'angle')
+    valid_neurons = ~isnan(best_angle_or_corrs);
+    coherent_cells{1} = abs(best_angle_or_corrs) <= coh_thresh & valid_neurons;
+elseif strcmpi(thresh_type,'corr')
+    % Identify all cells with non-nan correlations for potential plotting
+    valid_neurons = ~isnan(best_angle_or_corrs); % Should be all neurons active in both sessions...
+    % Identify cells with correlation above thresh
+    coherent_cells{1} = best_angle_or_corrs > coh_thresh & valid_neurons;
+end
 
-% Identify cells with correlation above thresh
-coherent_cells{1} = best_angle_corrs > coh_thresh;
+
 incoherent_cells{1} = valid_neurons & ~coherent_cells{1}; 
 coherent_cells{2} = neuron_map(coherent_cells{1});
 incoherent_cells{2} = neuron_map(incoherent_cells{1});
@@ -58,22 +71,28 @@ figure;
 set(gcf,'Position', [2270, 50, 1100, 850]);
 h = gca;
 
+scale_bar = true;
 if ~plot_coh_only % Plot session 1 and session 2 only cells in grey
-    for j= 1:2
+    for j = 1:2
         [~, ~, h_either] = plot_neuron_outlines(nan, sesh(j).ROIs(only{j}), h,...
-            'colors', [0.5 0.5 0.5]);
+            'colors', [0.5 0.5 0.5],'scale_bar', scale_bar);
+        scale_bar = false;
     end
+else
+    h_either = [];
 end
+
 
 for j = 1:2
     % Plot cells above thresh in red
     [~, ~, h_coh] = plot_neuron_outlines(nan, sesh(j).ROIs(coherent_cells{j}), h,...
-        'colors', [1 0 0]);
+        'colors', [1 0 0], 'scale_bar', scale_bar);
+    scale_bar = false;
     % Plot cells below thresh in green
     [~, ~, h_incoh] = plot_neuron_outlines(nan, sesh(j).ROIs(incoherent_cells{j}), h,...
-        'colors', [0 0 1]);
+        'colors', [0 0 1], 'scale_bar', scale_bar);
 end
-legend(cat(2, h_coh, h_incoh, h_either), {'Coherent', 'Not Coherent', ...
+legend(cat(2, h_coh(1), h_incoh(1), h_either(1)), {'Coherent', 'Not Coherent', ...
     'Active 1 Session Only'})
 axis tight
     

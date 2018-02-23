@@ -40,7 +40,7 @@ end
 num_neurons = size(traces,1);
 num_frames = size(traces,2);
 % SR = 20; % frames/sec
-
+time_bar = round(num_frames/SR/6,-1); % seconds
 %% Construct traces
 
 baseline = mean(traces,2);
@@ -49,14 +49,16 @@ time_plot = (1:num_frames)/SR;
 
 % NK attempt to make everything more or less equally spaced
 trace_max = max(trace_adj,[],2);
-trace_adj = trace_adj./trace_max;
+offset = median(trace_max);
+% trace_adj = trace_adj./trace_max;
+% trace_adj = trace_adj/trace_max(1); % Normalize everything to max height of the 1st trace.
 
 axes(h)
-y_base = 0;
+% y_base = 0;
 
 colors_used = nan(num_neurons,3);
 for j = 1:num_neurons
-    trace_use = trace_adj(j,:) + y_base;
+    trace_use = trace_adj(j,:) + (j-1)*offset; %trace_adj(j,:) + (j-1)*trace_max(1); %(trace_adj(j,:) + y_base;
     PSA_use = PSAbool(j,:);
     if ~isnan(color_table)
         plot(time_plot, trace_use, 'Color', color_table(j,:));
@@ -65,15 +67,14 @@ for j = 1:num_neurons
         colors_used(j,:) = hline.Color;
     end
     hold on
-    plot(time_plot(PSA_use), trace_use(PSA_use), 'r.')
     
-    % Get increment to next neuron's base y value
-    if j ~= num_neurons
-        y_base = max(trace_use) - min(trace_adj(j+1,:));
-    else 
-        y_base = max(trace_use);
+    % Plot putative spiking epochs if specified 
+    epochs = NP_FindSupraThresholdEpochs(PSA_use,eps);
+    if ~isempty(epochs)
+        hpsa = arrayfun(@(a,b) plot(time_plot(a:b), trace_use(a:b),'r'), epochs(:,1), epochs(:,2),...
+            'UniformOutput', false);
+        cellfun(@(a) set(a,'LineWidth',2), hpsa);
     end
-%     printNK(['testing' num2str(j)],'2env')
 end
 
 % y_data = arrayfun(@(a) max(a.XData),htraces.Children(2:end));
@@ -82,15 +83,20 @@ if ~isnan(color_table)
     colors_used = color_table;
 end
 
-% Plot scale bar at bottom
-y_loc = min(trace_adj(1,:)) - 0.25*range(trace_adj(1,:));
-plot([time_plot(1) time_plot(30*SR)], [y_loc y_loc],'LineWidth',3,'Color','k');
-text(time_plot(10+30*SR),double(y_loc),'30 s')
+% Plot time scale bar at bottom
+y_loc = min(trace_adj(1,:)) - 0.1*range(trace_adj(1,:));
+FLbar_time = round(num_frames+100,-2)/SR;
+plot([FLbar_time - time_bar FLbar_time], [y_loc y_loc],'LineWidth',2,'Color','k');
+text(FLbar_time - time_bar - 5,double(y_loc),[num2str(time_bar) ' s'],...
+    'HorizontalAlignment','right')
+% Plot fluorescence scale bar at bottom
+FLht = round(100*offset,-1); % % double(round(max(trace_adj(1,:))*100,-1)); % Get approx. height of max trace fluorescence
+plot([FLbar_time FLbar_time], double([y_loc y_loc + FLht/100]),'LineWidth',2,'Color','k');
+text(FLbar_time + 5, double((y_loc + FLht/100)-0.05), ...
+    [num2str(FLht) '% DF/F'])
 hold off
 axis tight
 axis off
-
-%% Scale traces properly
 
 end
 

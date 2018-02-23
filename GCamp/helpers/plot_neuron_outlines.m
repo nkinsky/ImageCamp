@@ -75,6 +75,9 @@ for j = 1:num_neurons
     hline(j).LineWidth = 2;
     colors_used(j,:) = hline(j).Color;
 end
+if num_neurons == 0
+    hline = plot(nan, nan,'Color',colors(1,:));
+end
 
 %% Plot scale bar
 if scale_bar
