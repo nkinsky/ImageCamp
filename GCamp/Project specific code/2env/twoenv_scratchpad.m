@@ -155,7 +155,7 @@ for pp = 2 %1:2 % 1 is at optimal rotation, 2 is at local cue rotation
         'shuffles-' datestr(now,29) '.mat']);
     save(savename,'Mouse','-v7.3')
 end
-disp(['PV analysis at best rotation angle ran in ' num2str(toc,'%0.0g') ' seconds']
+disp(['PV analysis at best rotation angle ran in ' num2str(toc,'%0.0g') ' seconds']);
 %%
 sesh_use = all_sessions;
 for j = 1:length(sesh_use)
@@ -625,3 +625,83 @@ imagesc_nan(nanmean(PVcorra_all,3)); colorbar
 % Tenaspis2_profile('GCamp6f_45','08_05_2015',4,'PF_only',1,'calc_half',2)
 % Tenaspis2_profile('GCamp6f_45','08_11_2015',1,'PF_only',1,'calc_half',1)
 % Tenaspis2_profile('GCamp6f_45','08_11_2015',1,'PF_only',1,'calc_half',2)
+
+%% Testing out hypothesis from Law, Bulkin, and Smith (2016) that there is more
+% instability in early sessions that late ones
+load('J:\GCamp Mice\Working\G30\2env\11_19_2014\1 - 2env square left 201B\Working\2env_batch_analysis4_workspace_1000shuffles_2018JAN11.mat');
+subs_use = [1 2; 3 4; 7 8];
+square_all = nan(4,3); circle_all = nan(4,3); 
+for j = 1:4
+    squarePV = Mouse(j).PV_corrs.active_both.square.PV_corr_mean;
+    circlePV = Mouse(j).PV_corrs.active_both.circle.PV_corr_mean;
+    square_all(j,:) = squarePV(sub2ind([8,8], subs_use(:,1),...
+        subs_use(:,2)));
+    circle_all(j,:) = circlePV(sub2ind([8,8], subs_use(:,1),...
+        subs_use(:,2)));
+end
+
+sq_days = repmat([1 3 5],4,1);
+ci_days = repmat([2 4 6],4,1);
+combPV_sameday = cat(1,square_all,circle_all);
+days_all = cat(1,sq_days, ci_days);
+days_all2 = repmat(1:3,8,1);
+
+try close(28); catch; end
+figure(28); set(gcf,'Position',[420 420 420 420]); h = gca;
+scatterBox(combPV_sameday(:),days_all2(:),'xLabels',{'SQ/CIR1','SQ/CIR2','SQ/CIR3'},...
+    'yLabel','|\rho_{PV}|','transparency',0.7,'h',h);
+make_plot_pretty(gca);
+printNK('Same Arena Stability vs Days','2env','append', true)
+[p,t,ss] = anova1(combPV_sameday(:),days_all2(:),'off');
+[cc,mm,hh] = multcompare(ss,'display','off');
+pos_use = get(gcf,'Position');
+try close(29); catch; end
+figure(29); set(gcf,'Position',[420 420 420 420]);
+text(0.1,0.7,['pANOVA = ' num2str(p)])
+text(0.1,0.5,['c12 = ' num2str(cc(1,6),'%0.2g')])
+text(0.1,0.3,['c13 = ' num2str(cc(2,6),'%0.2g')])
+text(0.1,0.1,['c12 = ' num2str(cc(3,6),'%0.2g')])
+axis off
+printNK('Same Arena Stability vs Days','2env','append', true)
+
+%% Now add in days 5 and 6 to the picture - not quite apples-to-apples since
+% you are comparing 2 - 5 min sessions in each arena, but allright for
+% starters.  Better would be to make PVs from 1st half of each session on
+% days 1-4 and 7-8, and compare sesh1_1st to sesh2_1st, and sesh1_2nd to
+% sesh2_2nd on each day, but that's too much work for now for a question
+% that's pretty tangential to the story.
+%
+% Result supports data from Law, Bulkin, and Smith (2016).  Lower PV corrs
+% on SQ/CIR1 turn into consistently high values on SQ/CIR2 and SQ/CIR3.
+% Arena Connection introduces interference that reduces PV correlations on
+% connected days.
+load('J:\GCamp Mice\Working\G30\2env\11_19_2014\1 - 2env square left 201B\Working\2env_PV_conn_1000shuffles-2018-01-17.mat')
+
+square_comb = nan(4,2); circle_comb = nan(4,2);
+for j = 1:4
+    PVconn_use = Mouse(j).PV_corrs.conn.pval.PV_corr_mean;
+    square_comb(j,:) = PVconn_use(sub2ind([8,8],[1 6],[3,8]));
+    circle_comb(j,:) = PVconn_use(sub2ind([8,8],[2 5],[4,7]));
+end
+
+PVcomb_all = cat(1,cat(2,square_all,square_comb),cat(2,circle_all,circle_comb));
+days_all_comb = repmat([1 2 5 3 4],8,1);
+
+try close(30); catch; end;
+figure(30); set(gcf,'Position',[420 420 550 420]); h = gca;
+scatterBox(PVcomb_all(:),days_all_comb(:),'xLabels',...
+    {'SQ/CIR1','SQ/CIR2','CONN1','CONN2','SQ/CIR3'},...
+    'yLabel','|\rho_{PV}|','transparency',0.7,'h',h);
+make_plot_pretty(gca);
+printNK('Same Arena Stability vs Days - With Conn Days','2env','append', true)
+[p,t,ss] = anova1(PVcomb_all(:),days_all_comb(:),'off');
+[cc,mm,hh] = multcompare(ss,'display','off');
+pos_use = get(gcf,'Position');
+try close(31); catch; end
+figure(31); set(gcf,'Position',[420 420 550 420]);
+text(0.1,0.7,['pANOVA = ' num2str(p)])
+text(0.1,0.5,['c12 = ' num2str(cc(1,6),'%0.2g')])
+text(0.1,0.3,['c13 = ' num2str(cc(2,6),'%0.2g')])
+text(0.1,0.1,['c12 = ' num2str(cc(3,6),'%0.2g')])
+axis off
+printNK('Same Arena Stability vs Days - With Conn Days','2env','append', true)
