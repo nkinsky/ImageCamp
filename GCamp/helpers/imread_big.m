@@ -18,6 +18,8 @@
 %
 
 function [stack_out,Nframes] = imread_big(stack_name)
+% NK add second variable to load subset of frames, and another to silence
+% waitbar if desired
 
 %get data block size
 info1 = imfinfo(stack_name);
