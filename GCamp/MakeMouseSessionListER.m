@@ -7,8 +7,179 @@ CurrDir = pwd;
 MasterDirectory = 'C:\MasterData';
 cd(MasterDirectory);
 
-%% 1 DREADDS cohort
+%% 2 Shock cohort pilots
 i = 1;
+MD(i).Animal = 'Marble_3';
+MD(i).Date = 'pre-exposure1';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\Imaging\Marble_3\20180205_1_exposure';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+MD(i).Animal = 'Marble_3';
+MD(i).Date = 'pre-open_1';
+MD(i).Session = 1;
+MD(i).Env = 'square';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\Imaging\Marble_3\20180205_squareopen';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_3';
+MD(i).Date = 'pre-exposure2';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\Imaging\Marble_3\20180206_2_exposure\20180206_2_exposure';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_3';
+MD(i).Date = 'pre-open_2';
+MD(i).Session = 1;
+MD(i).Env = 'square';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\Imaging\Marble_3\20180206_squareopen';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble_3';
+MD(i).Date = 'shock';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'e:\Evan\Imaging\Marble_3\20180207_open_.25shock\20180207_3_shock';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = '';
+MD(i).Shockdur = 2; 
+MD(i).Shocklevel = .25;
+
+i = i+1;
+MD(i).Animal = 'Marble_3';
+MD(i).Date = 'shock-open';
+MD(i).Session = 1;
+MD(i).Env = 'square';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'e:\Evan\Imaging\Marble_3\20180207_open_.25shock';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = '';
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_3';
+MD(i).Date = '4hr';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'e:\Evan\Imaging\Marble_3\20180207_open_4hr\20180207_4_4hr';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN;
+MD(i).Shocklevel = NaN; 
+
+i = i+1;
+MD(i).Animal = 'Marble_3';
+MD(i).Date = '4hr-open';
+MD(i).Session = 1;
+MD(i).Env = 'square';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'e:\Evan\Imaging\Marble_3\20180207_open_4hr';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN;
+MD(i).Shocklevel = NaN; 
+
+i = i+1;
+MD(i).Animal = 'Marble_3';
+MD(i).Date = 're-exposure1';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'e:\Evan\Imaging\Marble_3\20180208_open_5_reexposure\5_reexposure';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN;
+MD(i).Shocklevel = NaN; 
+
+i = i+1;
+MD(i).Animal = 'Marble_3';
+MD(i).Date = 're-open_1';
+MD(i).Session = 1;
+MD(i).Env = 'square';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'e:\Evan\Imaging\Marble_3\20180208_open_5_reexposure\open field';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN;
+MD(i).Shocklevel = NaN; 
+
+i = i+1;
+MD(i).Animal = 'Marble_3';
+MD(i).Date = 're-exposure2';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'e:\Evan\Imaging\Marble_3\20180209_open_6_reexposure\6_reexposure';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN;
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_3';
+MD(i).Date = 're-open_2';
+MD(i).Session = 1;
+MD(i).Env = 'square';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'e:\Evan\Imaging\Marble_3\20180209_open_6_reexposure\open field';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN;
+MD(i).Shocklevel = NaN;
+
+
+
+%% 1 DREADDS cohort
+i = i+1;
 MD(i).Animal = 'DREADDS_VHPC_1';
 MD(i).Date = 'pre-exposure1';
 MD(i).Session = 1;
@@ -18,9 +189,80 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_15_18_1_exposure\DREADDS_VHPC_1';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 2.23;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_1';
+MD(i).Date = 'pre-exposure2';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_16_18_2_exposure\DREADDS_VHPC_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 16.12;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_1';
+MD(i).Date = 'shock';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_17_18_3_shock\DREADDS_VHPC_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = '';
+MD(i).Shockdur = 2; 
+MD(i).Shocklevel = .25;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_1';
+MD(i).Date = '4hr';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_17_18_4_4hr\DREADDS_VHPC_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 39.78;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_1';
+MD(i).Date = 're-exposure1';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_18_18_5_postexposure\DREADDS_VHPC_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 50.11;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_1';
+MD(i).Date = 're-exposure2';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_19_18_6_postexposure_2\DREADDS_VHPC_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 51.75;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
 
 i = i+1;
 MD(i).Animal = 'DREADDS_VHPC_2';
@@ -32,7 +274,77 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_15_18_1_exposure\DREADDS_VHPC_2';
 end
 MD(i).Notes = 'Control';
+MD(i).Freezing = 1.47;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_2';
+MD(i).Date = 'pre-exposure2';
+MD(i).Session = 1;
+MD(i).Env = '4';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_16_18_2_exposure\DREADDS_VHPC_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 6.60;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_2';
+MD(i).Date = 'shock';
+MD(i).Session = 1;
+MD(i).Env = '4';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_17_18_3_shock\DREADDS_VHPC_2';
+end
+MD(i).Notes = 'Control';
 MD(i).Freezing = '';
+MD(i).Shockdur = 2; 
+MD(i).Shocklevel = .25;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_2';
+MD(i).Date = '4hr';
+MD(i).Session = 1;
+MD(i).Env = '4';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_17_18_4_4hr\DREADDS_VHPC_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 40.06;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_2';
+MD(i).Date = 're-exposure1';
+MD(i).Session = 1;
+MD(i).Env = '4';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_18_18_5_postexposure\DREADDS_VHPC_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 32.59;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_2';
+MD(i).Date = 're-exposure2';
+MD(i).Session = 1;
+MD(i).Env = '4';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_19_18_6_postexposure_2\DREADDS_VHPC_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 23.16;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
 
@@ -46,9 +358,81 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_15_18_1_exposure\DREADDS_VHPC_3';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 0;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_3';
+MD(i).Date = 'pre-exposure2';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_16_18_2A_exposure\DREADDS_VHPC_3';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 6.02;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_3';
+MD(i).Date = 'shock';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_17_18_3_shock\DREADDS_VHPC_3';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = '';
+MD(i).Shockdur = 2; 
+MD(i).Shocklevel = .25;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_3';
+MD(i).Date = '4hr';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_17_18_4_4hr\DREADDS_VHPC_3';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 20.01;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_3';
+MD(i).Date = 're-exposure1';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_18_18_5_postexposure\DREADDS_VHPC_3';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 24.23;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_3';
+MD(i).Date = 're-exposure2';
+MD(i).Session = 1;
+MD(i).Env = '3';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_19_18_6_postexposure_2\DREADDS_VHPC_3';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 32.73;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
 
 i = i+1;
 MD(i).Animal = 'DREADDS_VHPC_4';
@@ -60,7 +444,77 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_15_18_1_exposure\DREADDS_VHPC_4';
 end
 MD(i).Notes = 'Control';
+MD(i).Freezing = 1.02;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_4';
+MD(i).Date = 'pre-exposure2';
+MD(i).Session = 1;
+MD(i).Env = '4';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_16_18_2A_exposure\DREADDS_VHPC_4';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 4.948;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_4';
+MD(i).Date = 'shock';
+MD(i).Session = 1;
+MD(i).Env = '4';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_17_18_3_shock\DREADDS_VHPC_4';
+end
+MD(i).Notes = 'Control';
 MD(i).Freezing = '';
+MD(i).Shockdur = 2; 
+MD(i).Shocklevel = .25;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_4';
+MD(i).Date = '4hr';
+MD(i).Session = 1;
+MD(i).Env = '4';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_17_18_4_4hr\DREADDS_VHPC_4';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 38.37;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_4';
+MD(i).Date = 're-exposure1';
+MD(i).Session = 1;
+MD(i).Env = '4';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_18_18_5_postexposure\DREADDS_VHPC_4';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 30.01;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'DREADDS_VHPC_4';
+MD(i).Date = 're-exposure2';
+MD(i).Session = 1;
+MD(i).Env = '4';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = 'E:\Evan\0.25mA protocol\01_15_18_1_shock\01_19_18_6_postexposure_2\DREADDS_VHPC_4';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = 38.87;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
 
@@ -75,7 +529,7 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'E:\Evan\0.25mA protocol\12_18_17_1_shock\12_18_17_1_exposure\PF15';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 11.66;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
 
@@ -89,7 +543,7 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'E:\Evan\0.25mA protocol\12_18_17_1_shock\12_19_17_2_exposure\PF15';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 4.10;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
 
@@ -104,7 +558,7 @@ if (strcmp(userstr,'Eichentron'))
 end
 MD(i).Notes = 'Control';
 MD(i).Freezing = '';
-MD(i).Shockdur = []; 
+MD(i).Shockdur = 2; 
 MD(i).Shocklevel = .25;
 
 i = i+1;
@@ -114,10 +568,10 @@ MD(i).Session = 1;
 MD(i).Env = '3';
 MD(i).Room = 'CILSE 721 F';
 if (strcmp(userstr,'Eichentron'))
-    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_18_17_3_4hr\PF15';
+    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_20_17_3_4hr\PF15';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 18.17;
 MD(i).Shockdur = NaN;
 MD(i).Shocklevel = NaN; 
 
@@ -131,7 +585,7 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_21_17_4_rexposure\PF15';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 31.56;
 MD(i).Shockdur = NaN;
 MD(i).Shocklevel = NaN; 
 
@@ -142,10 +596,10 @@ MD(i).Session = 1;
 MD(i).Env = '3';
 MD(i).Room = 'CILSE 721 F';
 if (strcmp(userstr,'Eichentron'))
-    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_21_17_5_rexposure\PF15';
+    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_22_17_5_rexposure\PF15';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 13.57;
 MD(i).Shockdur = NaN;
 MD(i).Shocklevel = NaN;
 
@@ -159,7 +613,7 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'E:\Evan\0.25mA protocol\12_18_17_1_shock\12_18_17_1_exposure\PF16';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 4.68;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
 
@@ -173,7 +627,7 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'E:\Evan\0.25mA protocol\12_18_17_1_shock\12_19_17_2_exposure\PF16';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 6.50;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
 
@@ -188,7 +642,7 @@ if (strcmp(userstr,'Eichentron'))
 end
 MD(i).Notes = 'Control';
 MD(i).Freezing = '';
-MD(i).Shockdur = ''; 
+MD(i).Shockdur = 2; 
 MD(i).Shocklevel = .25;
 
 i = i+1;
@@ -198,10 +652,10 @@ MD(i).Session = 1;
 MD(i).Env = '4';
 MD(i).Room = 'CILSE 721 F';
 if (strcmp(userstr,'Eichentron'))
-    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_18_17_3_4hr\PF16';
+    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_20_17_3_4hr\PF16';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 44.08;
 MD(i).Shockdur = NaN;
 MD(i).Shocklevel = NaN; 
 
@@ -215,7 +669,7 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_21_17_4_rexposure\PF16';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 44.78;
 MD(i).Shockdur = NaN;
 MD(i).Shocklevel = NaN; 
 
@@ -226,10 +680,10 @@ MD(i).Session = 1;
 MD(i).Env = '4';
 MD(i).Room = 'CILSE 721 F';
 if (strcmp(userstr,'Eichentron'))
-    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_21_17_5_rexposure\PF16';
+    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_22_17_5_rexposure\PF16';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 16.79;
 MD(i).Shockdur = NaN;
 MD(i).Shocklevel = NaN;
 
@@ -243,7 +697,7 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'E:\Evan\0.25mA protocol\12_18_17_1_shock\12_18_17_1_exposure\PF17';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 6.55;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
 
@@ -257,7 +711,7 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'E:\Evan\0.25mA protocol\12_18_17_1_shock\12_19_17_2_exposure\PF17';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 9.5;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
 
@@ -272,7 +726,7 @@ if (strcmp(userstr,'Eichentron'))
 end
 MD(i).Notes = 'Control';
 MD(i).Freezing = '';
-MD(i).Shockdur = ''; 
+MD(i).Shockdur = 2; 
 MD(i).Shocklevel = .25;
 
 i = i+1;
@@ -282,10 +736,10 @@ MD(i).Session = 1;
 MD(i).Env = '3';
 MD(i).Room = 'CILSE 721 F';
 if (strcmp(userstr,'Eichentron'))
-    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_18_17_3_4hr\PF17';
+    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_20_17_3_4hr\PF17';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 12.73;
 MD(i).Shockdur = NaN;
 MD(i).Shocklevel = NaN; 
 
@@ -299,7 +753,7 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_21_17_4_rexposure\PF17';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 19.59;
 MD(i).Shockdur = NaN;
 MD(i).Shocklevel = NaN; 
 
@@ -310,10 +764,10 @@ MD(i).Session = 1;
 MD(i).Env = '3';
 MD(i).Room = 'CILSE 721 F';
 if (strcmp(userstr,'Eichentron'))
-    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_21_17_5_rexposure\PF17';
+    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_22_17_5_rexposure\PF17';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 10.56;
 MD(i).Shockdur = NaN;
 MD(i).Shocklevel = NaN;
 
@@ -327,7 +781,7 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'E:\Evan\0.25mA protocol\12_18_17_1_shock\12_18_17_1_exposure\PF18';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 6.72;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
 
@@ -341,7 +795,7 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'E:\Evan\0.25mA protocol\12_18_17_1_shock\12_19_17_2_exposure\PF18';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 2.80;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
 
@@ -356,7 +810,7 @@ if (strcmp(userstr,'Eichentron'))
 end
 MD(i).Notes = 'Control';
 MD(i).Freezing = '';
-MD(i).Shockdur = ''; 
+MD(i).Shockdur = 2; 
 MD(i).Shocklevel = .25;
 
 i = i+1;
@@ -366,10 +820,10 @@ MD(i).Session = 1;
 MD(i).Env = '4';
 MD(i).Room = 'CILSE 721 F';
 if (strcmp(userstr,'Eichentron'))
-    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_18_17_3_4hr\PF18';
+    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_20_17_3_4hr\PF18';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 12.93;
 MD(i).Shockdur = NaN;
 MD(i).Shocklevel = NaN; 
 
@@ -383,7 +837,7 @@ if (strcmp(userstr,'Eichentron'))
     MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_21_17_4_rexposure\PF18';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 18.88;
 MD(i).Shockdur = NaN;
 MD(i).Shocklevel = NaN; 
 
@@ -394,10 +848,10 @@ MD(i).Session = 1;
 MD(i).Env = '4';
 MD(i).Room = 'CILSE 721 F';
 if (strcmp(userstr,'Eichentron'))
-    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_21_17_5_rexposure\PF18';
+    MD(i).Location = 'e:\Evan\0.25mA protocol\12_18_17_1_shock\12_22_17_5_rexposure\PF18';
 end
 MD(i).Notes = 'Control';
-MD(i).Freezing = '';
+MD(i).Freezing = 9.04;
 MD(i).Shockdur = NaN;
 MD(i).Shocklevel = NaN;
 
