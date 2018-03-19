@@ -67,7 +67,7 @@ for m = 1:length(sesh_type)
             
             % Same as above but only for silent_thresh = nan and all mice
             % on one plot
-          e  if k == 1
+            if k == 1
                 twoenv_plot_PVcurve(corrs_use, sesh_type{m}, shuf_use, hin2);
                 title([Animal_text ' - ' sesh_type{m}])
                 make_plot_pretty(gca);
@@ -81,9 +81,9 @@ for m = 1:length(sesh_type)
             % Don't plot curves on combined/simple plots - wait for mean of all later
             twoenv_plot_PVcurve(corrs_use, sesh_type{m}, shuf_use, hinc,...
                 false); hold on
-%             twoenv_plot_PVcurve(corrs_use, sesh_type{m}, shuf_use, hins,...
-%                 false); hold on
-
+            %             twoenv_plot_PVcurve(corrs_use, sesh_type{m}, shuf_use, hins,...
+            %                 false); hold on
+            
             % Aggregate each mouse's correlations together
             corrs_all = cat(3, corrs_all, corrs_use);
             shuf_all = cat(3, shuf_all, shuf_use);
@@ -101,7 +101,7 @@ for m = 1:length(sesh_type)
         title(['Combined - ' sesh_type{m} ' silent\_thresh = ' ...
             num2str(silent_thresh)]);
         make_plot_pretty(gca);
-               
+        
         % Get local aligned correlations for later comparison
         local_mean = nanmean(local_all,3);
         [~, ~, mean_PVlocal_all{m,k}, ~, ~] = ...
@@ -116,8 +116,8 @@ for k = 1:3
     text(0.2,0.5,['Silent = ' num2str(silent_thresh)]);
     axis off
 end
-%% Plot same env overlap and different env overlap
-load(opt_data);
+%% Plot PV curves for all mice combined
+% load(opt_data);
 silent_thresh_array = [nan 0 1];
 figure(602); set(gcf,'Position',[2150 20 1400 940]);
 pt_colors = [0 0 0; 0 0 0; 1 0 0];
@@ -313,7 +313,6 @@ for k = 1:3
     GLMall(k).B = B;
     GLMall(k).dev = dev;
     GLMall(k).stats = stats;
-    
     
     cellfun(@(a) a.ModelCriterion.AIC,GLM)
     [~, model_use] = min(cellfun(@(a) a.ModelCriterion.AIC,GLM));
