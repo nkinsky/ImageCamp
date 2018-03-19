@@ -29,7 +29,8 @@ ip = inputParser;
 ip.addRequired('base_image',@(a) isnumeric(a));
 ip.addRequired('NeuronImage',@iscell);
 ip.addOptional('h',nan,@ishandle);
-ip.addParameter('colors', nan, @(a) isnumeric(a) && size(a,2) == 3);
+ip.addParameter('colors', nan, @(a) (isnumeric(a) && size(a,2) == 3) || ...
+    (ischar(a) && length(a) == num_neurons));
 ip.addParameter('scale_bar',true, @islogical)
 ip.parse(base_image, NeuronImage, varargin{:});
 

@@ -20,15 +20,22 @@ function [ h, colors_used ] = plot_neuron_traces( traces, varargin)
 %       colors_used: color table matching plotted traces
 
 %% Parse inputs
+num_neurons = size(traces,1);
+
 ip = inputParser;
 ip.addRequired('traces',@isnumeric);
-ip.addOptional('color_table',nan,@isnumeric);
+ip.addOptional('color_table',nan, @(a) (isnumeric(a) && size(a,2) == 3) || ...
+    (ischar(a) && length(a) == num_neurons));
 ip.addOptional('h', nan, @ishandle);
 ip.addParameter('SR',20,@(a) a == round(a)); % Frames/sec
 ip.addParameter('PSAbool',false(size(traces)),@islogical); % Putative spiking activity to match size of traces
 ip.parse(traces, varargin{:});
 
 color_table = ip.Results.color_table;
+if ischar(color_table) && size(color_table,1) == 1 && size(color_table,2) > 1
+   color_table = color_table'; 
+end
+
 h = ip.Results.h;
 SR = ip.Results.SR;
 PSAbool = ip.Results.PSAbool;
