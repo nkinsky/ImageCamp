@@ -165,7 +165,7 @@ legend(hneuron,arrayfun(@(a) ['Neuron ' num2str(a)], ...
     good_ind,'UniformOutput',false))
 axis tight
 %% Plot cell recruitment 1st v 2nd environment
-sesh_use = G45_square(6); %G45_square(5);
+sesh_use = G45_square(6); %G45_square(5); %G45_square(5);
 
 dirstr = ChangeDirectory_NK(sesh_use,0);
 load(fullfile(dirstr,'FinalOutput.mat'),'PSAbool','NeuronTraces');
@@ -199,7 +199,7 @@ PSAbool_sort2(cells2,:) = PSAbool_sort2(cells2,:)*2;
 LPtrace_sort = NeuronTraces.LPtrace(sort_ind,:);
 time_plot = (1:num_frames)/20;
 
-figure(100) 
+figure(100); set(gcf,'Position',[231         150        1055         739])
 h1 = subplot(6,1,2:6);
 imagesc(time_plot,1:num_neurons,PSAbool_sort2); 
 % colormap('gray')

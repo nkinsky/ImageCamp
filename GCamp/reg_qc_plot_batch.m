@@ -1,11 +1,37 @@
 function [reg_stats, hfig] = reg_qc_plot_batch(base, reg, varargin)
-% reg_stats = reg_qc_plot_batch(base, reg, num_shuffles (opt), num_shifts(opt), shift_dist(opt), ...)
-% Default is 100 shuffles, 10 shifts, and 4 pixel shift
-%%% NRK 1) need to update this for including batch map with ALL masks
-%%% included!!!
-% 2) Eliminate average correlation.  Make plotting centroid_angle an option
-% in a second graph (or do it automatically?)
-% 3) Add this into the end of neuron_reg_batch
+% [reg_stats, hfig] = reg_qc_plot_batch(base, reg, num_shuffles (opt), ...
+%   num_shifts(opt), shift_dist(opt), ...)
+%
+%   Plots histograms and ecdfs for centroid distance and |orientation diff|
+%   for all neuron ROIs matched together between sessions.
+%
+%   INPUTS:
+%
+%   base, reg: sessions in MD format. All sessions in reg will be
+%   registered to base.
+%
+%   num_shuffles (optional): Calculates chance level distributions by
+%       shuffling cell identify in the second session. Meaningless for 
+%       centroid distance. default = 100
+%
+%   num_shifts (optional): Similar to shuffling but takes a good
+%   registration and shifts all ROIs the distance specified in shift_dist.
+%   Identifies how sensitive your imaging window is to a bad registration
+%   due to lateral shifts
+%
+%   shift_dist (optional): number of pixels to shift ROIs in reg session
+%
+%   name_append (name-pair): name to append to batch_session_map in base
+%   session
+%
+%   batch_mode (name-pair): 0 = directly register each reg session to base
+%   session, 1 = use a batch_session_map to do registration (recommended
+%   since this tosses any ambiguous mappings between sessions), 2 = similar
+%   to 1 but includes registration between all cells recorded, including
+%   those that might be silent in the 1st session).  Default = 0. 1 is
+%   recommended if you have run neuron_reg_batch.
+%
+%   hfig (name-pair): figure handle. default = plot into new figure.
 
 
 %% Parse inputs

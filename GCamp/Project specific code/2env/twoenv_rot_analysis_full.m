@@ -41,7 +41,6 @@ num_shuffles = ip.Results.num_shuffles;
 save_fig = ip.Results.save_fig;
 sig_star = ip.Results.sig_star;
 sig_value = ip.Results.sig_value;
-local_ref = ip.Results.local_ref;
 name_append = ip.Results.name_append;
 cm_append = ip.Results.cm_append;
 TMap_type = ip.Results.TMap_type;
@@ -102,8 +101,43 @@ try
     disp('Loading previously saved file with these parameters and plotting from it')
     disp('Delete or re-name to re-run')
     already_ran = true;
+    
+    % pull out only the relevant sessions
+    if ~trans
+        sessions_rows = session_index;
+        sessions_cols = session_index;
+    elseif trans
+        square_ind = get_shape_ind(sessions, 'square');
+        circle_ind = get_shape_ind(sessions, 'octagon');
+        for j = 1:length(square_ind)
+            sessions_rows(j) = find(session_index(square_ind(j)) == ...
+                get_shape_ind(batch_session_map.session,'square'));
+        end
+        for j = 1:length(circle_ind)
+            sessions_cols(j) = find(session_index(circle_ind(j)) == ...
+                get_shape_ind(batch_session_map.session,'octagon'));
+        end
+    end
+    best_angle = best_angle(sessions_rows, sessions_cols);
+    best_angle_all = best_angle_all(sessions_rows, sessions_cols);
+    best_angle_shuf_all = best_angle_shuf_all(sessions_rows, sessions_cols);
+    corr_at_best = corr_at_best(sessions_rows, sessions_cols);
+    sig_test = sig_test(sessions_rows, sessions_cols);
+    corr_means = corr_means(sessions_rows, sessions_cols,:);
+    CI = CI(sessions_rows, sessions_cols,:,:);
+    
 catch
     already_ran = false;
+end
+
+% Grab the appropriate sessions from sig_star and sig_value if only a few
+% sessions are entered
+if size(sig_star,1) ~= num_sessions
+    sig_star = sig_star(session_index, session_index);
+end
+
+if size(sig_value,1) ~= num_sessions
+    sig_value = sig_value(session_index, session_index);
 end
  
 % Set up variables for plots
@@ -132,8 +166,9 @@ if ~trans
     p = ProgressBar((num_sessions-1)*num_sessions/2);
     for j = 1:num_sessions-1
         [~, base_rot] = get_rot_from_db(sessions(j));
+        sesh1 = session_index(j);
         for k = j+1:num_sessions
-            
+            sesh2 = session_index(k);
             % Do analysis if not already done
             if ~already_ran
                 [corr_mat, ~, shuffle_mat2, shift_back] = corr_rot_analysis(sessions(j), ...
@@ -171,7 +206,7 @@ if ~trans
             corr_mean_use = circshift(squeeze(corr_means(j,k,:)), local_shift_back);
             CI_use = circshift(squeeze(CI(j,k,:,:)), local_shift_back);
             plot_tuning_curve(rot_array, corr_mean_use, CI_use, cue_rot, ...
-                hh(1), num_sessions, subplot_ind, j, k, j, k, sessions, ...
+                hh(1), num_sessions, subplot_ind, j, k, sesh1, sesh2, sessions, ...
                 rot_type, sig_star(j,k), sig_value(j,k), local_ref);
             best_ang_use = wrapTo360(best_angle_all{j,k} + cue_rot_add);
             best_ang_use(best_ang_use == 360) = 0;
@@ -179,7 +214,7 @@ if ~trans
                 cue_rot_add);
             best_ang_shuf_use(best_ang_shuf_use == 360) = 0;
             plot_bestang_hist(rot_array, best_ang_use, best_ang_shuf_use, ...
-                edges2, hh(2), num_sessions, subplot_ind, j, k, j, k, ...
+                edges2, hh(2), num_sessions, subplot_ind, j, k, sesh1, sesh2,  ...
                 sessions, rot_type, local_ref);
             
             % Aggregate data limits to set y-axis the same for tuning curve
@@ -205,8 +240,6 @@ if ~trans
     end
 
 elseif trans
-    square_ind = get_shape_ind(sessions, 'square');
-    circle_ind = get_shape_ind(sessions, 'octagon');
     
     alpha_corr = alpha/(length(square_ind)*length(circle_ind));
     
@@ -295,6 +328,7 @@ end
 ref_type = {'distalref','localref'};
 ref_text = ref_type{local_ref + 1};
 
+arrayfun(@(a) set(a,'Visible','on'),hh)
 if save_fig && plot_flag
         file_name = {[sessions(1).Animal ' - ' rot_type ...
             ' - Population Rotation Analysis - ' num2str(num_shuffles) ...
@@ -305,7 +339,6 @@ if save_fig && plot_flag
     %         num2str(num_shuffles) ' shuffles' name_append '_' ref_text ],...
 
     for j = 1:2
-       figure(hh(j)); set(gcf,'Visible', 'on'); 
        set(gcf,'Position',[1921 1 1920 1004])
        printNK(file_name{j},'2env_rot')
     end
@@ -374,8 +407,8 @@ end
 
 %% plotting sub-function: plot population tuning curve
 function plot_tuning_curve(rot_array, corr_means, CI, cue_rot, fig_h, ...
-    num_sessions, subplot_ind, sesh1_ind, sesh2_ind, row, col, sesh_use, ...
-    rot_type, sig_star, sig_value, local_ref)
+    num_sessions, subplot_ind, sesh1_ind, sesh2_ind, sesh1_num, sesh2_num, ...
+    sesh_use, rot_type, sig_star, sig_value, local_ref)
 
 % Plot tuning curves
 set(groot, 'CurrentFigure', fig_h);
@@ -398,7 +431,7 @@ plot( rot_array(rot_log), corr_means(rot_log), 'r^')
 
 % Put significance star on plot
 if sig_star
-   plot(best_angle, corr_at_best + 0.1, 'r*'); 
+   plot(best_angle, corr_at_best + 0.04, 'r*'); 
 end
 
 if ~isnan(sig_value)
@@ -413,7 +446,8 @@ hold on
 % Plot 95% CI %
 plot([rot_array 360], [CI CI(:,1)],'k:') 
 hold off
-title_label(subplot_ind, sesh1_ind, sesh2_ind, row, col, rot_type, sesh_use)
+title_label(subplot_ind, sesh1_ind, sesh2_ind, sesh1_num, sesh2_num, ...
+    rot_type, sesh_use)
 
 if local_ref
     xlabel('Local Cue Mismatch (\theta)')
@@ -445,7 +479,7 @@ end
 %% plotting sub-function: plot histogram of best/optimal rotation counts
 function plot_bestang_hist(rot_array, best_angle_all, best_ang_shuf_all,  ...
     edges2, fig_h, num_sessions, subplot_ind, sesh1_ind, sesh2_ind, ...
-    row, col, sesh_use, rot_type, local_ref)
+    sesh1_num, sesh2_num, sesh_use, rot_type, local_ref)
 
 num_shuffles = size(best_ang_shuf_all,2);
 % Plot histogram of best angle counts for all neurons
@@ -464,12 +498,12 @@ CI_count(2,:) = shuf_count_sort(max([round(0.025*num_shuffles),1]),:);
 plot(rot_array, nanmean(shuf_count,1),'k-', rot_array, CI_count, 'k:');
 xlim([rot_array(1)-mean(diff(rot_array))/2 rot_array(end)+mean(diff(rot_array))/2])
 set(gca,'XTick',0:90:270);
-title_label(subplot_ind, sesh1_ind, sesh2_ind, row, col, rot_type, sesh_use)
+title_label(subplot_ind, sesh1_ind, sesh2_ind, sesh1_num, sesh2_num, rot_type, sesh_use)
 
 if local_ref
-    xlabel('\theta_{opt} (Local Cue Mismatch)')
+    xlabel('\theta_{optimal} (Local Cue Mismatch)')
 elseif ~local_ref
-    xlabel('\theta_{opt}')
+    xlabel('\theta_{optimal}')
 end
 
 ylabel('# Neurons')
@@ -488,17 +522,17 @@ function [shape_ind] = get_shape_ind(struct_in,shape)
 end
 
 %% title label sub-function
-function [] = title_label(subplot_ind, sesh1_index, sesh2_index, row, col, ...
-    rot_type, sesh_use)
+function [] = title_label(subplot_ind, sesh1_index, sesh2_index, sesh1_num, ...
+    sesh2_num, rot_type, sesh_use)
 
 if (strcmpi(rot_type,'circ2square') && subplot_ind == 1) || ...
         (~strcmpi(rot_type,'circ2square') && sesh1_index == 1 && sesh2_index == 2)
     [~, sesh_use] = ChangeDirectory_NK(sesh_use(1),0);
     title(mouse_name_title(sesh_use(1).Animal))
 else
-    title([num2str(row) ' ' twoenv_get_shape(sesh_use(sesh1_index).Animal, ...
+    title([num2str(sesh1_num) ' ' twoenv_get_shape(sesh_use(sesh1_index).Animal, ...
         sesh_use(sesh1_index).Date, sesh_use(sesh1_index).Session)...
-        ' - ' num2str(col) ' ' twoenv_get_shape(sesh_use(sesh2_index).Animal, ...
+        ' - ' num2str(sesh2_num) ' ' twoenv_get_shape(sesh_use(sesh2_index).Animal, ...
         sesh_use(sesh2_index).Date, sesh_use(sesh2_index).Session)]);
 end
 

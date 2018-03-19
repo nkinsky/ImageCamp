@@ -1,5 +1,5 @@
-function [ coh_bool, remap_bool, silent_bool, valid_bool, map_use] = twoenv_filter_cells2( ...
-    base_sesh, sesh1, sesh2, comp_type )
+function [ coh_bool, remap_bool, silent_bool, valid_bool, map_use] = ...
+    twoenv_filter_cells2( base_sesh, sesh1, sesh2, comp_type )
 % [ coh_bool, remap_bool, silent_bool, valid_bool, map_use] = twoenv_filter_cells2( ...
 %     base_sesh, sesh1, sesh2, comp_type)
 %   Wrapper function for twoenv_filter_cells. Breaks out cells into coherent, ...
@@ -31,6 +31,16 @@ else
     end
 end
 batch_session_map = fix_batch_session_map(batch_session_map);
+sesh1_ind = get_session_index(sesh1,batch_session_map.session);
+sesh2_ind = get_session_index(sesh2,batch_session_map.session);
+
+% % Swap indices to make sure square sesh goes first - better
+% if strcmpi(comp_type,'circ2square') && type_map(sesh1_ind) == 2 && ...
+%         type_map(sesh2_ind) == 1
+%     temp = sesh2_ind; temp_sesh = sesh(2);
+%     sesh2_ind = sesh1_ind; sesh(2) = sesh(1);
+%     sesh1_ind = temp; sesh(1) = temp_sesh;
+% end
 
 load(fullfile(sesh(1).dir,pf_file),'PSAbool','xBin','yBin');
 PSAbool1 = PSAbool(:,(xBin ~= 0 & yBin ~= 0));
@@ -38,8 +48,6 @@ PSAbool1 = PSAbool(:,(xBin ~= 0 & yBin ~= 0));
 load(fullfile(sesh(2).dir,pf_file),'PSAbool','xBin','yBin');
 PSAbool2 = PSAbool(:,(xBin ~= 0 & yBin ~= 0));
 
-sesh1_ind = get_session_index(sesh1,batch_session_map.session);
-sesh2_ind = get_session_index(sesh2,batch_session_map.session);
 if sesh1_ind == sesh2_ind
     best_angle_pop = 0;
     best_angle_dist = zeros(size(PSAbool,1),1);
@@ -58,5 +66,24 @@ map_use = get_neuronmap_from_batchmap(batch_session_map, sesh1_ind, sesh2_ind);
 % Need to adjust this - only valid for circ2square stuff
 [ coh_bool, remap_bool, silent_bool, valid_bool ] = twoenv_filter_cells( ...
     best_angle_pop, best_angle_dist, PSAbool1, PSAbool2, map_use);
+
+% Map values back from square to circle in the case that the circle was
+% entered before the square
+% if strcmpi(comp_type,'circ2square') && type_map(sesh1_ind) == 2 && ...
+%         type_map(sesh2_ind) == 1
+%     num_neurons2 = size(PSAbool2,1);
+%     coh_bool2 = false(num_neurons2,1); remap_bool2 = false(num_neurons2,1);
+%     silent_bool2 = false(num_neurons2,1); valid_bool2 = false(num_neurons2,1);
+%     good_map = map_use(valid_bool);
+%     coh_bool2(good_map) = coh_bool(valid_bool);
+%     remap_bool2(good_map) = remap_bool(valid_bool);
+%     silent_bool2(good_map) = silent_bool(valid_bool);
+%     valid_bool2(good_map) = valid_bool(valid_bool);
+%     
+%     coh_bool = coh_bool2; remap_bool = remap_bool2;
+%     silent_bool = silent_bool2; valid_bool = valid_bool2;
+%     
+% end
+
 end
 

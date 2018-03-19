@@ -26,7 +26,7 @@ ip.addParameter('NumXBins', 5, @(a) a > 0 && round(a) == a)
 ip.addParameter('NumYBins', 5, @(a) a > 0 && round(a) == a)
 ip.addParameter('corr_type', 'Spearman', @(a) strcmp('Spearman',a) || ...
     strcmp('Kendall',a) || strcmp('Pearson',a));
-ip.addParameter('num_shuffles', 1, @(a) a > 0 && round(a) == a);
+ip.addParameter('num_shuffles', 1, @(a) a >= 0 && round(a) == a);
 ip.addParameter('calc_half', false, @(a) islogical(a) || a == 0 || a == 1);
 ip.addParameter('alt_pos_file', 'Pos_align.mat', @(a) ischar(a) || ...
     iscell(a) && length(a) == num_sessions);
@@ -36,11 +36,11 @@ ip.addParameter('exclude_frames', [], @(a) isempty(a) || iscell(a) && ...
 ip.addParameter('output_flag',true, @islogical)
 ip.addParameter('filter_type', 'all_cells', @(a) any(strcmpi(a, {'all_cells',...
     'active_both', 'active_all', 'good_map' 'pval', 'custom',...
-    'no_coherent', 'no_remap', 'no_silent','coherent_only'}))); % Cells to include - nan = all cells, 
+    'no_coherent', 'no_remap', 'no_silent','coherent_only','custom_pairwise'}))); % Cells to include - nan = all cells, 
 % active_both = only cells that are active in both sessions being compared,
 % and active_all = only cells that are active in ALL sessions being
 % considered
-ip.addParameter('custom_filter',nan, @isnumeric);
+ip.addParameter('custom_filter',nan, @(a) isnumeric(a) || iscell(a));
 ip.addParameter('pval_thresh', 0.05, @(a) a > 0 && a <= 1); % pval thresh to use if specified above
 ip.addParameter('use_TMap', '', @(a) isempty(a) || strcmpi(a,'gauss') || ...
     strcmpi(a,'unsmoothed')); % '' = don't use TMap
@@ -104,7 +104,7 @@ for j = 1:num_sessions
     session_ind(j) = find(arrayfun(@(a) strcmp(a.Animal, session_struct(j).Animal)...
         & strcmp(a.Date,session_struct(j).Date)...
         & a.Session == session_struct(j).Session, batch_session_map.session));
-    end
+end
 
 batch_map = batch_session_map.map;
 
@@ -241,7 +241,7 @@ for m = 1:length(sesh)
             active_both_log = sum(PV_collapse > 0) == 2;
             PV_use = PV([m,ll],:,:,active_both_log);
         elseif any(strcmpi(filter_type, {'pval','no_coherent','no_remap',...
-                'no_silent','coherent_only'})) % Really should move ALL filtering outside of this function to make the function more general!!!
+                'no_silent','coherent_only','custom_pairwise'})) % Really should move ALL filtering outside of this function to make the function more general!!!
             
             % Get cells that are active in both sessions and pass pval
             % thresh in at least ONE session
@@ -283,12 +283,14 @@ for m = 1:length(sesh)
                 filter_final = ppass_either' & ~remap_bool;
             elseif strcmpi(filter_type,'no_silent') % Exclude silent cells
                 filter_final = ppass_either' & ~silent_bool;
-            elseif strcmpi(filter_type,'coherent_only') % Exclude coherent cells
+            elseif strcmpi(filter_type,'coherent_only') % Include only coherent cells
                 filter_final = ppass_either' & coh_bool;
-            elseif strcmpi(filter_type,'remap_only') % Exclude remapping cells
+            elseif strcmpi(filter_type,'remap_only') % Include remapping cells
                 filter_final = ppass_either' & remap_bool;
-            elseif strcmpi(filter_type,'silent_only') % Exclude silent cells
+            elseif strcmpi(filter_type,'silent_only') % Include silent cells
                 filter_final = ppass_either' & silent_bool;
+            elseif strcmpi(filter_type,'custom_pairwise')
+                filter_final = custom_filter{m,ll};
             end
             PV_use = PV_use(:,:,:,filter_final);
         else
@@ -299,6 +301,7 @@ for m = 1:length(sesh)
         % Slicing and dicing to help out parfor loop
         PV_use1 = squeeze(PV_use(1,:,:,:)); 
         PV_use2 = squeeze(PV_use(2,:,:,:));
+        
         for j = 1:NumXBins
             for k = 1:NumYBins             
                 % Get population vectors for each session in the
@@ -341,7 +344,7 @@ for m = 1:length(sesh)
             p.progress;
         end
         catch
-            skipped_comps = cat(1,skipped_comps, [ll m]);
+            skipped_comps = cat(1,skipped_comps, [m ll]);
         end
     end    
 end

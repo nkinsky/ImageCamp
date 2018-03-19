@@ -1,5 +1,5 @@
 function [hout, hmean_shuf, hmean_CI, unique_lags, mean_corr_cell, CI,...
-    hcurve] = plot_PVcurve(PV_corrs, lag, varargin)
+    hcurve, mean_corr_shuffle] = plot_PVcurve(PV_corrs, lag, varargin)
 % [hout, hmean_shuf, hmean_CI, unique_lags, mean_corr_cell, CI,...
 %     hcurve] = plot_PVcurve(PV_corrs, lag,...)
 %   Plots data in PV_corrs vs lags.  If PV_corrs_shuffle are non-NaN it also
@@ -43,13 +43,13 @@ end
 % lag = lag(filter);
 
 %% Distribute PV_corrs and PV_corrs_shuffle by day lag
-[mean_corr_cell, mean_mean_array, unique_lags] = get_means(PV_corrs(filter),...
+[mean_corr_cell, mean_mean_array, unique_lags] = arrange_means(PV_corrs(filter),...
     lag(filter));
 
 mean_corr_shuffle = cell(size(mean_corr_cell));
 for j = 1:num_shuffles
     shuf_use = squeeze(PV_corrs_shuffle(:,:,j));
-    shuf_temp = get_means(shuf_use(filter), lag(filter));
+    shuf_temp = arrange_means(shuf_use(filter), lag(filter));
 %     shuf_temp = get_means(squeeze(PV_corrs_shuffle(:,:,j)), lag);
     mean_corr_shuffle = cellfun(@(a,b) cat(1,a,b), mean_corr_shuffle, shuf_temp,...
         'UniformOutput', false);
@@ -57,7 +57,8 @@ end
 
 %% Calculate 95% CIs on shuffled data if specified
 if num_shuffles > 0
-    CI = cellfun(@(a) get_CI(a,CI_level),mean_corr_shuffle,'UniformOutput',false);
+    CI = cellfun(@(a) get_CI(a,CI_level), mean_corr_shuffle,...
+        'UniformOutput',false);
     CI = cell2mat(CI);
 else
     CI = nan;
@@ -71,6 +72,8 @@ if ~dont_plot
     hold on
     if plot_curves
         hcurve = plot(unique_lags,mean_mean_array,linetype);
+    else
+        hcurve = nan;
     end
     
     if num_shuffles > 0 && plot_curves
@@ -89,6 +92,7 @@ if ~dont_plot
 elseif dont_plot
     hmean_shuf = nan;
     hmean_CI = nan;
+    hcurve = nan;
 end
 
 hout = hin;
@@ -96,11 +100,15 @@ hout = hin;
 end
 
 %% Sub-function to get means of correlations at different lags
-function [mean_corr_cell, mean_mean_array, unique_lags] = get_means(corrs_in, lag)
+function [mean_corr_cell, mean_mean_array, unique_lags] = ...
+    arrange_means(corrs_in, lag)
+
 unique_lags = unique(lag(~isnan(lag)));
 
-mean_corr_cell = arrayfun(@(a) corrs_in(lag == a),unique_lags,'UniformOutput',false);
-mean_mean_array = cellfun(@(a) nanmean(a),mean_corr_cell);
+mean_corr_cell = arrayfun(@(a) corrs_in(lag == a), unique_lags,....
+    'UniformOutput',false);
+mean_mean_array = cellfun(@(a) nanmean(a), mean_corr_cell);
+
 end
 
 %% Get CI - level = 0 to 1 (e.g. 0.95 gives 95% CI)

@@ -4,6 +4,9 @@ function [ coh_bool, remap_bool, silent_bool, valid_bool ] = twoenv_filter_cells
 %     best_angle_pop, best_angle_all, PSAbool1, PSAbool2, map_use)
 %
 %   Filters cells into coherent, remapping, and silent cells for later use.
+%   Note that silent cell filter identifies cells that are active in the
+%   session, just not when the mouse is above a speed threshold (very
+%   conservative).
 %   
 %   INPUTS: best_angle_pop and best_angle_all are from full_rotation_analysis
 %   saved files, PSAbool1/2 are from the two sessions in question, map_use is

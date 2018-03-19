@@ -5,7 +5,7 @@
 
 %% Load base file
 load(fullfile(ChangeDirectory_NK(G30_square(1),0),...
-    '2env_batch_analysis4_workspace_1000shuffles_2017OCT12.mat'));
+    '2env_batch_analysis4_workspace_1000shuffles_2018JAN11.mat'));
 
 %% Run through each
 
@@ -15,8 +15,8 @@ alpha = 0.05;
 num_shuffles = 1000;
 local_ref = false;
 
-for animal_use = 1:length(Mouse)
-    for k = 1:3
+for animal_use = 2 %1:length(Mouse)
+    for k = 1%1:3
         % Get significance - max of chi-squared test and shuffle test
         sesh_use = Mouse(animal_use).sesh.(sesh_type{k});
         sig_values_comb = cat(3, Mouse(animal_use).coherency.(sesh_type{k}).pmat,...

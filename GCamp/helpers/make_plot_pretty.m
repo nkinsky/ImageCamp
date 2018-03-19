@@ -43,6 +43,8 @@ else
     h_obj = hin;
 end
 
+
+
 %% Modify axes and graphics objects
 if axes_flag
     set(h_ax,'LineWidth',linewidth,'FontSize',fontsize);
@@ -58,6 +60,15 @@ if ~isempty(h_obj)
            set(h_obj(j),'FontSize',fontsize);
        catch
        end
+       
+       try
+       if isgraphics(h_obj(j),'scatter')
+           set(h_obj(j),'LineWidth',linewidth);
+       end
+       catch
+       end
+       
+       
        try
            % Set colorbar to min max ticks only and fatten lines up
            if isgraphics(h_obj(j),'colorbar')

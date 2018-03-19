@@ -5,9 +5,16 @@ function [ h ] = twoenv_DI_topo( DI_use, batch_session_map, sesh_ind, varargin )
 high_DI_thresh = 0.75;
 low_DI_thresh = 0.25;
 
+if nargin < 4
+   neuron_filter = nan;
+end
+
 %% ID valid neurons and classify as high DI or low DI
 % ID valid neurons
 valid_neurons = find(~isnan(DI_use));
+if ~any(isnan(neuron_filter))
+    valid_neurons = valid_neurons & neuron_filter;
+end
 
 DI_valid = DI_use(valid_neurons);
 
@@ -48,19 +55,23 @@ set(gcf,'Position', [2270, 50, 1100, 850]);
 h = gca;
 
 % Plot all neuron outlines
+scale_bar = true;
 for j=1:2
-    [~, ~, h_neither] = plot_neuron_outlines(nan, sesh(j).ROIs, h, 'colors', [0 0 1]); % Plot all neurons
+    [~, ~, h_neither] = plot_neuron_outlines(nan, sesh(j).ROIs, h, ...
+        'colors', [0 0 1],'scale_bar', scale_bar);
+        scale_bar = false; % Plot all neurons
 end
 
 % Plot high DI in red, low DI in green for each session
 for j=1:2
     [~, ~, h_high] = plot_neuron_outlines(nan, sesh(j).ROIs(sesh(j).high_DI(sesh(j).high_DI ~= 0)), ...
-        h, 'colors', [1 0 0]); % Plot high DI red
+        h, 'colors', [1 0 0],'scale_bar', scale_bar);
+        scale_bar = false; % Plot high DI red
     [~, ~, h_low] = plot_neuron_outlines(nan, sesh(j).ROIs(sesh(j).low_DI(sesh(j).low_DI ~= 0)), ...
-        h, 'colors', [0 1 0]); % Plot low DI green
+        h, 'colors', [0 1 0], 'scale_bar', scale_bar); % Plot low DI green
 end
 
-legend(cat(2,h_high,h_low,h_neither),{'High DI','Low DI','tweener'})
+legend(cat(2,h_high(1),h_low(1),h_neither(1)),{'High DI','Low DI','tweener'})
 axis tight
 
 %% Potentially a bit cleaner looking plots, but not validated yet

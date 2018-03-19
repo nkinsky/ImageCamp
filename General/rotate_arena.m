@@ -32,7 +32,7 @@ y_orig = min(y);
 %     error('You have not entered a valid argument for "rot"')
 % end
 
-%% Try another tact
+%% Try another tact - rotate trajectory ny any amount
 rot_mat = [cosd(rot_deg) -sind(rot_deg); sind(rot_deg) cosd(rot_deg)];
 xy_rot = rot_mat*[x; y];
 x_rot = xy_rot(1,:);

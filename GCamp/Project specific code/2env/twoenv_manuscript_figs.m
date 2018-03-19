@@ -199,218 +199,233 @@ for j = 1:3
     title(title_text{j})
     make_plot_pretty(gca); make_plot_pretty(hc);
 end
-%% Rubin et al replication for connected days only
-plot_all_mice = true;
-cm = 'jet';
-ticks = 1:8; % 1:16;
-ticklabels = {'5s','5c','5s','5c','6c','6s','6c','6s'}; %arrayfun(@num2str,5:6,'UniformOutput',false);% {'s' 's' 'c' 'c' 'c' 'c' 's' 's' 's' 'c' 'c' 's' 's' 's' 'c' 'c' };
-filt_use = 'pval';
-alpha = 0.05/28; % 0.05 Bonferroni corrected for # of unique session-pairs
-
-mat_full = [];
-hmat_full = [];
-pmat_full = [];
-for j = 1:4
-    mat_use = Mouse(j).PV_corrs.conn.(filt_use).PV_corr_mean;
-    mat_full = cat(3,mat_full,mat_use);
-    corr_use = Mouse(j).PV_corrs.conn.(filt_use).PV_corr;
-    shuf_use = Mouse(j).PV_corrs.conn.(filt_use).PV_corr_binshuffle;
-    [h_mat, p_mat] = twoenv_PVshuftest( corr_use, shuf_use, alpha);
-    hmat_full = cat(3,hmat_full,h_mat);
-    pmat_full = cat(3,pmat_full,p_mat);
-end
-
-mat_use(logical(eye(8))) = nan;
-if plot_all_mice
-    figure(302)
-    set(gcf,'Position',[1937 25 1796 953])
-    for j = 1:4
-        subplot(2,3,j);
-        mat_plot = squeeze(mat_full(:,:,j));
-        hmat_plot = squeeze(hmat_full(:,:,j));
-        mat_plot(logical(eye(8))) = nan;
-%         imagesc_nan(mat_plot,cm);
-        sig_on_confmat(gca,mat_plot,hmat_plot);
-       
-        title(mouse_name_title(Mouse(j).sesh.circ2square(1).Animal));
-        set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
-            'YTick',ticks,'YTickLabel',ticklabels);
-        hc = colorbar;
-        make_plot_pretty(gca);
-        make_plot_pretty(hc);
-    end
-    subplot(2,3,5); 
-    mat_plot = mean(mat_full,3);
-    mat_plot(logical(eye(8))) = nan;
-    hmat_plot = max(pmat_full,[],3) < alpha;
-%     imagesc_nan(mat_plot,cm);
-    sig_on_confmat(gca,mat_plot,hmat_plot);
-    set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
-        'YTick',ticks,'YTickLabel',ticklabels);
-    hc = colorbar;
-    title('All Mice')
-    make_plot_pretty(gca);
-    make_plot_pretty(hc);
-        
-    subplot(2,3,6)
-    text(0.1,0.1,['Filter type = ' filt_use])
-    text(0.1,0.3,['pval thresh = ' num2str(inclusion_criteria.pval_thresh)])
-    text(0.1,0.5,['ntrans thresh = ' num2str(inclusion_criteria.ntrans_thresh)])
-    text(0.1,0.7,['cmperbin = ' num2str(inclusion_criteria.cmperbin_use)])
-    axis off
-end
-
-figure(303)
-set(gcf,'Position',[1980 10 1260 1000])
-mean_plot = mean(mat_full,3);
-mean_plot(logical(eye(8))) = nan;
-% mean_plot(logical(eye(16))) = nan;
-subplot(2,2,1)
-% imagesc_nan(mean_plot,cm);
-hmat_plot = mat_plot;
-hmat_plot(~isnan(hmat_plot)) = true;
-sig_on_confmat(gca,mean_plot,hmat_plot,max(pmat_full,[],3));
-set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
-    'YTick',ticks,'YTickLabel',ticklabels);
-axis equal tight
-hc = colorbar; % hc.Ticks = [min(mean_plot(:)) 1]; hc.TickLabels = {'min' '1'};
-title('All Mice - pmax shown')
-make_plot_pretty(gca);
-make_plot_pretty(hc)
-subplot(2,2,2)
-sig_on_confmat(gca,mean_plot,hmat_plot,mean(hmat_full,3));
-set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
-    'YTick',ticks,'YTickLabel',ticklabels);
-axis equal tight
-hc = colorbar; % hc.Ticks = [min(mean_plot(:)) 1]; hc.TickLabels = {'min' '1'};
-title('All Mice - mean(h) shown')
-make_plot_pretty(gca);
-make_plot_pretty(hc)
-subplot(2,2,3)
-% sig_on_confmat(gca,mean_plot,hmat_plot,mean(pmat_full,[],3));
-imagesc_nan(mean_plot)
-set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
-    'YTick',ticks,'YTickLabel',ticklabels);
-axis equal tight
-hc = colorbar; % hc.Ticks = [min(mean_plot(:)) 1]; hc.TickLabels = {'min' '1'};
-title('All Mice')
-make_plot_pretty(gca);
-make_plot_pretty(hc)
-
-
-subplot(2,2,4)
-text(0.1,0.1,['Filter type = ' filt_use])
-text(0.1,0.3,['pval thresh = ' num2str(inclusion_criteria.pval_thresh)])
-text(0.1,0.5,['ntrans thresh = ' num2str(inclusion_criteria.ntrans_thresh)])
-text(0.1,0.7,['cmperbin = ' num2str(inclusion_criteria.cmperbin_use)])
-axis off
-
-figure(304)
-set(gcf,'Position',[1937 25 1796 953])
-filts_use = {'coherent_only','no_silent','pval', 'no_remap','all_cells'};
-for k = 1:length(filts_use)
-    
-    mat_full = [];
-    pmat_full = [];
-    for j = 1:4
-        mat_use = Mouse(j).PV_corrs.conn.(filts_use{k}).PV_corr_mean;
-        corr_use = Mouse(j).PV_corrs.conn.(filts_use{k}).PV_corr;
-        shuf_use = Mouse(j).PV_corrs.conn.(filts_use{k}).PV_corr_binshuffle;
-        [hval_mat, p_mat] = twoenv_PVshuftest( corr_use, shuf_use, alpha);
-        mat_use(logical(eye(8))) = nan;
-        mat_full = cat(3,mat_full,mat_use);
-        pmat_full = cat(3,pmat_full,p_mat);
-    end
-    mat_plot = mean(mat_full,3);
-    subplot(2,3,k);
-    imagesc_nan(mat_plot);
-    hc = colorbar;
-    set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
-        'YTick',ticks,'YTickLabel',ticklabels);
-    make_plot_pretty(gca);
-    make_plot_pretty(hc)
-    title(['Conn PVs filt = ' mouse_name_title(filts_use{k})])
-    
-end
-subplot(2,3,6)
-text(0.1,0.3,['pval thresh = ' num2str(inclusion_criteria.pval_thresh)])
-text(0.1,0.5,['ntrans thresh = ' num2str(inclusion_criteria.ntrans_thresh)])
-text(0.1,0.7,['cmperbin = ' num2str(inclusion_criteria.cmperbin_use)])
-axis off
-         
-%% Now quantify in bar graph form
-figure(305)
-% set(gcf,'Position',[2060 350 1000 440])
-filts_use = {'coherent_only','no_silent','pval'};
-legend_use = {'Coherent Only', 'Coherent + Remap', 'Coh. + Remap + Silent'};
-PVmat_all = [];
-stdmat_all = [];
-for j = 1:num_animals
-    subplot(2,3,j)
-    PVmat = [];
-    stdmat = [];
-    for k = 1:3
-        [temps,tempd, std_s, std_d] = twoenv_connPVdelta(Mouse(j).PV_corrs.conn.(filts_use{k})...
-            .PV_corr_mean);
-        PVmat = [PVmat, [temps; tempd]]; % build up mat for each mouse
-        stdmat = [stdmat, [std_s; std_d]];
-    end
-    bar_w_err(PVmat, stdmat)
-    title(['Conn. \DeltaPV ' mouse_name_title(Mouse(j).sesh.circ2square(1).Animal)]);
-    legend(legend_use)
-    ylabel('\rho_{same} - \rho_{diff}')
-    set(gca,'XTickLabel',{'Same Day','Diff. Day'});
-    make_plot_pretty(gca)
-    PVmat_all = cat(3,PVmat_all,PVmat);
-    stdmat_all = cat(3,PVmat_all, stdmat);
-    
-    
-end
-
-subplot(2,3,5)
-PVmat_all_mean = mean(PVmat_all,3);
-PVmat_all_sem = std(PVmat_all,1,3)/sqrt(num_animals);
-bar_w_err(PVmat_all_mean, PVmat_all_sem);
-title('Conn. \DeltaPV - All Mice' );
-ylabel('\rho_{same} - \rho_{diff}')
-set(gca,'XTickLabel',{'Same Day','Diff. Day'});
-legend(legend_use)
-make_plot_pretty(gca)
-
-subplot(2,3,6)
-text(0.1,0.3,['pval thresh = ' num2str(inclusion_criteria.pval_thresh)])
-text(0.1,0.5,['ntrans thresh = ' num2str(inclusion_criteria.ntrans_thresh)])
-text(0.1,0.7,['cmperbin = ' num2str(inclusion_criteria.cmperbin_use)])
-axis off
-
-
-%% p-value distribution by session
-sesh_use2 = cat(1,G30_botharenas, G31_botharenas, G45_botharenas, ...
-    G48_botharenas);
-for j = 1:4
-    sesh_use = sesh_use2(j,:);
-    figure(400+j)
-    ylim_vec = zeros(1,16);
-    for k = 1:16
-        ChangeDirectory_NK(sesh_use(k));
-        load('Placefields_rot0.mat','pval');
-        subplot(4,4,k)
-        histogram(pval,30);
-        xlim([0 1.05])
-        xlabel('pval')
-        ylabel('Count')
-        if k == 1
-            title(mouse_name_title(sesh_use(k).Animal))
-        end
-        temp = get(gca,'YLim');
-        ylim_vec(k) = max(temp);
-    end
-    ymax = max(ylim_vec);
-    for k = 1:16
-        subplot(4,4,k)
-        ylim([0 ymax])
-    end
-end
+%% Code now in twoenv_fig4: Rubin et al replication for connected days only
+% plot_all_mice = true;
+% cm = 'jet';
+% ticks = 1:8; % 1:16;
+% ticklabels = {'5s','5c','5s','5c','6c','6s','6c','6s'}; %arrayfun(@num2str,5:6,'UniformOutput',false);% {'s' 's' 'c' 'c' 'c' 'c' 's' 's' 's' 'c' 'c' 's' 's' 's' 'c' 'c' };
+% filt_use = 'pval';
+% alpha = 0.05/28; % 0.05 Bonferroni corrected for # of unique session-pairs
+% 
+% mat_full = [];
+% hmat_full = [];
+% pmat_full = [];
+% for j = 1:4
+%     mat_use = Mouse(j).PV_corrs.conn.(filt_use).PV_corr_mean;
+%     mat_full = cat(3,mat_full,mat_use);
+%     corr_use = Mouse(j).PV_corrs.conn.(filt_use).PV_corr;
+%     shuf_use = Mouse(j).PV_corrs.conn.(filt_use).PV_corr_binshuffle;
+%     [h_mat, p_mat] = twoenv_PVshuftest( corr_use, shuf_use, alpha);
+%     hmat_full = cat(3,hmat_full,h_mat);
+%     pmat_full = cat(3,pmat_full,p_mat);
+% end
+% 
+% mat_use(logical(eye(8))) = nan;
+% if plot_all_mice
+%     figure(302)
+%     set(gcf,'Position',[1937 25 1796 953])
+%     for j = 1:4
+%         subplot(2,3,j);
+%         mat_plot = squeeze(mat_full(:,:,j));
+%         hmat_plot = squeeze(hmat_full(:,:,j));
+%         
+%         mat_plot(logical(eye(8))) = nan;
+%         hmat_plot(logical(eye(8))) = nan;
+% %         imagesc_nan(mat_plot,cm);
+%         sig_on_confmat(gca, make_mat_sym(mat_plot), make_mat_sym(hmat_plot));
+%        
+%         title(mouse_name_title(Mouse(j).sesh.circ2square(1).Animal));
+%         set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
+%             'YTick',ticks,'YTickLabel',ticklabels);
+%         hc = colorbar;
+%         make_plot_pretty(gca);
+%         make_plot_pretty(hc);
+%     end
+%     subplot(2,3,5); 
+%     mat_plot = mean(mat_full,3);
+%     mat_plot(logical(eye(8))) = nan;
+%     hmat_plot = max(pmat_full,[],3) < alpha;
+% 
+%     sig_on_confmat(gca, make_mat_sym(mat_plot), make_mat_sym(hmat_plot));
+%     set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
+%         'YTick',ticks,'YTickLabel',ticklabels);
+%     hc = colorbar;
+%     title('All Mice')
+%     make_plot_pretty(gca);
+%     make_plot_pretty(hc);
+%         
+%     subplot(2,3,6)
+%     text(0.1,0.1,['Filter type = ' filt_use])
+%     text(0.1,0.3,['pval thresh = ' num2str(inclusion_criteria.pval_thresh)])
+%     text(0.1,0.5,['ntrans thresh = ' num2str(inclusion_criteria.ntrans_thresh)])
+%     text(0.1,0.7,['cmperbin = ' num2str(inclusion_criteria.cmperbin_use)])
+%     axis off
+% end
+% 
+% figure(303)
+% set(gcf,'Position',[1980 10 1260 1000])
+% mean_plot = mean(mat_full,3);
+% mean_plot = nansum(cat(3, mean_plot, mean_plot'),3);
+% mean_plot(logical(eye(8))) = nan;
+% 
+% subplot(2,2,1)
+% hmat_plot = mat_plot;
+% hmat_plot(~isnan(hmat_plot)) = true;
+% sig_on_confmat(gca, make_mat_sym(mean_plot), make_mat_sym(hmat_plot), ...
+%     make_mat_sym(max(pmat_full,[],3)));
+% set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
+%     'YTick',ticks,'YTickLabel',ticklabels);
+% axis equal tight
+% hc = colorbar; % hc.Ticks = [min(mean_plot(:)) 1]; hc.TickLabels = {'min' '1'};
+% title('All Mice - pmax shown')
+% make_plot_pretty(gca);
+% make_plot_pretty(hc)
+% 
+% subplot(2,2,2)
+% sig_on_confmat(gca, make_mat_sym(mean_plot), make_mat_sym(hmat_plot), ...
+%     make_mat_sym(mean(hmat_full,3)));
+% set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
+%     'YTick',ticks,'YTickLabel',ticklabels);
+% axis equal tight
+% hc = colorbar; % hc.Ticks = [min(mean_plot(:)) 1]; hc.TickLabels = {'min' '1'};
+% title('All Mice - mean(h) shown')
+% make_plot_pretty(gca);
+% make_plot_pretty(hc)
+% 
+% subplot(2,2,3)
+% % sig_on_confmat(gca,mean_plot,hmat_plot,mean(pmat_full,[],3));
+% imagesc_nan(make_mat_sym(mean_plot))
+% set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
+%     'YTick',ticks,'YTickLabel',ticklabels);
+% axis equal tight
+% hc = colorbar; % hc.Ticks = [min(mean_plot(:)) 1]; hc.TickLabels = {'min' '1'};
+% title('All Mice')
+% make_plot_pretty(gca);
+% make_plot_pretty(hc)
+% 
+% 
+% subplot(2,2,4)
+% text(0.1,0.1,['Filter type = ' filt_use])
+% text(0.1,0.3,['pval thresh = ' num2str(inclusion_criteria.pval_thresh)])
+% text(0.1,0.5,['ntrans thresh = ' num2str(inclusion_criteria.ntrans_thresh)])
+% text(0.1,0.7,['cmperbin = ' num2str(inclusion_criteria.cmperbin_use)])
+% axis off
+% 
+% figure(304)
+% set(gcf,'Position',[1937 25 1796 953])
+% filts_use = {'coherent_only','no_silent','pval', 'no_remap'};
+% for k = 1:length(filts_use)
+%     
+%     mat_full = [];
+%     pmat_full = [];
+%     for j = 1:4
+%         mat_use = Mouse(j).PV_corrs.conn.(filts_use{k}).PV_corr_mean;
+%         corr_use = Mouse(j).PV_corrs.conn.(filts_use{k}).PV_corr;
+%         shuf_use = Mouse(j).PV_corrs.conn.(filts_use{k}).PV_corr_binshuffle;
+%         [hval_mat, p_mat] = twoenv_PVshuftest( corr_use, shuf_use, alpha);
+%         mat_use(logical(eye(8))) = nan;
+%         mat_full = cat(3,mat_full,mat_use);
+%         pmat_full = cat(3,pmat_full,p_mat);
+%     end
+%     mat_plot = mean(mat_full,3);
+%     mat_plot(logical(eye(8))) = nan;
+%     subplot(2,3,k);
+%     imagesc_nan(make_mat_sym(mat_plot));
+%     hc = colorbar;
+%     set(gca,'XAxisLocation','top','XTick',ticks,'XTickLabel',ticklabels,...
+%         'YTick',ticks,'YTickLabel',ticklabels);
+%     make_plot_pretty(gca);
+%     make_plot_pretty(hc)
+%     title(['Conn PVs filt = ' mouse_name_title(filts_use{k})])
+%     
+% end
+% subplot(2,3,6)
+% text(0.1,0.3,['pval thresh = ' num2str(inclusion_criteria.pval_thresh)])
+% text(0.1,0.5,['ntrans thresh = ' num2str(inclusion_criteria.ntrans_thresh)])
+% text(0.1,0.7,['cmperbin = ' num2str(inclusion_criteria.cmperbin_use)])
+% axis off
+%          
+% %% Now quantify in bar graph form
+% figure(305)
+% % set(gcf,'Position',[2060 350 1000 440])
+% filts_use = {'coherent_only','no_silent','pval'}; % {'coherent_only','silent_only','remap_only','no_coherent','no_silent', 'no_remap','pval'}; %
+% legend_use = {'Coherent Only', 'Coherent + Remap', 'Coh. + Remap + Silent'};
+% PVmat_all = [];
+% stdmat_all = [];
+% for j = 1:num_animals
+%     subplot(2,3,j)
+%     PVmat = [];
+%     stdmat = [];
+%     for k = 1:length(filts_use)
+%         [temps, tempd, std_s, std_d] = twoenv_connPVdelta(make_mat_sym(...
+%             Mouse(j).PV_corrs.conn.(filts_use{k}).PV_corr_mean));
+%         PVmat = [PVmat, [temps; tempd]]; % build up mat for each mouse
+%         stdmat = [stdmat, [std_s; std_d]];
+%     end
+%     bar_w_err(PVmat, stdmat)
+%     title(['Conn. \DeltaPV ' mouse_name_title(Mouse(j).sesh.circ2square(1).Animal)]);
+%     legend(legend_use)
+%     ylabel('\rho_{same} - \rho_{diff}')
+%     set(gca,'XTickLabel',{'Same Day','Diff. Day'});
+%     make_plot_pretty(gca)
+%     PVmat_all = cat(3,PVmat_all,PVmat);
+%     stdmat_all = cat(3,PVmat_all, stdmat);
+%     
+%     
+% end
+% 
+% subplot(2,3,5)
+% PVmat_all_mean = mean(PVmat_all,3);
+% PVmat_all_sem = std(PVmat_all,1,3)/sqrt(num_animals);
+% bar_w_err(PVmat_all_mean, PVmat_all_sem);
+% title('Conn. \DeltaPV - All Mice' );
+% ylabel('\rho_{same} - \rho_{diff}')
+% set(gca,'XTickLabel',{'Same Day','Diff. Day'});
+% legend(legend_use)
+% make_plot_pretty(gca)
+% 
+% subplot(2,3,6)
+% text(0.1,0.3,['pval thresh = ' num2str(inclusion_criteria.pval_thresh)])
+% text(0.1,0.5,['ntrans thresh = ' num2str(inclusion_criteria.ntrans_thresh)])
+% text(0.1,0.7,['cmperbin = ' num2str(inclusion_criteria.cmperbin_use)])
+% axis off
+% 
+% % Do rudimentary stats to see if adding in new cell population increases PV
+% % discrimination
+% [h12, p12] = ttest(PVmat_all(1,1,:),PVmat_all(1,2,:),'tail','left');
+% [h23, p23] = ttest(PVmat_all(1,2,:),PVmat_all(1,3,:),'tail','left');
+% 
+% [h12d, p12d] = ttest(PVmat_all(2,1,:),PVmat_all(2,2,:),'tail','left');
+% [h23d, p23d] = ttest(PVmat_all(2,2,:),PVmat_all(2,3,:),'tail','left');
+% 
+% 
+% %% p-value distribution by session
+% sesh_use2 = cat(1,G30_botharenas, G31_botharenas, G45_botharenas, ...
+%     G48_botharenas);
+% for j = 1:4
+%     sesh_use = sesh_use2(j,:);
+%     figure(400+j)
+%     ylim_vec = zeros(1,16);
+%     for k = 1:16
+%         ChangeDirectory_NK(sesh_use(k));
+%         load('Placefields_rot0.mat','pval');
+%         subplot(4,4,k)
+%         histogram(pval,30);
+%         xlim([0 1.05])
+%         xlabel('pval')
+%         ylabel('Count')
+%         if k == 1
+%             title(mouse_name_title(sesh_use(k).Animal))
+%         end
+%         temp = get(gca,'YLim');
+%         ylim_vec(k) = max(temp);
+%     end
+%     ymax = max(ylim_vec);
+%     for k = 1:16
+%         subplot(4,4,k)
+%         ylim([0 ymax])
+%     end
+% end
 
 %% Aggregrate p-value distribution across all sessions
 sesh_use3 = cat(1,G30_botharenas, G31_botharenas, G45_botharenas, G48_botharenas);
