@@ -3,6 +3,88 @@
 twoenv_reference;
 load(fullfile(ChangeDirectory_NK(G30_square(1),0),...
     '2env_batch_analysis4_workspace_1000shuffles_2018JAN11.mat'));
+
+%% S1a Simple - traces for positive, neutral, and negative DI neurons
+sesh_use = G30_square(5); %G45_square(5); %G45_square(5);
+sesh_use2 = G30_oct(5);
+DI_cutoff = 0.67;
+dirstr = ChangeDirectory_NK(sesh_use,0);
+load(fullfile(dirstr,'FinalOutput.mat'),'PSAbool','NeuronTraces','NeuronImage');
+base_image = imread(fullfile(dirstr,'ICmovie_min_proj.tif'));
+num_neurons = size(PSAbool,1);
+num_frames = size(PSAbool,2);
+
+% For G30_square(5)
+env_t = [320 750 1075];
+cells1 = 1:690;
+cells2 = 691:num_neurons;
+redDI = [95 114 31 98 193]; % 1st arena/square
+blueDI = [763 578 73 761 770]; %2nd arena/circle
+greenDI = [376 153 249 164 327]; %[130 376 39 120 64]; % same in both
+
+[PSAbool_sort, sort_ind] = sortPSA(PSAbool);
+PSAbool_sort2 = double(PSAbool_sort);
+PSAbool_sort2(cells2,:) = PSAbool_sort2(cells2,:)*2;
+LPtrace_sort = NeuronTraces.LPtrace(sort_ind,:);
+time_plot = (1:num_frames)/20;
+
+% Get DI between arenas
+PV1 = get_PV_from_TMap(sesh_use, 'PFname_append', '_cm4_rot0',...
+    'TMap_use', 'unsmoothed');
+PV2 = get_PV_from_TMap(sesh_use2, 'PFname_append', '_cm4_rot0',...
+    'TMap_use', 'unsmoothed');
+[~,~, DI] = get_discr_ratio(nanmean(nanmean(PV1,1),2), ...
+    nanmean(nanmean(PV2,1),2));
+DI = squeeze(DI);
+DIsort = DI(sort_ind);
+DIclass = nan(size(DI));
+DIclass(DIsort >= DI_cutoff) = 1; % 1st arena cells
+DIclass(DIsort > -DI_cutoff & DIsort < DI_cutoff) = 2; % Neither cells?
+DIclass(DIsort <= -DI_cutoff) = 3; % 2nd arena cells
+PSAbool_sort3 = double(PSAbool_sort);
+PSAbool_sort3(DIclass == 2,:) = PSAbool_sort3(DIclass == 2,:)*2;
+PSAbool_sort3(DIclass == 3,:) = PSAbool_sort3(DIclass == 3,:)*3;
+
+%%
+try close(250); end; try close(251); end
+neurons_to_plot = cat(1,redDI,greenDI,blueDI)';
+% order = [1:5; 6:10; 11:15];
+% colors = cat(1, repmat([1 0 0],length(redDI),1), ...
+%     repmat([0 1 0],length(greenDI),1), repmat([0 0 1],length(blueDI),1))';
+colors = cat(1, repmat('r',1,length(redDI)), repmat('g',1,length(greenDI)), ...
+    repmat('b',1,length(blueDI)))';
+figure(250)
+set(gcf,'Position',[1930 220 1840 720])
+ha = subplot(1,2,1);
+plot_neuron_outlines(base_image,NeuronImage(neurons_to_plot(:)),ha,...
+    'colors',colors(:));
+hold on
+
+hb = subplot(1,2,2);
+traces_to_plot = LPtrace_sort(flipud(neurons_to_plot(:)),:);
+PSA_plot = PSAbool_sort(flipud(neurons_to_plot(:)),:);
+colors_plot = flipud(colors(:));
+plot_neuron_traces(traces_to_plot,colors_plot,hb) % ,'PSAbool',PSA_plot);
+hold on;
+ylims = get(gca,'YLim');
+for j = 1:3
+    plot([env_t(j) env_t(j)], ylims,'k--')
+end
+make_figure_pretty(gcf);
+printNK('Connected Day example traces and ROIS by DI type','2env')
+
+figure(251)
+hc = gca;
+set(gcf,'Position',[1930 220 1500 720])
+plot_neuron_traces(traces_to_plot,colors_plot,hc) % ,'PSAbool',PSA_plot);
+hold on;
+ylims = get(gca,'YLim');
+for j = 1:3
+    plot([env_t(j) env_t(j)], ylims,'k--')
+end
+make_plot_pretty(hc,'linewidth',1.5);
+printNK('Connected Day example traces by DI type','2env')
+
 %% S1b - What proportion of neurons maintain the coherent map?
 rot_file_use = 'full_rotation_analysis_circ2square_cm4_TMap_unsmoothed_shuffle1000.mat';
 coh_cutoff = 30; % degrees
@@ -125,10 +207,10 @@ save(fullfile(base_dir,'pat_sep_mechs.mat'),'mech_breakdown','coh_cutoff',...
 
 %% Get all pairs <= 1 day apart - sig diff.
 coh_cutoff = 45; % degrees
-DI_cutoff = 0.90; % Arbitrary between 0 and 1
+DI_cutoff = 0.7; % Arbitrary between 0 and 1
 
 before_pairs = [1 1 2 2 3 3 4 4; 1 2 1 2 3 4 3 4]';
-during_pairs = [5 5 6 6 ; 5 6 5 6]'; %[5 6; 6 5]'; % This includes only pairs exactly 1 day apart
+during_pairs = [5 6; 6 5]'; %[5 5 6 6 ; 5 6 5 6]'; % This includes only pairs exactly 1 day apart
 after_pairs = [7 7 8 8; 7 8 7 8]';
 
 mech_before_all = nan(4,size(before_pairs,1),4);

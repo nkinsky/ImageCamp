@@ -1,4 +1,4 @@
-% 2env Figure 5: Temporal Lag
+% 2env Figure 6: Temporal Lag
 
 %% Load data if required
 load(fullfile(ChangeDirectory_NK(G30_square(1),0),...
@@ -202,6 +202,10 @@ diff_prop = squeeze(coh_prop_bymouse(:,3,:));
 [p_diff, t_diff, stats_diff] = anova1(diff_prop, [], 'off');
 figure; [c_diff, m_diff, h_diff] = multcompare(stats_diff);
 
+% Run ANOVA to get stats on whether the two groups are different
+[panova, tab, stats] = anova1(cat(1,same_prop(:),diff_prop(:)),...
+    cat(1,ones(length(same_prop(:)),1),2*ones(length(diff_prop(:)),1)),'off');
+
 %% Make Cell overlap ratio vs time plot
 try; close 505; end; try; close 506; end; try; close 507; end
 try; close 508; end;
@@ -283,7 +287,7 @@ errorbar(unique_lags_all{1}, cellfun(@mean, same_env), ...
     cellfun(@std, same_env), 'k.-');
 hold on
 errorbar(unique_lags_all{3}, cellfun(@mean, diff_env), ...
-    cellfun(@std, diff_env), 'g.--');
+    cellfun(@std, diff_env), 'r-');
 xlabel('Day lag')
 ylabel('Mean overlap ratio')
 xlim([-0.5 7.5]); ylim([0 0.6])
@@ -307,11 +311,10 @@ end
 
 days = [1 1 2 2 3 3 4 4 5 5 6 6];
 % Reorganize into days
-n_by_days = [];
+n_by_days = nan(4,length(days);
 for j = 1:max(days)
     temp = nneurons_all(:,days == j);
     n_by_days(:,j) = temp(:);
-    
 end
 
 figure(35); set(gcf,'Position', [2200 620 480 340]) 
@@ -324,5 +327,9 @@ ylabel('# Neurons Active')
 printNK('Num Active Neurons vs Days','2env')
 
 % Fit linear model
-lm = fitlm(days(:), n_by_days(:));
+lm = fitlm(days_mat(:),n_by_days(:));
+
+% Run ANOVA
+panova = anova1(n_by_days(:), days_mat(:),'off');
+pkw = kruskalwallis(n_by_days(:), days_mat(:),'off');
        

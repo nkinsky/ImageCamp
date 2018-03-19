@@ -1,4 +1,4 @@
-% 2env Figure 4: Arena Connection
+% 2env Figure 5: Arena Connection
 
 %% Load data if required
 load(fullfile(ChangeDirectory_NK(G30_square(1),0),...
@@ -123,10 +123,44 @@ coh_prop_before = mean(coh_pairs_before,2);
 coh_prop_during = mean(coh_pairs_during,2);
 coh_prop_after = mean(coh_pairs_after,2);
 
-p = anova1(cat(2,mean(coh_pairs_after,2),mean(coh_pairs_before,2),...
-    mean(coh_pairs_during,2)),'off');
+% This code is broken, though it worked before. maybe MATLAB is having
+% issues?
+% mat_use = cat(2,mean(coh_pairs_after,2),mean(coh_pairs_before,2),...
+%     mean(coh_pairs_during,2));
+% p = anova1(mat_use,'off'); % Do balanced ANOVA using means of bda for all mice!!
+
+mat_use2 = cat(2,mean(coh_pairs_before,1),mean(coh_pairs_during,1),...
+    mean(coh_pairs_after,1));
+groups = cat(2,ones(1,size(before_pairs,1)), ones(1,size(during_pairs,1))*2,...
+    ones(1,size(after_pairs,1))*3);
+
+figure(701); set(gcf,'Position', [520 420 840 380]);
+h = subplot(1,2,1);
+scatterBox(mat_use2, groups', 'XLabels',{'Before', 'During', 'After'}, 'yLabel',...
+    'Prob. Coherent','h',h);
+make_plot_pretty(h)
+[p, t, stats] = anova1(mat_use2, groups,'off');
+[c, m, h] = multcompare(stats,'display','off');
+pkw = kruskalwallis(mat_use2, groups, 'off');
+
+h = subplot(1,2,2);
+plot_anova_stats(p,c,0.05,h);
+
+% Run binomial glm too
+% groups2 = cat(1, ones(size(coh_pairs_before(:))), 2*ones(size(coh_pairs_during(:))),...
+%     3*ones(size(coh_pairs_after(:))));
+bda_bin = cat(1,coh_pairs_before(:), coh_pairs_during(:), coh_pairs_after(:));
+groups2 = zeros(length(groups2),3);
+nb = length(coh_pairs_before(:)); nd = length(coh_pairs_during(:));
+na = length(coh_pairs_after(:));
+groups2(1:nb,1) = 1; groups2((nb + 1):(nb + nd),2) = 1;
+groups2((nb + nd + 1):end,3) = 1;
+glm = fitglm(groups2,bda_bin,'Distribution','binomial');
 
 %% Rubin et al replication for connected days only
+load(fullfile(ChangeDirectory_NK(G30_square(1),0), ...
+    '2env_PV_conn_1000shuffles-2018-01-17.mat'));
+%%
 plot_all_mice = true;
 cm = 'jet';
 ticks = 1:8; % 1:16;
@@ -240,7 +274,7 @@ axis off
 
 figure(304)
 set(gcf,'Position',[1937 25 1796 953])
-filts_use = {'coherent_only','no_silent','pval', 'no_remap'};
+filts_use = {'coherent_only','no_silent','pval'};
 for k = 1:length(filts_use)
     
     mat_full = [];
@@ -271,6 +305,38 @@ text(0.1,0.3,['pval thresh = ' num2str(inclusion_criteria.pval_thresh)])
 text(0.1,0.5,['ntrans thresh = ' num2str(inclusion_criteria.ntrans_thresh)])
 text(0.1,0.7,['cmperbin = ' num2str(inclusion_criteria.cmperbin_use)])
 axis off
+
+%% Get whether or not comparisons are above chance or not
+% Note that you only care about upper diagonal of the matrix but you get
+% the same answer regardless since all you care about is proportions.
+same_arena = [1 0 1 0 0 1 0 1; 0 1 0 1 1 0 1 0; 1 0 1 0 0 1 0 1; 0 1 0 1 1 0 1 0; ...
+    0 1 0 1 1 0 1 0; 1 0 1 0 0 1 0 1; 0 1 0 1 1 0 1 0; 1 0 1 0 0 1 0 1];
+
+ppass = nan(4,8,8);
+ppass_diffarena = [];
+for j = 1:4
+    shuf_mean = squeeze(nanmean(nanmean(...
+        Mouse(j).PV_corrs.conn.pval.PV_corr_binshuffle,3),4)); % Get mean shuffled corrs in each spatial bin 
+    temp = shuf_mean - Mouse(j).PV_corrs.conn.pval.PV_corr_mean; 
+    p = sum(temp > 0, 3)/1000; % Get pval from shuffle test
+    ppass(j,:,:) = p <= alpha/28; % Compare to 0.05 after bonferroni correction - save for later
+    ppass_use = squeeze(ppass(j,:,:));
+    ppass_diffarena = [ppass_diffarena, ppass_use(~same_arena)];
+end
+% This comes out to 68% +/- 18%.
+%% ScatterBox proportion of coherent session pairs in same arena vs different arena
+% during connection in 
+
+same_arena = [1 0 1 0 0 1 0 1; 0 1 0 1 1 0 1 0; 1 0 1 0 0 1 0 1; 0 1 0 1 1 0 1 0; ...
+    0 1 0 1 1 0 1 0; 1 0 1 0 0 1 0 1; 0 1 0 1 1 0 1 0; 1 0 1 0 0 1 0 1];
+hmean = mean(hmat_full,3);
+pairs_use = logical(triu(ones(8),1));
+
+hmean_vec = hmean(pairs_use);
+grps = same_arena(pairs_use);
+
+scatterBox(hmean_vec,grps);
+
          
 %% Now quantify in bar graph form
 figure(305)
@@ -328,7 +394,23 @@ axis off
 %% ScatterBox plot of before-during-after PV correlations for one mouse + 
 % all mice? All comparisons 1 day apart to control for effects of time.
 
-load('2env_PVsilent_cm4_local0-1000shuffles-2018-01-06.mat')
+load(fullfile(ChangeDirectory_NK(G30_square(1),0),...
+    '2env_PVsilent_cm4_local0-1000shuffles-2018-01-06.mat'))
+
+% Get whether PVcorrs are above chance or not.
+ppass = nan(4,8,8);
+shuf95 = nan(4,8,8);
+for j = 1:4
+    shuf_mean = Mouse(j).PVcorrs.circ2square(1).PVshuf_corrs;
+    temp = shuf_mean - Mouse(j).PVcorrs.circ2square(1).PVcorrs; 
+    p = sum(temp > 0, 3)/1000; % Get pval from shuffle test
+    ppass(j,:,:) = p < alpha/28; % Compare to 0.05 after bonferroni correction - save for later
+    ppass_use = squeeze(ppass(j,:,:));
+    
+    shuf_sort = sort(shuf_mean,3);
+    shuf95(j,:,:) = squeeze(shuf_sort(:,:,975)); % Get upper 95% CI value for each comparison
+end
+ppass = logical(ppass);
 
 % Get all pairs <= 1 day apart - sig diff.
 before_pairs = [1 1 2 2 3 3 4 4; 1 2 1 2 3 4 3 4]';
@@ -340,9 +422,9 @@ after_pairs = [7 7 8 8; 7 8 7 8]';
 % during_pairs = [5 6  ; 6 5]';
 % after_pairs = [7 7 8 8; 7 8 7 8]';
 
-before_all = [];
-during_all = [];
-after_all = [];
+before_all = []; ppass_before_all = []; before_all95 = [];
+during_all = []; ppass_during_all = []; during_all95 = [];
+after_all = []; ppass_after_all = []; after_all95 = [];
 groups_all = [];
 for k = 1:4
     mouse_name = Mouse(k).sesh.circ2square(1).Animal;
@@ -352,6 +434,12 @@ for k = 1:4
         during_pairs(:,1),during_pairs(:,2)));
     after = Mouse(k).PVcorrs.circ2square(1).PVcorrs(sub2ind([8,8],...
         after_pairs(:,1),after_pairs(:,2)));
+    ppass_before = ppass(sub2ind([8,8],before_pairs(:,1),before_pairs(:,2)));
+    ppass_during = ppass(sub2ind([8,8],during_pairs(:,1),during_pairs(:,2)));
+    ppass_after = ppass(sub2ind([8,8],after_pairs(:,1),after_pairs(:,2)));
+    before95 = shuf95(sub2ind([8,8],before_pairs(:,1),before_pairs(:,2)));
+    during95 = shuf95(sub2ind([8,8],during_pairs(:,1),during_pairs(:,2)));
+    after95 = shuf95(sub2ind([8,8],after_pairs(:,1),after_pairs(:,2)));
     groups = cat(1,ones(size(before)), 2*ones(size(during)), ...
         3*ones(size(after)));
     
@@ -368,22 +456,42 @@ for k = 1:4
     during_all = cat(1,during_all,during);
     after_all = cat(1,after_all,after);
     
+    ppass_before_all = cat(1,ppass_before_all,ppass_before);
+    ppass_during_all = cat(1,ppass_during_all,ppass_during);
+    ppass_after_all = cat(1,ppass_after_all,ppass_after);
+    
+    before_all95 = cat(1,before_all95,before95);
+    during_all95 = cat(1,during_all95,during95);
+    after_all95 = cat(1,after_all95,after95);
     
 end
 
 groups_all = cat(1,ones(size(before_all)), 2*ones(size(during_all)), ...
     3*ones(size(after_all)));
 bda_all = cat(1, before_all, during_all, after_all);
+
 scatterBox(bda_all,groups_all,'xLabels',{'Before','During','After'},'yLabel', ...
     'Mean \rho_{PV}','transparency', 0.7, 'Position', [1000 420 350 380]);
 title('All Mice');
 set(gca,'tickdir','in','YLim',[-0.2 0.6])
+hold on
+plot([1 2 3], [mean(before_all95), mean(during_all95), mean(after_all95)],'k--')
 make_plot_pretty(gca)
 
 printNK('PV Before During After for All Mice', '2env')
 
 [p_bda, t_bda, bda_stats] = anova1(bda_all, groups_all, 'off');
 figure; [c_bda, m_bda, h_bda] = multcompare(bda_stats);
+
+% % Try above but plot those not above chance in red...
+% ppass_all = logical(cat(1, ppass_before_all, ppass_during_all, ppass_after_all));
+% h = scatterBox(bda_all(ppass_all),groups_all(ppass_all),'xLabels',...
+%     {'Before','During','After'},'yLabel', ...
+%     'Mean \rho_{PV}','transparency', 0.7, 'Position', [1000 420 350 380]);
+% hold on
+% scatterBox(bda_all(~ppass_all),groups_all(~ppass_all),'xLabels',...
+%     {'Before','During','After'},'yLabel', ...
+%     'Mean \rho_{PV}','transparency', 0.7, 'circleColors',[0.7 0 0],'h', h);
 
 %% Stats for 5b: PFdensity increase
 dmean_all = nan(2,8,4);
@@ -407,5 +515,49 @@ scatterBox(dmean_all(:),groups(:));
 
 [p, t, stats] = anova1(dmean_all(:), groups(:),'off');
 [c, m, h] = multcompare(stats,'display','off');
+
+%% Single cell examples of place fields remapping to cluster near the hallway
+% Doesn't seem to pan out - most of the neurons with firing near the
+% hallway only have 1-2 transients and many fire during the pass through
+% the hallway, so the whole effect might be due to me having to include a
+% small portion of the hallway in my placefield analysis.
+sesh_use = G48_botharenas(11:12);
+for j = 1:2
+    dirstr = ChangeDirectory_NK(sesh_use(j),0);
+    load(fullfile(dirstr,'Placefields_half.mat'),'Placefields_halves')
+    sesh_use(j).x{1} = Placefields_halves{1}.x;
+    sesh_use(j).x{2} = Placefields_halves{2}.x;
+    sesh_use(j).y{1} = Placefields_halves{1}.y;
+    sesh_use(j).y{2} = Placefields_halves{2}.y;
+    sesh_use(j).PSAbool{1} = Placefields_halves{1}.PSAbool;
+    sesh_use(j).PSAbool{2} = Placefields_halves{2}.PSAbool;
+    sesh_use(j).TMap{1} = Placefields_halves{1}.TMap_gauss;
+    sesh_use(j).TMap{2} = Placefields_halves{2}.TMap_gauss;
+end
+
+figure(125); set(gcf,'Position',[112 134 1565 863]);
+l = 1; stay_in = true;
+while stay_in
+    for k = 1:2
+        for j = 1:2
+            if j == 1
+                subplot(2,4,((k-1)*4+1):((k-1)*4+2))
+                x_use = sesh_use(j).x{k};
+                y_use = sesh_use(j).y{k};
+                PSAuse = sesh_use(j).PSAbool{k}(l,:);
+                plot(x_use,y_use,'k',x_use(PSAuse),y_use(PSAuse),'r.')
+                axis off
+                if k == 1
+                    title(num2str(l))
+                end
+            end
+            subplot(2,4,(k-1)*4 + j + 2)
+            imagesc_nan(rot90(sesh_use(j).TMap{k}{l},1));
+            axis off
+        end
+    end
+
+    [l, stay_in] = LR_cycle(l,[1 size(PSAbool,1)]);
+end
 
 
