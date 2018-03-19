@@ -165,8 +165,9 @@ legend(hneuron,arrayfun(@(a) ['Neuron ' num2str(a)], ...
     good_ind,'UniformOutput',false))
 axis tight
 %% Plot cell recruitment 1st v 2nd environment
-sesh_use = G45_square(6); %G45_square(5); %G45_square(5);
-
+sesh_use = G30_square(5); %G45_square(5); %G45_square(5);
+sesh_use2 = G30_oct(5);
+DI_cutoff = 0.67;
 dirstr = ChangeDirectory_NK(sesh_use,0);
 load(fullfile(dirstr,'FinalOutput.mat'),'PSAbool','NeuronTraces');
 num_neurons = size(PSAbool,1);
@@ -179,14 +180,14 @@ num_frames = size(PSAbool,2);
 % cells2 = 670:num_neurons; % cells recruited in 2nd env
 
 % For G45_square(6)
-env_t = [358 690 1000]; % Times of entry into 2nd env, 1st env, and 2nd env
-cells1 = 1:645; % cells recruited in 1st env
-cells2 = 646:num_neurons; % cells recruited in 2nd env
+% env_t = [358 690 1000]; % Times of entry into 2nd env, 1st env, and 2nd env
+% cells1 = 1:645; % cells recruited in 1st env
+% cells2 = 646:num_neurons; % cells recruited in 2nd env
 
 % For G30_square(5)
-% env_t = [320 750 1075];
-% cells1 = 1:690;
-% cells2 = 691:num_neurons;
+env_t = [320 750 1075];
+cells1 = 1:690;
+cells2 = 691:num_neurons;
 
 % For G30_square(6)
 % env_t = [340 670 1000];
@@ -198,6 +199,23 @@ PSAbool_sort2 = double(PSAbool_sort);
 PSAbool_sort2(cells2,:) = PSAbool_sort2(cells2,:)*2;
 LPtrace_sort = NeuronTraces.LPtrace(sort_ind,:);
 time_plot = (1:num_frames)/20;
+
+% Get DI between arenas
+PV1 = get_PV_from_TMap(sesh_use, 'PFname_append', '_cm4_rot0',...
+    'TMap_use', 'unsmoothed');
+PV2 = get_PV_from_TMap(sesh_use2, 'PFname_append', '_cm4_rot0',...
+    'TMap_use', 'unsmoothed');
+[~,~, DI] = get_discr_ratio(nanmean(nanmean(PV1,1),2), ...
+    nanmean(nanmean(PV2,1),2));
+DI = squeeze(DI);
+DIsort = DI(sort_ind);
+DIclass = nan(size(DI));
+DIclass(DIsort >= DI_cutoff) = 1; % 1st arena cells
+DIclass(DIsort > -DI_cutoff & DIsort < DI_cutoff) = 2; % Neither cells?
+DIclass(DIsort <= -DI_cutoff) = 3; % 2nd arena cells
+PSAbool_sort3 = double(PSAbool_sort);
+PSAbool_sort3(DIclass == 2,:) = PSAbool_sort3(DIclass == 2,:)*2;
+PSAbool_sort3(DIclass == 3,:) = PSAbool_sort3(DIclass == 3,:)*3;
 
 figure(100); set(gcf,'Position',[231         150        1055         739])
 h1 = subplot(6,1,2:6);
@@ -226,7 +244,62 @@ hold off
 axis tight
 axis off
 
-% Attempt to do above but sort by discrimination index instead...
+% Attempt to do this with neurons color coded by DI index instead.
+figure(101); set(gcf,'Position',[231         150        1055         739])
+h1 = subplot(6,1,2:6);
+imagesc(time_plot,1:num_neurons,PSAbool_sort3); 
+% colormap('gray')
+colormap([1 1 1; 1 0 0; 0 1 0; 0 0 1])
+hold on
+for j = 1:3
+    plot([env_t(j) env_t(j)],[1 num_neurons],'k--');
+end
+plot([1 max(time_plot)], [cells1(end) cells1(end)],'k--')
+xlabel('Time (s)')
+ylabel('Neuron #')
+hold off
+% imagesc_gray(PSAbool_sort); colorbar off;
+h2 = subplot(6,1,1);
+smth_win_sec = 10; % Smoothing window to use in seconds
+plot_type = 'PSAbool';
+switch plot_type; case 'PSAbool'; act_plot = PSAbool_sort; case 'LPtrace'; act_plot = LPtrace_sort; end
+plot(time_plot, convtrim(mean(act_plot(DIclass == 1,:),1), ...
+    ones(20*smth_win_sec,1))/smth_win_sec,'r'); 
+hold on; 
+plot(time_plot, convtrim(mean(act_plot(DIclass == 2,:),1), ...
+    ones(20*smth_win_sec,1))/smth_win_sec,'g'); 
+plot(time_plot, convtrim(mean(act_plot(DIclass == 3,:),1), ...
+    ones(20*smth_win_sec,1))/smth_win_sec,'b'); 
+ylims = get(gca,'YLim');
+% for j = 1:3; plot([env_t(j) env_t(j)],ylims,'k--'); end
+hold off
+axis tight
+axis off
+make_figure_pretty(gcf)
+
+%% Simplified version of above
+
+%% Plot cell recruitment time vs DI classification
+recruit_time = nan(size(PSAbool_sort,1));
+for j = 1:size(PSAbool_sort,1) 
+    recruit_time(j) = find(PSAbool_sort(j,:),1,'first')/20; 
+end
+
+figure(601); set(gcf,'Position', [520 420 840 380]);
+h = subplot(1,2,1);
+scatterBox(recruit_time(~isnan(DIclass)), DIclass(~isnan(DIclass)),...
+    'XLabels',{'Sq. Pref', 'Both', 'Circ. Pref'}, 'yLabel',...
+    'Time of 1st Ca^{2+} event','h',h);
+make_plot_pretty(h)
+[p, t, stats] = anova1(recruit_time(~isnan(DIclass)), ...
+    DIclass(~isnan(DIclass)),'off');
+[c, m, h] = multcompare(stats,'display','off');
+
+h = subplot(1,2,2);
+plot_anova_stats(p,c,0.05,h);
+
+
+%% Attempt to do above but sort by discrimination index instead...
 DI_use = squeeze(Mouse(3).DI(6,6,:));
 sesh_ind2 = [12 11]; % session indices in 16 session format, square always first
 base_sesh = Mouse(3).sesh.circ2square(1);
