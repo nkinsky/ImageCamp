@@ -20,7 +20,12 @@ nframes = obj.NumberOfFrames;
 timestamps = temp(:,2);
 if length(timestamps) < (nframes +1)
     nadd = nframes - length(timestamps) + 1;
-    timestamps = [timestamps; repmat(timestamps(end),nadd,1)];
+    time_diff = diff(timestamps);
+    diff_use = time_diff(end);
+    for j = 1:nadd
+        timestamps = [timestamps; timestamps(end) + diff_use];
+    end
+%     timestamps = [timestamps; repmat(timestamps(end),nadd,1)];
 end
 
 [~, filebase] = fileparts(dvt_filename);
