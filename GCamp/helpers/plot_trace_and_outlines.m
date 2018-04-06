@@ -4,15 +4,17 @@ function [ ] = plot_trace_and_outlines( base_image, NeuronImage, NeuronTraces,..
 % plots neuron outlines on top of base image with corresponding traces next
 % to it
 
-if nargin < 6
-    SR = 20;
-    if nargin < 7
-        hfig = figure;
-        if nargin < 8
-            PSAbool = false(size(NeuronTraces));
+if nargin < 5
+    nframes_plot = size(NeuronTraces,2);
+    if nargin < 6
+        SR = 20;
+        if nargin < 7
+            hfig = figure;
+            if nargin < 8
+                PSAbool = false(size(NeuronTraces));
+            end
         end
     end
-    
 end
 
 figure(hfig);
