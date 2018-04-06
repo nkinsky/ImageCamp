@@ -288,27 +288,27 @@ axis tight
 %% Plot MI of circle vs square sessions
 MImean_comb = [];
 for k = 1:4
-mouse_use = k;
-mouse_name = Mouse(mouse_use).sesh.square(1).Animal;
-sesh_use = cat(1,Mouse(mouse_use).sesh.square, ...
-    Mouse(mouse_use).sesh.circle);
-
-dirstr_all = arrayfun(@(a) ChangeDirectory_NK(a,0),...
-    sesh_use,'UniformOutput',false);
-
-MImean_all = nan(size(sesh_use));
-for j = 1:length(dirstr_all(:))
-    load(fullfile(dirstr_all{j},'SpatialInfo_cm4_rot0.mat'),'MI');
-    MImean_all(j) = mean(MI);
-end
-MImean_comb = cat(3,MImean_comb,MImean_all);
-
-scatterBox(MImean_all(:),repmat((1:2)',8,1),'xLabels',{'Square','Circle'},...
-    'yLabel', 'Mutual Information (bits)','position',[2280 420 450 290],...
-    'transparency', 0.7);
-title(mouse_name_title(mouse_name));
-
-printNK(['MI square vs circle for ' mouse_name],'2env')
+    mouse_use = k;
+    mouse_name = Mouse(mouse_use).sesh.square(1).Animal;
+    sesh_use = cat(1,Mouse(mouse_use).sesh.square, ...
+        Mouse(mouse_use).sesh.circle);
+    
+    dirstr_all = arrayfun(@(a) ChangeDirectory_NK(a,0),...
+        sesh_use,'UniformOutput',false);
+    
+    MImean_all = nan(size(sesh_use));
+    for j = 1:length(dirstr_all(:))
+        load(fullfile(dirstr_all{j},'SpatialInfo_cm4_rot0.mat'),'MI');
+        MImean_all(j) = mean(MI);
+    end
+    MImean_comb = cat(3,MImean_comb,MImean_all);
+    
+    scatterBox(MImean_all(:),repmat((1:2)',8,1),'xLabels',{'Square','Circle'},...
+        'yLabel', 'Mutual Information (bits)','position',[2280 420 450 290],...
+        'transparency', 0.7);
+    title(mouse_name_title(mouse_name));
+    
+    printNK(['MI square vs circle for ' mouse_name],'2env')
 end
 
 groups = repmat(cat(1,ones(1,8),2*ones(1,8)),1,1,4);

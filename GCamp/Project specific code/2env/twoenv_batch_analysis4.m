@@ -1480,7 +1480,7 @@ for j = 1:num_animals
 end
 
 %% Plot PF density maps
-plot_all_PFdens = true;
+plot_all_PFdens = false;
 plot_comb_PFdens = true;
 
 % Plot individual mouse PFdensity plots
