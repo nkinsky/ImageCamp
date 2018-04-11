@@ -69,8 +69,6 @@ else
     ha = nan;
 end
 
-
-
 %% Step 6: do an ANOVA on all the categories!!!
 [p,t,stats] = anova1(rhos,cats,'off');
 crho = multcompare(stats,'Display','off');
