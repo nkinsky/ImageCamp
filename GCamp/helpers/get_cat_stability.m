@@ -7,8 +7,8 @@ function [ stay_prop, coactive_prop] = get_cat_stability(categories, neuron_map,
 %   categories variable (length 2 cell with category designation for neurons in
 %   2 different sessions. Must contain row arrays, and rows must be
 %   integers matching those in cat_designations
-%   neuron_map maps neurons in session
-%   1 to session 2. 
+%   neuron_map maps neurons in session 1 to session 2. 
+
 %% Parse Inputs
 ip = inputParser;
 ip.addRequired('categories', @(a) iscell(a) && length(a) == 2 && ...
@@ -37,7 +37,7 @@ end
 coactive_prop = zeros(1,length(cat_designations));
 for j = 1:length(cat_designations)
     cat_use = cat_designations(j);
-    num_coactive = sum(coactive_bool & categories{1} == cat_use);
+    num_coactive = sum(coactive_bool & (categories{1} == cat_use));
     coactive_prop(j) = num_coactive/sum(categories{1} == cat_use);
 end
 
