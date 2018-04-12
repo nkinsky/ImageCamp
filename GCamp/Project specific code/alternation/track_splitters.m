@@ -16,8 +16,8 @@ function [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
 
 %%% NRK Note - scrap deltamat for now since num stem bins is not the same
 %%% across all sessions - need to change this somehow! or maybe just
-%%% resize? This function is undergoing some serious hacking on 12/14 and
-%%% needs some cleanup/attention
+%%% resize? This function is undergoing some serious hacking on 12/14/17 
+%%% and needs some cleanup/attention
 
 if nargin < 4
     xlims = [-1.25, 1.25];
@@ -38,13 +38,13 @@ length(deltacurve{find(~cellfun(@isempty, deltacurve),1,'first')});
 
 % Get map between all sessions and related info
 batch_map = batch_session_map.map;
+% NK replace this with get_neuronmap_from_batchmap later
 sesh_inds = arrayfun(@(a) get_session_index(a, batch_session_map.session),...
-    sesh); % Get indices in map for each session
+    sesh); % Get indices in map for each session 
 num_sessions = length(sesh);
 num_neurons = size(batch_map,1);
 
 %% Step 2: Step through each session and load in 1-pval, deltacurve, and sigsplitting
-% Make this into a function??
 
 % Pre-allocate
 relymat = nan(num_neurons, num_sessions);
@@ -52,29 +52,24 @@ deltamat = nan(num_neurons, num_sessions);
 deltamaxmat = nan(num_neurons, num_sessions);
 sigmat = nan(num_neurons, num_sessions);
 for j = 1:num_sessions
+    
+    % Get session and map indices to use
     sesh_use = sesh(j);
     map_use = batch_map(:,sesh_inds(j)+1);
-    load(fullfile(sesh_use.Location,'sigSplitters'),'pvalue','sigcurve',...
-        'deltacurve');
-    nneurons_sesh = length(pvalue); % get number of neurons in sesh_use
-    valid_bool = ~isnan(map_use) & map_use ~= 0; % Get boolean for validly mapped cells
-    sigsplitter_bool = cellfun(@(a) sum(a) >= sigthresh, sigcurve); % Get splitters
     
-    % Identify cells active on the stem
-    stem_bool = ~cellfun(@isempty, pvalue); % in sesh(j) numbering
+    % Get "splittiness" metrics and validly mapped cells for that session
+    [ rely_val, delta_max, sigsplitter_bool ] = ...
+        parse_splitters( sesh_use.Location, sigthresh );
+    valid_bool = ~isnan(map_use) & map_use ~= 0; % Get boolean for validly mapped cells
+    
+    % Map valid stem neurons to batch_map numbering scheme
     valid_stem_bool = false(num_neurons,1); 
     valid_stem_bool(valid_bool) = stem_bool(map_use(valid_bool)); % in batch_map numbering
-    
-    % Assign reliability and delta_max values to the appropriate neurons
-    rely_val = nan(nneurons_sesh,1); delta_max = nan(nneurons_sesh,1);
-    rely_val(stem_bool) = cellfun(@(a) 1 - min(a), pvalue(stem_bool));
-    delta_max(stem_bool) = cellfun(@(a) max(abs(a)),deltacurve(stem_bool));
-    %     delta_val = cell2mat(deltacurve(stem_bool));
-    
+            
     % Dump all the values into the matrices
     sigmat(valid_stem_bool,j) = sigsplitter_bool(map_use(valid_stem_bool)); % Map sig
-    relymat(valid_stem_bool,j) = rely_val(map_use(valid_stem_bool)); % Map sig
-    deltamaxmat(valid_stem_bool,j) = delta_max(map_use(valid_stem_bool)); % Map sig
+    relymat(valid_stem_bool,j) = rely_val(map_use(valid_stem_bool)); % Map rely_val
+    deltamaxmat(valid_stem_bool,j) = delta_max(map_use(valid_stem_bool)); % Map delta_max
     
 end
 
@@ -144,4 +139,22 @@ cmat(:,1) = unique_days(cmat(:,1));
 cmat(:,2) = unique_days(cmat(:,2));
 
 end
+
+
+%% Leftovers from step 2
+
+%     load(fullfile(sesh_use.Location,'sigSplitters'),'pvalue','sigcurve',...
+%         'deltacurve');
+%     nneurons_sesh = length(pvalue); % get number of neurons in sesh_use
+%     valid_bool = ~isnan(map_use) & map_use ~= 0; % Get boolean for validly mapped cells
+%     sigsplitter_bool = cellfun(@(a) sum(a) >= sigthresh, sigcurve); % Get splitters
+    
+    % Identify cells active on the stem
+%     stem_bool = ~cellfun(@isempty, pvalue); % in sesh(j) numbering
+
+% Assign reliability and delta_max values to the appropriate neurons
+%     rely_val = nan(nneurons_sesh,1); delta_max = nan(nneurons_sesh,1);
+%     rely_val(stem_bool) = cellfun(@(a) 1 - min(a), pvalue(stem_bool));
+%     delta_max(stem_bool) = cellfun(@(a) max(abs(a)),deltacurve(stem_bool));
+    %     delta_val = cell2mat(deltacurve(stem_bool));
 

@@ -1,4 +1,5 @@
-function [ ha, rhos, cats, rho_mean, rho_median, day_lag, p, crho ] = alt_plot_corrs_v_cat( MDbase, MDreg, varargin )
+function [ ha, rhos, cats, rho_mean, rho_median, day_lag, p, crho ] = ...
+    alt_plot_corrs_v_cat( MDbase, MDreg, varargin )
 % [ ha, rho_mean, rho_median, day_lag ]  = alt_plot_corrs_v_cat( MDbase, MDreg,... )
 %   Plots correlations between neurons in MDbase and MDreg broken down by
 %   category: stem place cells (PCs), stem non-place cells (NPCs),

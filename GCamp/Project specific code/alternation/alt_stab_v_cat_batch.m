@@ -47,7 +47,7 @@ coactive_prop_all = cell(num_mice,1);
 for j = 1:num_mice
     seshs_use = good_seshs{j};
     sesh_temp = mice_sesh{j};
-    for k = 1:length(seshs_use)
+    for k = 1:size(seshs_use,1)
         [~, stay_prop, coactive_prop, cat_names] = alt_stability_v_cat(...
             sesh_temp(seshs_use(k,1)), sesh_temp(seshs_use(k,2)), ...
             'plot_flag',false);

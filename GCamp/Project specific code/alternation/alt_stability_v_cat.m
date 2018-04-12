@@ -1,4 +1,4 @@
-function [ ha, stay_prop, coactive_prop, cat_names ] = alt_stability_v_cat(...
+function [ ha, stay_prop, coactive_prop, cat_names, coactive_bool ] = alt_stability_v_cat(...
     MDbase, MDreg, varargin )
 % [ha, stay_prop, coactive_prop] = alt_stability_v_cat( MDbase, MDreg, ... )
 %   Gets and plots two cell stability metrics: coactivity probability, and probability of
@@ -45,7 +45,8 @@ neuron_map = neuron_map_simple(MDbase, MDreg,'suppress_output', true);
 cat_names = temp{1};
 %% Step 3: Get category stability metrics
 
-[ stay_prop, coactive_prop] = get_cat_stability(categories, neuron_map, 0:5);
+[ stay_prop, coactive_prop, coactive_bool] = ...
+    get_cat_stability(categories, neuron_map, 0:5);
 stay_prop = circshift(stay_prop,-1); % Shift so discarded cells are at the right
 cat_names = circshift(cat_names,-1);
 coactive_prop = circshift(coactive_prop,-1);
