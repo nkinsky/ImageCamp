@@ -165,7 +165,9 @@ G48_both_best_angle = [0 180 105 240 105 75 0 0 90 90 75 90 180 90 90 150];
 %% All sessions
 all_sessions = cat(2,G30_botharenas, G31_botharenas, G45_botharenas, G48_botharenas);
 all_square = cat(2,G30_square,G31_square,G45_square,G48_square);
+all_square2 = cat(1,G30_square,G31_square,G45_square,G48_square);
 all_oct = cat(2,G30_oct,G31_oct,G45_oct,G48_oct);
+all_oct2 = cat(1,G30_oct,G31_oct,G45_oct,G48_oct);
 all_sesh2 = cat(1,G30_botharenas, G31_botharenas, G45_botharenas,...
     G48_botharenas);
 square_days = [ 1 1 4 4 5 6 7 7];
