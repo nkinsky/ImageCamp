@@ -186,7 +186,7 @@ if ~trans
                     shuffle_mat2, rot_array, shift_back, alpha_corr);
             end
             
-            % NRK - adjust here to shift corr_mat - NEEDS checking...
+            % NRK - adjust here to shift corr_mat
             if ~local_ref
                 % Identify how much to shift curves back
                 % 90 degree increments for square
