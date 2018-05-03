@@ -449,7 +449,7 @@ g1 = group_means(:,1,:); % circle
 g2 = group_means(:,2,:); % square
 g3 = group_means(:,3,:); % circ2square
 
-% Run ranksum on all 3 combos
+% Run ranksum on all 3 combos - just do a kw test!!!
 [p12all,h12all] = ranksum(g1(:),g2(:),'tail','both');
 [p13all,h13all] = ranksum(g1(:),g3(:),'tail','right');
 [p23all,h23all] = ranksum(g2(:),g3(:),'tail','right');

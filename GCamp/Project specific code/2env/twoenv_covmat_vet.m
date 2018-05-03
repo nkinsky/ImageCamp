@@ -16,8 +16,8 @@ remap_sesh2 = 5;
 clust_size = 20; % Approximate # of neurons per cluster
 
 PVcoh = MPV1(Animal).PVcorrs.(coh_sesh_type)(silent_thresh_ind)...
-    .PV{coh_sesh1,coh_sesh2};
-[PVcoh1, PVcoh2] = compare_PVcov(PVcoh);
+    .PV{coh_sesh1,coh_sesh2};% population vectors for two sessions
+[PVcoh1, PVcoh2] = compare_PVcov(PVcoh); %calculate covariance matrices for each session
 
 PVremap = MPV1(Animal).PVcorrs.(coh_sesh_type)(silent_thresh_ind)...
     .PV{remap_sesh1,remap_sesh2};

@@ -2,7 +2,7 @@ function [ ] = plot_trace_and_outlines( base_image, NeuronImage, NeuronTraces,..
     neurons_to_plot, nframes_plot, SR, hfig, PSAbool )
 % plot_trace_and_outlines( base_image, NeuronImage, NeuronTraces, neurons_to_plot, nframes_plot )
 % plots neuron outlines on top of base image with corresponding traces next
-% to it
+% to it. Good for paper figures.
 
 if nargin < 5
     nframes_plot = size(NeuronTraces,2);
