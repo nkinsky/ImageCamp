@@ -1,11 +1,13 @@
-function [ TMap1, TMap2 ] = register_tmaps( MDbase, MDreg, PFname, smoothing )
+function [ TMap1, TMap2 ] = register_tmaps( MDbase, MDreg, PFname, smoothing, ...
+    varargin)
 % [ TMap1, TMap2 ] = register_tmaps( MDbase, MDreg, PFname, smoothing )
 %   TMap1 and TMap2 are the same size and have the same neurons in each
 %   row. PFname indicates placefield file name to load, smoothing = 'gauss'
 %   or 'unsmoothed'
 
 % get map between the two sessions
-neuron_map = neuron_map_simple(MDbase, MDreg, 'suppress_output', true); 
+neuron_map = neuron_map_simple(MDbase, MDreg, 'suppress_output', true,...
+    varargin{:}); 
 
 % load tmaps
 sesh = complete_MD(MDbase);

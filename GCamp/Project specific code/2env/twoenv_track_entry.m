@@ -1,4 +1,4 @@
-function [ entry_tracking ] = twoenv_track_entry( filename )
+function [ entry_tracking, hfig ] = twoenv_track_entry( filename )
 % entry_tracking = twoenv_track_entry( filename )
 %   Tracks mouse entry into each arena for 2env experiment. Identifies from
 %   which direction he is carried into the maze and which direction he is

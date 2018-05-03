@@ -45,6 +45,8 @@ switch location
         location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\Alternation\Figures';
     case 'cnmf'
         location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\MATLAB\CNMF vs T4';
+    case 'eraser'
+        location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\Eraser';
     otherwise
 end
 

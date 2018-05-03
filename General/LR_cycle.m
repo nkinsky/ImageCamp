@@ -33,7 +33,7 @@ persistent disp_flag; % Set persistent variable so that you only display
 % below the 1st time it is called in a while loop
 % Will clear out when you push spacebar
 if ~exist('disp_flag','var') || isempty(disp_flag)
-    disp('Use L/R keys to scroll. Hit spacebar to stop cycling, ''k'' to enter keyboard mode')
+    disp('Use L/R keys to scroll (4L/6R go +/-10). Hit spacebar to stop cycling, ''k'' to enter keyboard mode')
     disp_flag = 1;
 end
 
