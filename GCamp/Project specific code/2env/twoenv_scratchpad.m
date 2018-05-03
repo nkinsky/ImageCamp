@@ -1,8 +1,6 @@
 %% Set-up everything
 twoenv_reference;
 
-num_shuffles = 1000;
-
 Mouse(1).sesh.square = G30_square;
 Mouse(1).sesh.circle = G30_oct;
 Mouse(1).sesh.circ2square = G30_botharenas;
@@ -47,10 +45,11 @@ for j = 1:num_animals
 end
     
 % P-value thresholds for cell inclusion
-pval_filt = true;
-pval_thresh = 0.05;
+pval_filt = false;
+pval_thresh = 1;
 cmperbin_use = 4; 
-ntrans_thresh = 5;
+ntrans_thresh = 0;
+num_shuffles = 0;
 
 inclusion_criteria.pval_filt = pval_filt;
 inclusion_criteria.pval_thresh = 0.05;
@@ -66,11 +65,11 @@ same_bool = [true true false];
 local_aligned = [false true];
 tic
 basedir = ChangeDirectory_NK(G30_square(1),0);
-for pp = 2 %1:2 % 1 is at optimal rotation, 2 is at local cue rotation
+for pp = 1 %1:2 % 1 is at optimal rotation, 2 is at local cue rotation
     if pp == 1
         nshuf = num_shuffles;
         sil_thresh_use = silent_thresh;
-        animal_start = 2;
+        animal_start = 1;
     elseif pp == 2
         nshuf = 0;
         sil_thresh_use = silent_thresh;
@@ -78,7 +77,7 @@ for pp = 2 %1:2 % 1 is at optimal rotation, 2 is at local cue rotation
     end
     for j = animal_start:num_animals
         for m = 1:3 % square, circ, circ2square
-            for k = 1:length(sil_thresh_use) % 1:3 silenthresh = nan, 0, or 1
+            for k = 2 %1:length(sil_thresh_use) % 1:3 silenthresh = nan, 0, or 1
                 
                 sesh_use = Mouse(j).sesh.(sesh_type{m});
                 best_angle_use = Mouse(j).best_angle.(sesh_type{m});
