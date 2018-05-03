@@ -2755,6 +2755,352 @@ if (strcmp(userstr,'Natlaptop'))
 end
 MD(i).Notes = '';
 
+%% Eraser - Marble3
+Marble3(1) = i+1;
+
+i = i+1;
+MD(i).Animal = 'Marble3';
+MD(i).Date = '02_05_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Square Open Field -2';
+MD(i).Room = '610 Comm 721A';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble3\20180205_1_openfield\Imaging';
+end
+MD(i).Notes = [];
+MD(i).Pix2CM = 0.27;
+
+i = i+1;
+MD(i).Animal = 'Marble3';
+MD(i).Date = '02_05_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock Box -2';
+MD(i).Room = '610 Comm 721F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble3\20180205_2_fcbox\Imaging';
+end
+MD(i).Notes = 'Missing';
+MD(i).Pix2CM = 0.0969;
+
+i = i+1;
+MD(i).Animal = 'Marble3';
+MD(i).Date = '02_06_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Square Open Field -1';
+MD(i).Room = '610 Comm 721A';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble3\20180206_1_openfield\Imaging';
+end
+MD(i).Notes = [];
+MD(i).Pix2CM = 0.27;
+
+i = i+1;
+MD(i).Animal = 'Marble3';
+MD(i).Date = '02_06_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock Box -1';
+MD(i).Room = '610 Comm 721F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble3\20180206_2_fcbox\Imaging';
+end
+MD(i).Notes = 'Missing';
+MD(i).Pix2CM = 0.0969;
+
+i = i+1;
+MD(i).Animal = 'Marble3';
+MD(i).Date = '02_07_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Square Open Field 0';
+MD(i).Room = '610 Comm 721A';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble3\20180207_1_openfield\Imaging';
+end
+MD(i).Notes = [];
+MD(i).Pix2CM = 0.27;
+
+i = i+1;
+MD(i).Animal = 'Marble3';
+MD(i).Date = '02_07_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock Box 0';
+MD(i).Room = '610 Comm 721F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble3\20180207_2_fcbox\Imaging';
+end
+MD(i).Notes = 'Missing';
+MD(i).Pix2CM = 0.0969;
+
+i = i+1;
+MD(i).Animal = 'Marble3';
+MD(i).Date = '02_07_2018';
+MD(i).Session = 3;
+MD(i).Env = 'Square Open Field 4hr';
+MD(i).Room = '610 Comm 721A';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble3\20180207_3_openfield\Imaging';
+end
+MD(i).Notes = [];
+MD(i).Pix2CM = 0.27;
+
+i = i+1;
+MD(i).Animal = 'Marble3';
+MD(i).Date = '02_07_2018';
+MD(i).Session = 4;
+MD(i).Env = 'Shock Box 4hr';
+MD(i).Room = '610 Comm 721F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble3\20180207_4_fcbox\Imaging';
+end
+MD(i).Notes = 'Missing';
+MD(i).Pix2CM = 0.0969;
+
+i = i+1;
+MD(i).Animal = 'Marble3';
+MD(i).Date = '02_08_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Square Open Field 1';
+MD(i).Room = '610 Comm 721A';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble3\20180208_1_openfield\Imaging';
+end
+MD(i).Notes = [];
+MD(i).Pix2CM = 0.27;
+
+i = i+1;
+MD(i).Animal = 'Marble3';
+MD(i).Date = '02_08_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock Box 1';
+MD(i).Room = '610 Comm 721F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble3\20180208_2_fcbox\Imaging';
+end
+MD(i).Notes = 'Missing';
+MD(i).Pix2CM = 0.0969;
+
+i = i+1;
+MD(i).Animal = 'Marble3';
+MD(i).Date = '02_09_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Square Open Field 2';
+MD(i).Room = '610 Comm 721A';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble3\20180209_1_openfield\Imaging';
+end
+MD(i).Notes = [];
+MD(i).Pix2CM = 0.27;
+
+i = i+1;
+MD(i).Animal = 'Marble3';
+MD(i).Date = '02_09_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock Box 2';
+MD(i).Room = '610 Comm 721F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble3\20180209_2_fcbox\Imaging';
+end
+MD(i).Notes = 'Missing';
+MD(i).Pix2CM = 0.0969;
+
+i = i+1;
+MD(i).Animal = 'Marble3';
+MD(i).Date = '02_15_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Square Open Field 7';
+MD(i).Room = '610 Comm 721A';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble3\20180215_1_openfield\Imaging';
+end
+MD(i).Notes = [];
+MD(i).Pix2CM = 0.27;
+
+i = i+1;
+MD(i).Animal = 'Marble3';
+MD(i).Date = '02_15_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock Box 7';
+MD(i).Room = '610 Comm 721F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble3\20180215_2_fcbox\Imaging';
+end
+MD(i).Notes = 'Missing';
+MD(i).Pix2CM = 0.0969;
+
+Marble3(2) = i;
+
+%% Eraser - Marble7
+Marble7(1) = i+1;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_19_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Square Open Field -2';
+MD(i).Room = '610 Comm 721A';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble7\20180319_1_openfield\imaging';
+end
+MD(i).Notes = [];
+MD(i).Pix2CM = 0.27;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_19_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock Box -2';
+MD(i).Room = '610 Comm 721F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble7\20180319_2_fcbox\Imaging';
+end
+MD(i).Notes = 'Missing';
+MD(i).Pix2CM = 0.0969;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_20_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Square Open Field -1';
+MD(i).Room = '610 Comm 721A';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble7\20180320_1_openfield\Imaging';
+end
+MD(i).Notes = [];
+MD(i).Pix2CM = 0.27;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_20_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock Box -1';
+MD(i).Room = '610 Comm 721F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble7\20180320_2_fcbox\Imaging';
+end
+MD(i).Notes = 'Missing';
+MD(i).Pix2CM = 0.0969;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_21_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Square Open Field 0';
+MD(i).Room = '610 Comm 721A';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble7\20180321_1_openfield\Imaging';
+end
+MD(i).Notes = [];
+MD(i).Pix2CM = 0.27;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_21_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock Box 0';
+MD(i).Room = '610 Comm 721F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble7\20180321_2_fcbox\Imaging';
+end
+MD(i).Notes = 'Missing';
+MD(i).Pix2CM = 0.0969;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_21_2018';
+MD(i).Session = 3;
+MD(i).Env = 'Square Open Field 4hr';
+MD(i).Room = '610 Comm 721A';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble7\20180321_3_openfield\Imaging';
+end
+MD(i).Notes = [];
+MD(i).Pix2CM = 0.27;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_21_2018';
+MD(i).Session = 4;
+MD(i).Env = 'Shock Box 4hr';
+MD(i).Room = '610 Comm 721F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble7\20180321_4_fcbox\Imaging';
+end
+MD(i).Notes = 'Missing';
+MD(i).Pix2CM = 0.0969;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_22_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Square Open Field 1';
+MD(i).Room = '610 Comm 721A';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble7\20180322_1_openfield\Imaging';
+end
+MD(i).Notes = [];
+MD(i).Pix2CM = 0.27;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_22_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock Box 1';
+MD(i).Room = '610 Comm 721F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble7\20180322_2_fcbox\Imaging';
+end
+MD(i).Notes = 'Missing';
+MD(i).Pix2CM = 0.0969;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_23_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Square Open Field 2';
+MD(i).Room = '610 Comm 721A';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble7\20180323_1_openfield\Imaging';
+end
+MD(i).Notes = [];
+MD(i).Pix2CM = 0.27;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_23_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock Box 2';
+MD(i).Room = '610 Comm 721F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble7\20180323_2_fcbox\Imaging';
+end
+MD(i).Notes = 'Missing';
+MD(i).Pix2CM = 0.0969;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_28_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Square Open Field 7';
+MD(i).Room = '610 Comm 721A';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble7\20180328_1_openfield\Imaging';
+end
+MD(i).Notes = [];
+MD(i).Pix2CM = 0.27;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_28_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock Box 7';
+MD(i).Room = '610 Comm 721F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Marble7\20180328_2_fcbox\Imaging';
+end
+MD(i).Notes = 'Missing';
+MD(i).Pix2CM = 0.0969;
+
+Marble7(2) = i;
+
 %% Compile session_ref
 
 session_ref.G30 = G30;
@@ -2764,6 +3110,8 @@ session_ref.G44 = G44;
 session_ref.G45 = G45;
 session_ref.G46 = G46;
 session_ref.G48 = G48;
+session_ref.Marble3 = Marble3;
+session_ref.Marble7 = Marble7;
 
 %%
 save MasterDirectory.mat MD;
