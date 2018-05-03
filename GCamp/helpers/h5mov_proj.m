@@ -1,13 +1,22 @@
 function [ proj_out] = h5mov_proj( moviefile, proj_type)
 % proj_out = h5mov_proj( moviefile, proj_type)
-%   Create a 'max' or 'min' projection of an h5 movie
+%   Create a 'max' or 'min' projection of an h5 movie (or tif/tiff now!)
 
 % Get movie information. 
-info = h5info(moviefile,'/Object');
-Xdim = info.Dataspace.Size(1);
-Ydim = info.Dataspace.Size(2);
-NumFrames = info.Dataspace.Size(3);
-
+[~,~,ext] = fileparts(moviefile); % Get filetype
+file_type = ext(2:end);
+switch file_type
+    case 'h5'
+        info = h5info(moviefile,'/Object');
+        Xdim = info.Dataspace.Size(1);
+        Ydim = info.Dataspace.Size(2);
+        NumFrames = info.Dataspace.Size(3);
+    case {'tif','tiff'}
+        tstack = TIFFStack(moviefile);
+        [Xdim, Ydim, NumFrames] = size(tstack); 
+    otherwise
+        
+end
 FrameChunkSize = min([1250 NumFrames]);
 ChunkStarts = 1:FrameChunkSize:NumFrames;
 ChunkEnds = FrameChunkSize:FrameChunkSize:NumFrames;
@@ -27,9 +36,15 @@ switch proj_type
         F = @min;
         bool_use = @lt;
         newproj = inf(Xdim,Ydim); % Start at infinity for min proj
+    case 'std' % Not finished yet, clearly
+        F = @mean;
     otherwise
         disp('only ''min'' and ''max'' projections enabled currently')
 end
+
+% Error catching in case another file has been loaded recently.
+
+Set_T_Params(moviefile)
 
 p = ProgressBar(NumChunks);
 for i = 1:NumChunks

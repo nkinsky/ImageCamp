@@ -1,11 +1,22 @@
-function [ delta_angle, delta_pos, pos1, angles ] = get_PF_angle_delta( ...
-    sesh1, sesh2, batch_map, TMap_type, bin_size, PCfilter, plot_flag )
+function [ delta_angle, delta_pos, pos1, angles, delta_angle_shuf ] = ...
+    get_PF_angle_delta( ...
+    sesh1, sesh2, batch_map, TMap_type, bin_size, PCfilter, plot_flag, nshuf )
 % delta_angle = get_PF_angle_delta( sesh1, sesh2, neuron_map, ... )
 %   Gets the change in angle of place field centroids relative to the
-%   center of the arena between two sessions.
+%   center of the arena between two sessions. delta_angle, pos1, and angles
+%   outputs are vetted currently (2018APR19), delta_pos is not.  Nan values
+%   in delta_angle indicate that that neuron was active in one session but
+%   NOT above the speed threshold used to determine placefields. Inputs of
+%   TMap_type are either 'TMap_gauss' or 'TMap_unsmoothed'. These should be
+%   used with bin_size of 1 or 4 respectively. PCfilter is a boolean to
+%   only include neurons that are considered place cells in either session
+%   (p < 0.05).
 
 if nargin < 7
     plot_flag = false;
+    if nargin < 8
+        nshuf = 0;
+    end
 end
 
 sesh1 = complete_MD(sesh1); sesh2 = complete_MD(sesh2);
@@ -31,7 +42,11 @@ for j = 1:2
     elseif isnan(bin_size)
         file_load = 'Placefields.mat'; % Unrotated, unaligned, 1cm per bin standard TMaps
         stats_load = 'PlacefieldStats.mat';
+    elseif ischar(bin_size) % Allow user to append something to filename - hack, fix later
+        file_load = ['Placefields' bin_size '.mat'];
+        stats_load = ['PlacefieldStats' bin_size '.mat'];
     end
+    
     temp = load(fullfile(sessions(j).Location,file_load), TMap_type,'pval',...
         'x','y','PSAbool','cmperbin');
     load(fullfile(sessions(j).Location, stats_load),'PFcentroids')
@@ -40,7 +55,7 @@ for j = 1:2
     sessions(j).TMap = cellfun(@transpose, temp.(TMap_type),...
         'UniformOutput', false);
     num_trans = get_num_trans(temp.PSAbool);
-    sessions(j).pf_bool = temp.pval < 0.05 & num_trans >= 5;
+    sessions(j).pf_bool = temp.pval' < 0.05 & num_trans >= 5;
     sessions(j).x = temp.x;
     sessions(j).y = temp.y;
     sessions(j).PSAbool = temp.PSAbool;
@@ -88,6 +103,10 @@ angles(:,1) = sessions(1).PFangle2(valid_bool)';
 angles(:,2) = sessions(2).PFangle2(map_use(valid_bool))';
 delta_angle = diff(angles,1,2);
 delta_angle(delta_angle < 0) = delta_angle(delta_angle < 0) + 360;
+% Nan-value debugging - uncomment to examine why any NaN's are popping up.
+% if any(isnan(delta_angle))
+%     keyboard
+% end
 
 %% Calculate position difference 0 not vetted yet...
 pos = nan(2,sum(valid_bool),2);
@@ -96,7 +115,8 @@ pos(2,:,1:2) = sessions(2).PFpos(map_use(valid_bool),:);
 delta_pos = squeeze(diff(pos,1,1));
 pos1 = squeeze(pos(1,:,:));
 pos2 = squeeze(pos(2,:,:));
-%%
+
+%% Filter out place cells
 if PCfilter
     % get filter out place fields
     pf_bool = false(sum(valid_bool),2);
@@ -108,10 +128,33 @@ if PCfilter
     delta_pos = delta_pos(pf_either_bool);
     pos1 = pos1(pf_either_bool);
     pos2 = pos2(pf_either_bool);
+    angles = angles(pf_either_bool,:);
 
 end
 
+%% Last but not least, filter out any nan values (neurons that weren't active
+% above apeed threshold in one session)
+nan_bool = isnan(delta_angle);
+delta_angle = delta_angle(~nan_bool);
+delta_pos = delta_pos(~nan_bool);
+pos1 = pos1(~nan_bool);
+pos2 = pos2(~nan_bool);
+angles = angles(~nan_bool,:);
+
 pos_all = cat(3,pos1,pos2);
+
+%% Get shuffled delta_values
+delta_angle_shuf = nan(size(delta_angle,1),nshuf);
+ngood = size(angles,1);
+ang2 = angles(:,2);
+ang1 = angles(:,1);
+parfor j = 1:nshuf
+   ang2shuf = ang2(randperm(ngood)); %#ok<PFBNS>
+   delta_shuf_temp = ang1 - ang2shuf;
+   delta_shuf_temp(delta_shuf_temp < 0) = ...
+       delta_shuf_temp(delta_shuf_temp  < 0) + 360;
+   delta_angle_shuf(:,j) = delta_shuf_temp;
+end
 %% Plot to check if needed
 if plot_flag
     figure
