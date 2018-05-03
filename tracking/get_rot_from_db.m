@@ -15,18 +15,23 @@ function [ rot_to_corr_to_std, rot_from_std] = get_rot_from_db(db_struct )
 [~, db_struct] = ChangeDirectory(db_struct(1).Animal, db_struct(1).Date, ...
     db_struct(1).Session,0);
 
-if regexpi(db_struct(1).Notes,'90CW')
-    rot_to_corr_to_std = 90;
-    rot_from_std = 270;
-elseif regexpi(db_struct(1).Notes,'90CCW')
-    rot_to_corr_to_std = -90;
-    rot_from_std = 90;
-elseif regexpi(db_struct(1).Notes,'180')
-    rot_to_corr_to_std = 180;
-    rot_from_std = 180;
-else
+if isempty(db_struct(1).Notes)
     rot_to_corr_to_std = 0;
     rot_from_std = 0;
+else
+    if regexpi(db_struct(1).Notes,'90CW')
+        rot_to_corr_to_std = 90;
+        rot_from_std = 270;
+    elseif regexpi(db_struct(1).Notes,'90CCW')
+        rot_to_corr_to_std = -90;
+        rot_from_std = 90;
+    elseif regexpi(db_struct(1).Notes,'180')
+        rot_to_corr_to_std = 180;
+        rot_from_std = 180;
+    else
+        rot_to_corr_to_std = 0;
+        rot_from_std = 0;
+    end
 end
 
 
