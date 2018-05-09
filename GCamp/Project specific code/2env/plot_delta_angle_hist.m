@@ -21,6 +21,9 @@ ip.addParameter('nshuf',0,@isnumeric);
 ip.addParameter('plot_legend',true, @islogical);
 ip.addParameter('sig_thresh',0.05, @isnumeric); % significance thresh for p-value
 ip.addParameter('hist_binsize', 22.5, @numeric); % Bin size for histograms
+ip.addParameter('half_use', [nan nan], @(a) isnumeric(a) && ...
+    ((size(a,1) == 1 && size(a,2) == 2) || ...
+   (size(a,1) == 2 && size(a,2) == 1)));
 
 % cutoff for if pfs are considered coherent or no - also used to determine
 % significance: count # pf rots < coh_ang_thresh away from mean and compare
@@ -33,6 +36,7 @@ TMap_type = ip.Results.TMap_type;
 bin_size = ip.Results.bin_size;
 PCfilter = ip.Results.PCfilter;
 nshuf = ip.Results.nshuf;
+half_use = ip.Results.half_use;
 h = ip.Results.h;
 sig_thresh = ip.Results.sig_thresh;
 hist_binsize = ip.Results.hist_binsize;
@@ -63,7 +67,8 @@ s2_ind = get_session_index(sesh2,batch_session_map.session);
 
 % Get the differences in PF angle and position between the two sessions
 [delta_angle, delta_pos, pos1, ~, delta_angle_shuf] = get_PF_angle_delta(sesh1, ...
-    sesh2, batch_session_map, TMap_type, bin_size, PCfilter, false, nshuf);
+    sesh2, batch_session_map, TMap_type, bin_size, PCfilter, false, nshuf,...
+    half_use);
 
 % Count how many neurons are detected on each day and how many are not
 % active while the mouse is running on one day. This should be zero since

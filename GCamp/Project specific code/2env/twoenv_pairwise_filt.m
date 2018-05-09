@@ -6,8 +6,14 @@ function [ filt_bool ] = twoenv_pairwise_filt(base_sesh, sesh1, sesh2,...
 %   according to type (pval only, silent cells included, random remapping
 %   cells, etc.)
 
-pval_thresh = 0.05;
+
 ntrans_thresh = 5;
+pval_thresh = 0.05;
+if strcmpi(filt_type,'none')
+    ntrans_thresh = 1;
+    pval_thresh = 1;
+end
+
 
 half_flag = false;
 if exist('half_use','var')
@@ -53,7 +59,7 @@ ppass_either = (ppass1 | ppass2) & valid_bool'; % Include cells that pass inclus
 
 %% Perform filtering
 switch filt_type
-    case 'pval'
+    case {'pval', 'none'}
         filt_bool = ppass_either';
     case 'remap_only'
         filt_bool = ppass_either' & remap_bool;

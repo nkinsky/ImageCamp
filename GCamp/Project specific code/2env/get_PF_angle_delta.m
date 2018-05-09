@@ -1,6 +1,6 @@
 function [ delta_angle, delta_pos, pos1, angles, delta_angle_shuf ] = ...
-    get_PF_angle_delta( ...
-    sesh1, sesh2, batch_map, TMap_type, bin_size, PCfilter, plot_flag, nshuf )
+    get_PF_angle_delta( sesh1, sesh2, batch_map, TMap_type, bin_size, ...
+    PCfilter, plot_flag, nshuf, half_use )
 % delta_angle = get_PF_angle_delta( sesh1, sesh2, neuron_map, ... )
 %   Gets the change in angle of place field centroids relative to the
 %   center of the arena between two sessions. delta_angle, pos1, and angles
@@ -16,6 +16,9 @@ if nargin < 7
     plot_flag = false;
     if nargin < 8
         nshuf = 0;
+        if nargin < 9
+            half_use = [nan nan];
+        end
     end
 end
 
@@ -26,11 +29,15 @@ batch_map = fix_batch_session_map(batch_map);
 sesh_index = arrayfun(@(a) get_session_index(a, batch_map.session), sessions);
 [~, PFrot_use] = arrayfun(@get_rot_from_db, sessions);
 
-map_use = get_neuronmap_from_batchmap(batch_map.map, sesh_index(1), ...
+map_use = get_neuronmap_from_batchmap(batch_map, sesh_index(1), ...
     sesh_index(2));
 valid_bool = ~isnan(map_use) & (map_use ~= 0); % Get validly mapped neurons
 %%
 % rot_to_match = 0; % How much to rotate TMap to match actual trajectory
+
+% Check to see if sesh1 and sesh2 are the same
+% same_sesh = all([sesh1.Date == sesh2.Date, sesh1.Session == sesh2.Session, ...
+%     strcmpi(sesh1.Animal, sesh2.Animal)]);
 for j = 1:2
     % Load in transient maps
     if bin_size == 4
@@ -47,11 +54,18 @@ for j = 1:2
         stats_load = ['PlacefieldStats' bin_size '.mat'];
     end
     
+    if isnan(half_use(j))
     temp = load(fullfile(sessions(j).Location,file_load), TMap_type,'pval',...
         'x','y','PSAbool','cmperbin');
     load(fullfile(sessions(j).Location, stats_load),'PFcentroids')
     %     sessions(j).TMap = cellfun(@(a) rot90(a,rot_to_match)',temp.(TMap_type),...
     %         'UniformOutput',false);
+    elseif ~isnan(half_use(j))
+        load(fullfile(sessions(j).Location,file_load), 'Placefields_halves')
+        temp = Placefields_halves{half_use(j)};
+        load(fullfile(sessions(j).Location, stats_load),'Placefields_half_stats')
+        PFcentroids = Placefields_half_stats{half_use(j)}.PFcentroids; %#ok<*USENS>
+    end
     sessions(j).TMap = cellfun(@transpose, temp.(TMap_type),...
         'UniformOutput', false);
     num_trans = get_num_trans(temp.PSAbool);
@@ -60,7 +74,7 @@ for j = 1:2
     sessions(j).y = temp.y;
     sessions(j).PSAbool = temp.PSAbool;
     sessions(j).cmperbin = temp.cmperbin;
-    sessions(j).centroids = PFcentroids; %#ok<USENS>
+    sessions(j).centroids = PFcentroids; 
     
     % Get location of each neuron's peak calcium activity bin
     map_dim = size(sessions(1).TMap{1});
