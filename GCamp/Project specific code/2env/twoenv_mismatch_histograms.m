@@ -15,7 +15,7 @@ PCfilter = false;
 mismatch_cutoff = 22.5; % Used for calculating mismatches 
 nshuf = 1000;
 
-coh_ang_thresh = 45; % used for calculating significance values and # cells close to mean
+coh_ang_thresh = 30; % used for calculating significance values and # cells close to mean
 plot_hists = false; % true = plot histograms for all mice/session-pairs
 plot_entry = false; % true = plot entry breakdown for all animals
 %% Calculate rotation angles for all square session-pairs
@@ -34,17 +34,19 @@ mismatch_bool_all_sq = false(4,8,8);
 delta_angle_med_sq = nan(4,8,8);
 arena_rot_sq = nan(4,8,8);
 pshuf_sq = nan(4,8,8);
-ncell_sq = nan(4,8,8);
+ncells_sq = nan(4,8,8);
+coh_ratio_sq = nan(4,8,8);
 tic
 for j = 1:4
     [~, delta_angle_med_sq(j,:,:), arena_rot_sq(j,:,:), pshuf_sq(j,:,:), ...
-        ncell_sq(j,:,:)] = plot_pfangle_batch(all_square2(j,:), [], nshuf,...
-        PCfilter, coh_ang_thresh, plot_hists);
+        ncells_sq(j,:,:), coh_ratio_sq(j,:,:)] = plot_pfangle_batch(...
+        all_square2(j,:), [], nshuf, PCfilter, coh_ang_thresh, plot_hists);
     if plot_hists
         printNK(['Square pf_rot_histograms - Mouse ' num2str(j) '_PF' ...
             num2str(PCfilter) '_cohthresh' num2str(round(coh_ang_thresh))],'2env')
     end
 end 
+toc
 %% Classify square session-pairs
 % Figure out a global remapping metric here and apply it!!! 
 gr_bool_sq = pshuf_sq > 0.05/28; % Get global remapping session-pairs
@@ -72,10 +74,12 @@ mismatch_bool_all_oct = false(4,8,8);
 delta_angle_med_oct = nan(4,8,8);
 arena_rot_oct = nan(4,8,8);
 pshuf_oct = nan(4,8,8);
-ncell_oct = nan(4,8,8);
+ncells_oct = nan(4,8,8);
+coh_ratio_oct = nan(4,8,8);
+tic
 for j = 1:4
     [~, delta_angle_med_oct(j,:,:), arena_rot_oct(j,:,:), pshuf_oct(j,:,:),...
-        ncell_oct(j,:,:)] = ...
+        ncells_oct(j,:,:), coh_ratio_oct(j,:,:)] = ...
         plot_pfangle_batch(all_oct2(j,:), [], nshuf, PCfilter, ...
         coh_ang_thresh, plot_hists);
     if plot_hists
@@ -111,10 +115,12 @@ end
 delta_angle_med_c2s = nan(4,8,8);
 arena_rot_c2s = nan(4,8,8);
 pshuf_c2s = nan(4,8,8);
-ncell_c2s = nan(4,8,8);
+ncells_c2s = nan(4,8,8);
+coh_ratio_c2s = nan(4,8,8);
+tic
 for j = 1:4
     [~, delta_angle_med_c2s(j,:,:), arena_rot_c2s(j,:,:), pshuf_c2s(j,:,:),...
-        ncell_c2s(j,:,:)] = ...
+        ncells_c2s(j,:,:), coh_ratio_c2s(j,:,:)] = ...
     plot_pfangle_batch(all_square2(j,:), all_oct2(j,:), nshuf,...
         PCfilter, coh_ang_thresh, plot_hists);
     if plot_hists
@@ -125,6 +131,11 @@ end
 toc
 
 gr_bool_c2s = pshuf_c2s > 0.05/64;
+
+save(fullfile(ChangeDirectory_NK(G30_square(1),0),...
+    ['2env_misma_coh' num2str(round(coh_ang_thresh)) '_shuf' ...
+    num2str(nshuf) '-' datestr(now,29) '.mat']),'ncells_sq','coh_ratio_sq',...
+    'ncells_oct','coh_ratio_oct','ncells_c2s','coh_ratio_c2s')
 %% Calculate how much each mouse uses right angles to orient each map
 right_lims = repmat((0:90:360)',1,2)+ [-22.5 22.5];
 sq_rightang_bool = cellfun(@(a) bw_bool(a,right_lims),...

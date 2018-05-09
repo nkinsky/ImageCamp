@@ -77,7 +77,7 @@ for pp = 1 %1:2 % 1 is at optimal rotation, 2 is at local cue rotation
     end
     for j = animal_start:num_animals
         for m = 1:3 % square, circ, circ2square
-            for k = 2 %1:length(sil_thresh_use) % 1:3 silenthresh = nan, 0, or 1
+            for k = 1:length(sil_thresh_use) % 1:3 silenthresh = nan, 0, or 1
                 
                 sesh_use = Mouse(j).sesh.(sesh_type{m});
                 best_angle_use = Mouse(j).best_angle.(sesh_type{m});
