@@ -15,7 +15,7 @@ ip = inputParser;
 ip.addRequired('MDbase',@isstruct);
 ip.addRequired('MDreg',@isstruct);
 ip.addParameter('batch_map',[], @(a) isempty(a) || isstruct(a)); % specify to use batch map instead of pairwise reg
-ip.KeepUnmatched = true;
+ip.KeepUnmatched = true; % pass on any varargins to neuron_register if needs be.
 ip.parse(MDbase,MDreg,varargin{:});
 batch_map = ip.Results.batch_map;
 

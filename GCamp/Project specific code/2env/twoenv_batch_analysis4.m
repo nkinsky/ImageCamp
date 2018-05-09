@@ -286,11 +286,11 @@ p.stop;
 dispNK('Running PV analysis at best angle for connected session by halves')
 half_use = [1 1 2 2 1 1 2 2];
 filters_use = {'pval', 'coherent_only', 'remap_only', 'silent_only', 'no_coherent',...
-    'no_remap', 'no_silent'}; 
+    'no_remap', 'no_silent', 'none'}; 
 p = ProgressBar(num_animals*length(filters_use));
 num_shuffles = 0;
 for j = 1:num_animals
-    for k = 1:length(filters_use)
+    for k = length(filters_use) % just 'none' filter %1:length(filters_use) % all filters
         if strcmpi(filters_use{k},'pval')
             num_shuffles = 1000;
         else

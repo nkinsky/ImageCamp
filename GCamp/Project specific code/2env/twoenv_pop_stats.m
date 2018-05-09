@@ -50,6 +50,7 @@ ncells_all = cat(1, ncells_sq, ncells_oct);
 oct_time_mat = shiftdim(repmat(make_timediff_mat(G30_oct),1,1,4),2);
 sq_time_mat = shiftdim(repmat(make_timediff_mat(G30_square),1,1,4),2);
 all_time_mat = cat(1,sq_time_mat,oct_time_mat);
+
 %% Time plots
 try close(401); end %#ok<*TRYNC>
 [gp_sq, ug_sq, ind_sq] = group_mat(coh_ratio_sq, sq_time_mat);
