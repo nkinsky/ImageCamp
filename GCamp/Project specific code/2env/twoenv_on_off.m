@@ -14,7 +14,7 @@
 % remapping sessions on the same day (maybe 1-3 days lag?). 
 % Show that there is no difference for local vs mismatch pairs.
 
-load_existing = false; % Set to false if you want to run from scratch, true = run existing files
+load_existing = true; % Set to false if you want to run from scratch, true = run existing files
 
 
 %% Get silent/new cells for square
@@ -171,14 +171,14 @@ day6 = squeeze(cell_cat_breakdown_c2s(:,6,6,:))./...
 connday_breakdown = cat(1,day5,day6);
 
 figure(302)
-set (gcf,'Position', [2026, 54, 894, 800])
-subplot(2,2,1)
+set (gcf,'Position', [2025, 50, 1350, 800])
+subplot(2,3,1)
 bar(mean(connday_breakdown,1)); xlim([0 5]);
 xvals = repmat(1:4,size(connday_breakdown,1),1);
 xvaloff = xvals + randn(size(xvals))*0.02;
 hold on
 scatter(xvaloff(:), connday_breakdown(:))
-set(gca,'XTickLabels',{'Coh', 'Gl. Remap', 'On', 'Off'})
+set(gca,'XTickLabels',{'Coh', 'Rand. Remap', 'On', 'Off'})
 title('Cell Class circ2square on CONN1 and CONN2')
 ylabel('Proportion')
 
@@ -192,38 +192,41 @@ sq3 = reshape(cell_cat_breakdown_sq(:,7,8,:),[],4);
 oct1 = reshape(cell_cat_breakdown_oct(:,1,2,:),[],4);
 oct2 = reshape(cell_cat_breakdown_oct(:,3,4,:),[],4);
 oct3 = reshape(cell_cat_breakdown_oct(:,7,8,:),[],4);
-win0_all = cat(1, sq1, sq2, sq3,oct1, oct2, oct3);
+win0_all = cat(1, sq1, sq2, sq3, oct1, oct2, oct3);
 win0_all_prop = win0_all./sum(win0_all,2);
+win0_day3_prop = win0_all_prop([9:12, 21:24],:);
 
-subplot(2,2,2)
+subplot(2,3,2)
 bar(mean(win0_all_prop,1)); xlim([0 5]);
 xvals = repmat(1:4,size(win0_all_prop,1),1);
 xvaloff = xvals + randn(size(xvals))*0.02;
 hold on
-scatter(xvaloff(:), win0_all_prop(:))
-set(gca,'XTickLabels',{'Coh', 'Gl. Remap', 'On', 'Off'})
+hb = scatter(xvaloff(:), win0_all_prop(:));
+xvaloff3 = xvaloff([9:12, 21:24],:);
+ha = scatter(xvaloff3(:),win0_day3_prop(:),[],'r');
+set(gca,'XTickLabels',{'Coh', 'Rand. Remap', 'On', 'Off'})
 title('Cell Class within arena same day')
 ylabel('Proportion')
+legend(cat(1,ha,hb),{'Bef. Conn', 'Aft. Conn'})
 
-% MMake plot for same arena 1 days apart (octagon only) - this is not
-% correct - need more sessions!
-win1_1 = reshape(cell_cat_breakdown_oct(:,2:3,2:3,:),[],4);
-win1_2 = reshape(cell_cat_breakdown_oct(:,[2 4],[2 4],:),[],4);
-win1_3 = reshape(cell_cat_breakdown_oct(:,[1 4],[1 4],:),[],4);
-win1_4 = reshape(cell_cat_breakdown_oct(:,[1 3],[1 3],:),[],4);
-win1_all = cat(1, win1_1, win1_2, win1_3, win1_4);
-win1_all_prop = win1_all./sum(win1_all,2);
-
-subplot(2,2,4)
-hold off
-bar(nanmean(win1_all_prop,1)); xlim([0 5]);
-xvals = repmat(1:4,size(win1_all_prop,1),1);
-xvaloff = xvals + randn(size(xvals))*0.02;
+% Combine same day plots into one plot - note that same arena comparisons
+% are for individual arenas only whereas different arena comparisons are on
+% connected days only
+subplot(2,3,3)
+hbar = bar([mean(win0_all_prop,1); mean(connday_breakdown,1) ]' ); xlim([0 5]);
 hold on
-scatter(xvaloff(:), win1_all_prop(:))
-set(gca,'XTickLabels',{'Coh', 'Gl. Remap', 'On', 'Off'})
-title('Cell Class within arena 1 day apart')
+xvals = repmat(1:4,size(win0_all_prop,1),1);
+xvaloff = xvals + randn(size(xvals))*0.02 + hbar(1).XOffset;
+scatter(xvaloff(:), win0_all_prop(:),[],'k');
+xvals = repmat(1:4,size(connday_breakdown,1),1);
+xvaloff = xvals + randn(size(xvals))*0.02+hbar(2).XOffset;
+scatter(xvaloff(:), connday_breakdown(:),[],'k')
+set(gca,'XTickLabels',{'Coh', 'Rand. Remap', 'On', 'Off'})
+title('Cell Class - Same Day (Diff Arena connected)')
 ylabel('Proportion')
+hchance = plot([-0.4 0 0 0.4]+hbar(1).XData(1), [ones(1,2)*sum(hbar(1).YData(1:2))/6 ,...
+    ones(1,2)*sum(hbar(2).YData(1:2))/6],'k--');
+legend(cat(2,hbar,hchance),{'Same Arena', 'Diff. Arena', 'Chance'})
 
 % Make plot for c2s 1 day apart
 c2s1 = reshape(cell_cat_breakdown_c2s(:,1:2,1:2,:),[],4);
@@ -231,19 +234,62 @@ c2s2 = reshape(cell_cat_breakdown_c2s(:,3:4,3:4,:),[],4);
 c2s3 = reshape(cell_cat_breakdown_c2s(:,7:8,7:8,:),[],4);
 c2s1_all = cat(1,c2s1,c2s2,c2s3);
 c2s1_all_prop = c2s1_all./sum(c2s1_all,2);
+c2s1_aft_prop = c2s1_all_prop(33:48,:);
 
-subplot(2,2,3)
+subplot(2,3,4)
 bar(mean(c2s1_all_prop,1)); xlim([0 5]);
 xvals = repmat(1:4,size(c2s1_all_prop,1),1);
 xvaloff = xvals + randn(size(xvals))*0.02;
 hold on
-scatter(xvaloff(:), c2s1_all_prop(:))
-set(gca,'XTickLabels',{'Coh', 'Gl. Remap', 'On', 'Off'})
+hb = scatter(xvaloff(:), c2s1_all_prop(:));
+xvaloffa = xvaloff(33:48,:);
+ha = scatter(xvaloffa(:),c2s1_aft_prop(:),[],'r');
+legend(cat(1,hb,ha),{'Bef.Conn','Aft. Conn'})
+set(gca,'XTickLabels',{'Coh', 'Rand. Remap', 'On', 'Off'})
 title('Cell Class circ2square Sq1 v Cir1, Sq2 v Cir2, Sq3 v Cir3')
 ylabel('Proportion')
 
 [pc2s1, ~, statc2s1] = kruskalwallis(c2s1_all_prop(:), xvals(:), 'off');
 c_c2s1 = multcompare(statsconn,'display','off');
+
+% Make plot for same arena 1 days apart (octagon only)
+win1_1 = reshape(cell_cat_breakdown_oct(:,2:3,2:3,:),[],4);
+win1_2 = reshape(cell_cat_breakdown_oct(:,[2 4],[2 4],:),[],4);
+win1_3 = reshape(cell_cat_breakdown_oct(:,[1 4],[1 4],:),[],4);
+win1_4 = reshape(cell_cat_breakdown_oct(:,[1 3],[1 3],:),[],4);
+win1_all = cat(1, win1_1, win1_2, win1_3, win1_4);
+win1_all_prop = win1_all./sum(win1_all,2);
+
+subplot(2,3,5)
+hold off
+bar(nanmean(win1_all_prop,1)); xlim([0 5]);
+xvals = repmat(1:4,size(win1_all_prop,1),1);
+xvaloff = xvals + randn(size(xvals))*0.02;
+hold on
+scatter(xvaloff(:), win1_all_prop(:))
+set(gca,'XTickLabels',{'Coh', 'Rand. Remap', 'On', 'Off'})
+title('Cell Class within arena 1 day apart')
+ylabel('Proportion')
+
+% Combine 1 day plots - split this into two separate plots if you decide to
+% include it (left = coh vs rand remap , y-axis = propotion of COACTIVE
+% cells, right = on/off, y-axis = proportion of TOTAL cells
+subplot(2,3,6)
+hbar = bar([nanmean(win1_all_prop,1); mean(c2s1_all_prop,1)]' ); xlim([0 5]);
+hold on
+xvals = repmat(1:4,size(win1_all_prop,1),1);
+xvaloff = xvals + randn(size(xvals))*0.02 + hbar(1).XOffset;
+scatter(xvaloff(:), win1_all_prop(:),[],'k')
+xvals = repmat(1:4,size(c2s1_all_prop,1),1);
+xvaloff = xvals + randn(size(xvals))*0.02 + hbar(2).XOffset;
+scatter(xvaloff(:), c2s1_all_prop(:),[],'k');
+hchance = plot([-0.4 0 0 0.4]+hbar(1).XData(1), [ones(1,2)*sum(hbar(1).YData(1:2))/6 ,...
+    ones(1,2)*sum(hbar(2).YData(1:2))/6],'k--');
+legend(cat(2,hbar,hchance),{'Same Arena', 'Diff. Arena', 'Chance'})
+set(gca,'XTickLabels',{'Coh', 'Rand. Remap', 'On', 'Off'})
+title('Cell Class 1 day apart')
+ylabel('Proportion')
+
 
 %% Should probably only do comparison of on/off vs global remap vs coherent for
 % connected days since only there can I do same day comparisons without
@@ -299,7 +345,7 @@ for m = 0:1
     for j = 1:4
         filt_use = 'none';
         PVmax = squeeze(nanmax(reshape(Mouseconn.Mouse(j).PV.connfilt.(filt_use),8,[],...
-            size(Mouse(j).PV.connfilt.(filt_use),4)),[],2));
+            size(Mouseconn.Mouse(j).PV.connfilt.(filt_use),4)),[],2));
         for k = 1:2
             DItemp = get_discr_ratio(PVmax(mat_ind_win(k,1)+4*m,:), ...
                 PVmax(mat_ind_win(k,2)+4*m,:));
@@ -347,41 +393,95 @@ conn_bw_prop = conn_bw_breakdown./sum(conn_bw_breakdown,2);
 
 try close(303); end
 figure(303)
-set (gcf,'Position', [2026, 54, 1020, 800])
+set (gcf,'Position', [2026, 54, 1500, 800])
 
-subplot(2,2,1)
+subplot(2,3,1)
 bar(mean(conn_win_prop,1)); xlim([0 5]);
 xvals = repmat(1:4,size(conn_win_prop,1),1);
 xvaloff = xvals + randn(size(xvals))*0.02;
 hold on
 scatter(xvaloff(:), conn_win_prop(:))
-set(gca,'XTickLabels',{'Coh', 'Gl. Remap', 'On', 'Off'})
+set(gca,'XTickLabels',{'Coh', 'Rand. Remap', 'On', 'Off'})
 title('Cell Class Same Arena CONN1 CONN2')
 ylabel('Proportion')
 
-subplot(2,2,2)
+subplot(2,3,2)
 bar(mean(conn_bw_prop,1)); xlim([0 5]);
 xvals = repmat(1:4,size(conn_bw_prop,1),1);
 xvaloff = xvals + randn(size(xvals))*0.02;
 hold on
 scatter(xvaloff(:), conn_bw_prop(:))
-set(gca,'XTickLabels',{'Coh', 'Gl. Remap', 'On', 'Off'})
+set(gca,'XTickLabels',{'Coh', 'Rand. Remap', 'On', 'Off'})
 title('Cell Class Diff Arena CONN1 CONN2')
 ylabel('Proportion')
 
-subplot(2,2,3)
-h = bar([mean(conn_win_prop,1); mean(conn_bw_prop,1)]'); xlim([0 5]);
+subplot(2,3,3)
+hbar = bar([mean(conn_win_prop,1); mean(conn_bw_prop,1)]'); xlim([0 5]);
 xvals = repmat(1:4,size(conn_win_prop,1),1);
-xvaloff = xvals + randn(size(xvals))*0.02 + h(1).XOffset;
+xvaloff = xvals + randn(size(xvals))*0.02 + hbar(1).XOffset;
 hold on
-scatter(xvaloff(:), conn_win_prop(:), 'ko')
+hwin = scatter(xvaloff(:), conn_win_prop(:), 'ko');
 xvals = repmat(1:4,size(conn_bw_prop,1),1);
-xvaloff = xvals + randn(size(xvals))*0.02 + h(2).XOffset;
-scatter(xvaloff(:), conn_bw_prop(:), 'ko')
+xvaloff = xvals + randn(size(xvals))*0.02 + hbar(2).XOffset;
+hbw = scatter(xvaloff(:), conn_bw_prop(:), 'ko');
 
-set(gca,'XTickLabels',{'Coh', 'Gl. Remap', 'On', 'Off'})
+set(gca,'XTickLabels',{'Coh', 'Rand. Remap', 'On', 'Off'})
 title('Cell Class CONN1 CONN2')
 ylabel('Proportion')
-legend(h,'Same Arena', 'Diff Arena')
+hchance = plot([-0.4 0 0 0.4]+hbar(1).XData(1), [ones(1,2)*sum(hbar(1).YData(1:2))/6 ,...
+    ones(1,2)*sum(hbar(2).YData(1:2))/6],'k--');
+legend(cat(2,hbar,hchance),{'Same Arena', 'Diff. Arena', 'Chance'})
+make_plot_pretty(gca)
+hwin.MarkerEdgeAlpha = 0.5;
+hwin.SizeData = 24;
+hbw.MarkerEdgeAlpha = 0.5;
+hbw.SizeData = 24;
 
+subplot(2,3,4)
+text(-0.2, 0.9, 'Pop. significantly reorganizes')
+text(-0.2, 0.8, 'Dec. Coh. pop, incr. rand remap , incr. on/off')
+text(-0.2, 0.7, 'Still, a majority of sessions mainted a significant coherent population')
+text(-0.2, 0.6, 'incr in on/off consistent with Leutgeb, but Ca2+ imaging underestimates rate remap')
+text(-0.2, 0.5, '& only captures extreme rate changes')
+text(-0.2, 0.4, 'however, decreased PV corrs on conn day reflect more subtle event rate changes')
+axis off
+
+% run stats
+[~,pcoh] = ttest2(conn_win_prop(:,1),conn_bw_prop(:,1));
+[~,pgr] = ttest2(conn_win_prop(:,2),conn_bw_prop(:,2));
+[~,pon] = ttest2(conn_win_prop(:,3),conn_bw_prop(:,3));
+[~,poff] = ttest2(conn_win_prop(:,4),conn_bw_prop(:,4));
+[~,ponoff_win] = ttest2(conn_win_prop(:,3),conn_win_prop(:,4));
+[~,ponoff_bw] = ttest2(conn_bw_prop(:,3),conn_bw_prop(:,4));
+
+subplot(2,3,5)
+title('t-test results')
+text(0.1,0.9,['p_{coh} diff = ' num2str(pcoh,'%0.3g')])
+text(0.1,0.8,['p_{gr} diff = ' num2str(pgr,'%0.3g')])
+text(0.1,0.7,['p_{on} diff = ' num2str(pon,'%0.3g')])
+text(0.1,0.6,['p_{off} diff = ' num2str(poff,'%0.3g')])
+text(0.1,0.5,['p_{on~=off,win} = ' num2str(ponoff_win,'%0.3g')])
+text(0.1,0.4,['p_{on~=off,bw} = ' num2str(ponoff_bw,'%0.3g')])
+axis off
+
+pcoh_rks = ranksum(conn_win_prop(:,1),conn_bw_prop(:,1));
+pgr_rks = ranksum(conn_win_prop(:,2),conn_bw_prop(:,2));
+pon_rks = ranksum(conn_win_prop(:,3),conn_bw_prop(:,3));
+poff_rks = ranksum(conn_win_prop(:,4),conn_bw_prop(:,4));
+ponoff_win_rks = ranksum(conn_win_prop(:,3),conn_win_prop(:,4));
+ponoff_bw_rks = ranksum(conn_bw_prop(:,3),conn_bw_prop(:,4));
+pcoh_win = signtest(conn_win_prop(:,1), sum(hbar(1).YData(1:2))/6);
+pcoh_bw = signtest(conn_bw_prop(:,1), sum(hbar(2).YData(1:2))/6);
+
+subplot(2,3,6)
+title('ranksum test results')
+text(0.1,0.9,['p_{coh} diff = ' num2str(pcoh_rks,'%0.3g')])
+text(0.1,0.8,['p_{gr} diff = ' num2str(pgr_rks,'%0.3g')])
+text(0.1,0.7,['p_{on} diff = ' num2str(pon_rks,'%0.3g')])
+text(0.1,0.6,['p_{off} diff = ' num2str(poff_rks,'%0.3g')])
+text(0.1,0.5,['p_{on~=off,win} = ' num2str(ponoff_win_rks,'%0.3g')])
+text(0.1,0.4,['p_{on~=off,bw} = ' num2str(ponoff_bw_rks,'%0.3g')])
+text(0.1,0.3, ['p_{coh,win} > chance = ' num2str(pcoh_win, '%0.3g')])
+text(0.1,0.2, ['p_{coh,bw} > chance = ' num2str(pcoh_bw, '%0.3g')])
+axis off
 
