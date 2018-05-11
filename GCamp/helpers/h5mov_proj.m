@@ -1,4 +1,4 @@
-function [ proj_out] = h5mov_proj( moviefile, proj_type)
+function [ proj_out ] = h5mov_proj( moviefile, proj_type)
 % proj_out = h5mov_proj( moviefile, proj_type)
 %   Create a 'max' or 'min' projection of an h5 movie (or tif/tiff now!)
 
