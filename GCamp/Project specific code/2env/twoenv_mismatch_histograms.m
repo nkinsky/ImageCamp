@@ -10,13 +10,14 @@
 % ne21 = length(edges2);
 % ne3 = length(edges3);
 % ne4 = length(edges4);
+ppp = mfilename;
 
 PCfilter = false;
 mismatch_cutoff = 22.5; % Used for calculating mismatches 
 nshuf = 1000;
 
 coh_ang_thresh = 30; % used for calculating significance values and # cells close to mean
-plot_hists = false; % true = plot histograms for all mice/session-pairs
+plot_hists = true; % true = plot histograms for all mice/session-pairs
 plot_entry = false; % true = plot entry breakdown for all animals
 %% Calculate rotation angles for all square session-pairs
 % Shuffle, get p value, and apply CIs from shuffled data! - shuffle cell
@@ -253,14 +254,14 @@ pmmdiff_rot = ranksum(squeeze(comb_breakdownw(:,2,1)),...
 pdistdiff_rot = ranksum(squeeze(comb_breakdownw(:,3,1)),...
     squeeze(comb_breakdownw(:,3,2)));
 
-text(0.6,0.7,['1v2 p = ' num2str(c(1,6),'%0.2f')])
-text(0.1,0.5,['1v3 p = ' num2str(c(2,6),'%0.2f')])
-text(0.6,0.5,['2v3 p = ' num2str(c(3,6),'%0.2f')])
-text(0.1,0.7,['pkw = ' num2str(pkw,'%0.2f')])
+text(0.6,0.7,['1v2 p = ' num2str(c(1,6),'%0.2g')])
+text(0.1,0.5,['1v3 p = ' num2str(c(2,6),'%0.2g')])
+text(0.6,0.5,['2v3 p = ' num2str(c(3,6),'%0.2g')])
+text(0.1,0.7,['pkw = ' num2str(pkw,'%0.2g')])
 text(0.1,0.3,'Cir v Sq diff?')
-text(0.6,0.3,['ploc\_diff = ' num2str(plcdiff_rot,'%0.2f')])
-text(0.1,0.1,['ploc\_diff = ' num2str(pmmdiff_rot,'%0.2f')])
-text(0.6,0.1,['pdist\_diff = ' num2str(pdistdiff_rot,'%0.2f')])
+text(0.6,0.3,['ploc\_diff = ' num2str(plcdiff_rot,'%0.2g')])
+text(0.1,0.1,['pmm\_diff = ' num2str(pmmdiff_rot,'%0.2g')])
+text(0.6,0.1,['pdist\_diff = ' num2str(pdistdiff_rot,'%0.2g')])
 title('KW test with post-hoc Tukey HSD')
 axis off
 
@@ -300,14 +301,14 @@ pmmdiff_nrot = ranksum(squeeze(comb_breakdownw(:,2,1)),...
 pdistdiff_nrot = ranksum(squeeze(comb_breakdownw(:,3,1)),...
     squeeze(comb_breakdownw(:,3,2)));
 
-text(0.6,0.7,['1v2 p = ' num2str(c(1,6),'%0.2f')])
-text(0.1,0.5,['1v3 p = ' num2str(c(2,6),'%0.2f')])
-text(0.6,0.5,['2v3 p = ' num2str(c(3,6),'%0.2f')])
-text(0.1,0.7,['pkw = ' num2str(pkw,'%0.2f')])
+text(0.6,0.7,['1v2 p = ' num2str(c(1,6),'%0.2g')])
+text(0.1,0.5,['1v3 p = ' num2str(c(2,6),'%0.2g')])
+text(0.6,0.5,['2v3 p = ' num2str(c(3,6),'%0.2g')])
+text(0.1,0.7,['pkw = ' num2str(pkw,'%0.2g')])
 text(0.1,0.3,'Cir v Sq diff?')
-text(0.6,0.3,['ploc\_diff = ' num2str(plcdiff_nrot,'%0.2f')])
-text(0.1,0.1,['ploc\_diff = ' num2str(pmmdiff_nrot,'%0.2f')])
-text(0.6,0.1,['pdist\_diff = ' num2str(pdistdiff_nrot,'%0.2f')])
+text(0.6,0.3,['ploc\_diff = ' num2str(plcdiff_nrot,'%0.2g')])
+text(0.1,0.1,['pmm\_diff = ' num2str(pmmdiff_nrot,'%0.2g')])
+text(0.6,0.1,['pdist\_diff = ' num2str(pdistdiff_nrot,'%0.2g')])
 title('KW test with post-hoc Tukey HSD')
 axis off
 
