@@ -125,7 +125,7 @@ end
 load(fullfile(ChangeDirectory_NK(G30_square(1),0),...
     '2env_popstats_coh30_shuf1000-2018-05-05.mat'));
 
-cell_cat_breakdown_c2s = nan(4,8,8,4); % mice x sesh_sq x sesh_oct x cat (ncoh, ngr, n_on, n_off)
+cell_cat_breakdown_conn12 = nan(4,8,8,4); % mice x sesh_sq x sesh_oct x cat (ncoh, ngr, n_on, n_off)
 for j = 1:4
     ncoh = squeeze(coh_ratio_c2s(j,:,:)).*squeeze(ncells_c2s(j,:,:)); % c
     ngr = squeeze(ncells_c2s(j,:,:)) - ncoh;
@@ -133,7 +133,7 @@ for j = 1:4
     n_off = cellfun(@(a) sum(a == -1), Mouse(j).DI.circ2square(1).DI(1:8,1:8));
     nsilent = cellfun(@length, squeeze(become_silent_c2s(j,:,:)));
     nnew = cellfun(@length, squeeze(new_cells_c2s(j,:,:)));
-    cell_cat_breakdown_c2s(j,:,:,:) = cat(3,ncoh,ngr, n_on + nnew, n_off + nsilent);
+    cell_cat_breakdown_conn12(j,:,:,:) = cat(3,ncoh,ngr, n_on + nnew, n_off + nsilent);
 end
 
 cell_cat_breakdown_sq = nan(4,8,8,4); % mice x sesh_sq x sesh_sq x cat (ncoh, ngr, n_on, n_off)
@@ -164,15 +164,15 @@ end
 
 %% Make plot for connected day
 try close(302); end
-day5 = squeeze(cell_cat_breakdown_c2s(:,5,5,:))./...
-    sum(squeeze(cell_cat_breakdown_c2s(:,5,5,:)),2);
-day6 = squeeze(cell_cat_breakdown_c2s(:,6,6,:))./...
-    sum(squeeze(cell_cat_breakdown_c2s(:,6,6,:)),2);
+day5 = squeeze(cell_cat_breakdown_conn12(:,5,5,:))./...
+    sum(squeeze(cell_cat_breakdown_conn12(:,5,5,:)),2);
+day6 = squeeze(cell_cat_breakdown_conn12(:,6,6,:))./...
+    sum(squeeze(cell_cat_breakdown_conn12(:,6,6,:)),2);
 connday_breakdown = cat(1,day5,day6);
 
 figure(302)
-set (gcf,'Position', [2025, 50, 1350, 800])
-subplot(2,3,1)
+set (gcf,'Position', [2025, 50, 1890, 800])
+subplot(2,4,1)
 bar(mean(connday_breakdown,1)); xlim([0 5]);
 xvals = repmat(1:4,size(connday_breakdown,1),1);
 xvaloff = xvals + randn(size(xvals))*0.02;
@@ -196,7 +196,7 @@ win0_all = cat(1, sq1, sq2, sq3, oct1, oct2, oct3);
 win0_all_prop = win0_all./sum(win0_all,2);
 win0_day3_prop = win0_all_prop([9:12, 21:24],:);
 
-subplot(2,3,2)
+subplot(2,4,2)
 bar(mean(win0_all_prop,1)); xlim([0 5]);
 xvals = repmat(1:4,size(win0_all_prop,1),1);
 xvaloff = xvals + randn(size(xvals))*0.02;
@@ -212,31 +212,58 @@ legend(cat(1,ha,hb),{'Bef. Conn', 'Aft. Conn'})
 % Combine same day plots into one plot - note that same arena comparisons
 % are for individual arenas only whereas different arena comparisons are on
 % connected days only
-subplot(2,3,3)
+subplot(2,4,3)
 hbar = bar([mean(win0_all_prop,1); mean(connday_breakdown,1) ]' ); xlim([0 5]);
 hold on
 xvals = repmat(1:4,size(win0_all_prop,1),1);
 xvaloff = xvals + randn(size(xvals))*0.02 + hbar(1).XOffset;
-scatter(xvaloff(:), win0_all_prop(:),[],'k');
+hwin = scatter(xvaloff(:), win0_all_prop(:),[],'k');
 xvals = repmat(1:4,size(connday_breakdown,1),1);
 xvaloff = xvals + randn(size(xvals))*0.02+hbar(2).XOffset;
-scatter(xvaloff(:), connday_breakdown(:),[],'k')
+hbw = scatter(xvaloff(:), connday_breakdown(:),[],'k');
 set(gca,'XTickLabels',{'Coh', 'Rand. Remap', 'On', 'Off'})
 title('Cell Class - Same Day (Diff Arena connected)')
 ylabel('Proportion')
 hchance = plot([-0.4 0 0 0.4]+hbar(1).XData(1), [ones(1,2)*sum(hbar(1).YData(1:2))/6 ,...
     ones(1,2)*sum(hbar(2).YData(1:2))/6],'k--');
 legend(cat(2,hbar,hchance),{'Same Arena', 'Diff. Arena', 'Chance'})
+make_plot_pretty(gca)
+hwin.MarkerEdgeAlpha = 0.5;
+hwin.SizeData = 24;
+hbw.MarkerEdgeAlpha = 0.5;
+hbw.SizeData = 24;
+
+% Run stats on above
+pcoh_rks = ranksum(win0_all_prop(:,1),connday_breakdown(:,1));
+pgr_rks = ranksum(win0_all_prop(:,2),connday_breakdown(:,2));
+pon_rks = ranksum(win0_all_prop(:,3),connday_breakdown(:,3));
+poff_rks = ranksum(win0_all_prop(:,4),connday_breakdown(:,4));
+ponoff_win_rks = ranksum(win0_all_prop(:,3),win0_all_prop(:,4));
+ponoff_bw_rks = ranksum(connday_breakdown(:,3),connday_breakdown(:,4));
+pcoh_win = signtest(win0_all_prop(:,1), sum(hbar(1).YData(1:2))/6);
+pcoh_bw = signtest(connday_breakdown(:,1), sum(hbar(2).YData(1:2))/6);
+
+subplot(2,4,4)
+title('ranksum test results')
+text(0.1,0.9,['p_{coh} diff = ' num2str(pcoh_rks,'%0.3g')])
+text(0.1,0.8,['p_{gr} diff = ' num2str(pgr_rks,'%0.3g')])
+text(0.1,0.7,['p_{on} diff = ' num2str(pon_rks,'%0.3g')])
+text(0.1,0.6,['p_{off} diff = ' num2str(poff_rks,'%0.3g')])
+text(0.1,0.5,['p_{on~=off,win} = ' num2str(ponoff_win_rks,'%0.3g')])
+text(0.1,0.4,['p_{on~=off,bw} = ' num2str(ponoff_bw_rks,'%0.3g')])
+text(0.1,0.3, ['p_{coh,win} > chance = ' num2str(pcoh_win, '%0.3g')])
+text(0.1,0.2, ['p_{coh,bw} > chance = ' num2str(pcoh_bw, '%0.3g')])
+axis off
 
 % Make plot for c2s 1 day apart
-c2s1 = reshape(cell_cat_breakdown_c2s(:,1:2,1:2,:),[],4);
-c2s2 = reshape(cell_cat_breakdown_c2s(:,3:4,3:4,:),[],4);
-c2s3 = reshape(cell_cat_breakdown_c2s(:,7:8,7:8,:),[],4);
+c2s1 = reshape(cell_cat_breakdown_conn12(:,1:2,1:2,:),[],4);
+c2s2 = reshape(cell_cat_breakdown_conn12(:,3:4,3:4,:),[],4);
+c2s3 = reshape(cell_cat_breakdown_conn12(:,7:8,7:8,:),[],4);
 c2s1_all = cat(1,c2s1,c2s2,c2s3);
 c2s1_all_prop = c2s1_all./sum(c2s1_all,2);
 c2s1_aft_prop = c2s1_all_prop(33:48,:);
 
-subplot(2,3,4)
+subplot(2,4,5)
 bar(mean(c2s1_all_prop,1)); xlim([0 5]);
 xvals = repmat(1:4,size(c2s1_all_prop,1),1);
 xvaloff = xvals + randn(size(xvals))*0.02;
@@ -260,7 +287,7 @@ win1_4 = reshape(cell_cat_breakdown_oct(:,[1 3],[1 3],:),[],4);
 win1_all = cat(1, win1_1, win1_2, win1_3, win1_4);
 win1_all_prop = win1_all./sum(win1_all,2);
 
-subplot(2,3,5)
+subplot(2,4,6)
 hold off
 bar(nanmean(win1_all_prop,1)); xlim([0 5]);
 xvals = repmat(1:4,size(win1_all_prop,1),1);
@@ -274,21 +301,50 @@ ylabel('Proportion')
 % Combine 1 day plots - split this into two separate plots if you decide to
 % include it (left = coh vs rand remap , y-axis = propotion of COACTIVE
 % cells, right = on/off, y-axis = proportion of TOTAL cells
-subplot(2,3,6)
+subplot(2,4,7)
 hbar = bar([nanmean(win1_all_prop,1); mean(c2s1_all_prop,1)]' ); xlim([0 5]);
 hold on
 xvals = repmat(1:4,size(win1_all_prop,1),1);
 xvaloff = xvals + randn(size(xvals))*0.02 + hbar(1).XOffset;
-scatter(xvaloff(:), win1_all_prop(:),[],'k')
+hwin = scatter(xvaloff(:), win1_all_prop(:),[],'k');
 xvals = repmat(1:4,size(c2s1_all_prop,1),1);
 xvaloff = xvals + randn(size(xvals))*0.02 + hbar(2).XOffset;
-scatter(xvaloff(:), c2s1_all_prop(:),[],'k');
+hbw = scatter(xvaloff(:), c2s1_all_prop(:),[],'k');
 hchance = plot([-0.4 0 0 0.4]+hbar(1).XData(1), [ones(1,2)*sum(hbar(1).YData(1:2))/6 ,...
     ones(1,2)*sum(hbar(2).YData(1:2))/6],'k--');
 legend(cat(2,hbar,hchance),{'Same Arena', 'Diff. Arena', 'Chance'})
 set(gca,'XTickLabels',{'Coh', 'Rand. Remap', 'On', 'Off'})
 title('Cell Class 1 day apart')
 ylabel('Proportion')
+make_plot_pretty(gca)
+hwin.MarkerEdgeAlpha = 0.5;
+hwin.SizeData = 24;
+hbw.MarkerEdgeAlpha = 0.5;
+hbw.SizeData = 24;
+
+
+% Get stats
+pcoh_rks = ranksum(win1_all_prop(:,1),c2s1_all_prop(:,1));
+pgr_rks = ranksum(win1_all_prop(:,2),c2s1_all_prop(:,2));
+pon_rks = ranksum(win1_all_prop(:,3),c2s1_all_prop(:,3));
+poff_rks = ranksum(win1_all_prop(:,4),c2s1_all_prop(:,4));
+ponoff_win_rks = ranksum(win1_all_prop(:,3),win1_all_prop(:,4));
+ponoff_bw_rks = ranksum(c2s1_all_prop(:,3),c2s1_all_prop(:,4));
+pcoh_win = signtest(win1_all_prop(:,1), sum(hbar(1).YData(1:2))/6);
+pcoh_bw = signtest(c2s1_all_prop(:,1), sum(hbar(2).YData(1:2))/6);
+
+subplot(2,4,8)
+title('ranksum test results')
+text(0.1,0.9,['p_{coh} diff = ' num2str(pcoh_rks,'%0.3g')])
+text(0.1,0.8,['p_{gr} diff = ' num2str(pgr_rks,'%0.3g')])
+text(0.1,0.7,['p_{on} diff = ' num2str(pon_rks,'%0.3g')])
+text(0.1,0.6,['p_{off} diff = ' num2str(poff_rks,'%0.3g')])
+text(0.1,0.5,['p_{on~=off,win} = ' num2str(ponoff_win_rks,'%0.3g')])
+text(0.1,0.4,['p_{on~=off,bw} = ' num2str(ponoff_bw_rks,'%0.3g')])
+text(0.1,0.3, ['p_{coh,win} > chance = ' num2str(pcoh_win, '%0.3g')])
+text(0.1,0.2, ['p_{coh,bw} > chance = ' num2str(pcoh_bw, '%0.3g')])
+axis off
+
 
 
 %% Should probably only do comparison of on/off vs global remap vs coherent for
@@ -336,7 +392,7 @@ for m = 0:1
 end
 
 %% Get on/off cells
-Mouseconn = load(fullfile(ChangeDirectory_NK(G30_square(1),0),...
+Mouseconn2 = load(fullfile(ChangeDirectory_NK(G30_square(1),0),...
     '2env_PV_conn_1shuffles-2018-05-09.mat'));
 
 n_on_conn = nan(8,4,4);
@@ -344,8 +400,8 @@ n_off_conn = nan(8,4,4);
 for m = 0:1
     for j = 1:4
         filt_use = 'none';
-        PVmax = squeeze(nanmax(reshape(Mouseconn.Mouse(j).PV.connfilt.(filt_use),8,[],...
-            size(Mouseconn.Mouse(j).PV.connfilt.(filt_use),4)),[],2));
+        PVmax = squeeze(nanmax(reshape(Mouseconn2.Mouse(j).PV.connfilt.(filt_use),8,[],...
+            size(Mouseconn2.Mouse(j).PV.connfilt.(filt_use),4)),[],2));
         for k = 1:2
             DItemp = get_discr_ratio(PVmax(mat_ind_win(k,1)+4*m,:), ...
                 PVmax(mat_ind_win(k,2)+4*m,:));
@@ -365,6 +421,9 @@ for m = 0:1
         end
     end
 end
+
+
+
 
 %% Reshape indices to make pulling out data easier
 coh_ratio_conn_rs = reshape(coh_ratio_conn,8,[]);
@@ -484,4 +543,122 @@ text(0.1,0.4,['p_{on~=off,bw} = ' num2str(ponoff_bw_rks,'%0.3g')])
 text(0.1,0.3, ['p_{coh,win} > chance = ' num2str(pcoh_win, '%0.3g')])
 text(0.1,0.2, ['p_{coh,bw} > chance = ' num2str(pcoh_bw, '%0.3g')])
 axis off
+
+
+%% Get conn1 to conn2 cell classifications based on halves
+% Delegate indices out so that everything ends up in the appropriate place
+% - within arena first
+mat_ind_win = [1 6; 1 8; 2 5; 2 7; 3 6; 3 8; 4 5; 4 7]; 
+half_win = [1 1; 1 2; 1 1; 1 2; 2 1; 2 2; 2 1; 2 2]; 
+sesh_ind_win = [9 12; 9 12; 10 11; 10 11; 9 12; 9 12; 10 11; 10 11];
+% between arenas 2nd - yes I know this could be done more efficiently by
+% concatenating everything but this makes it easier on my brain
+mat_ind_bw = [1 5; 1 7; 2 6; 2 8; 3 5; 3 7; 4 6; 4 8]; 
+half_bw = [1 1; 1 2; 1 1; 1 2; 2 1; 2 2; 2 1; 2 2];
+sesh_ind_bw = [9 11; 9 11; 10 12; 10 12; 09 11; 9 11; 10 12; 10 12];
+
+ncells_conn12 = nan(8,8,8);
+coh_ratio_conn12 = nan(8,8,8);
+
+try close(652); end; try close(653); end;
+
+for m = 0
+    for j = 1:4
+        
+        figure(652); set(gcf,'Position', [2000, 270, 1820, 700])
+        for k = 1:8
+            [~, ~, ~, ~, ncells_conn12(j+4*m, mat_ind_win(k,1), mat_ind_win(k,2)), ...
+                coh_ratio_conn12(j+4*m, mat_ind_win(k,1), mat_ind_win(k,2))] = ...
+                plot_delta_angle_hist(all_sessions2(j,sesh_ind_win(k,1)+2*m), ...
+                all_sessions2(j,sesh_ind_win(k,2)+2*m), all_sessions2(j,1), 'circ2square', ...
+                true, 'bin_size', '_half_cm1_speed1_inMD', 'nshuf', 1000, ...
+                'TMap_type', 'TMap_gauss', 'half_use', half_win(k,:),...
+                'coh_ang_thresh', 30, 'h', subplot(4,8,8*(j-1)+k),...
+                'plot_legend', false);
+        end
+        
+        figure(653); set(gcf,'Position', [2000, 70, 1820, 700])
+        for k = 1:8
+            [~, ~, ~, ~, ncells_conn12(j+4*m, mat_ind_bw(k,1), mat_ind_bw(k,2)), ...
+                coh_ratio_conn12(j+4*m, mat_ind_bw(k,1), mat_ind_bw(k,2))] = ...
+                plot_delta_angle_hist(all_sessions2(j,sesh_ind_bw(k,1)+2*m), ...
+                all_sessions2(j,sesh_ind_bw(k,2)+2*m), all_sessions2(j,1), 'circ2square', ...
+                true, 'bin_size', '_half_cm1_speed1_inMD', 'nshuf', 1000, ...
+                'TMap_type', 'TMap_gauss', 'half_use', half_bw(k,:),...
+                'coh_ang_thresh', 30,  'h', subplot(4,8,8*(j-1)+k),...
+                'plot_legend', false);
+        end
+    end
+end
+
+%% Get DI
+DIconn1conn2 = cell(8,8,8); % animal x day1 sesh x day2 sesh
+for j = 1:4
+    for k = 1:4 % use 1:3 eventually
+        for ll = 5:8
+            PVuse = Mouseconn2.Mouse(j).PV.connfilt.none([k,ll],:,:,:);
+            PVmax = nanmax(reshape(PVuse,2,[],size(PVuse,4)),[],2);
+            DItemp = get_discr_ratio(PVmax(1,:),PVmax(2,:));
+            DIconn1conn2{j,k,ll} = DItemp;
+        end
+    end
+end
+
+%%
+n_on_conn12 = nan(8,8,8);
+n_off_conn12 = nan(8,8,8);
+for m = 0
+    for j = 1:4
+        filt_use = 'none';
+        PVmax = squeeze(nanmax(reshape(Mouseconn2.Mouse(j).PV.connfilt.(filt_use),8,[],...
+            size(Mouseconn2.Mouse(j).PV.connfilt.(filt_use),4)),[],2));
+        for k = 1:8
+            DItemp = get_discr_ratio(PVmax(mat_ind_win(k,1)+4*m,:), ...
+                PVmax(mat_ind_win(k,2)+4*m,:));
+            n_on_conn12(j+4*m, mat_ind_win(k,1), mat_ind_win(k,2)) = ...
+                sum(DItemp == 1);
+            n_off_conn12(j+4*m, mat_ind_win(k,1), mat_ind_win(k,2)) = ...
+                sum(DItemp == -1);
+        end
+        
+        for k = 1:8
+            DItemp = get_discr_ratio(PVmax(mat_ind_bw(k,1)+4*m,:), ...
+                PVmax(mat_ind_bw(k,2)+4*m,:));
+            n_on_conn12(j+4*m, mat_ind_bw(k,1), mat_ind_bw(k,2)) = ...
+                sum(DItemp == 1);
+            n_off_conn12(j+4*m, mat_ind_bw(k,1), mat_ind_bw(k,2)) = ...
+                sum(DItemp == -1);
+        end
+    end
+end
+%%
+
+
+% %%
+% cell_cat_breakdown_conn12good = nan(4,8,8,4); % mice x sesh_sq x sesh_oct x cat (ncoh, ngr, n_on, n_off)
+% for j = 1:4
+%     ncoh = squeeze(coh_ratio_conn12(j,:,:)).*squeeze(ncells_conn12(j,:,:)); % c
+%     ngr = squeeze(ncells_conn12(j,:,:)) - ncoh;
+%     n_on = cellfun(@(a) sum(a == 1),squeeze(DIconn1conn2(j,:,:)));
+%     n_off = cellfun(@(a) sum(a == -1), squeeze(DIconn1conn2(j,:,:)));
+%     nsilent = cellfun(@length, squeeze(become_silent_c2s(j,:,:)));
+%     nnew = cellfun(@length, squeeze(new_cells_c2s(j,:,:)));
+%     cell_cat_breakdown_conn12good(j,:,:,:) = cat(3,ncoh,ngr, n_on + nnew, n_off + nsilent);
+% end
+
+
+
+
+% % Make connected sessions matrix
+% conn_sesh_all2 = [];
+% for j = 1:4
+%     conn_sesh_all2 = cat(3,conn_sesh_all2,...
+%         Mouseconn2.Mouse(j).PV_corrs.conn.none.PV_corr_mean);
+% end
+% conn_sesh_all2(logical(eye(8))) = nan;
+
+
+
+
+
 
