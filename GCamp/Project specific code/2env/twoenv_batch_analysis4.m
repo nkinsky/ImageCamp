@@ -288,10 +288,10 @@ half_use = [1 1 2 2 1 1 2 2];
 filters_use = {'pval', 'coherent_only', 'remap_only', 'silent_only', 'no_coherent',...
     'no_remap', 'no_silent', 'none'}; 
 p = ProgressBar(num_animals*length(filters_use));
-num_shuffles = 0;
+num_shuffles = 1000;
 for j = 1:num_animals
     for k = length(filters_use) % just 'none' filter %1:length(filters_use) % all filters
-        if strcmpi(filters_use{k},'pval')
+        if strcmpi(filters_use{k},'pval') || strcmpi(filters_use{k},'none')
             num_shuffles = 1000;
         else
             num_shuffles = 1;
