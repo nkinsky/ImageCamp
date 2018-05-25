@@ -652,6 +652,7 @@ conn_sesh_all(logical(eye(8))) = nan;
 
 all_sesh_bef_aft2 = all_sesh_full_mean([1:8, 13:16],[1:8, 13:16]);
 
+%% Plot everything
 divs = [1.5 6.5 10.5];
 try close(456); end
 figure(456)
@@ -678,6 +679,21 @@ arrayfun(@(a) set(a,'CLim',clim_use),hconf)
 chil = get(gcf,'Children');
 arrayfun(@(a) set(a,'Ticks',clim_use,'TickLabels',...
     arrayfun(@(a) num2str(a,'%0.2f'),clim_use','UniformOutput',false)),chil([1 3]))
+
+% Make condensed bef_aft matrix
+all_bef_aft_cond = nan(6,6);
+for j = 1:6
+    inds1 = (1:2) + (j-1)*2;
+    for k = 1:6
+        inds2 = (1:2) + (k-1)*2;
+        section_use = all_sesh_bef_aft2(inds1,inds2);
+        all_bef_aft_cond(j,k) = nanmean(section_use(:));
+        
+    end
+end
+
+subplot(2,3,6)
+imagesc_nan(all_bef_aft_cond); colorbar
 
 %% Get day means
 all_sesh_cond = nan(8,8);
