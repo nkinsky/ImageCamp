@@ -1,4 +1,4 @@
-function [ hbar, hs, p, cmat ] = barscatter( varargin )
+function [ hbar, hs, p, cmat] = barscatter( varargin )
 % [ hbar, hs, p, cmat ] = barscatter( varargin )
 %   produces a bar plot of means of data1, data2,... with a scatter plot of
 %   of each data point in data1 overlaid. Plots into current axes. Not yet
