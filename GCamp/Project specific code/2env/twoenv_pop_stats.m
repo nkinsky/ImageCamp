@@ -17,25 +17,35 @@ MD = MakeMouseSessionListNK('Nat');
 
 %% Get within arena coherent counts
 PCfilter = false;
-coh_ang_thresh = 30;
+coh_ang_thresh = 22.5;
 nshuf = 1000;
 
 coh_ratio_sq = nan(4,8,8);
 pshuf_sq = nan(4,8,8);
 ncells_sq = nan(4,8,8);
+coh_bool_sq = cell(4,8,8);
+neuronid_sq = cell(4,8,8);
+
 tic
 for j = 1:4
-    [~, ~, ~, pshuf_sq(j,:,:), ncells_sq(j,:,:), coh_ratio_sq(j,:,:)] = ...
+    [~, ~, ~, pshuf_sq(j,:,:), ncells_sq(j,:,:), coh_ratio_sq(j,:,:),...
+        coh_bool_sq(j,:,:), neuronid_sq(j,:,:)] = ...
         plot_pfangle_batch(...
         all_square2(j,:), [], nshuf, PCfilter, coh_ang_thresh, false);
 end
 gr_bool_sq = pshuf_sq > 0.05/28;
 
+%%
+
 coh_ratio_oct = nan(4,8,8);
 pshuf_oct = nan(4,8,8);
 ncells_oct = nan(4,8,8);
+coh_bool_oct = cell(4,8,8);
+neuronid_oct = cell(4,8,8);
+
 for j = 1:4
-    [~, ~, ~, pshuf_oct(j,:,:), ncells_oct(j,:,:), coh_ratio_oct(j,:,:)] = ...
+    [~, ~, ~, pshuf_oct(j,:,:), ncells_oct(j,:,:), coh_ratio_oct(j,:,:),...
+        coh_bool_oct(j,:,:), neuronid_oct(j,:,:)] = ...
         plot_pfangle_batch(...
         all_oct2(j,:), [], nshuf, PCfilter, coh_ang_thresh, false);
 end
@@ -154,5 +164,11 @@ plot(ones(1,2)*sum_lims(1),ylim_use, 'k-.', ...
     ones(1,2)*dmean,ylim_use, 'k-')
 make_plot_pretty(gca)
 %%
+basedir = ChangeDirectory_NK(G30_square(1),0);
 printNK(['Population Statistics Breakdown PCfilt_' num2str(PCfilter) ...
     'ang_thresh_' num2str(round(coh_ang_thresh))],'2env')
+
+save(fullfile(basedir, ['2env_popstats_coh' num2str(round(coh_ang_thresh)) '_shuf' ...
+    num2str(nshuf) '_PCfilt_' num2str(PCfilter) '-' datestr(now,29) '.mat']),...
+    'coh_ratio_sq', 'coh_ratio_oct', 'ncells_sq', 'ncells_oct', 'coh_bool_sq', ...
+    'coh_bool_oct', 'neuronid_sq', 'neuronid_oct')
