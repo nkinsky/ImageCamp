@@ -1183,7 +1183,7 @@ text(0.1, 0.3, ['pval filt = ' filt_use])
 axis off
 
 subplot(2,4,3)
-[hbar, ~, pkw_onoffbda, c_onoffbda, means_onoffbda] = barscatter(bw01_bef_prop(:,3:4), ...
+[hbar, ~, pkw_onoffbda, c_onoffbda] = barscatter(bw01_bef_prop(:,3:4), ...
     bw01_dur_prop(:,3:4), bw01_aft_prop(:,3:4));
 set(gca,'XTick',1:3,'XTickLabel',{'Before', 'During', 'After'});
 ylabel('Proportion Total Cells')
