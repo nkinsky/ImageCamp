@@ -26,7 +26,7 @@ function [ n_out, stay_in, x, y, button] = LR_cycle( n_in, n_range)
 
 % ASCII definitions here
 right = 29; left = 28; spacebar = 32; k = 107; rightmouse = 3;
-right9 = 57; left7 = 55;
+right9 = 57; left7 = 55; % left4 = 52; right6 = 54;
 
 %% Set up and display output
 persistent disp_flag; % Set persistent variable so that you only display 
