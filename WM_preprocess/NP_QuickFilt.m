@@ -1,7 +1,7 @@
 function[FiltSig] = NP_QuickFilt(sig,low,high,sr)
 % [FiltSig] = NP_QuickFilt(sig,low,high,sr)
 
-forder = 500;  % filter order has to be even; .. the longer the more
+forder = min([500,floor(length(sig)/3)]);  % filter order has to be even; .. the longer the more
                % selective, but the operation will be linearly slower
     	       % to the filter order
 

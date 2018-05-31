@@ -449,7 +449,7 @@ g1 = group_means(:,1,:); % circle
 g2 = group_means(:,2,:); % square
 g3 = group_means(:,3,:); % circ2square
 
-% Run ranksum on all 3 combos
+% Run ranksum on all 3 combos - just do a kw test!!!
 [p12all,h12all] = ranksum(g1(:),g2(:),'tail','both');
 [p13all,h13all] = ranksum(g1(:),g3(:),'tail','right');
 [p23all,h23all] = ranksum(g2(:),g3(:),'tail','right');
@@ -460,21 +460,42 @@ g3 = group_means(:,3,:); % circ2square
 [p13nrot,h13nrot] = ranksum(g1(:,:,2),g3(:,:,2),'tail','right');
 [p23nrot,h23nrot] = ranksum(g2(:,:,2),g3(:,:,2),'tail','right');
 
-%% Figure 2b: Coherent Event Rate Maps Across Days
-% 1 = square, 2 = square rotated with cells following local cues, 3 =
-% square rotated, 4 = circle
+%% Figure 2b/c: Coherent Event Rate Maps Across Days
 plot_local_aligned = 0; % true = plot with local cues aligned, false = as presented to mouse
-sesh_use = G30_square([1 6 7]); %cat(2,G45_square([1:4, 7]),G45_oct(1)); cat(2,G30_oct([1:4,7]),G30_square(1)); % % cat(2, G48_oct(1), G48_oct(5), G48_oct(2), G48_oct(3), G48_square(5), G48_oct(4)); % cat(2, G48_oct(1), G48_oct(2), G48_oct(5), G48_square(5), G48_oct(3)); % cat(2,G30_square(1), G30_square(3), G30_square(4), G30_oct(1), G30_square(6));
-base_sesh = G30_square(1); G45_square(1); % G48_square(1); %G30_square(1); % G30_square(1); 
+
+% For figure 2c square - four example cells across days in each corner of square
+% sesh_use = cat(2,G45_square([1:4, 7]),G45_oct(1)); 
+% base_sesh = G45_square(1); 
+% num_cols = length(sesh_use);
+% best_angle_use = G45_both_best_angle([1 2 7 8 13 3]); 
+% good_ind = [50 128 602 268]; 
+% num_rows = length(good_ind);
+
+% for figure 2e octagon
+sesh_use = G30_oct([3 4]);
+base_sesh = G30_square(1); 
 num_cols = length(sesh_use);
-best_angle_use = G30_square_best_angle([1 6 7]);% G45_both_best_angle([1 2 7 8 13 3]);
-% num_rows = 3;
+best_angle_use = G30_circle_best_angle(3:4);
+good_ind = [62 92 65 67]; 
+num_rows = length(good_ind);
+
+% For figure 2b - 3 example cells for calculating angles
+% sesh_use = G30_square([1 6 7]); 
+% base_sesh = G30_square(1);
+% num_cols = length(sesh_use);
+% best_angle_use = G30_square_best_angle([1 6 7]);
+% good_ind = [27 90 156];
+% num_rows = length(good_ind);
 
 [base_dir, base_sesh_full] = ChangeDirectory_NK(base_sesh,0);
 load(fullfile(base_dir,'batch_session_map.mat'));
 batch_session_map_win = batch_session_map;
-load(fullfile(base_dir,'batch_session_map_trans.mat'));
-base_index = match_session(batch_session_map.session, base_sesh);
+try
+    load(fullfile(base_dir,'batch_session_map_trans.mat'));
+    base_index = match_session(batch_session_map.session, base_sesh);
+catch
+    disp('no _trans map found')
+end
 
 % Assemble cells to plot
 PF_plot = cell(1,length(sesh_use));
@@ -495,17 +516,9 @@ for j = 1:length(sesh_use)
     sesh_use(j).rot = rot;
 end
 sparse_map = batch_session_map.map(:,arrayfun(@(a) a.sesh_index, sesh_use)+1); % get map for just the 4 days in question
-good_ind = find(sum(sparse_map ~= 0 & ~isnan(sparse_map),2) == num_cols); % neurons active on all 4 days
-% good_ind = [63 21 22 7 42];
-% good_ind = [63 7 42]; % [7 21 42 63 74 113 143]; % Use this code to get the
-% appropriate neurons from the base session for G48 (G48_square(1) which
-% isn't plotted: arrayfun(@(a) find(a == batch_session_map.map(:,4)), G48_oct1_good_neurons)
-% good_ind = [50 71 368]; %[71 135 50 303 368]; %[70 71 72 82 135 224 230
-% 242 89 122]; % [71 230 135]; % All for G30
-% good_ind = [50 128 212 268]; %[50 224 268 174];% G45_square(1:4,7) + G45_oct(1)
-% [56 69 161 392]; %[37 50 56 69 161 180 207 323 361 392]; % G48 square(1) + all circle sessions
-num_rows = 4; 
-% num_rows = length(good_ind);
+% Uncomment here to scroll through all good cells
+% good_ind = find(sum(sparse_map ~= 0 & ~isnan(sparse_map),2) == num_cols); % neurons active on all 4 days
+% num_rows = 4;
 
 figure; set(gcf,'Position',[2100 20 750 875]);
 
@@ -549,16 +562,17 @@ for m = 1:(floor(length(good_ind)/num_rows))
                 else
                     imagesc_nan(rot90(sesh_use(k).tmap{neuron_use},1));                    
                 end
-                if k == 1 % only label neuron in first session
+%                 if k == 1 % only label neuron in first session
                        title({['Neuron ' num2str(neuron_use)], ['Rot = ' ...
                            num2str(sesh_use(k).rot)]})
-                elseif j == 1 && k ~= 1
-                    title(['Rot = ' num2str(sesh_use(k).rot)])
-                end
+%                 elseif j == 1 && k ~= 1
+%                     title(['Rot = ' num2str(sesh_use(k).rot)])
+%                 end
             end
 %             axis equal 
             axis tight
             axis off
+            ylabel(num2str(good_ind(neurons_plot(j))))
             try
             if j == 1
                 dirstr = ChangeDirectory_NK(sesh_use(k),0);
@@ -609,4 +623,129 @@ hold on
 legend(hneuron,arrayfun(@(a) ['Neuron ' num2str(a)], ...
     good_ind,'UniformOutput',false))
 axis tight
+
+%% Get rotation angles for 2b
+neurons_get67 = [27 90 156];
+load(fullfile(ChangeDirectory_NK(G30_square(1),0),'batch_session_map'));
+[delta_angle, ~, ~, angles67, ~, neuronid] = get_PF_angle_delta(...
+    G30_square(6), G30_square(7),batch_session_map,'TMap_gauss',1,false,...
+    false,0);
+inds_use67 = arrayfun(@(a) find(a == neuronid(:,1)),neurons_get12);
+delta_angles67 = delta_angle(inds_use67)-360
+
+%% Get rotation angles for 2c
+neurons_get12 = [50 128 602 268];
+load(fullfile(ChangeDirectory_NK(G45_square(1),0),'batch_session_map'));
+[delta_angle, ~, ~, angles12, ~, neuronid] = get_PF_angle_delta(...
+    G45_square(1),G45_square(2),batch_session_map,'TMap_gauss',1,false,...
+    false,0);
+inds_use12 = arrayfun(@(a) find(a == neuronid(:,1)),neurons_get12);
+delta_angles12 = delta_angle(inds_use12)-360
+
+neurons_get34 = [40 181 233 260];
+load(fullfile(ChangeDirectory_NK(G45_square(1),0),'batch_session_map'));
+[delta_angle, ~, ~, angles34, ~, neuronid] = get_PF_angle_delta(...
+    G45_square(3),G45_square(4),batch_session_map,'TMap_gauss',1,false,...
+    false,0);
+inds_use34 = arrayfun(@(a) find(a == neuronid(:,1)),neurons_get34);
+delta_angles34 = delta_angle(inds_use34)-360
+
+neurons_get34b = [182 95 262 140];
+load(fullfile(ChangeDirectory_NK(G30_oct(1),0),'batch_session_map'));
+[delta_angle, ~, ~, angles34b, ~, neuronid] = get_PF_angle_delta(...
+    G30_oct(3),G30_oct(4),batch_session_map,'TMap_gauss',1,false,...
+    false,0);
+inds_use34b = arrayfun(@(a) find(a == neuronid(:,1)),neurons_get34b);
+delta_angles34b = delta_angle(inds_use34b)-360
+
+%% Plot center-out square-square and octagon-octagon histograms
+
+[~, delta_mean_s, ~, ps, ~, coh_ratio_s] = plot_delta_angle_hist(...
+    G45_square(1), G45_square(2), G45_square(1), 'TMap_type', 'TMap_gauss',...
+    'bin_size', 1, 'nshuf', 1000);
+ylims = get(gca,'YLim');
+make_plot_pretty(gca,'linewidth',1,'fontsize',14)
+set(gca,'YLim',ylims,'YTick',0:60:120)
+printNK('Square to square center out histo','2env')
+
+[~, delta_mean_o, ~, po, ~, coh_ratio_o] = plot_delta_angle_hist(...
+    G30_oct(3), G30_oct(4), G30_oct(1), 'TMap_type', 'TMap_gauss',...
+    'bin_size', 1, 'nshuf', 1000);
+ylims = get(gca,'YLim');
+make_plot_pretty(gca,'linewidth',1,'fontsize',14)
+set(gca,'YLim',ylims,'YTick',0:50:100)
+printNK('Octagon to octagon center out histo','2env')
+
+%% Coh v Glob remapping breakdown: See twoenv_mismatch_hist
+
+%% numbers and ratios of coh vs remapping neurons: see two_env_on_off
+
+%% Make plot of mean ratio of coherent cells vs coh_ang_thresh
+ang_plot = [15 22.5 30 45];
+coh_ratio_means = nan(8,length(ang_plot),2); % mice/arena x angles x PCfilt
+pcoh = nan(2,4);
+for m = 0:1
+    for j = 1:length(ang_plot)
+        file_load = fullfile(ChangeDirectory_NK(G30_square(1),0),...
+            ['2env_popstats_coh' num2str(round(ang_plot(j))) ...
+            '_shuf1000_PCfilt_' num2str(m) '-2018-05-22.mat']);
+        load(file_load)
+        
+        % count coh ratio
+        sq_means_all = reshape(coh_ratio_sq,4,[]);
+        oct_means_all = reshape(coh_ratio_oct,4,[]);
+        means_comb_all = cat(1, sq_means_all, oct_means_all);
+        coh_ratio_means(1:4,j,m+1) = nanmean(sq_means_all,2);
+        coh_ratio_means(5:8,j,m+1) = nanmean(oct_means_all,2);
+        pcoh(m+1,j) = signtest(means_comb_all(:), ang_plot(j)/180, ...
+            'tail', 'right');
+                
+    end
+end
+
+try close(457); end
+figure(457); set(gcf,'Position', [531 220 1069 649]);
+
+subplot(1,2,1)
+errorbar(1:4, mean(squeeze(coh_ratio_means(:,:,1))), ...
+    std(squeeze(coh_ratio_means(:,:,1)))/sqrt(8));
+hold on
+hch = plot(1:4,ang_plot/180,'k--');
+text(1, 0.7, ['p_{signtest,max} = ' num2str(max(pcoh(1,:)), '%0.2g')]);
+xlim([0.5 4.5]); ylim([0, 0.8])
+legend(hch,'Chance')
+xlabel('Coh. Ang. Cutoff (+/-)');
+ylabel('Proportion of Neurons')
+set(gca,'XTick',1:4,'XTickLabel', arrayfun(@(a) num2str(a,'%0.1f'),...
+    ang_plot, 'UniformOutput', false))
+title('PCfilter = false')
+make_plot_pretty(gca)
+
+subplot(1,2,2)
+errorbar(1:4, mean(squeeze(coh_ratio_means(:,:,2))), ...
+    std(squeeze(coh_ratio_means(:,:,2)))/sqrt(8));
+hold on
+hch = plot(1:4,ang_plot/180,'k--');
+text(1, 0.7, ['p_{signtest,max} = ' num2str(max(pcoh(2,:)), '%0.2g')]);
+xlim([0.5 4.5]); ylim([0, 0.8])
+legend(hch,'Chance')
+xlabel('Coh. Ang. Cutoff (+/-)');
+ylabel('Proportion of Neurons')
+set(gca,'XTick',1:4,'XTickLabel', arrayfun(@(a) num2str(a,'%0.1f'),...
+    ang_plot, 'UniformOutput', false))
+title('PCfilter = true')
+make_plot_pretty(gca)
+
+
+
+
+
+
+
+
+
+
+
+
+
 

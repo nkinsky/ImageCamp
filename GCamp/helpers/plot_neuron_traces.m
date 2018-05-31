@@ -25,7 +25,7 @@ num_neurons = size(traces,1);
 ip = inputParser;
 ip.addRequired('traces',@isnumeric);
 ip.addOptional('color_table',nan, @(a) (isnumeric(a) && size(a,2) == 3) || ...
-    (ischar(a) && length(a) == num_neurons));
+    (ischar(a) && size(a,2) == 1) || isnan(a));
 ip.addOptional('h', nan, @ishandle);
 ip.addParameter('SR',20,@(a) a == round(a)); % Frames/sec
 ip.addParameter('PSAbool',false(size(traces)),@islogical); % Putative spiking activity to match size of traces

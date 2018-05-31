@@ -28,7 +28,7 @@ if nargin < 5
 end
 
 cat_nums = 0:5;
-cat_names = {['ntrans < ' num2str(ntrans_thresh)], 'Splitters',...
+cat_names = { ['ntrans < ' num2str(ntrans_thresh)], 'Splitters', ...
     'Stem PCs', 'Arm PCs', 'Stem NPCs', 'Arm NPCs'};
 
 load(fullfile(sesh.Location,'sigSplitters.mat'),'neuronID','sigcurve');

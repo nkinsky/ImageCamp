@@ -1,5 +1,5 @@
-function [ h ] = plot_traj2( session, varargin )
-% h = FCplot( sessions, varargin )
+function [ h, xAVI, yAVI, baseframe ] = plot_traj2( session, varargin )
+% [ h, xAVI, yAVI, baseframe ] = plot_traj2( session, varargin )
 %   Plots trajectory for a given session from Pos.mat. Spits out handle
 %   axes in h. Plots in cm coordinates by default
 
@@ -34,26 +34,28 @@ dirstr = fullfile(dirstr,dir_append);
 
 %% Plot stuff
 axes(h_in)
-if ~plot_vid % Plot trajectory
-    temp = load(fullfile(dirstr,pos_file), ['x' xy_append], ['y' xy_append]);
-    x_use = temp.(['x' xy_append]);
-    y_use = temp.(['y' xy_append]);
-    
-    plot(x_use,y_use);
-    axis tight
-    axis off
-    
-elseif plot_vid % Plot 1st video frame
+
+baseframe = nan;
+if plot_vid % Plot 1st video frame
     vidfile = ls(fullfile(dirstr,'*.avi'));
     if size(vidfile,1) ~= 1
         error('More than one AVI file in directory specified')
     end
     vidobj = VideoReader(fullfile(dirstr,vidfile));
     frame_plot = readFrame(vidobj);
-    imagesc(frame_plot)
-    axis tight
-    axis off
+    imagesc(flipud(frame_plot))
+    set(gca,'YDir','normal')
+    hold on
+    baseframe = flipud(frame_plot);
 end
+temp = load(fullfile(dirstr,pos_file), ['x' xy_append], ['y' xy_append]);
+x_use = temp.(['x' xy_append]);
+y_use =  temp.(['y' xy_append]);
+
+plot(x_use,y_use);
+% axis tight
+% axis off
+
 if ~omit_session
     title({[mouse_name_title(session.Animal) ' - ' mouse_name_title(session.Date) ...
         ' session ' num2str(session.Session)], title_line2})
@@ -61,6 +63,9 @@ elseif omit_session
     title({[mouse_name_title(session.Animal) ' - ' mouse_name_title(session.Date)],...
         title_line2})
 end
+
+xAVI = x_use; yAVI = y_use;
+
 
 end
 

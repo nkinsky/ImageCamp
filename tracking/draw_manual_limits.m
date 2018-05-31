@@ -1,5 +1,7 @@
-function [ x_manual, y_manual, ind_keep ] = draw_manual_limits( x,y, env_label )
-%[ x_manual, y_manual ] = draw_manual_limits( x,y )
+function [ x_manual, y_manual, ind_keep, xlims, ylims ] = ...
+    draw_manual_limits(x ,y, env_label, ha, prompt )
+%[ x_manual, y_manual, ind_keep, xlims, ylims ] = ...
+%   draw_manual_limits( x,y, env_label, hfig, prompt )
 %   Plots x and y and has you draw a rectangle over them defining which
 %   points to keep and which to discard
 %
@@ -15,21 +17,28 @@ function [ x_manual, y_manual, ind_keep ] = draw_manual_limits( x,y, env_label )
 %
 %   ind_keep: index to the points in x and y that correspond to x_manual,
 %   y_manual
+%
+%   xlims,ylims: limits of rectangle you drew.
 
 
 % Plot x and y
-figure(1234)
-plot(x,y)
+if nargin < 5
+    prompt = 'Draw rectangle around points you wish to consider for arena alignment!';
+    if nargin < 4
+        figure(1234); ha = gca;
+    end
+end
+plot(x,y,'b-')
 
 % Draw rectangle
 ok = 'n';
 
 while strcmpi(ok,'n')
-    title('Draw rectangle around points you wish to consider for arena alignment!')
+    title(prompt)
     xlabel(env_label)
-    disp('Draw rectangle around points you wish to consider for arena alignment!')
-    rect = getrect(1234); %[xmin ymin width height]
-    figure(1234)
+    disp(prompt)
+    rect = getrect(ha); %[xmin ymin width height]
+    axes(ha)
     hold on
     rectangle('Position',rect,'EdgeColor',[1 0 0],'LineStyle','-.')
     hold off
@@ -39,6 +48,8 @@ end
 % Calculate bounds
 xmin = rect(1); xmax = rect(1) + rect(3);
 ymin = rect(2); ymax = rect(2) + rect(4);
+xlims = [xmin, xmax];
+ylims = [ymin, ymax];
 
 % Get ind_keep
 ind_keep = (x > xmin & x < xmax) & (y > ymin & y < ymax);
@@ -47,7 +58,7 @@ ind_keep = (x > xmin & x < xmax) & (y > ymin & y < ymax);
 x_manual = x(ind_keep);
 y_manual = y(ind_keep);
 
-close(1234)
+close(ha.Parent)
 
 
 

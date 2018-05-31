@@ -147,8 +147,9 @@ printNK('Circ2square Coherent Example Rotated - G45','2env','append',true)
 % 1 = square, 2 = square rotated with cells following local cues, 3 =
 % square rotated, 4 = circle
 plot_local_aligned = 0; % true = plot with local cues aligned, false = as presented to mouse
-sesh_use = cat(2, G45_square(1), G45_oct([1 2 5])); 
-base_sesh =sesh_use(1); 
+% sesh_use = cat(2, G45_square(1), G45_oct([1 2 5])); 
+sesh_use = cat(2, G45_square([1 3]), G45_oct([1 4])); 
+base_sesh = sesh_use(1); 
 num_cols = length(sesh_use);
 best_angle_use = cat(2, G45_square_best_angle(1), G45_circle_best_angle([1 2 5])); 
 
@@ -178,7 +179,7 @@ for j = 1:length(sesh_use)
 end
 % sparse_map = batch_session_map.map(:,arrayfun(@(a) a.sesh_index, sesh_use)+1); % get map for just the 4 days in question
 % good_ind = find(sum(sparse_map ~= 0 & ~isnan(sparse_map),2) == num_cols); % neurons active on all 4 days
-good_ind = [47 68 129 191]; %[50 128 212 268]; % Good for G45
+good_ind = [50 51 56 87]; [47 68 129 191]; %[50 128 212 268]; % Good for G45
 num_rows = 4; 
 % num_rows = length(good_ind);
 
@@ -230,6 +231,8 @@ for m = 1:(floor(length(good_ind)/num_rows))
                 elseif j == 1 && k ~= 1
                     title(['Rot = ' num2str(sesh_use(k).rot)])
                 end
+                title({['Neuron ' num2str(neuron_use)], ['Rot = ' ...
+                           num2str(sesh_use(k).rot)]})
             end
 %             axis equal 
             axis tight
@@ -274,41 +277,41 @@ end
 % Plot figure showing neuron outlines from above
 ncolors = [1 0 0; 0 1 0; 0 0 1; 1 0 1]; % Plot example neurons as r g b cyan
 ncolors = resize(ncolors, [length(good_ind), 3]); % Add in more intermediate colors if needed
-figure; set(gcf,'Position',[2500 150 950 770])
-h = gca;
-load(fullfile(base_dir,'FinalOutput.mat'),'NeuronImage')
-hall = plot_neuron_outlines(nan,NeuronImage,h,'colors',[0.5 0.5 0.5]);
-hold on
-[~, ~, hneuron] = plot_neuron_outlines(nan,NeuronImage(good_ind((end-3):end)),hall,...
-    'colors', ncolors, 'scale_bar', false);
-legend(hneuron,arrayfun(@(a) ['Neuron ' num2str(a)], ...
-    good_ind,'UniformOutput',false))
-axis tight
+% figure; set(gcf,'Position',[2500 150 950 770])
+% h = gca;
+% load(fullfile(base_dir,'FinalOutput.mat'),'NeuronImage')
+% hall = plot_neuron_outlines(nan,NeuronImage,h,'colors',[0.5 0.5 0.5]);
+% hold on
+% [~, ~, hneuron] = plot_neuron_outlines(nan,NeuronImage(good_ind((end-3):end)),hall,...
+%     'colors', ncolors, 'scale_bar', false);
+% legend(hneuron,arrayfun(@(a) ['Neuron ' num2str(a)], ...
+%     good_ind,'UniformOutput',false))
+% axis tight
 
 %% Plot MI of circle vs square sessions
 MImean_comb = [];
 for k = 1:4
-mouse_use = k;
-mouse_name = Mouse(mouse_use).sesh.square(1).Animal;
-sesh_use = cat(1,Mouse(mouse_use).sesh.square, ...
-    Mouse(mouse_use).sesh.circle);
-
-dirstr_all = arrayfun(@(a) ChangeDirectory_NK(a,0),...
-    sesh_use,'UniformOutput',false);
-
-MImean_all = nan(size(sesh_use));
-for j = 1:length(dirstr_all(:))
-    load(fullfile(dirstr_all{j},'SpatialInfo_cm4_rot0.mat'),'MI');
-    MImean_all(j) = mean(MI);
-end
-MImean_comb = cat(3,MImean_comb,MImean_all);
-
-scatterBox(MImean_all(:),repmat((1:2)',8,1),'xLabels',{'Square','Circle'},...
-    'yLabel', 'Mutual Information (bits)','position',[2280 420 450 290],...
-    'transparency', 0.7);
-title(mouse_name_title(mouse_name));
-
-printNK(['MI square vs circle for ' mouse_name],'2env')
+    mouse_use = k;
+    mouse_name = Mouse(mouse_use).sesh.square(1).Animal;
+    sesh_use = cat(1,Mouse(mouse_use).sesh.square, ...
+        Mouse(mouse_use).sesh.circle);
+    
+    dirstr_all = arrayfun(@(a) ChangeDirectory_NK(a,0),...
+        sesh_use,'UniformOutput',false);
+    
+    MImean_all = nan(size(sesh_use));
+    for j = 1:length(dirstr_all(:))
+        load(fullfile(dirstr_all{j},'SpatialInfo_cm4_rot0.mat'),'MI');
+        MImean_all(j) = mean(MI);
+    end
+    MImean_comb = cat(3,MImean_comb,MImean_all);
+    
+    scatterBox(MImean_all(:),repmat((1:2)',8,1),'xLabels',{'Square','Circle'},...
+        'yLabel', 'Mutual Information (bits)','position',[2280 420 450 290],...
+        'transparency', 0.7);
+    title(mouse_name_title(mouse_name));
+    
+    printNK(['MI square vs circle for ' mouse_name],'2env')
 end
 
 groups = repmat(cat(1,ones(1,8),2*ones(1,8)),1,1,4);
@@ -322,5 +325,26 @@ printNK('MI square vs circle for All Mice','2env')
 
 [panova, anovatab, stats] = anova1(MImean_comb(:),groups(:),'off');
 
+%% Plot center-out histos
+
+[~, delta_mean_c2s, ~, pc2s, ~, coh_ratio_c2s] = plot_delta_angle_hist(...
+    G48_square(5), G48_oct(5), G48_square(1), 'TMap_type', 'TMap_gauss',...
+    'bin_size', 1, 'nshuf', 1000, 'circ2square',true);
+% ylims = get(gca,'YLim');
+make_plot_pretty(gca,'linewidth',1,'fontsize',14)
+set(gca,'YLim',[0 50],'YTick',0:25:50,'XLim',[-10 370])
+printNK('Octagon to Square histo example 1 - coherent','2env')
+
+[~, delta_mean_gr, ~, pgr, ~, coh_ratio_gr] = plot_delta_angle_hist(...
+    G30_square(7), G30_oct(5), G30_square(1), 'TMap_type', 'TMap_gauss',...
+    'bin_size', 1, 'nshuf', 1000, 'circ2square',true);
+% ylims = get(gca,'YLim');
+make_plot_pretty(gca,'linewidth',1,'fontsize',14)
+set(gca,'YLim',[0 30],'YTick',0:15:30,'XLim',[-10 370])
+printNK('Octagon to Square histo example 2 - global remapper','2env')
+
+%% See twoenv_pop_stats for PVs same v diff
+
+%% See twoenv_mismatch_histograms for Coh Ratio Same v Diff.
 
 

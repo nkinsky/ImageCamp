@@ -22,8 +22,10 @@ k = rot_angle/90;
 
 obj = VideoReader(avi_path);
 axes(h)
-imagesc(flipud(rot90(readFrame(obj),k))); 
-
+% imagesc(flipud(rot90(readFrame(obj),k))); 
+% imagesc(rot90(readFrame(obj),k)); 
+imagesc(rot90(flipud(readFrame(obj)),k));
+set(h,'YDir','normal')
 
 end
 

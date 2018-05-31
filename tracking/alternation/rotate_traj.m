@@ -1,4 +1,4 @@
-function [rotx, roty, rot_ang] = rotate_traj(x,y,rot_ang)
+function [rotx, roty, rot_ang, rotarray, hfig] = rotate_traj(x,y,rot_ang)
 %[rotx, roty] = rotate_traj(x,y)
 %
 %   This function takes the mouse's trajectory and rotates it along the x
@@ -22,7 +22,7 @@ function [rotx, roty, rot_ang] = rotate_traj(x,y,rot_ang)
     if nargin < 3
 
         %Plot the trajectory. 
-        figure;
+        hfig = figure;
         plot(x,y);
             title('Animal Trajectory', 'fontsize', 12);
 

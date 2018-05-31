@@ -1,7 +1,9 @@
-function [ conn_filt_cell ] = twoenv_make_conn_filt( base_sesh, filt_type )
+function [ conn_filt_cell ] = twoenv_make_conn_filt( base_sesh, filt_type)
 % conn_filt_cell = twoenv_make_conn_filt( base_sesh )
 %   Spits out a cell containing only the appropriate cells specified in
 %   filt_type for each session.
+
+
 
 load(fullfile(ChangeDirectory_NK(base_sesh,0),'batch_session_map_trans.mat'));
 batch_session_map = fix_batch_session_map(batch_session_map);

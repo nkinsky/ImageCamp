@@ -1,4 +1,5 @@
-function [ h , colors_used, hline] = plot_neuron_outlines( base_image, NeuronImage, varargin )
+function [ h , colors_used, hline] = plot_neuron_outlines( base_image, ...
+    NeuronImage, varargin )
 % [h, colors_used, hline]  = plot_neuron_outlines( base_image, NeuronImage,  h, varargin)
 %   plot outlines of neurons on top of the base image.  h is optional.  
 %   h (output) is axis handle to plot, and colors_used is
@@ -23,14 +24,21 @@ function [ h , colors_used, hline] = plot_neuron_outlines( base_image, NeuronIma
 %       colors_used: color table, good for using with plot_neuron_traces
 
 %% Parse inputs
-num_neurons = length(NeuronImage);
+if iscell(NeuronImage)
+    num_neurons = length(NeuronImage);
+else
+    num_neurons = 1;
+    temp = NeuronImage;
+    clear NeuronImage;
+    NeuronImage{1} = temp;
+end
 
 ip = inputParser;
 ip.addRequired('base_image',@(a) isnumeric(a));
-ip.addRequired('NeuronImage',@iscell);
+ip.addRequired('NeuronImage',@(a) iscell(a) || isnumeric(a));
 ip.addOptional('h',nan,@ishandle);
 ip.addParameter('colors', nan, @(a) (isnumeric(a) && size(a,2) == 3) || ...
-    (ischar(a) && length(a) == num_neurons));
+    (ischar(a) && size(a,2) == 1));
 ip.addParameter('scale_bar',true, @islogical)
 ip.parse(base_image, NeuronImage, varargin{:});
 

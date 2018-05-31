@@ -249,7 +249,7 @@ for m = 1:length(sesh)
             % Get map from sesh ll to sesh m & neuron types
             [ coh_bool, remap_bool, silent_bool, valid_bool, map_use] = ...
                 twoenv_filter_cells2( batch_session_map.session(1), sesh(m), ...
-                sesh(ll), comp_type ); % NRK - really need to move this outside of here.
+                sesh(ll), comp_type ); % NRK - really need to move this outside of here. slow.
             
             % fix potential bug in neuron_reg_batch by doing registration
             % directly

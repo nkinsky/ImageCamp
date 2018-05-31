@@ -1,5 +1,7 @@
-function [corr_mat, shuffle_mat, shuffle_mat2, shift_back ] = corr_rot_analysis( session1, session2, batch_session_map, rot_array, varargin )
-% [corr_mat, shuffle_mat, shuffle_mat2, shift_back ] = corr_rot_analysis( session1, session2, batch_session_map, rot_array, num_shuffles)
+function [corr_mat, shuffle_mat, shuffle_mat2, shift_back ] = corr_rot_analysis(...
+    session1, session2, batch_session_map, rot_array, varargin )
+% [corr_mat, shuffle_mat, shuffle_mat2, shift_back ] = corr_rot_analysis( ...
+%   session1, session2, batch_session_map, rot_array, num_shuffles)
 %   
 % Compares session1 TMaps to TMaps in session2 that have been rotated as
 % specified in rot_array.  Requires running batch_rot_arena and
@@ -79,6 +81,7 @@ shuffle_mat = [];
 % correlation.
 
 shuffle_mat2 = [];
+shift_back = [];
 % if disp_progress
     
 %     disp('Shuffling')

@@ -404,7 +404,7 @@ for j = 1:4
     shuf_mean = Mouse(j).PVcorrs.circ2square(1).PVshuf_corrs;
     temp = shuf_mean - Mouse(j).PVcorrs.circ2square(1).PVcorrs; 
     p = sum(temp > 0, 3)/1000; % Get pval from shuffle test
-    ppass(j,:,:) = p < alpha/28; % Compare to 0.05 after bonferroni correction - save for later
+    ppass(j,:,:) = p < alpha/64; % Compare to 0.05 after bonferroni correction - save for later
     ppass_use = squeeze(ppass(j,:,:));
     
     shuf_sort = sort(shuf_mean,3);
@@ -480,8 +480,14 @@ make_plot_pretty(gca)
 
 printNK('PV Before During After for All Mice', '2env')
 
-[p_bda, t_bda, bda_stats] = anova1(bda_all, groups_all, 'off');
-figure; [c_bda, m_bda, h_bda] = multcompare(bda_stats);
+% Between group stats
+[p_bda, t_bda, bda_stats] = kruskalwallis(bda_all, groups_all, 'off');
+[c_bda, m_bda, h_bda] = multcompare(bda_stats,'display','off');
+
+% Conservative stats versus chance
+pbef_chance = signtest(bda_all(groups_all == 1),mean(before_all95));
+pdur_chance = signtest(bda_all(groups_all == 2),mean(during_all95));
+paft_chance = signtest(bda_all(groups_all == 3),mean(after_all95));
 
 % % Try above but plot those not above chance in red...
 % ppass_all = logical(cat(1, ppass_before_all, ppass_during_all, ppass_after_all));
@@ -521,7 +527,9 @@ scatterBox(dmean_all(:),groups(:));
 % hallway only have 1-2 transients and many fire during the pass through
 % the hallway, so the whole effect might be due to me having to include a
 % small portion of the hallway in my placefield analysis.
-sesh_use = G48_botharenas(11:12);
+use_same_max = true; % True = normalize all TMaps to max firing rate map
+
+sesh_use = G31_botharenas(11:12);
 for j = 1:2
     dirstr = ChangeDirectory_NK(sesh_use(j),0);
     load(fullfile(dirstr,'Placefields_half.mat'),'Placefields_halves')
@@ -533,9 +541,16 @@ for j = 1:2
     sesh_use(j).PSAbool{2} = Placefields_halves{2}.PSAbool;
     sesh_use(j).TMap{1} = Placefields_halves{1}.TMap_gauss;
     sesh_use(j).TMap{2} = Placefields_halves{2}.TMap_gauss;
+    for k = 1:2
+        nan_map_plot = Placefields_halves{k}.RunOccMap;
+        nan_map_plot(nan_map_plot == 0) = nan;
+        nan_map_plot(nan_map_plot ~= 0 & ~isnan(nan_map_plot)) = 0;
+        sesh_use(j).nan_map_plot{k} = nan_map_plot;
+    end
+    
 end
 
-figure(125); set(gcf,'Position',[112 134 1565 863]);
+hh = figure(125); set(gcf,'Position',[112 134 1565 863]);
 l = 1; stay_in = true;
 while stay_in
     for k = 1:2
@@ -552,12 +567,144 @@ while stay_in
                 end
             end
             subplot(2,4,(k-1)*4 + j + 2)
-            imagesc_nan(rot90(sesh_use(j).TMap{k}{l},1));
+            if all(isnan(sesh_use(j).TMap{k}{l}(:)))
+                imagesc_nan(rot90(sesh_use(j).nan_map_plot{k},1));
+            else
+                imagesc_nan(rot90(sesh_use(j).TMap{k}{l},1));
+            end
             axis off
         end
     end
+    
+    % normalize to max FR
+    if use_same_max
+        maxes = cat(1,hh.Children([1,2,4,5]).CLim);
+        maxes = maxes(maxes(:,2) ~= 1,:);
+        clims_use = [0 max(max(maxes))];
+        if ~all(clims_use == 0)
+            arrayfun(@(a) set(a,'CLim',clims_use),hh.Children([1 2 4 5]));
+        end
+    end
+        
 
-    [l, stay_in] = LR_cycle(l,[1 size(PSAbool,1)]);
+    [l, stay_in] = LR_cycle(l,[1 size(sesh_use(j).PSAbool{k},1)]);
 end
+
+%% Make 2 plots: one of connected days only, the other of all days, but
+% all scaled the same
+Mouseconn = load('2env_PV_conn_1000shuffles-2018-01-17.mat');
+% load('2env_PVsilent_cm4_local0-0shuffles-2018-05-03.mat'); % this has no place cell filter!
+load('2env_PVsilent_cm4_local0-1000shuffles-2018-01-06.mat')
+silent_thresh = nan;
+if isnan(silent_thresh)
+    sil_bool = [true false false];
+else
+    sil_bool = silent_thresh == [nan 0 1];
+end
+
+sq_inds = [1 2 7 8 9 12 13 14]; cir_inds = [3 4 5 6 10 11 15 16];
+
+% Make all sessions matrix - circ2square
+c2s_sesh_all = []; sq_sesh_all = []; cir_sesh_all = [];
+for j = 1:4 
+    c2s_sesh_all = cat(3,c2s_sesh_all,Mouse(j).PVcorrs.circ2square(sil_bool).PVcorrs); 
+    sq_sesh_all = cat(3,sq_sesh_all,Mouse(j).PVcorrs.square(sil_bool).PVcorrs); 
+    cir_sesh_all = cat(3,cir_sesh_all,Mouse(j).PVcorrs.circle(sil_bool).PVcorrs); 
+end
+c2s_sesh_mean = nanmean(c2s_sesh_all,3);
+cir_sesh_mean = nanmean(cir_sesh_all,3);
+sq_sesh_mean = nanmean(sq_sesh_all,3);
+
+% Construct mega matrix with everthing inside - why didn't I just do this
+% to begin with? 
+all_sesh_full_mean = nan(16,16);
+for j = 1:16
+    for k = 1:16
+        if j == k
+            continue
+        end
+        
+        if any(sq_inds == j) && any(sq_inds == k) % both square
+            sq_inds_use = find((sq_inds == j) | (sq_inds == k));
+            all_sesh_full_mean(j,k) = sq_sesh_mean(sq_inds_use(1),...
+                sq_inds_use(2));
+        elseif any(cir_inds == j) && any(cir_inds == k) % both cir
+            cir_inds_use = find((cir_inds == j) | (cir_inds == k));
+            all_sesh_full_mean(j,k) = cir_sesh_mean(cir_inds_use(1),...
+                cir_inds_use(2));
+        else
+            sq_ind_use = (sq_inds == j) | (sq_inds == k);
+            cir_ind_use = (cir_inds == j) | (cir_inds == k);
+            all_sesh_full_mean(j,k) = c2s_sesh_mean(sq_ind_use, cir_ind_use);
+        end
+    end
+end
+% 
+% all_sesh_bef_aft = c2s_sesh_mean([1:4, 7:8],[1:4, 7:8]);
+
+% Make connected sessions matrix
+conn_sesh_all = [];
+for j = 1:4
+    conn_sesh_all = cat(3,conn_sesh_all,...
+        Mouseconn.Mouse(j).PV_corrs.conn.pval.PV_corr_mean);
+end
+conn_sesh_all(logical(eye(8))) = nan;
+
+all_sesh_bef_aft2 = all_sesh_full_mean([1:8, 13:16],[1:8, 13:16]);
+
+%% Plot everything
+divs = [1.5 6.5 10.5];
+try close(456); end
+figure(456)
+hconf(1) = subplot(2,3,[1 2 4 5]);
+imagesc_nan(all_sesh_bef_aft2); colorbar
+hold on
+plot([0.5 12.5],[2.5 2.5],'r--', [0.5 12.5],[6.5 6.5],'r--',...
+    [0.5 12.5],[10.5 10.5],'r--');
+plot([2.5 2.5],[0.5 12.5],'r--', [6.5 6.5], [0.5 12.5],'r--',...
+    [10.5 10.5], [0.5 12.5], 'r--');
+title('Non-Connected Days')
+
+hconf(2) = subplot(2,3,3);
+imagesc_nan(mean(conn_sesh_all,3)); colorbar
+hold on
+plot([4.5 4.5],[0.5 8.5],'r--',[0.5 8.5],[4.5 4.5],'r--')
+title('Connected Days')
+make_figure_pretty(gcf)
+
+% Scale color limits
+clim_both = cat(1,hconf.CLim);
+clim_use = [min(clim_both(:)) max(clim_both(:))];
+arrayfun(@(a) set(a,'CLim',clim_use),hconf)
+chil = get(gcf,'Children');
+arrayfun(@(a) set(a,'Ticks',clim_use,'TickLabels',...
+    arrayfun(@(a) num2str(a,'%0.2f'),clim_use','UniformOutput',false)),chil([1 3]))
+
+% Make condensed bef_aft matrix
+all_bef_aft_cond = nan(6,6);
+for j = 1:6
+    inds1 = (1:2) + (j-1)*2;
+    for k = 1:6
+        inds2 = (1:2) + (k-1)*2;
+        section_use = all_sesh_bef_aft2(inds1,inds2);
+        all_bef_aft_cond(j,k) = nanmean(section_use(:));
+        
+    end
+end
+
+subplot(2,3,6)
+imagesc_nan(all_bef_aft_cond); colorbar
+
+%% Get day means
+all_sesh_cond = nan(8,8);
+for j = 1:8
+    for k = 1:8
+        ind1_use = (2*j-1):(2*j);
+        ind2_use = (2*k-1):(2*k);
+        vals_use = all_sesh_full_mean(ind1_use,ind2_use);
+        all_sesh_cond(j,k) = nanmean(vals_use(:)); 
+    end
+end
+
 
 

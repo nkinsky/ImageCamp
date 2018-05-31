@@ -311,7 +311,7 @@ end
 
 days = [1 1 2 2 3 3 4 4 5 5 6 6];
 % Reorganize into days
-n_by_days = nan(4,length(days);
+n_by_days = nan(4,length(days));
 for j = 1:max(days)
     temp = nneurons_all(:,days == j);
     n_by_days(:,j) = temp(:);

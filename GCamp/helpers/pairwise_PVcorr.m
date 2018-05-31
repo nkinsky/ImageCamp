@@ -1,4 +1,5 @@
-function [ corrs, PV1_use, PV2_use, final_filter ] = pairwise_PVcorr( MD1, MD2, varargin )
+function [ corrs, PV1_use, PV2_use, final_filter ] = pairwise_PVcorr(...
+    MD1, MD2, varargin )
 % [corrs, PV1_use, PV2_use, final_filter] = pairwise_PVcorr( MD1, MD2, ... )
 %   Gets pairwise PV correlations between MD1 and MD2. Spits out PV
 %   correlations (Spearman) at each spatial bin and nBinsX x nBinsy x
@@ -57,7 +58,6 @@ ip.addParameter('silent_thresh', nan, @(a) isnan(a) || a >=0 && a <= 1);
 ip.addParameter('pval_thresh', 0.05, @(a) a > 0 & a <= 1);
 ip.addParameter('ntrans_thresh', 3, @(a) a >= 0 & round(a) == a);
 ip.addParameter('batch_map',[], @(a) isempty(a) || isstruct(a)); % specify to use batch map instead of pairwise reg
-% ip.addParameter('skip_corr'
 ip.addParameter('custom_filter', nan, @(a) islogical(a) || isnan(a)); % nan = don't use custom filter
 ip.KeepUnmatched = true;
 ip.parse(MD1, MD2, varargin{:});

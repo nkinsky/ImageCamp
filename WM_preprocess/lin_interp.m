@@ -8,9 +8,12 @@ function [ y_interp ] = lin_interp( x ,y, x_interp )
 % OUTPUT VARIABLES
 % y_interp:     y value at x_interp
 
-if sum(x_interp < x) == 0 || sum(x_interp >= x) == 0
+if all(x_interp == x) % if x_interp is exactly equal to a value in x
+    y_interp = y(1);
+elseif (sum(x_interp < x) == 0 || sum(x_interp >= x) == 0) && ...
+        (sum(x_interp == x) ~= 2)
     error('x_interp is outside the range of x')
-else
+else % perform interpolation if x_interp is within x
     y_interp = (y(2)-y(1))/(x(2)- x(1))*(x_interp-x(1)) + y(1);
 end
 
