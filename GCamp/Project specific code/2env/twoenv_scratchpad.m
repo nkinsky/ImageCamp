@@ -48,11 +48,11 @@ end
 pval_filt = false;
 pval_thresh = 1;
 cmperbin_use = 4; 
-ntrans_thresh = 0;
-num_shuffles = 0;
+ntrans_thresh = 1;
+num_shuffles =1000;
 
 inclusion_criteria.pval_filt = pval_filt;
-inclusion_criteria.pval_thresh = 0.05;
+inclusion_criteria.pval_thresh = pval_thresh;
 inclusion_criteria.cmperbin_use = cmperbin_use;
 inclusion_criteria.ntrans_thresh = ntrans_thresh;
 
@@ -77,7 +77,7 @@ for pp = 1 %1:2 % 1 is at optimal rotation, 2 is at local cue rotation
     end
     for j = animal_start:num_animals
         for m = 1:3 % square, circ, circ2square
-            for k = 1:length(sil_thresh_use) % 1:3 silenthresh = nan, 0, or 1
+            for k = 1:2 % length(silent_thresh) % 1:3 silenthresh = nan, 0, or 1
                 
                 sesh_use = Mouse(j).sesh.(sesh_type{m});
                 best_angle_use = Mouse(j).best_angle.(sesh_type{m});

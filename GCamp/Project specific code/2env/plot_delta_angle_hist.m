@@ -1,6 +1,6 @@
-function [ h, delta_mean, arena_rot, p, ncells, coh_ratio ] = ...
+function [ h, delta_mean, arena_rot, p, ncells, coh_ratio, coh_bool, neuron_id  ] = ...
     plot_delta_angle_hist(sesh1, sesh2, map_sesh, varargin)
-%  [ h, delta_mean, arena_rot, p, ncells, coh_ratio ] = ...
+%  [ h, delta_mean, arena_rot, p, ncells, coh_ratio, coh_bool, neuron_id ] = ...
 %       plot_delta_angle_hist( sesh1, sesh2, map_sesh, ...)
 %   Plot histogram of all place field rotation angles between sessions.
 %   Spits out axes handle, the circular mean of all pf rotations, 
@@ -66,7 +66,7 @@ s1_ind = get_session_index(sesh1,batch_session_map.session);
 s2_ind = get_session_index(sesh2,batch_session_map.session);
 
 % Get the differences in PF angle and position between the two sessions
-[delta_angle, delta_pos, pos1, ~, delta_angle_shuf] = get_PF_angle_delta(sesh1, ...
+[delta_angle, delta_pos, pos1, ~, delta_angle_shuf, neuron_id] = get_PF_angle_delta(sesh1, ...
     sesh2, batch_session_map, TMap_type, bin_size, PCfilter, false, nshuf,...
     half_use);
 
@@ -104,7 +104,8 @@ if plot_flag
     hhist = histogram(delta_angle,edges); %#ok<NASGU>
     ylims = get(gca,'YLim');
     xlim([0 360]);
-    xlabel('PF rotation'); ylabel('Count')
+    set(gca,'XTick',0:90:360)
+    xlabel('PF rotation'); ylabel('Neurons')
     hold on
     hCImean = gobjects(0);
 end
@@ -119,9 +120,9 @@ count_lims = repmat([delta_mean-coh_ang_thresh, ...
     delta_mean+coh_ang_thresh],3,1) + [-360 0 360]'; 
 
 % Make boolean of angles within the limits
-ndata_bool = bw_bool(delta_angle, count_lims);
-nmean_data = sum(ndata_bool); % sum them up.
-coh_ratio = nmean_data/length(ndata_bool); % Get ratio of cells that are coherent
+coh_bool = bw_bool(delta_angle, count_lims);
+nmean_data = sum(coh_bool); % sum them up.
+coh_ratio = nmean_data/length(coh_bool); % Get ratio of cells that are coherent
 
 % pre-allocate for shuffling
 shuf_count = nan(nshuf, length(edges)-1);

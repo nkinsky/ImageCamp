@@ -40,7 +40,7 @@ G48_alt(j).Date = '10_13_2015'; G48_alt(j).Session = 1; j = j+1;
 G48_alt(j).Date = '10_13_2015'; G48_alt(j).Session = 2; j = j+1;
 G48_alt(j).Date = '10_14_2015'; G48_alt(j).Session = 1; j = j+1;
 % G48_alt(j).Date = '10_14_2015'; G48_alt(j).Session = 2; j = j+1; % Bad frames need to be corrected
-G48_alt(j).Date = '10_15_2015'; G48_alt(j).Session = 1; j = j+1; % Need ICmovie_min_proj.tif
+G48_alt(j).Date = '10_15_2015'; G48_alt(j).Session = 1; j = j+1; 
 G48_alt(j).Date = '10_15_2015'; G48_alt(j).Session = 2; j = j+1;
 G48_alt(j).Date = '10_16_2015'; G48_alt(j).Session = 1; j = j+1;
 G48_alt(j).Date = '10_16_2015'; G48_alt(j).Session = 2; j = j+1;

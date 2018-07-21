@@ -1,4 +1,4 @@
-function [ delta_angle, delta_pos, pos1, angles, delta_angle_shuf ] = ...
+function [ delta_angle, delta_pos, pos1, angles, delta_angle_shuf, neuronid ] = ...
     get_PF_angle_delta( sesh1, sesh2, batch_map, TMap_type, bin_size, ...
     PCfilter, plot_flag, nshuf, half_use )
 % delta_angle = get_PF_angle_delta( sesh1, sesh2, neuron_map, ... )
@@ -12,12 +12,12 @@ function [ delta_angle, delta_pos, pos1, angles, delta_angle_shuf ] = ...
 %   only include neurons that are considered place cells in either session
 %   (p < 0.05).
 
-if nargin < 7
-    plot_flag = false;
+if nargin < 9
+    half_use = [nan nan];
     if nargin < 8
         nshuf = 0;
-        if nargin < 9
-            half_use = [nan nan];
+        if nargin < 7
+            plot_flag = false;
         end
     end
 end
@@ -112,6 +112,8 @@ end
 
 
 %% Calculate angle difference
+neuronid(:,1) = find(valid_bool);
+neuronid(:,2) = map_use(valid_bool);
 angles = nan(sum(valid_bool),2);
 angles(:,1) = sessions(1).PFangle2(valid_bool)';
 angles(:,2) = sessions(2).PFangle2(map_use(valid_bool))';
@@ -143,17 +145,19 @@ if PCfilter
     pos1 = pos1(pf_either_bool);
     pos2 = pos2(pf_either_bool);
     angles = angles(pf_either_bool,:);
+    neuronid = neuronid(pf_either_bool,:);
 
 end
 
 %% Last but not least, filter out any nan values (neurons that weren't active
-% above apeed threshold in one session)
+% above speed threshold in one session)
 nan_bool = isnan(delta_angle);
 delta_angle = delta_angle(~nan_bool);
 delta_pos = delta_pos(~nan_bool);
 pos1 = pos1(~nan_bool);
 pos2 = pos2(~nan_bool);
 angles = angles(~nan_bool,:);
+neuronid = neuronid(~nan_bool,:);
 
 pos_all = cat(3,pos1,pos2);
 

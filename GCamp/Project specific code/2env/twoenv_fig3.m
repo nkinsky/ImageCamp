@@ -425,3 +425,26 @@ figure; [c_r, m_r, h_r] = multcompare(r_stats);
 
 [p_nr, t_nr, nr_stats] = anova1(prop_by_aligntype_nr(:), aligntype(:), 'off');
 figure; [c_nr, m_nr, h_nr] = multcompare(nr_stats);
+
+%% See twoenv_mismatch_histograms for most of the current plots
+
+%% Example sessions - octagon mismatch with rotation at a non-right angle
+[~, delta_mean_o, ~, po, ~, coh_ratio_o] = plot_delta_angle_hist(...
+    G30_oct(6), G30_oct(8), G30_oct(1), 'TMap_type', 'TMap_gauss',...
+    'bin_size', 1, 'nshuf', 1000);
+% ylims = get(gca,'YLim');
+make_plot_pretty(gca,'linewidth',1,'fontsize',14)
+set(gca,'YLim',[0 50],'YTick',0:25:50,'XLim',[-10 370])
+printNK('Octagon to octagon mismatch histo example','2env')
+
+%% Example square session
+[~, delta_mean_s, ~, ps, ~, coh_ratio_s] = plot_delta_angle_hist(...
+    G48_square(3), G48_square(5), G48_square(1), 'TMap_type', 'TMap_gauss',...
+    'bin_size', 1, 'nshuf', 1000);
+% ylims = get(gca,'YLim');
+make_plot_pretty(gca,'linewidth',1,'fontsize',14)
+set(gca,'YLim',[0 40],'YTick',0:20:40,'XLim',[-10 370])
+printNK('Square to square mismatch histo example','2env')
+
+
+

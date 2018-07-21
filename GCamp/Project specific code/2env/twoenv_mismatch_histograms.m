@@ -10,13 +10,14 @@
 % ne21 = length(edges2);
 % ne3 = length(edges3);
 % ne4 = length(edges4);
+ppp = mfilename;
 
 PCfilter = false;
 mismatch_cutoff = 22.5; % Used for calculating mismatches 
 nshuf = 1000;
 
 coh_ang_thresh = 30; % used for calculating significance values and # cells close to mean
-plot_hists = false; % true = plot histograms for all mice/session-pairs
+plot_hists = true; % true = plot histograms for all mice/session-pairs
 plot_entry = false; % true = plot entry breakdown for all animals
 %% Calculate rotation angles for all square session-pairs
 % Shuffle, get p value, and apply CIs from shuffled data! - shuffle cell
@@ -146,7 +147,9 @@ oct_rightang_bool = cellfun(@(a) bw_bool(a,right_lims),...
 %% Plot everything
 bin_size = 22.5; % degrees
 edges_use = -bin_size/2:bin_size:(360-bin_size/2);
+edges_use2 = -bin_size:2*bin_size:(360-bin_size);
 nbins = length(edges_use)-1;
+nbins2 = length(edges_use2)-1;
 
 try close(35); end %#ok<TRYNC>
 figure(35); set(gcf,'Position',[2225 10 1700 1000]);
@@ -168,12 +171,18 @@ legend(cat(1,hsq,hoct,hc),{'Square','Octagon','Chance'})
 title('Mismatch session PF rot angles')
 
 subplot(3,3,2); hold off
-hsq2 = histogram(angles_all_sq, [edges_use, edges_use(2)+360], 'DisplayStyle', 'bar',...
+angles_all_sq_adj = angles_all_sq;
+angles_all_sq_adj(angles_all_sq_adj > 360-2*bin_size) = ...
+    angles_all_sq_adj(angles_all_sq_adj > 360-2*bin_size) - 360;
+hsq2 = histogram(angles_all_sq_adj, edges_use2, 'DisplayStyle', 'bar',...
     'Normalization','probability');
 hold on
-hoct2 = histogram(angles_all_oct, [edges_use, edges_use(2)+360] , 'DisplayStyle', ...
-    'stairs','Normalization','probability');
-hc2 = plot(edges_use,1/nbins*ones(size(edges_use)),'r--');
+angles_all_oct_adj = angles_all_oct;
+angles_all_oct_adj(angles_all_oct_adj > 360-2*bin_size) = ...
+    angles_all_oct_adj(angles_all_oct_adj > 360-2*bin_size) - 360;
+hoct2 = histogram(angles_all_oct_adj, edges_use2 , 'DisplayStyle', ...
+    'bar','Normalization','probability');
+hc2 = plot(edges_use2,1/nbins2*ones(size(edges_use2)),'r--');
 hold off
 legend(cat(1,hsq2,hoct2,hc2),{'Square','Octagon','Chance'},...
     'Location','NorthWest')
@@ -253,14 +262,14 @@ pmmdiff_rot = ranksum(squeeze(comb_breakdownw(:,2,1)),...
 pdistdiff_rot = ranksum(squeeze(comb_breakdownw(:,3,1)),...
     squeeze(comb_breakdownw(:,3,2)));
 
-text(0.6,0.7,['1v2 p = ' num2str(c(1,6),'%0.2f')])
-text(0.1,0.5,['1v3 p = ' num2str(c(2,6),'%0.2f')])
-text(0.6,0.5,['2v3 p = ' num2str(c(3,6),'%0.2f')])
-text(0.1,0.7,['pkw = ' num2str(pkw,'%0.2f')])
+text(0.6,0.7,['1v2 p = ' num2str(c(1,6),'%0.2g')])
+text(0.1,0.5,['1v3 p = ' num2str(c(2,6),'%0.2g')])
+text(0.6,0.5,['2v3 p = ' num2str(c(3,6),'%0.2g')])
+text(0.1,0.7,['pkw = ' num2str(pkw,'%0.2g')])
 text(0.1,0.3,'Cir v Sq diff?')
-text(0.6,0.3,['ploc\_diff = ' num2str(plcdiff_rot,'%0.2f')])
-text(0.1,0.1,['ploc\_diff = ' num2str(pmmdiff_rot,'%0.2f')])
-text(0.6,0.1,['pdist\_diff = ' num2str(pdistdiff_rot,'%0.2f')])
+text(0.6,0.3,['ploc\_diff = ' num2str(plcdiff_rot,'%0.2g')])
+text(0.1,0.1,['pmm\_diff = ' num2str(pmmdiff_rot,'%0.2g')])
+text(0.6,0.1,['pdist\_diff = ' num2str(pdistdiff_rot,'%0.2g')])
 title('KW test with post-hoc Tukey HSD')
 axis off
 
@@ -291,6 +300,7 @@ comb_breakdownw = cat(3,squeeze(sq_breakdown(:,2,:)),...
 [pkw,~,statskw] = kruskalwallis(comb_breakdown(:,1:3),...
     {'Local','Mismatch','Distal'},'off');
 c = multcompare(statskw,'display','off');
+prsmm_lc = ranksum(comb_breakdown(:,1,:),comb_breakdown(:,2,:));
 
 % Is there a difference between square/circ? Not after Bonf correction.
 plcdiff_nrot = ranksum(squeeze(comb_breakdownw(:,1,1)),...
@@ -300,14 +310,15 @@ pmmdiff_nrot = ranksum(squeeze(comb_breakdownw(:,2,1)),...
 pdistdiff_nrot = ranksum(squeeze(comb_breakdownw(:,3,1)),...
     squeeze(comb_breakdownw(:,3,2)));
 
-text(0.6,0.7,['1v2 p = ' num2str(c(1,6),'%0.2f')])
-text(0.1,0.5,['1v3 p = ' num2str(c(2,6),'%0.2f')])
-text(0.6,0.5,['2v3 p = ' num2str(c(3,6),'%0.2f')])
-text(0.1,0.7,['pkw = ' num2str(pkw,'%0.2f')])
+text(0.6,0.7,['1v2 p = ' num2str(c(1,6),'%0.2g')])
+text(0.1,0.5,['1v3 p = ' num2str(c(2,6),'%0.2g')])
+text(0.6,0.5,['2v3 p = ' num2str(c(3,6),'%0.2g')])
+text(0.1,0.7,['pkw = ' num2str(pkw,'%0.2g')])
 text(0.1,0.3,'Cir v Sq diff?')
-text(0.6,0.3,['ploc\_diff = ' num2str(plcdiff_nrot,'%0.2f')])
-text(0.1,0.1,['ploc\_diff = ' num2str(pmmdiff_nrot,'%0.2f')])
-text(0.6,0.1,['pdist\_diff = ' num2str(pdistdiff_nrot,'%0.2f')])
+text(0.6,0.3,['ploc\_diff = ' num2str(plcdiff_nrot,'%0.2g')])
+text(0.1,0.1,['pmm\_diff = ' num2str(pmmdiff_nrot,'%0.2g')])
+text(0.6,0.1,['pdist\_diff = ' num2str(pdistdiff_nrot,'%0.2g')])
+text(0.1,0.9,['loc v mm rank-sum p = ' num2str(prsmm_lc,'%0.2g')])
 title('KW test with post-hoc Tukey HSD')
 axis off
 
@@ -338,6 +349,37 @@ make_figure_pretty(gcf)
 printNK(['Mismatch Breakdown PFfilt=' num2str(PCfilter) ' ang_thresh= ' ...
     num2str(round(coh_ang_thresh))],'2env')
 
+%%
+% Plot coherent v global remapping proportions for all comparisons (circle,
+% square, and circ2square here).
+try close(383); end
+
+figure(383); set(gcf,'Position',[1990 150 460 800]);
+subplot(2,1,1)
+gr_breakdown_win = sum(cat(1, gr_bool_sq(:,:), gr_bool_oct(:,:)),2)/28;
+gr_breakdown_c2s = sum(gr_bool_c2s(:,:),2)/64;
+h = bar(1:2, [1 - mean(gr_breakdown_win), 1 - mean(gr_breakdown_c2s)]);
+xlim([0 3])
+xplot = 1 + randn(size(gr_breakdown_win))*0.02;
+hold on
+scatter(xplot(:), 1 - gr_breakdown_win(:),'ko')
+xplot = 2 + randn(size(gr_breakdown_c2s))*0.02;
+hold on
+scatter(xplot(:), 1 - gr_breakdown_c2s(:),'ko')
+title('Coherent v Gl. Remapping Breakdown')
+hold off
+set(gca,'XTickLabel',{'Same','Diff.'})
+xlabel('Arena')
+ylabel('Prob. Coh. x Mouse')
+make_plot_pretty(gca,'linewidth',1)
+
+% Stats
+subplot(2,1,2)
+prks = ranksum(gr_breakdown_win, gr_breakdown_c2s);
+text(0.1,0.5, ['prks_diff = ' num2str(prks,'%0.2f')])
+axis off
+
+printNK('Coh probability same v diff','2env')
 
 %% Get entry and landing angle changes between sessions and shuffled values
 nshuf = 1000;
