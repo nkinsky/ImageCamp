@@ -1996,10 +1996,27 @@ MD(i).Notes = 'Will Method';
 MD(i).Pix2CM = 0.0874;
 MD(i).perf = 57.5;
 
+
 i = i+1;
 MD(i).Animal = 'GCamp6f_45';
 MD(i).Date = '09_22_2015';
 MD(i).Session = 1;
+MD(i).Env = 'alternation';
+MD(i).Room = '201a - 2015';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = '';
+elseif (strcmp(userstr,'mouseimage'))
+    MD(i).Location = 'F:\GCamp6f_45\09_22_2015\1 - alternation';
+end
+MD(i).Notes = 'Will Method';
+MD(i).Pix2CM = 0.0874;
+MD(i).perf = 70;
+
+
+i = i+1;
+MD(i).Animal = 'GCamp6f_45';
+MD(i).Date = '09_22_2015';
+MD(i).Session = 2;
 MD(i).Env = 'alternation';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
