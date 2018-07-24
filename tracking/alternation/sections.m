@@ -49,10 +49,12 @@ while skewed
     
     if exist(fullfile(pwd,'Pos_align.mat'),'file') % Skip rotating if already done.
         [rot_x,rot_y,rotang] = rotate_traj(x,y,0);
+        disp('Rotated data already found in Pos_align.mat')
     else
         %Try loading previous rotation angle.
         try
             load(fullfile(pwd,'rotated.mat'));
+            disp('Rotated data already found in rotated.mat')
             % Run the rotation anyway if manual override is specified
             if manual_rot_overwrite == 1
                 [rot_x,rot_y,rotang] = rotate_traj(x,y);

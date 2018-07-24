@@ -1,6 +1,9 @@
-function [ output_args ] = batch_align_pos2(base_sesh, reg_sesh, varargin )
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+function [ ] = batch_align_pos2(base_sesh, reg_sesh, varargin )
+% batch_align_pos2(base_sesh, reg_sesh, varargin )
+%   Re-vamp of batch_alien_pos for eraser project. Tries to use self drawn
+%   limits of the arena for scaling the data since in some sessions the
+%   mice do not explore the entire arena in the shock box. I believe this
+%   still needs to be de-bugged as of 7/16/2018.
 
 
 warning('off','MATLAB:load:variableNotFound')
