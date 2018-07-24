@@ -893,34 +893,34 @@ end
 MD(i).Notes = 'Regular Alternation';
 MD(i).Pix2CM = 0.15;
 MD(i).perf = 86;
-
-i = i+1;
-MD(i).Animal = 'GCamp6f_30';
-MD(i).Date = '11_12_2014';
-MD(i).Session = 2;
-MD(i).Env = 'Alternation';
-MD(i).Room = '2 Cu 201B';
-if (strcmp(userstr,'Nat'))
-    MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\11_12_2014\Working\left trials';
-elseif (strcmp(userstr,'Nat_laptop'))
-    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_12_2014\Working';
-end
-MD(i).Notes = 'Correct Left Trials Only';
-MD(i).Pix2CM = 0.15;
-
-i = i+1;
-MD(i).Animal = 'GCamp6f_30';
-MD(i).Date = '11_12_2014';
-MD(i).Session = 3;
-MD(i).Env = 'Alternation';
-MD(i).Room = '2 Cu 201B';
-if (strcmp(userstr,'Nat'))
-    MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\11_12_2014\Working\right trials';
-elseif (strcmp(userstr,'Nat_laptop'))
-    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_12_2014\Working';
-end
-MD(i).Notes = 'Correct Right Trials Only';
-MD(i).Pix2CM = 0.15;
+% 
+% i = i+1;
+% MD(i).Animal = 'GCamp6f_30';
+% MD(i).Date = '11_12_2014';
+% MD(i).Session = 2;
+% MD(i).Env = 'Alternation';
+% MD(i).Room = '2 Cu 201B';
+% if (strcmp(userstr,'Nat'))
+%     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\11_12_2014\Working\left trials';
+% elseif (strcmp(userstr,'Nat_laptop'))
+%     MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_12_2014\Working';
+% end
+% MD(i).Notes = 'Correct Left Trials Only';
+% MD(i).Pix2CM = 0.15;
+% 
+% i = i+1;
+% MD(i).Animal = 'GCamp6f_30';
+% MD(i).Date = '11_12_2014';
+% MD(i).Session = 3;
+% MD(i).Env = 'Alternation';
+% MD(i).Room = '2 Cu 201B';
+% if (strcmp(userstr,'Nat'))
+%     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\11_12_2014\Working\right trials';
+% elseif (strcmp(userstr,'Nat_laptop'))
+%     MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_12_2014\Working';
+% end
+% MD(i).Notes = 'Correct Right Trials Only';
+% MD(i).Pix2CM = 0.15;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -939,33 +939,33 @@ MD(i).Notes = 'Regular Alternation';
 MD(i).Pix2CM = 0.15;
 MD(i).perf = 88.3;
 
-i = i+1;
-MD(i).Animal = 'GCamp6f_30';
-MD(i).Date = '11_13_2014';
-MD(i).Session = 2;
-MD(i).Env = 'Alternation';
-MD(i).Room = '2 Cu 201B';
-if (strcmp(userstr,'Nat'))
-    MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\11_13_2014\Working\left trials';
-elseif (strcmp(userstr,'Nat_laptop'))
-    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working';
-end
-MD(i).Notes = 'Correct Left Trials Only';
-MD(i).Pix2CM = 0.15;
-
-i = i+1;
-MD(i).Animal = 'GCamp6f_30';
-MD(i).Date = '11_13_2014';
-MD(i).Session = 3;
-MD(i).Env = 'Alternation';
-MD(i).Room = '2 Cu 201B';
-if (strcmp(userstr,'Nat'))
-    MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\11_13_2014\Working\right trials';
-elseif (strcmp(userstr,'Nat_laptop'))
-    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working';
-end
-MD(i).Notes ='Correct Right Trials Only';
-MD(i).Pix2CM = 0.15;
+% i = i+1;
+% MD(i).Animal = 'GCamp6f_30';
+% MD(i).Date = '11_13_2014';
+% MD(i).Session = 2;
+% MD(i).Env = 'Alternation';
+% MD(i).Room = '2 Cu 201B';
+% if (strcmp(userstr,'Nat'))
+%     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\11_13_2014\Working\left trials';
+% elseif (strcmp(userstr,'Nat_laptop'))
+%     MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working';
+% end
+% MD(i).Notes = 'Correct Left Trials Only';
+% MD(i).Pix2CM = 0.15;
+% 
+% i = i+1;
+% MD(i).Animal = 'GCamp6f_30';
+% MD(i).Date = '11_13_2014';
+% MD(i).Session = 3;
+% MD(i).Env = 'Alternation';
+% MD(i).Room = '2 Cu 201B';
+% if (strcmp(userstr,'Nat'))
+%     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\11_13_2014\Working\right trials';
+% elseif (strcmp(userstr,'Nat_laptop'))
+%     MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working';
+% end
+% MD(i).Notes ='Correct Right Trials Only';
+% MD(i).Pix2CM = 0.15;
 
 G30.alternation(2) = i;
 
@@ -2105,7 +2105,7 @@ MD(i).Location = 'D:\GCamp mice\G45\alternation\09_19_2015\1 - alternation\Worki
 MD(i).Env = 'alternation';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
-    MD(i).Location = '';
+    MD(i).Location = 'D:\GCamp mice\G45\alternation\09_19_2015\1 - alternation\Working';
 elseif (strcmp(userstr,'mouseimage'))
     MD(i).Location = 'F:\GCamp6f_45\09_19_2015\1 - alternation';
 end
@@ -2130,20 +2130,20 @@ MD(i).Pix2CM = 0.0874;
 MD(i).perf = 70;
 
 
-i = i+1;
-MD(i).Animal = 'GCamp6f_45';
-MD(i).Date = '09_22_2015';
-MD(i).Session = 2;
-MD(i).Env = 'alternation';
-MD(i).Room = '201a - 2015';
-if (strcmp(userstr,'Nat'))
-    MD(i).Location = '';
-elseif (strcmp(userstr,'mouseimage'))
-    MD(i).Location = 'M:\GCamp6f_45\09_22_2015\1 - alternation';
-end
-MD(i).Notes = 'Will Method';
-MD(i).Pix2CM = 0.0874;
-MD(i).perf = 70;
+% i = i+1;
+% MD(i).Animal = 'GCamp6f_45';
+% MD(i).Date = '09_22_2015';
+% MD(i).Session = 2;
+% MD(i).Env = 'alternation';
+% MD(i).Room = '201a - 2015';
+% if (strcmp(userstr,'Nat'))
+%     MD(i).Location = '';
+% elseif (strcmp(userstr,'mouseimage'))
+%     MD(i).Location = 'M:\GCamp6f_45\09_22_2015\1 - alternation';
+% end
+% MD(i).Notes = 'Will Method';
+% MD(i).Pix2CM = 0.0874;
+% MD(i).perf = 70;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_45';
@@ -2320,20 +2320,22 @@ MD(i).Notes = 'Will Method';
 MD(i).Pix2CM = 0.0874;
 MD(i).perf = 72;
 
-i = i+1;
-MD(i).Animal = 'GCamp6f_45';
-MD(i).Date = '10_06_2015';
-MD(i).Session = 1;
-MD(i).Env = 'alternation';
-MD(i).Room = '201a - 2015';
-if (strcmp(userstr,'Nat'))
-    MD(i).Location = 'D:\GCamp mice\G45\alternation\10_06_2015\1 - alternation\Working';
-elseif strcmpi(userstr,'mouseimage')
-    MD(i).Location = 'M:\GCamp6f_45\10_06_2015\1 - alternation';
-end
-MD(i).Notes = 'Will Method';
-MD(i).Pix2CM = 0.0874;
-MD(i).perf = 71;
+% Lots of weird drift between imaging and behavioral camera - scrap, can't
+% figure out alignment
+% i = i+1;
+% MD(i).Animal = 'GCamp6f_45';
+% MD(i).Date = '10_06_2015';
+% MD(i).Session = 1;
+% MD(i).Env = 'alternation';
+% MD(i).Room = '201a - 2015';
+% if (strcmp(userstr,'Nat'))
+%     MD(i).Location = 'D:\GCamp mice\G45\alternation\10_06_2015\1 - alternation\Working';
+% elseif strcmpi(userstr,'mouseimage')
+%     MD(i).Location = 'M:\GCamp6f_45\10_06_2015\1 - alternation';
+% end
+% MD(i).Notes = 'Will Method';
+% MD(i).Pix2CM = 0.0874;
+% MD(i).perf = 71;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_45';
@@ -3077,6 +3079,8 @@ MD(i).Notes = 'Will Method';
 MD(i).Pix2CM = 0.0874;
 MD(i).perf = 65.7;
 
+% Don't have tracking data for this, but need it - good low performance
+% point!
 i = i+1;
 MD(i).Animal = 'GCamp6f_48';
 MD(i).Date = '09_24_2015';
