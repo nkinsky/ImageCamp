@@ -120,7 +120,7 @@ for j = 3
     close(hw)
 end
 
-%% Run sigSpliterplots
+%% Run sigSplitterplots
 binthresh = 3;
 success_bool = false(1,length(alt_all));
 for j = 1:length(alt_all)
@@ -164,3 +164,33 @@ cats = repmat(1:5,size(rhos_all,1),1);
 scatterBox(rho_all(:), cats(:))
 cat2 = repmat(1:5,size(coactive_all,1),1);
 scatterBox(coactive_all(:),cats2(:))
+
+%% Check if all the sessions have a pos.mat, pos_align, and Placefields file
+sesh_check = MD(ref.G30.alternation(1):ref.G30.alternation(2));
+num_sesh = length(sesh_check);
+
+pos_bool = false(1, num_sesh);
+pos_align_bool = false(1, num_sesh);
+split_sesh_bool = false(1, num_sesh);
+pf_bool = false(1, num_sesh);
+pf_bool1 = false(1, num_sesh);
+
+for j = 1:length(sesh_check)
+    dir_use = ChangeDirectory_NK(sesh_check(j),0);
+    if ~isempty(dir_use)
+        pos_bool(j) = exist(fullfile(dir_use,'Pos.mat'),'file');
+        pos_align_bool(j) = exist(fullfile(dir_use,'Pos_align.mat'),'file');
+        split_sesh_bool(j) = exist(fullfile(dir_use,'part1'),'dir');
+        pf_bool1(j) = exist(fullfile(dir_use,'Placefields_cm1.mat'),'file');
+        pf_bool(j) = exist(fullfile(dir_use,'Placefields.mat'),'file');
+    end
+    
+end
+
+gtg = sesh_check(pf_bool1);
+change_pf_name = sesh_check(pf_bool & ~pf_bool1);
+run_pos_align = sesh_check(~pf_bool1 & ~pf_bool & ~pos_align_bool & pos_bool);
+run_pos_comb = sesh_check(~pf_bool1 & ~pf_bool & ~pos_bool & split_sesh_bool);
+no_pos_file = sesh_check(~pos_bool & ~pf_bool1 & ~pf_bool & ~split_sesh_bool);
+run_pf = sesh_check(~pf_bool & ~pf_bool1 & pos_align_bool);
+disp('ran')
