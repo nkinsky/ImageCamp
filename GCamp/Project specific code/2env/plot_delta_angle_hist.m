@@ -3,7 +3,11 @@ function [ h, delta_mean, arena_rot, p, ncells, coh_ratio, coh_bool, neuron_id  
 %  [ h, delta_mean, arena_rot, p, ncells, coh_ratio, coh_bool, neuron_id ] = ...
 %       plot_delta_angle_hist( sesh1, sesh2, map_sesh, ...)
 %   Plot histogram of all place field rotation angles between sessions.
-%   Spits out axes handle, the circular mean of all pf rotations, 
+%   Spits out axes handle, the circular mean of all pf rotations, the arena
+%   rotation, number of cells co-active in both sessions, the ratio of
+%   cells that are coherent (within coh_ang_thresh), a boolean of whether
+%   each cell is coherent or not,  & the neuron ids for each session.  Note
+%   that delta_mean spits out values in degrees between 0 and 360.
 
 ip = inputParser;
 ip.addRequired('sesh1',@isstruct);
@@ -24,6 +28,7 @@ ip.addParameter('hist_binsize', 22.5, @numeric); % Bin size for histograms
 ip.addParameter('half_use', [nan nan], @(a) isnumeric(a) && ...
     ((size(a,1) == 1 && size(a,2) == 2) || ...
    (size(a,1) == 2 && size(a,2) == 1)));
+ip.addParameter('center_pf_filt', false, @islogical);
 
 % cutoff for if pfs are considered coherent or no - also used to determine
 % significance: count # pf rots < coh_ang_thresh away from mean and compare
@@ -44,6 +49,7 @@ coh_ang_thresh = ip.Results.coh_ang_thresh;
 plot_flag = ip.Results.plot_flag;
 plot_arena_rot = ip.Results.plot_arena_rot & plot_flag;
 plot_legend = ip.Results.plot_legend & plot_flag;
+center_pf_filt = ip.Results.center_pf_filt;
 
 % Calculate bins
 edges = 0:hist_binsize:360;
@@ -66,9 +72,9 @@ s1_ind = get_session_index(sesh1,batch_session_map.session);
 s2_ind = get_session_index(sesh2,batch_session_map.session);
 
 % Get the differences in PF angle and position between the two sessions
-[delta_angle, delta_pos, pos1, ~, delta_angle_shuf, neuron_id] = get_PF_angle_delta(sesh1, ...
-    sesh2, batch_session_map, TMap_type, bin_size, PCfilter, false, nshuf,...
-    half_use);
+[delta_angle, delta_pos, pos1, ~, delta_angle_shuf, neuron_id, cdists1] = ...
+    get_PF_angle_delta(sesh1, sesh2, batch_session_map, TMap_type, bin_size, ...
+    PCfilter, false, nshuf, half_use);
 
 % Count how many neurons are detected on each day and how many are not
 % active while the mouse is running on one day. This should be zero since
@@ -79,14 +85,23 @@ nan_bool = isnan(delta_angle);
 delta_angle = delta_angle(~nan_bool); % Keep only good values
 ncells = length(delta_angle);
 
+% Filter out center neurons if specified
+if center_pf_filt
+   edge_pf_bool = cdists1 > quantile(cdists1, 0.75);
+   delta_angle = delta_angle(edge_pf_bool);
+   delta_angle_shuf = delta_angle_shuf(edge_pf_bool,:);
+end
+
 % Calculate the mean rotation of the data
 delta_mean = circ_rad2ang(circ_mean(circ_ang2rad(delta_angle)));
 if delta_mean < 0; delta_mean = delta_mean + 360; end
+if delta_mean > 360; delta_mean = delta_mean - 360; end
 
 % Debugging statement
 if isnan(delta_mean)
     keyboard
 end
+
 
 % %%
 % keyboard
