@@ -31,6 +31,33 @@ plot_neuron_traces( NeuronTraces.(trace_plot)(neurons_plot,:), colors_used, htra
 hold off
 make_figure_pretty(gcf);
 
+%% Figure S1b
+sesh_use = G45_square(1); % G30_square(1);
+proj_use = 'ICmovie_max_proj.tif';
+
+% Load image to use and NeuronROIs
+dirstr = ChangeDirectory_NK(sesh_use,0);
+im_use = imread(fullfile(dirstr,proj_use));
+load(fullfile(dirstr,'FinalOutput.mat'),'NeuronImage');
+
+% Plot max proj with outlines and plot min proj alone and save
+figure(233); set(gcf,'Position',[2200 270 890 650]); h = gca;
+plot_neuron_outlines(im_use, NeuronImage, h, 'colors', [1 0 0])
+printNK('G45 max proj with all neuron ROIs', '2env')
+
+figure(244); set(gcf,'Position',[2100 170 890 650]);
+min_use = imread(fullfile(dirstr,'ICmovie_min_proj.tif'));
+imagesc_gray(min_use)
+axis equal
+axis tight
+axis off
+printNK('G45 min proj', '2env')
+
+
+
+
+
+
 %% Figure 1b with rising phase of transients identified
 sesh_use = G45_square(1); % G30_square(1);
 proj_use = 'ICmovie_min_proj.tif';

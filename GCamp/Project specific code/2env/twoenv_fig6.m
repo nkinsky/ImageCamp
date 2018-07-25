@@ -57,7 +57,7 @@ text(0.1,0.1, ['chi2 df = ' num2str(Mouse(animal_use).coherency...
 axis off
 printNK('Same Day Rotation Histogram - Circle G45','2env','append',true)
 
-%% Circle same day
+%% Circle 6 day
 animal_use = 3;
 rot_type = 'circle'; % see sesh_type above
 k = find(cellfun(@(a) strcmpi(rot_type,a),sesh_type));
@@ -99,10 +99,29 @@ text(0.1,0.1, ['chi2 df = ' num2str(Mouse(animal_use).coherency...
 axis off
 printNK('Six Day Rotation Histogram - Circle G45','2env','append',true)
 
+%% Circle same day center-out
+[~, delta_mean_0, ~, p0, ~, coh_ratio_0] = plot_delta_angle_hist(...
+    G45_oct(1), G45_oct(2), G45_oct(1), 'TMap_type', 'TMap_gauss',...
+    'bin_size', 1, 'nshuf', 1000, 'coh_ang_thresh', 30);
+ylims = get(gca,'YLim');
+make_plot_pretty(gca,'linewidth',1,'fontsize',14)
+set(gca,'YLim',ylims,'YTick',ylims)
+printNK('Oct center out lag 0 histo','2env')
+
+%% Circle 6 day center-out
+[~, delta_mean_6, ~, p6, ~, coh_ratio_6] = plot_delta_angle_hist(...
+    G45_oct(1), G45_oct(8), G45_oct(1), 'TMap_type', 'TMap_gauss',...
+    'bin_size', 1, 'nshuf', 1000, 'coh_ang_thresh', 30);
+ylims = get(gca,'YLim');
+make_plot_pretty(gca,'linewidth',1,'fontsize',14)
+set(gca,'YLim',ylims,'YTick',ylims)
+printNK('Oct center out lag 6 histo','2env')
+
 %% See twoenv_silent_cellPVs for PV vs day lag plots
 
 %% Plot Coherency proportion vs time
 plot_by_animal = false; %Suggest keeping false since not much is apparent on the animal level
+lag7_remove = true; % Remove all data at day lag = 7 per reviewer comment
 
 coh_all = [];
 gr_all = [];
@@ -191,20 +210,30 @@ plot(days_ref(~isnan(win_env))', win_env(~isnan(win_env)), 'ko-', ...
 ylim([0 1.1])
 xlim([-0.5 7.5]); xlabel('Day lag'); ylabel('Coherent Ratio')
 legend('Same Arena', 'Different Arena')
+% Get rid of lag 7 data points per reviewer comments
+if lag7_remove
+    hcomb.Children(2).Children(1).XData(end) = nan;
+    hcomb.Children(2).Children(1).YData(end) = nan;
+    xlim([-0.5 6.5])
+end
+
 make_plot_pretty(gca)
 
 % Run ANOVA to get stats on whether or not there is any drop-off with time
 same_prop = [squeeze(coh_prop_bymouse(:,1,:)); squeeze(coh_prop_bymouse(:,2,:))];
 [p_same, t_same, stats_same] = anova1(same_prop, [], 'off');
+pkw_same = kruskalwallis(same_prop,[],'off');
 figure; [c_same, m_same, h_same] = multcompare(stats_same);
 
 diff_prop = squeeze(coh_prop_bymouse(:,3,:));
 [p_diff, t_diff, stats_diff] = anova1(diff_prop, [], 'off');
+pkw_diff = kruskalwallis(diff_prop,[],'off');
 figure; [c_diff, m_diff, h_diff] = multcompare(stats_diff);
 
 % Run ANOVA to get stats on whether the two groups are different
 [panova, tab, stats] = anova1(cat(1,same_prop(:),diff_prop(:)),...
     cat(1,ones(length(same_prop(:)),1),2*ones(length(diff_prop(:)),1)),'off');
+prk = ranksum(same_prop(:), diff_prop(:));
 
 %% Make Cell overlap ratio vs time plot
 try; close 505; end; try; close 506; end; try; close 507; end

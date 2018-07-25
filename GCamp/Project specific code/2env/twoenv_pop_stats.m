@@ -18,7 +18,7 @@ MD = MakeMouseSessionListNK('Nat');
 %% Get within arena coherent counts
 PCfilter = false;
 coh_ang_thresh = 22.5;
-nshuf = 1000;
+nshuf = 0;
 
 coh_ratio_sq = nan(4,8,8);
 pshuf_sq = nan(4,8,8);
@@ -53,6 +53,7 @@ toc
 
 gr_bool_oct = pshuf_oct > 0.05/28;
 
+%%
 coh_ratio_all = cat(1, coh_ratio_sq, coh_ratio_oct);
 gr_bool_all = cat(1, gr_bool_sq, gr_bool_oct);
 ncells_all = cat(1, ncells_sq, ncells_oct);
@@ -134,17 +135,32 @@ coh_num_all = coh_ratio_all.*ncells_all;
 gr_num_all = ncells_all - coh_num_all;
 
 subplot(2,3,5)
-hcohn = histogram(coh_num_all(:),0:12.5:175);
-hold on;
-hgrn = histogram(gr_num_all(:), hcohn.BinEdges);
-xlabel('Num. Cells')
-legend(cat(1,hcohn,hgrn),{['< ' num2str(coh_ang_thresh,'%0.1f') ' from mean'],...
-    ['>= ' num2str(coh_ang_thresh,'%0.1f') ' from mean']})
-ylabel('Number of session-pairs')
-title(['PCfilter = ' num2str(PCfilter)])
-[hks,pks] = kstest2(coh_num_all(:), gr_num_all(:),'tail','smaller');
-text(100,40,['p_{ks}(1-sided) = ' num2str(pks,'%0.2g')])
-make_plot_pretty(gca)
+
+hs = scatter( gr_num_all(:), coh_num_all(:),'k');
+hs.SizeData = 25;
+hs.MarkerEdgeAlpha = 0.6;
+xlabel('# Cells Randomly Remapping');
+ylabel('# Cells Staying Coherent');
+xlims = get(gca,'XLim');
+hold on
+hc = plot(xlims, xlims*coh_ang_thresh/180,'k--');
+hl = legend(hc,'Chance');
+legend boxoff
+make_plot_pretty(gca);
+set(gca,'XLim',xlims);
+
+%  Old more confusing plot of # cells randomly remapping vs staying coherent
+% hcohn = histogram(coh_num_all(:),0:12.5:175);
+% hold on;
+% hgrn = histogram(gr_num_all(:), hcohn.BinEdges);
+% xlabel('Num. Cells')
+% legend(cat(1,hcohn,hgrn),{['< ' num2str(coh_ang_thresh,'%0.1f') ' from mean'],...
+%     ['>= ' num2str(coh_ang_thresh,'%0.1f') ' from mean']})
+% ylabel('Number of session-pairs')
+% title(['PCfilter = ' num2str(PCfilter)])
+% [hks,pks] = kstest2(coh_num_all(:), gr_num_all(:),'tail','unequal');
+% text(100,40,['p_{ks}(1-sided) = ' num2str(pks,'%0.2g')])
+% make_plot_pretty(gca)
 
 coh_num_sq = coh_ratio_sq.*ncells_sq;
 gr_num_sq = ncells_sq - coh_num_sq;

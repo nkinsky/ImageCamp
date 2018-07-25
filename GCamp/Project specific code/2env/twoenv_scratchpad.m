@@ -704,3 +704,11 @@ text(0.1,0.3,['c13 = ' num2str(cc(2,6),'%0.2g')])
 text(0.1,0.1,['c12 = ' num2str(cc(3,6),'%0.2g')])
 axis off
 printNK('Same Arena Stability vs Days - With Conn Days','2env','append', true)
+
+%% Save only neuron image from FinalOutput.mat
+
+for j = 1:64
+    ChangeDirectory_NK(all_sessions(j))
+    load('FinalOutput.mat','NeuronImage')
+    save('NeuronROIs','NeuronImage')
+end

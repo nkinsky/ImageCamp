@@ -147,8 +147,8 @@ h = subplot(1,2,2);
 plot_anova_stats(p,c,0.05,h);
 
 % Run binomial glm too
-% groups2 = cat(1, ones(size(coh_pairs_before(:))), 2*ones(size(coh_pairs_during(:))),...
-%     3*ones(size(coh_pairs_after(:))));
+groups2 = cat(1, ones(size(coh_pairs_before(:))), 2*ones(size(coh_pairs_during(:))),...
+    3*ones(size(coh_pairs_after(:))));
 bda_bin = cat(1,coh_pairs_before(:), coh_pairs_during(:), coh_pairs_after(:));
 groups2 = zeros(length(groups2),3);
 nb = length(coh_pairs_before(:)); nd = length(coh_pairs_during(:));
@@ -500,27 +500,27 @@ paft_chance = signtest(bda_all(groups_all == 3),mean(after_all95));
 %     'Mean \rho_{PV}','transparency', 0.7, 'circleColors',[0.7 0 0],'h', h);
 
 %% Stats for 5b: PFdensity increase
-dmean_all = nan(2,8,4);
-for j = 1:4
-    dens_use = Mouse(j).PFdens_map;
-    sq_incrs = round(size(dens_use{1,1})/3);
-    cir_incrs = round(size(dens_use{2,1})/3);
-    sq_bins = [sq_incrs(1) 2*sq_incrs(1); 2*sq_incrs(2) size(dens_use{1,1},2)];
-    cir_bins = [cir_incrs(1) 2*cir_incrs(1); 1 cir_incrs(1)];
-    dmean_sq = cellfun(@(a) nanmean(nanmean(a(sq_bins(1,1):sq_bins(1,2),sq_bins(2,1):sq_bins(2,2)))), ...
-        dens_use(1,:));
-    dmean_cir = cellfun(@(a) nanmean(nanmean(a(cir_bins(1,1):cir_bins(1,2),cir_bins(2,1):cir_bins(2,2)))), ...
-        dens_use(2,:));
-    dmean_all(:,:,j) = cat(1,dmean_sq,dmean_cir);
-
-end
-
-groups = repmat([1 1 1 1 2 2 3 3],2,1,4);
-
-scatterBox(dmean_all(:),groups(:));
-
-[p, t, stats] = anova1(dmean_all(:), groups(:),'off');
-[c, m, h] = multcompare(stats,'display','off');
+% dmean_all = nan(2,8,4);
+% for j = 1:4
+%     dens_use = Mouse(j).PFdens_map;
+%     sq_incrs = round(size(dens_use{1,1})/3);
+%     cir_incrs = round(size(dens_use{2,1})/3);
+%     sq_bins = [sq_incrs(1) 2*sq_incrs(1); 2*sq_incrs(2) size(dens_use{1,1},2)];
+%     cir_bins = [cir_incrs(1) 2*cir_incrs(1); 1 cir_incrs(1)];
+%     dmean_sq = cellfun(@(a) nanmean(nanmean(a(sq_bins(1,1):sq_bins(1,2),sq_bins(2,1):sq_bins(2,2)))), ...
+%         dens_use(1,:));
+%     dmean_cir = cellfun(@(a) nanmean(nanmean(a(cir_bins(1,1):cir_bins(1,2),cir_bins(2,1):cir_bins(2,2)))), ...
+%         dens_use(2,:));
+%     dmean_all(:,:,j) = cat(1,dmean_sq,dmean_cir);
+% 
+% end
+% 
+% groups = repmat([1 1 1 1 2 2 3 3],2,1,4);
+% 
+% scatterBox(dmean_all(:),groups(:));
+% 
+% [p, t, stats] = anova1(dmean_all(:), groups(:),'off');
+% [c, m, h] = multcompare(stats,'display','off');
 
 %% Single cell examples of place fields remapping to cluster near the hallway
 % Doesn't seem to pan out - most of the neurons with firing near the
@@ -655,7 +655,7 @@ all_sesh_bef_aft2 = all_sesh_full_mean([1:8, 13:16],[1:8, 13:16]);
 %% Plot everything
 divs = [1.5 6.5 10.5];
 try close(456); end
-figure(456)
+figure(456); set(gcf, 'Position', [ 420  420  1600  838])
 hconf(1) = subplot(2,3,[1 2 4 5]);
 imagesc_nan(all_sesh_bef_aft2); colorbar
 hold on
@@ -695,6 +695,113 @@ end
 subplot(2,3,6)
 imagesc_nan(all_bef_aft_cond); colorbar
 
+%% Plot same as above by sorted by arena 
+try close(458); end
+figure(458); set(gcf, 'Position', [ 288  86  1600  838])
+hconf(1) = subplot(2,3,[1 2 4 5]);
+arena_sort = [1 2 7:10 3:6 11 12];
+PVcorr_bef_aft_arenasort = all_sesh_bef_aft2(arena_sort,arena_sort);
+imagesc_nan(PVcorr_bef_aft_arenasort);  colorbar
+hold on
+plot([0.5 12.5], [6.5 6.5], 'r--', [6.5 6.5], [0.5 12.5], 'r--')
+title('Non-connected days sorted by arena chronologically')
+set(gca,'XTick',1.5:2:11.5,'XTickLabel',{'SQ1','SQ2','SQ3','OCT1','OCT2',...
+    'OCT3'},'YTick',1.5:2:11.5,'YTickLabel',{'SQ1','SQ2','SQ3','OCT1','OCT2',...
+    'OCT3'})
+make_plot_pretty(gca)
+
+hconf(2) = subplot(2,3,3);
+PVcorr_conn = mean(conn_sesh_all,3);
+arena_sort_conn = [1 3 6 8 2 4 5 7];
+PVcorr_conn_arenasort = PVcorr_conn(arena_sort_conn, arena_sort_conn);
+imagesc_nan(PVcorr_conn_arenasort);  colorbar
+hold on
+plot([0.5 7.5], [4.5 4.5], 'r--', [4.5 4.5], [0.5 7.5], 'r--')
+title('Connected days sorted by arena chronologically')
+set(gca,'XTick',1.5:2:8.5,'XTickLabel',{'SC1', 'SC2', 'OC1', ...
+    'OC2'},'YTick',1.5:2:8.5,'YTickLabel', {'SC1', 'SC2', 'OC1', 'OC2'})
+make_plot_pretty(gca)
+
+% Scale color limits
+clim_both = cat(1,hconf.CLim);
+clim_use = [min(clim_both(:)) max(clim_both(:))];
+arrayfun(@(a) set(a,'CLim',clim_use),hconf)
+chil = get(gcf,'Children');
+arrayfun(@(a) set(a,'Ticks',clim_use,'TickLabels',...
+    arrayfun(@(a) num2str(a,'%0.2f'),clim_use','UniformOutput',false)),chil([1 3]))
+printNK('PV confusion matrices sorted by arena','2env')
+
+%% Load file for PFdensity analysis
+
+load(fullfile(ChangeDirectory_NK(G30_square(1),0), '2env_batch_analysis4_workspace_1000shuffles_2018JAN11.mat'));
+
+%% Do density analysis
+
+sesh_sub = [1:4, 7:8]; % Before and After sessions
+% spit out a mouse x arena x session x ybins x xbins array 
+PFdens_breakdown = nan(4,2,6,3,3);
+for mouse = 1:4
+    for arena = 1:2 % square and circle
+        for mm = 1:6 % before and after sessions
+            sesh_use = sesh_sub(mm);
+            map_use = Mouse(mouse).PFdens_map{arena,sesh_use}; 
+            [ypix, xpix] = find(~isnan(map_use)); % Get pixels occupied by mouse
+            xedges = round(linspace(min(xpix),max(xpix),4)); % divide arena up into thirds
+            xedge_start = xedges(1:3);
+            xedge_end = xedges(2:4) + [-1 -1 0];
+            yedges = round(linspace(min(ypix),max(ypix),4));
+            yedge_start = yedges(1:3);
+            yedge_end = yedges(2:4) + [-1 -1 0];
+            nfields = nan(3);
+            for j = 1:3
+                for k = 1:3
+                    bin_pfs = map_use(yedge_start(j):yedge_end(j),...
+                        xedge_start(k):xedge_end(k));
+                    nfields(j,k) = nanmean(bin_pfs(:));
+                end
+            end
+            PFdens_breakdown(mouse, arena, sesh_use, :, :) = nfields;
+        end
+    end
+end
+
+square_hall_ind = 6;
+oct_hall_ind = 4;
+
+square_hallbin_dens = squeeze(PFdens_breakdown(:,1,:,square_hall_ind));
+oct_hallbin_dens = squeeze(PFdens_breakdown(:,2,:,oct_hall_ind));
+square_otherbin_dens = squeeze(PFdens_breakdown(:,1,:,[1:5, 7:9]));
+oct_otherbin_dens = squeeze(PFdens_breakdown(:,2,:,[1:3, 5:9]));
+hall_grp = [square_hallbin_dens(:), oct_hallbin_dens(:)];
+other_grp = [square_otherbin_dens(:), oct_otherbin_dens(:)];
+
+try close(900); end
+figure(900); set(gcf,'Position',[200 420 840 600])
+subplot(1,2,1)
+[hbar, ~, pdens, cdens] = barscatter(hall_grp, other_grp);
+data = cat(1, hall_grp, other_grp);
+grps = cat(1, ones(size(hall_grp)).*[1 2], ones(size(other_grp)).*[3,4]);
+[pkw_dens, ~, stats] = kruskalwallis(data(:), grps(:), 'off');
+cdens = multcompare(stats,'display','off');
+legend(hbar,{'Square','Circle'})
+set(gca,'XTick', 1:2, 'XTickLabel',{'Near Hall', 'Other Bin'})
+ylabel('Mean Place Field Count') 
+make_plot_pretty(gca,'linewidth',1)
+
+subplot(1,2,2);
+text(0.5, 0.7, ['pdens\_rks = ' num2str(pdens,'%0.2g')])
+text(0.5, 0.5, ['prk\_hall\_sqvoct = ' ...
+    num2str(ranksum(hall_grp(:,1),hall_grp(:,2)),'%0.2g')])
+text(0.5, 0.3, ['prk\_other\_sqvoct = ' ...
+    num2str(ranksum(other_grp(:,1),other_grp(:,2)),'%0.2g')])
+text(0.5, 0.1, ['prk\_comb\_sqvoct = ' ...
+    num2str(ranksum(cat(1, other_grp(:,1), hall_grp(:,1)), cat(1, ...
+    other_grp(:,2), hall_grp(:,2))),'%0.2g')])
+axis off
+
+printNK('PFdensity analysis before after final','2env')
+%%
+
 %% Get day means
 all_sesh_cond = nan(8,8);
 for j = 1:8
@@ -705,6 +812,16 @@ for j = 1:8
         all_sesh_cond(j,k) = nanmean(vals_use(:)); 
     end
 end
+
+%% Get PVs with silent cells from before to after
+load('2env_PVsilent_cm4_local0-1000shuffles-2018-05-24.mat')
+bef = []; aft = []; 
+for j = 1:4 
+    corrs_use = Mouse(j).PVcorrs.circ2square(2).PVcorrs; 
+    bef = cat(1,bef,corrs_use([1 2 9 10 19 20 27 28]));
+    aft = cat(1,aft,corrs_use([55 56 63 64])); 
+end
+figure; [~,~, p] = barscatter(bef(:),aft(:));
 
 
 
