@@ -5,19 +5,31 @@ function [perf] = sigtuning_batch(sesh_sigtuning, PFname)
 %   splitters and total number of splitters. Loads variables from PFname
 %   (e.g. Placefields_1cm.mat)
 
-for j = 1:length(sesh_sigtuning)
+num_sessions = length(sesh_sigtuning);
+
+%% First check if there is an Alternation.mat file and if not create it by running
+% postrials.
+% for j = 1:num_sessions
+%     ChangeDirectory_NK(sesh_sigtuning(j))
+%     load(PFname,'x','y');
+% %     postrials(x,y,0,'skip_rot_check',skip_rot_check);
+% end
+
+%% Then run the rest
+for j = 1:num_sessions
     skip_perf = 0;
     ChangeDirectory_NK(sesh_sigtuning(j))
     if exist('sigSplitters.mat','file') ~= 2
-%         try
+        try
             load(PFname,'x','y','PSAbool');
-            disp(['Running sigtuningAllCells for session ' num2str(sesh_sigtuning(j).Session) ...
+            disp(['Running sigtuningAllCells for session ' ...
+                num2str(sesh_sigtuning(j).Session) ...
                 ' from ' sesh_sigtuning(j).Date])
             sigtuningAllCells(x,y,PSAbool);
-%         catch
-%             disp('Required files missing - skipping for now')
-%             skip_perf = 1;
-%         end
+        catch
+            disp('Required files missing - skipping for now')
+            skip_perf = 1;
+        end
     elseif exist('sigSplitters.mat','file') == 2
         disp(['sigTuningAllCells already run for session ' num2str(sesh_sigtuning(j).Session) ...
         ' from ' sesh_sigtuning(j).Date])
@@ -33,5 +45,7 @@ for j = 1:length(sesh_sigtuning)
         perf(j).hand_perf = sesh_sigtuning(j).perf;
     end
 end
+
+
 
 end
