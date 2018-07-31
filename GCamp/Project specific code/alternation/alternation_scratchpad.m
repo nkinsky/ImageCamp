@@ -166,7 +166,7 @@ cat2 = repmat(1:5,size(coactive_all,1),1);
 scatterBox(coactive_all(:),cats2(:))
 
 %% Check if all the sessions have a pos.mat, pos_align, and Placefields file
-sesh_check = MD(ref.G30.alternation(1):ref.G30.alternation(2));
+sesh_check = MD(ref.G48.alternation(1):ref.G48.alternation(2));
 num_sesh = length(sesh_check);
 
 pos_bool = false(1, num_sesh);
