@@ -1,7 +1,9 @@
 function [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
-    p_anova, cmat, daydiff_mean  ] = track_splitters( MDbase, MDreg, sigthresh, xlims)
+    p_anova, cmat, daydiff_mean  ] = track_splitters( MDbase, MDreg, ...
+    sigthresh, xlims)
 % [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
-%     p_anova, cmat, daydiff_mean  ] = track_splitters( MDbase, MDreg, sigthresh)
+%     p_anova, cmat, daydiff_mean  ] = track_splitters( MDbase, MDreg, ...
+%   sigthresh, xlims)
 %   track splitters across days by spitting out relymat and deltamat that
 %   tracks 1-pval and deltacurve from sigsplitters.mat for each neuron, and
 %   onsetmat which identifies the day the neuron first achieves significant
@@ -27,20 +29,25 @@ if nargin < 4
 end
 
 %% Step 1: Load batch neuron map and identify session indices for each
+% NK - do this for pair-wise sessions too? With try-catch clause?
 sesh = cat(2,MDbase,MDreg); % combine all into one structure
 sesh = complete_MD(sesh); % fill in all relevant info
 basedir = ChangeDirectory_NK(sesh(1),0); 
-load(fullfile(basedir,'batch_session_map.mat')); % load map
+map_type = 'pairwise'; % Default is to use pairwise registrations
+if exist(fullfile(basedir,'batch_session_map.mat'),'file')
+    load(fullfile(basedir,'batch_session_map.mat'), 'batch_session_map'); % load map
+    map_type = 'batch_map'; % overwrite if using batch_session_map
+end
 
 % get number of bins on stem
 load(fullfile(basedir,'sigSplitters.mat'),'deltacurve');
-length(deltacurve{find(~cellfun(@isempty, deltacurve),1,'first')});
+length(deltacurve{find(~cellfun(@isempty, deltacurve),1,'first')}); %#ok<*IDISVAR,*USENS>
 
 % Get map between all sessions and related info
-batch_map = batch_session_map.map;
-% NK replace this with get_neuronmap_from_batchmap later
-sesh_inds = arrayfun(@(a) get_session_index(a, batch_session_map.session),...
-    sesh); % Get indices in map for each session 
+% batch_map = batch_session_map.map;
+% % NK replace this with get_neuronmap_from_batchmap later
+% sesh_inds = arrayfun(@(a) get_session_index(a, batch_session_map.session),...
+%     sesh); % Get indices in map for each session 
 num_sessions = length(sesh);
 num_neurons = size(batch_map,1);
 
@@ -55,7 +62,8 @@ for j = 1:num_sessions
     
     % Get session and map indices to use
     sesh_use = sesh(j);
-    map_use = batch_map(:,sesh_inds(j)+1);
+%     map_use = batch_map(:,sesh_inds(j)+1);
+    map_use = neuron_map_simple(MDbase, sesh_use, 'batch_map', batch_session_map);
     
     % Get "splittiness" metrics and validly mapped cells for that session
     [ rely_val, delta_max, sigsplitter_bool ] = ...
@@ -93,6 +101,10 @@ dayarray = arrayfun(@(a) get_time_bw_sessions(sesh(1),a),sesh)+1;
 dayarray(find(diff(dayarray) == 0)+1) = ...
     dayarray(find(diff(dayarray) == 0)+1)+0.5; 
 dayarray = repmat(dayarray,num_splitters,1);
+keyboard
+% NK put code here to grab hand checked reg matrix and discard any
+% registrations that aren't great by setting them as NaN? Then they
+% shouldn't plot...
 
 onset2 = onsetsesh(splitters);
 onset_day = dayarray(sub2ind(size(dayarray),(1:size(dayarray,1))',onset2));
@@ -133,7 +145,7 @@ deltavalid = deltamaxmat2(valid_bool);
 ba_bool = arrayfun(@(a) ismember(a,days_ba),daysvalid);
 
 [p_anova, ~, stats] = anova1(deltavalid(ba_bool), daysvalid(ba_bool),'off');
-[cmat,mmat] = multcompare(stats,'Display','off');
+[cmat, ~] = multcompare(stats,'Display','off');
 unique_days = unique(daysvalid(ba_bool));
 cmat(:,1) = unique_days(cmat(:,1));
 cmat(:,2) = unique_days(cmat(:,2));

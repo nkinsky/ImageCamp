@@ -1,3 +1,4 @@
+% ANTIQUATED!!!
 % Script to get correlations between all sessions that pass the transitive
 % test
 
@@ -110,8 +111,8 @@ p.stop;
 
 corr_mat_plot = nan(num_sessions,num_sessions);
 day_plot = corr_mat_plot;
-for j = 1:size(corr_matrix,1);
-    for k = j:size(corr_matrix,2);
+for j = 1:size(corr_matrix,1)
+    for k = j:size(corr_matrix,2)
         corr_mat_plot(j,k) = nanmean(squeeze(corr_matrix(j,k,:)));
         day_plot(j,k) = get_time_bw_sessions(batch_session_map.session(j),...
             batch_session_map.session(k));

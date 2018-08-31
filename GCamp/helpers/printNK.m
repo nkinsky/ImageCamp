@@ -3,7 +3,8 @@ function [  ] = printNK( filename, varargin )
 %   Prints current figure to filename in location on NORVAL as a pdf with '-bestfit'
 %   option specified.
 %
-%   Location(optional): pwd if unspecified, see below for other options.
+%   Location(optional): dir to save to. Feel free to add your own shorcuts
+%   (see below for these options). pwd if left blank.
 %
 %   'hfig' (name-value pair): assumes current figure (gcf) if left unspecfied or
 %   empty
@@ -48,6 +49,7 @@ switch location
     case 'eraser'
         location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\Eraser';
     otherwise
+%         disp('using location as save location')
 end
 
 
@@ -82,6 +84,7 @@ save_file = fullfile(location, filename);
 if ~append
     print(hfig, save_file, '-dpdf', resolution_use)
 elseif append
+%     arrayfun(@(a) set(a,'FontName','Arial'),hfig.Children)
     print(hfig, save_file, '-dpsc', resolution_use, '-append');
 end
 
