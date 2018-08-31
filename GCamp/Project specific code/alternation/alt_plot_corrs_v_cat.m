@@ -3,7 +3,8 @@ function [ ha, rhos, cats, rho_mean, rho_median, day_lag, p, crho ] = ...
 % [ ha, rho_mean, rho_median, day_lag ]  = alt_plot_corrs_v_cat( MDbase, MDreg,... )
 %   Plots correlations between neurons in MDbase and MDreg broken down by
 %   category: stem place cells (PCs), stem non-place cells (NPCs),
-%   splitters, non-stem PCs, and non-stem NPCs
+%   splitters, non-stem PCs, and non-stem NPCs. % Need to write a batch
+%   function for this! 
 
 sesh = complete_MD(MDbase);
 sesh(2) = complete_MD(MDreg);
@@ -26,7 +27,7 @@ ntrans_thresh = ip.Results.ntrans_thresh;
 sigthresh = ip.Results.sigthresh;
 plot_flag = ip.Results.plot_flag;
 %% Step 1: register sessions
-% Get map and cells the go silent or become active
+% Get map and cells that go silent or become active
 neuron_map = neuron_map_simple(MDbase, MDreg, 'suppress_output', true);
 coactive_bool = ~isnan(neuron_map) & neuron_map ~= 0;
 

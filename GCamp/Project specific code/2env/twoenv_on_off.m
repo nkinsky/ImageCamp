@@ -150,6 +150,7 @@ CIall_mean = squeeze(nanmean(CIall,5));
 % silent cell from registration
 load(fullfile(ChangeDirectory_NK(G30_square(1),0),...
     '2env_popstats_coh30_shuf1000-2018-05-05.mat'));
+% Also in 2env_misma_coh... files in same directory
 
 % Set up boolean designating is square cells are on or off cells
 sq_is_off = true(8);
