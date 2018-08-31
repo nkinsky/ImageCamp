@@ -712,3 +712,146 @@ for j = 1:64
     load('FinalOutput.mat','NeuronImage')
     save('NeuronROIs','NeuronImage')
 end
+
+%% same as below but for coherency between sessions - run before below
+plot_flag = false;
+for j = 1:4; try close(600+j); end; end
+
+% pairs = [9 10; 9 9; 9 10; 10 9; 10 10; 9 10; ...
+%     11 12; 11 11; 11 12; 12 11; 12 12; 11 12];
+pairs = [9 10; 9 9; 9 10; 9 10; 10 10; 9 10; ...
+    12 11; 11 11; 12 11; 12 11; 12 12; 12 11];
+% halves = [1 1; 1 2; 1 2; 2 1; 1 2; 2 2; ...
+%     1 1; 1 2; 1 2; 1 2; 2 1; 2 2];
+halves = [1 1; 1 2; 1 2; 2 1; 1 2; 2 2; ...
+    1 1; 1 2; 2 1; 1 2; 1 2; 2 2];
+sub_use = [1 2; 1 3; 1 4; 2 3; 2 4; 3 4; ...
+    5 6; 5 7; 5 8; 6 7; 6 8; 7 8];
+
+n = 1;
+coh_bool_conns = cell(4,8,8);
+neuron_id_conns = cell(4,8,8);
+dmean_conns = nan(4,8,8);
+hw = waitbar(0,'Doing pairwise delta\_angle plots for coherency by half...');
+disp('Doing pairwise delta_angle plots for coherency by half...')
+for j = 1:4
+    if plot_flag; figure(600+j); end
+    for k = 1:size(pairs,1)
+%         [~, ~, ~, ~, ~, ~, coh_bool_conns{j,index_use(k,1), index_use(k,2)},...
+%             neuron_id_conns{j,index_use(k,1), index_use(k,2)}] = ...
+%             plot_delta_angle_hist(all_sessions2(j,pairs(k,1)), ...
+%             all_sessions2(j,pairs(k,2)), all_sessions2(j,1), 'circ2square', true, ...
+%             'half_use', halves(k,:), 'plot_flag', false, 'bin_size', ...
+%             '_half_cm1_speed1_inMD');
+    if plot_flag
+        h = subplot(3,4,k);
+    else
+        h = [];
+    end
+        
+        [~, dmean_use, ~, ~, ~, ~, coh_bool_conns{j,sub_use(k,1), sub_use(k,2)},...
+            neuron_id_conns{j,sub_use(k,1), sub_use(k,2)}] = ...
+            plot_delta_angle_hist(all_sessions2(j,pairs(k,1)), ...
+            all_sessions2(j,pairs(k,2)), [], 'circ2square', true, ...
+            'half_use', halves(k,:), 'plot_flag', plot_flag, 'bin_size', ...
+            '_half_cm1_speed1_inMD', 'coh_ang_thresh', 30, 'h', h);
+        dmean_conns(j,sub_use(k,1), sub_use(k,2)) = dmean_use;
+        if plot_flag; ylabel(['dmean = ' num2str(round(dmean_use,0))]); end
+        waitbar(n/4/size(pairs,1),hw);
+        n = n + 1;
+    end
+end
+close(hw)
+
+dmean_conns_exact = dmean_conns;
+dmean_temp = dmean_conns;
+dmean_temp = round(dmean_temp/15)*15;
+dmean_temp(dmean_temp == 360) = 0;
+dmean_conns = dmean_temp;
+
+dmean_conns_rev = nan(4,8,8);
+dmean_conns_rev(~isnan(dmean_conns)) = 360 - dmean_conns(~isnan(dmean_conns));
+dmean_conns_rev(dmean_conns_rev == 360) = 0;
+
+%% Run pairwise PVcorrs for all connected sessions without regard to rotation...
+ntrans_thresh = 5;
+
+PVconns_filt = cell(4,8,8);
+PVconns_all = cell(4,8,8);
+filt_all = cell(4,8,8);
+
+n = 1;
+hw = waitbar(0,'Doing pairwise PVcorrs by half...');
+disp('Doing pairwise PVcorrs by half');
+for j = 1:4
+    for k = 1:size(pairs,1)
+        % Old way using best rotation for WHOLE session
+%         [~, PV1use, PV2use, final_filt, PV1, PV2] = pairwise_PVcorr(all_sessions2(j,pairs(k,1)), ...
+%             all_sessions2(j,pairs(k,2)), 'PFname_append', ...
+%             {['_half_cm4_trans_rot' num2str(all_best_ang2_rev(j,pairs(k,1))) '_forPV_inMD'], ...
+%             ['_half_cm4_trans_rot' num2str(all_best_ang2_rev(j,pairs(k,2))) '_forPV_inMD']}, ...
+%             'half_use',halves(k,:), 'silent_thresh', 0, 'pval_thresh', 1, ...
+%             'ntrans_thresh', 1);
+        % New way using best rotation between each half...
+        rot_use = dmean_conns_rev(j, sub_use(k,1), sub_use(k,2));
+        [~, PV1use, PV2use, final_filt, PV1, PV2] = pairwise_PVcorr(all_sessions2(j,pairs(k,1)), ...
+            all_sessions2(j,pairs(k,2)), 'PFname_append', ...
+            {['_half_cm4_trans_rot' num2str(0) '_forPV_inMD'], ...
+            ['_half_cm4_trans_rot' num2str(rot_use) '_forPV_inMD']}, ...
+            'half_use', halves(k,:), 'silent_thresh', 0, 'pval_thresh', 1, ...
+            'ntrans_thresh', ntrans_thresh);
+        
+        PVconns_filt{j,sub_use(k,1), sub_use(k,2)} = cat(4,PV1use,PV2use);
+        PVconns_all{j,sub_use(k,1), sub_use(k,2)} = cat(4,PV1,PV2);
+        filt_all{j,sub_use(k,1), sub_use(k,2)} = final_filt;
+        waitbar(n/4/size(pairs,1),hw);
+        n = n+1;
+    end
+end
+close(hw)
+
+% Save the above two
+save(fullfile(ChangeDirectory_NK(G30_square(1),0), ['2env_PVdiscrimination_' ...
+    datestr(now,29) '.mat']),'PVconns_filt','PVconns_all','filt_all',...
+    'coh_bool_conns','neuron_id_conns', 'dmean_conns', 'dmean_conns_rev')
+    
+
+%% Run placefields_half for connected sessions but rotate things correctly!
+% Should run BEFORE running the above!!!!
+
+all_best_ang2_rev = 360-all_best_ang2;
+all_best_ang2_rev(all_best_ang2_rev == 360) = 0;
+
+for j = 1:4
+    for k = 9:12
+        ang_rot = all_best_ang2_rev(j,k);
+        Placefields_half(all_sessions2(j,k), 'inMD', [], ...
+            ['_half_cm4_trans_rot' num2str(ang_rot) '_forPV'], 'minspeed', 1, 'cmperbin', ...
+            4, 'Pos_data', ['Pos_align_trans_rot' num2str(ang_rot) '.mat'],...
+            'B',1)
+    end
+end
+
+%% Same as above but for each pair independently
+for j = 1:4
+    for k =  1:size(pairs,1)
+        ang_rot = dmean_conns_rev(j, sub_use(k,1), sub_use(k,2));
+        Placefields_half(all_sessions2(j,pairs(k,2)), 'inMD', [], ...    
+            ['_half_cm4_trans_rot' num2str(ang_rot) '_forPV'], 'minspeed', 1, 'cmperbin', ...
+            4, 'Pos_data', ['Pos_align_trans_rot' num2str(ang_rot) '.mat'],...
+            'B',1)
+    end
+end
+
+%%
+for j = 1:4
+    for k = 10:11
+        Placefields_half(all_sessions2(j,k), 'inMD', [], ...    
+            ['_half_cm4_trans_rot' num2str(0) '_forPV'], 'minspeed', 1, 'cmperbin', ...
+            4, 'Pos_data', ['Pos_align_trans_rot' num2str(0) '.mat'],...
+            'B',1)
+    end
+end
+
+        
+        
