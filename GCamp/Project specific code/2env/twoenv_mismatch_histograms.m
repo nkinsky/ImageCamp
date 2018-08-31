@@ -20,7 +20,7 @@ coh_ang_thresh = 30; % used for calculating significance values and # cells clos
 plot_hists = true; % true = plot histograms for all mice/session-pairs
 plot_entry = false; % true = plot entry breakdown for all animals
 
-load_existing = 0; % 0 = run again, 1 = load PCfilter = false, 1000 shuf data
+load_existing = 1; % 0 = run again, 1 = load PCfilter = false, 1000 shuf data
 
 %% Calculate rotation angles for all square session-pairs
 % Shuffle, get p value, and apply CIs from shuffled data! - shuffle cell
