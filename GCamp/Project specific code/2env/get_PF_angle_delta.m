@@ -25,12 +25,19 @@ end
 sesh1 = complete_MD(sesh1); sesh2 = complete_MD(sesh2);
 
 sessions = cat(1,sesh1,sesh2);
-batch_map = fix_batch_session_map(batch_map);
-sesh_index = arrayfun(@(a) get_session_index(a, batch_map.session), sessions);
 [~, PFrot_use] = arrayfun(@get_rot_from_db, sessions);
-
-map_use = get_neuronmap_from_batchmap(batch_map, sesh_index(1), ...
-    sesh_index(2));
+if ~isempty(batch_map)
+    batch_map = fix_batch_session_map(batch_map);
+    sesh_index = arrayfun(@(a) get_session_index(a, batch_map.session), sessions);
+    map_use = get_neuronmap_from_batchmap(batch_map, sesh_index(1), ...
+        sesh_index(2));
+elseif isempty(batch_map)
+    temp = neuron_registerMD(sesh1, sesh2);
+    map_use = zeros(size(temp.neuron_id));
+    map_use(cellfun(@(a) ~isempty(a) && ~isnan(a) && a ~= 0, temp.neuron_id)) = ...
+        cell2mat(temp.neuron_id(cellfun(@(a) ~isempty(a) && ~isnan(a) && a ~= 0,...
+        temp.neuron_id)));
+end
 valid_bool = ~isnan(map_use) & (map_use ~= 0); % Get validly mapped neurons
 %%
 % rot_to_match = 0; % How much to rotate TMap to match actual trajectory

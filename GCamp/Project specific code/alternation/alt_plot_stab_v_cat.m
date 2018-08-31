@@ -17,8 +17,10 @@ ip.addRequired('day_lag', @(a) round(a) == a && a >= 0);
 ip.addRequired('comp_type', @(a) strcmpi(a,'exact') || strcmpi(a,'le'));
 ip.addRequired('mice_sesh', @(a) isstruct(a) || iscell(a));
 ip.addOptional('color_mice', true, @islogical);
+ip.addParameter('PFname','Placefields.mat', @ischar);
 ip.parse(day_lag, comp_type, mice_sesh, varargin{:});
 color_mice = ip.Results.color_mice;
+PFname = ip.Results.PFname;
 
 % Deal out mice_sesh into appropriate variable
 if iscell(mice_sesh)
@@ -39,7 +41,7 @@ end
 
 % Get proportions for all mice
 [ stay_prop_all, coactive_prop_all, cat_names ] = ...
-    alt_stab_v_cat_batch(day_lag, comp_type, mice_sesh);
+    alt_stab_v_cat_batch(day_lag, comp_type, mice_sesh, PFname);
 
 %% Plot everything and get individual mouse stats
 figure; set(gcf,'Position',[2170 320 850 460]); hstay = gca;
@@ -83,14 +85,14 @@ stay_all2 = cat(1,stay_prop_all{:});
 cats_all = cat(1,cats{:});
 boxplot(stay_all2(:), cats_all(:),'color', 'k', 'symbol', 'k',...
     'labels', cat_names)
-title(['Sessions ' comp_str ' ' num2str(day_lag) 'day(s) apart'])
+title(['Sessions ' comp_str ' ' num2str(day_lag) ' day(s) apart'])
 
 axes(hco)
 co_all2 = cat(1,coactive_prop_all{:});
 cats_all = cat(1,cats{:});
 boxplot(co_all2(:), cats_all(:),'color', 'k', 'symbol', 'k',...
     'labels', cat_names)
-title(['Sessions ' comp_str ' ' num2str(day_lag) 'day(s) apart'])
+title(['Sessions ' comp_str ' ' num2str(day_lag) ' day(s) apart'])
 
 %% Run stats on group data
 [stats.all.stay.p, ~, stats.all.stay.stats] = kruskalwallis(...
