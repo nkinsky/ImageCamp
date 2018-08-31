@@ -10,9 +10,9 @@ save('Pos.mat','n_image_frames','x_use','y_use','t_use','MoMtime','start_time',.
     'xpos_interp','ypos_interp','time_interp','exclude_time_interp')
 
 %% 0.5) First plot everything and figure out what needs manual limits
-base_sesh = G31_alt(1); % base session
+base_sesh = G48_alt(1); % base session
 % todo_sesh = MD([203 204 206 212 213]);
-todo_sesh = run_pos_align; % sessions to do
+todo_sesh = sesh_run(3); % sessions to do
 % todo_sesh = MD(213);
 figure; 
 for j = 1:length(todo_sesh)
@@ -61,6 +61,8 @@ end
 
 %% 1) Run batch_align_pos with 'base_adjust' name-pair set to false and
 % manual_limits set to true.
+base_sesh = G48_alt(1);
+todo_sesh = sesh_run(3);
 
 man_limits_bool = false(1,length(todo_sesh));
 % Adjust below as needed to only draw manual limits as required (based on
@@ -74,7 +76,7 @@ batch_align_pos(base_sesh,todo_sesh,'base_adjust',false,...
 %% 2) Run Placefields_batch on all new sessions - make sure to use
 % exclude_time_interp!!! Note this only works for sets of 2 sessions - if
 % there are more than 2 sessions combined you will need to revisit this!
-todo_sesh = run_pf;
+% todo_sesh = run_pf;
 
 exc_times = []; suc_bool = false(1,length(todo_sesh));
 for j = 1:length(todo_sesh)
@@ -115,7 +117,7 @@ end
 
 %% 2.5) Run PF stats too - not sure if I truly need this yet, but might as 
 % well run it now anyway
-todo_sesh = G48_alt;
+% todo_sesh = sesh_run(3);
 
 for j = 1:length(todo_sesh)
     sesh_use = todo_sesh(j);
@@ -128,10 +130,15 @@ for j = 1:length(todo_sesh)
 end
 
 %% 2.8) ID transition from forced to free and run Placefields half in
-% relevant sessions
+% relevant sessions, run alt_get_forced_free
 
 %% 2.9) Run PF on each half of above sessions, save forced as "..._forced_cm1"
-% and combines as "..._combined_cm1..." and free normally "..._cm1"
+% and combined as "..._combined_cm1..." and free normally "..._cm1". Do
+% this by running alt_forced_free_PF. Move forced to new dir in working
+% dir, add this to MakeMouseSessionList_NK, and rename the PF file to "..._cm1".
+% Put a fake Pos_align file (trick_var = 'this is a fake variable to trick
+% sigtuning into not needing user input'; save Pos_align.mat trick_var.
+% Also put ICmovie_min_proj.tif there.
 
 
 %% 3) Run sigtuning_batch on all new sessions - note that this uses Placefields
@@ -145,6 +152,18 @@ G31_alt = sigtuning_batch(complete_MD(G31_alt), 'Placefields_cm1.mat');
 G45_alt = sigtuning_batch(complete_MD(G45_alt), 'Placefields_cm1.mat');
 G48_alt = sigtuning_batch(complete_MD(G48_alt), 'Placefields_cm1.mat');
 
+%% 3.5) Make sure neuron registration is good for each animal!
+
+% G30_regstats = reg_qc_plot_batch(G30_alt(1), G30_alt(2:end));
+% ChangeDirectory_NK(G30_alt(1)); save('G30_regstats','G30_regstats')
+% G31_regstats = reg_qc_plot_batch(G31_alt(1), G31_alt(2:end));
+% ChangeDirectory_NK(G31_alt(1)); save('G31_regstats','G31_regstats')
+% G45_regstats = reg_qc_plot_batch(G45_alt(1), G45_alt(2:end));
+% ChangeDirectory_NK(G45_alt(1)); save('G45_regstats','G45_regstats')
+G48_regstats = reg_qc_plot_batch(G48_alt(1), G48_alt(2:end));
+ChangeDirectory_NK(G48_alt(1)); save('G48_regstats','G48_regstats')
+
+%% 3.6) See more in depth req qc in alternation_fig_reg_quality
 %% 4) Run plotSigSplitters in batch mode (code located in
 % alternation_scratchpad) for all new sessions
 
