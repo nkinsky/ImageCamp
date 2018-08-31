@@ -3351,6 +3351,19 @@ MD(i).perf = 50;
 i = i+1;
 MD(i).Animal = 'GCamp6f_48';
 MD(i).Date = '10_08_2015';
+MD(i).Session = 2;
+MD(i).Env = 'alternation';
+MD(i).Room = '201a - 2015';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'D:\GCamp mice\G48\alternation\10_08_2015\2 - alternation\Processed Data';
+end
+MD(i).Notes = 'Will Method';
+MD(i).Pix2CM = 0.0874;
+MD(i).perf = 66;
+
+i = i+1;
+MD(i).Animal = 'GCamp6f_48';
+MD(i).Date = '10_08_2015';
 MD(i).Session = 3;
 MD(i).Env = 'alternation';
 MD(i).Room = '201a - 2015';
@@ -3358,6 +3371,19 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp mice\G48\alternation\10_08_2015\1 - alternation\Processed Data\Forced Trials';
 end
 MD(i).Notes = 'Forced Alternation portion of session 1 (first part)';
+MD(i).Pix2CM = 0.0874;
+MD(i).perf = nan;
+
+i = i+1;
+MD(i).Animal = 'GCamp6f_48';
+MD(i).Date = '10_08_2015';
+MD(i).Session = 4;
+MD(i).Env = 'alternation';
+MD(i).Room = '201a - 2015';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'D:\GCamp mice\G48\alternation\10_08_2015\2 - alternation\Processed Data\Forced Trials';
+end
+MD(i).Notes = 'Forced Alternation portion of session 2 (first part)';
 MD(i).Pix2CM = 0.0874;
 MD(i).perf = nan;
 
@@ -3543,7 +3569,6 @@ MD(i).Notes = 'Forced Alternation portion of session 1 (first part)';
 MD(i).Pix2CM = 0.0874;
 MD(i).perf = nan;
 
-% No T4 as of 7/26/2018 AM
 i = i+1;
 MD(i).Animal = 'GCamp6f_48';
 MD(i).Date = '10_14_2015';
@@ -3554,6 +3579,19 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp mice\G48\alternation\10_14_2015\2 - alternation\Working';
 end
 MD(i).Notes = 'Will Method';
+MD(i).Pix2CM = 0.0874;
+MD(i).perf = 70.7;
+
+i = i+1;
+MD(i).Animal = 'GCamp6f_48';
+MD(i).Date = '10_14_2015';
+MD(i).Session = 4;
+MD(i).Env = 'alternation';
+MD(i).Room = '201a - 2015';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'D:\GCamp mice\G48\alternation\10_14_2015\2 - alternation\Working\Forced Trials';
+end
+MD(i).Notes = 'Forced Alternation portion of session 2 (first part)';
 MD(i).Pix2CM = 0.0874;
 MD(i).perf = 70.7;
 
