@@ -39,7 +39,7 @@ end
 
 %% Run placefields on a bunch of data
 
-%% Make Example splitting plots for ontogeny diagram
+%% Make Example splitting plots for ontogeny diagram for Progress Report Talk
 figure; set(gcf,'Position',[34 200 1020 425]);
 curve = 0.02*randn(2,50);
 for j = 1:5
@@ -75,6 +75,10 @@ for j = 1:5
 end
 %% Register all sessions to one another pair-wise fashion
 fail_bool = cell(4,1);
+num_sessions_all = cellfun(@length,alt_all_cell);
+nsesh_total = sum(num_sessions_all.*(num_sessions_all-1))/2;
+hw = waitbar(0,'Running pair-wise registrations...');
+n = 1;
 for j = 1:4
     MD_use = alt_all_cell{j};
     num_sessions = length(MD_use);
@@ -82,13 +86,17 @@ for j = 1:4
     for k = 1:num_sessions - 1
         for ll = k+1:num_sessions
             try
-                neuron_map_simple(MD_use(k),MD_use(ll));
+                neuron_map_simple(MD_use(k),MD_use(ll), ...
+                    'suppress_output', true);
             catch
                 fail_bool{j}(k,ll) = true;
             end
+            waitbar(n/nsesh_total,hw);
+            n = n+1;
         end
     end
 end
+close(hw)
 
 %% When done with above, run to qc registrations - use plot_registration
 for j = 3
@@ -166,7 +174,8 @@ cat2 = repmat(1:5,size(coactive_all,1),1);
 scatterBox(coactive_all(:),cats2(:))
 
 %% Check if all the sessions have a pos.mat, pos_align, and Placefields file
-sesh_check = MD(ref.G48.alternation(1):ref.G48.alternation(2));
+% sesh_check = MD(ref.G48.alternation(1):ref.G48.alternation(2));
+sesh_check = G48_alt;
 num_sesh = length(sesh_check);
 
 pos_bool = false(1, num_sesh);
@@ -174,6 +183,7 @@ pos_align_bool = false(1, num_sesh);
 split_sesh_bool = false(1, num_sesh);
 pf_bool = false(1, num_sesh);
 pf_bool1 = false(1, num_sesh);
+alt_bool = false(1, num_sesh);
 
 for j = 1:length(sesh_check)
     dir_use = ChangeDirectory_NK(sesh_check(j),0);
@@ -183,6 +193,7 @@ for j = 1:length(sesh_check)
         split_sesh_bool(j) = exist(fullfile(dir_use,'part1'),'dir');
         pf_bool1(j) = exist(fullfile(dir_use,'Placefields_cm1.mat'),'file');
         pf_bool(j) = exist(fullfile(dir_use,'Placefields.mat'),'file');
+        alt_bool(j) = exist(fullfile(dir_use,'Alternation.mat'),'file');
     end
     
 end
@@ -194,3 +205,26 @@ run_pos_comb = sesh_check(~pf_bool1 & ~pf_bool & ~pos_bool & split_sesh_bool);
 no_pos_file = sesh_check(~pos_bool & ~pf_bool1 & ~pf_bool & ~split_sesh_bool);
 run_pf = sesh_check(~pf_bool & ~pf_bool1 & pos_align_bool);
 disp('ran')
+
+%% Fix bad G31 registration sessions by registering by masks
+dates_run1 = arrayfun(@(a) a.Date, G31_alt, 'UniformOutput', false);
+for j = 1:5
+    neuron_register('GCamp6f_31', dates_run1{j}, 1, '12_05_2014', 1, ...
+        'use_neuron_masks', 1, 'name_append', '_masks')
+end
+neuron_register('GCamp6f_31','12_05_2014',1,'12_11_2014',1, ...
+    'use_neuron_masks', 1, 'name_append', '_masks')
+neuron_register('GCamp6f_31','12_03_2014',1,'12_11_2014',1, ...
+    'use_neuron_masks', 1, 'name_append', '_masks')
+
+%%
+neuron_register('GCamp6f_45','09_08_2015',1,'10_07_2015',1, ...
+    'use_neuron_masks', 1, 'name_append', '_masks')
+
+%% Run batch registration for all FINAL files
+batch_session_map31 = neuron_reg_batch(G31_alt(1), G31_alt(2:end));
+batch_session_map45 = neuron_reg_batch(G45_alt(1), G45_alt(2:end));
+batch_session_map48 = neuron_reg_batch(G48_alt(1), G48_alt(2:end));
+save(fullfile(G30_alt(1),'batch_maps_all_mice.mat'), 'batch_session_map30',...
+    'batch_session_map31', 'batch_session_map45', 'batch_session_map48')
+
