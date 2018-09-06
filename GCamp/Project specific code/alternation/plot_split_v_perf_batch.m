@@ -29,6 +29,7 @@ for j = 1:num_animals
     % Plot everything
     [ha, hpts(j) ] = plot_split_v_perf(perf, split_prop, acclim_bool, ...
         forced_bool, ha, false);
+    title(mouse_name_title(MD_use(1).Animal));
     hold on
     hpts(j).Color = colors_use{j};
     
@@ -39,8 +40,11 @@ for j = 1:num_animals
 end
 hold off
 xlim([0 1])
-legend(hpts,cellfun(@mouse_name_title,unique_names,'UniformOutput',false),...
-    'Location','northwest')
+if num_animals > 1
+    legend(hpts,cellfun(@mouse_name_title,unique_names,'UniformOutput',false),...
+        'Location','northwest')
+    title('Multiple Mice')
+end
 
 %% Run linear regression
 glm = fitglm(perf_all,split_prop_all);
