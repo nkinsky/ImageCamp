@@ -9,7 +9,11 @@ perf_calc = nan(length(MD),1);
 perf_by_trial = cell(length(MD),1);
 for j = 1:length(MD)
     [dirstr,sesh_use] = ChangeDirectory_NK(MD(j),0);
-    perf_notes(j) = sesh_use.perf/100;
+    try
+        perf_notes(j) = sesh_use.perf/100;
+    catch
+        keyboard
+    end
     load(fullfile(dirstr,'Alternation.mat'));
     num_correct = sum(Alt.summary(:,3));
     num_trials = size(Alt.summary,1);

@@ -34,7 +34,7 @@ ha = ip.Results.ha;
 plot_flag = ip.Results.plot_flag;
 
 %% Step 1: register sessions
-% Get map and cells the go silent or become active
+% Get map and cells that go silent or become active
 neuron_map = neuron_map_simple(MDbase, MDreg,'suppress_output', true);
 
 %% Step 2: Parse cells into splitters (1), stem PCs(2), stem NPCs (3), 
