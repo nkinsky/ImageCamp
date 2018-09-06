@@ -1,5 +1,8 @@
-function [ neuron_map] = neuron_register( mouse_name, base_date, base_session, reg_date, reg_session, varargin)
-% neuron_map = neuron_register( mouse_name, base_date, base_session, reg_date, reg_session, check_neuron_mapping, ...)
+function [ neuron_map] = neuron_register( mouse_name, base_date, base_session, ...
+    reg_date, reg_session, varargin)
+% neuron_map = neuron_register( mouse_name, base_date, base_session, ...
+%   reg_date, reg_session, check_neuron_mapping, ...)
+%
 %   Registers neurons from one session to another based on the minimum
 %   projection of each session.
 %
@@ -168,7 +171,7 @@ end
 % Check to see if this has already been run - if so, skip all of the stuff
 % below
 try
-    load(map_unique_filename)
+    load(map_unique_filename, 'neuron_map')
     if ~suppress_output
         disp('Neuron Registration Already ran! Using existing neuron map file');
     end
