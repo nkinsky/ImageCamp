@@ -221,10 +221,59 @@ neuron_register('GCamp6f_31','12_03_2014',1,'12_11_2014',1, ...
 neuron_register('GCamp6f_45','09_08_2015',1,'10_07_2015',1, ...
     'use_neuron_masks', 1, 'name_append', '_masks')
 
+%% Run pairwise qc for each mouse and save reg_stats with 1000 shuffles...
+nreps = cellfun(@length, alt_all_cell).*(cellfun(@length, alt_all_cell) -1)/2;
+for m = 4
+    sesh_use = alt_all_cell{m}; 
+    hw = waitbar(0, ['Calculating reg quality metrics for ' ...
+        mouse_name_title(sesh_use(1).Animal)]);
+    n = 1;
+    for j = 1:length(sesh_use)-1 
+        base_sesh = sesh_use(j);
+        for k = (j+1):length(sesh_use)
+            reg_sesh = sesh_use(k);
+            if j == k
+                continue
+            else
+                reg_stats = neuron_reg_qc(base_sesh, reg_sesh, 'shuffle', ...
+                    1000, 'orient_only', true);
+                save(fullfile(sesh_use(j).Location,['reg_stats_' ...
+                    sesh_use(k).Date '_s' num2str(sesh_use(k).Session)]), ...
+                    'reg_stats', 'base_sesh', 'reg_sesh');
+                waitbar(n/nreps(m), hw);
+                n = n + 1;
+            end
+        end
+    end
+    close(hw)
+%     save(fullfile(sesh_use(1).Location,'reg_pvalue_mat'), 'reg_pval_mat')
+end
+
+%% Calculate p-value versus shuffled after above is finished
+for m = 1:4
+    sesh_use = alt_all_cell{m};
+    reg_pval_mat = nan(length(sesh_use));
+    for j = 1:length(sesh_use)-1
+        base_sesh = sesh_use(j);
+        for k = (j+1):length(sesh_use)
+            reg_sesh = sesh_use(k);
+            load(fullfile(sesh_use(j).Location,['reg_stats_' ...
+                sesh_use(k).Date '_s' num2str(sesh_use(k).Session)]), ...
+                'reg_stats');
+            reg_pval_mat(j,k) = reg_calc_pvalue(reg_stats);
+        end
+    end
+    save(fullfile(sesh_use(1).Location,'reg_pvalue_mat'), 'reg_pval_mat')
+end
+
+
 %% Run batch registration for all FINAL files
 batch_session_map31 = neuron_reg_batch(G31_alt(1), G31_alt(2:end));
 batch_session_map45 = neuron_reg_batch(G45_alt(1), G45_alt(2:end));
 batch_session_map48 = neuron_reg_batch(G48_alt(1), G48_alt(2:end));
-save(fullfile(G30_alt(1),'batch_maps_all_mice.mat'), 'batch_session_map30',...
+save(fullfile(G30_alt(1).Location,'batch_maps_all_mice.mat'), 'batch_session_map30',...
     'batch_session_map31', 'batch_session_map45', 'batch_session_map48')
 
+%%
+batch_session_map48a = neuron_reg_batch(G48_alt(1), G48_alt(2:16));
+batch_session_map4b8 = neuron_reg_batch(G48_alt(17), G48_alt(18:end));
