@@ -1,6 +1,6 @@
 function [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
     p_anova, cmat, daydiff_mean  ] = track_splitters( MDbase, MDreg, ...
-    sigthresh, xlims)
+    sigthresh, xlims, reg_type)
 % [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
 %     p_anova, cmat, daydiff_mean  ] = track_splitters( MDbase, MDreg, ...
 %   sigthresh, xlims)
@@ -15,16 +15,19 @@ function [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
 %   for each cell, wherease delta_mat spits out the whole curve for each
 %   cell. cmat output is results from a post-hoc anova. daydiff_mean is two
 %   rows - day difference and mean deltamax.
+%
+%   reg_type = 'pairwise' (default) or 'batch' (uses batch_session_map in
+%   base_directory). 'batch' generally gets more reliable results, but can
+%   be overly conservative if you have one bad registration in the middle
+%   of your sessions.
 
-%%% NRK Note - scrap deltamat for now since num stem bins is not the same
-%%% across all sessions - need to change this somehow! or maybe just
-%%% resize? This function is undergoing some serious hacking on 12/14/17 
-%%% and needs some cleanup/attention
-
-if nargin < 4
-    xlims = [-1.25, 1.25];
-    if nargin < 3
-        sigthresh = 3;
+if nargin < 5
+    reg_type = 'pairwise'; % default reg type is pairwise, must specify using batch map
+    if nargin < 4
+        xlims = [-1.25, 1.25];
+        if nargin < 3
+            sigthresh = 3;
+        end
     end
 end
 
@@ -33,10 +36,8 @@ end
 sesh = cat(2,MDbase,MDreg); % combine all into one structure
 sesh = complete_MD(sesh); % fill in all relevant info
 basedir = ChangeDirectory_NK(sesh(1),0); 
-map_type = 'pairwise'; % Default is to use pairwise registrations
-if exist(fullfile(basedir,'batch_session_map.mat'),'file')
+if strcmpi(reg_type,'batch')
     load(fullfile(basedir,'batch_session_map.mat'), 'batch_session_map'); % load map
-    map_type = 'batch_map'; % overwrite if using batch_session_map
 end
 
 % get number of bins on stem
@@ -51,7 +52,15 @@ length(deltacurve{find(~cellfun(@isempty, deltacurve),1,'first')}); %#ok<*IDISVA
 num_sessions = length(sesh);
 num_neurons = size(batch_map,1);
 
-%% Step 2: Step through each session and load in 1-pval, deltacurve, and sigsplitting
+%% Step 2: Step through each session and load in 1-pval, deltacurve, 
+% and sigsplitting
+%%% NRK - need to do this on a neuron-by-neuron basis for each session,
+%%% using pairwise registration and hand_check/pval validation of
+%%% registration only. batch_maps are waaay to conservative, particularly
+%%% for mice with more sessions (e.g. G45 and G48).
+%%% Look +/- 7 days max?  Also, what does the code below do with NaNs
+%%% (ambiguous mapping neurons)? Does it discard them completely if there
+%%% is a NaN anywhere along the way?
 
 % Pre-allocate
 relymat = nan(num_neurons, num_sessions);
