@@ -783,7 +783,7 @@ if (strcmp(userstr,'Nat'))
 end
 MD(i).Notes = 'Will Method';
 MD(i).Pix2CM = 0.15;
-MD(i).perf = [];
+MD(i).perf = nan;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_30';
@@ -2004,7 +2004,7 @@ if (strcmp(userstr,'Nat'))
 end
 MD(i).Notes = 'Will Method';
 MD(i).Pix2CM = 0.0874;
-MD(i).perf = 'unknown';
+MD(i).perf = nan; % Not noted
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_45';
@@ -2238,6 +2238,7 @@ if (strcmp(userstr,'Nat'))
 end
 MD(i).Notes = 'Will Method';
 MD(i).Pix2CM = 0.0874;
+MD(i).perf = 75;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_45';
@@ -2250,6 +2251,7 @@ if (strcmp(userstr,'Nat'))
 end
 MD(i).Notes = 'Will Method';
 MD(i).Pix2CM = 0.0874;
+MD(i).perf = 74.2;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_45';
@@ -3214,7 +3216,7 @@ if (strcmp(userstr,'Nat'))
 end
 MD(i).Notes = 'Will Method';
 MD(i).Pix2CM = 0.0874;
-MD(i).perf = [];
+MD(i).perf = nan;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_48';
@@ -3593,7 +3595,7 @@ if (strcmp(userstr,'Nat'))
 end
 MD(i).Notes = 'Forced Alternation portion of session 2 (first part)';
 MD(i).Pix2CM = 0.0874;
-MD(i).perf = 70.7;
+MD(i).perf = nan;
 
 % Too distracted (has an open wound that I treat afterward) to include
 % i = i+1;
