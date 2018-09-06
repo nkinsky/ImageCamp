@@ -1,5 +1,7 @@
-function [ reg_stats] = neuron_reg_qc2( Animal, base_date, base_session, reg_date, reg_session, varargin )
-% reg_stats = neuron_reg_qc2( Animal, base_date, base_session, reg_date, reg_session, varargin )
+function [ reg_stats] = neuron_reg_qc2( Animal, base_date, base_session, ...
+    reg_date, reg_session, varargin )
+% reg_stats = neuron_reg_qc2( Animal, base_date, base_session, reg_date, ...
+%   reg_session, varargin )
 %   Calculates registration statistics between two sessions.  Wrapper
 %   function for neuron_reg_qc - see that for full documentation and
 %   optional inputs
