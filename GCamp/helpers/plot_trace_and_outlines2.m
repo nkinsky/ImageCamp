@@ -1,7 +1,7 @@
 function [h, neurons_use] = plot_trace_and_outlines2(sesh)
 % [h, neurons_plotted] = plot_trace_and_outlines2(sesh)
 %   Plots neuron outlines and traces of 10 randomly selected neurons. Good
-%   for quality control plots for a session.
+%   for quality control plots for a session. Super basic.
 
 dir_use = ChangeDirectory_NK(sesh,0);
 load(fullfile(dir_use,'FinalOutput.mat'),'NeuronImage','NeuronTraces',...
