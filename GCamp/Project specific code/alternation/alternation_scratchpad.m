@@ -223,12 +223,12 @@ neuron_register('GCamp6f_45','09_08_2015',1,'10_07_2015',1, ...
 
 %% Run pairwise qc for each mouse and save reg_stats with 1000 shuffles...
 nreps = cellfun(@length, alt_all_cell).*(cellfun(@length, alt_all_cell) -1)/2;
-for m = 4
+for m = 3
     sesh_use = alt_all_cell{m}; 
     hw = waitbar(0, ['Calculating reg quality metrics for ' ...
         mouse_name_title(sesh_use(1).Animal)]);
     n = 1;
-    for j = 1:length(sesh_use)-1 
+    for j = 17:length(sesh_use)-1 
         base_sesh = sesh_use(j);
         for k = (j+1):length(sesh_use)
             reg_sesh = sesh_use(k);
