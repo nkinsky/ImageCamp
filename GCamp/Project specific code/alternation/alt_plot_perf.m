@@ -5,12 +5,12 @@ function [ ha ] = alt_plot_perf(perf_bool, varargin )
 %   into) as parameters.  if no ha specified, creates a new figure;
 
 ip = inputParser;
-ip.addRequired('perf_bool',@(a) all(islogical(a)));
+ip.addRequired('perf_bool', @(a) all(islogical(a)));
 ip.addParameter('window', 10, @(a) a > 0 && round(a) == a);
 ip.addParameter('ha', gca, @ishandle);
-ip.addParameter('legend_flag',true, @islogical)
-ip.addParameter('criteria',75, @(a) a >= 0 & a <=100)
-ip.addParameter('learning',false, @islogical);
+ip.addParameter('legend_flag', true, @islogical)
+ip.addParameter('criteria', 75, @(a) a >= 0 & a <=100)
+ip.addParameter('learning', false, @islogical);
 ip.parse(perf_bool,varargin{:});
 window = ip.Results.window;
 ha = ip.Results.ha;

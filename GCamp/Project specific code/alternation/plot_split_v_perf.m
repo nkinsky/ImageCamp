@@ -12,6 +12,7 @@ if nargin < 2
     set(gcf,'Position',[1070 250 700 600]);
     ha = gca;
 end
+axes(ha)
 
 legit_bool = ~acclim_bool & ~forced_bool;
 hpts = plot(perf(legit_bool), split_prop(legit_bool),'o');
