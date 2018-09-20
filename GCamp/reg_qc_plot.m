@@ -11,7 +11,7 @@ function [ ] = reg_qc_plot(centroid_dist, orient_diff, avg_corr, varargin )
 p = inputParser;
 p.KeepUnmatched = true;
 p.addRequired('centroid_dist', @isnumeric)
-p.addRequired('orient_diff', @isnumeric)
+p.addRequired('orient_diff', @(a) isnumeric(a) || iscell(a))
 p.addRequired('avg_corr', @isnumeric)
 p.addOptional('h', 0, @ishandle)
 p.addParameter('plot_shuf', 0, @(a) isnumeric(a) || a == 0 || a == 1 || a == 2); % 0 = normal, 1 = shuffled, 2 = shifted
@@ -56,13 +56,13 @@ end
 if ~isempty(orient_diff)
     subplot(2,2,2)
     hold on
-    histplotfun(abs(orient_diff), orient_edges, multi_sesh, plot_shuf, 'probability')
+    histplotfun(orient_diff, orient_edges, multi_sesh, plot_shuf, 'probability')
     xlabel('Absolute Orientation Difference (\theta, degrees)')
     hold off
     
     subplot(2,2,4)
     hold on
-    ecdfplotfun(abs(orient_diff), plot_shuf)
+    ecdfplotfun(orient_diff, plot_shuf)
     xlabel('Absolute Orientation Difference (\theta, degrees)')
     ylabel('F(\theta)')
 end
@@ -86,7 +86,7 @@ function [] = ecdfplotfun(a, shuf)
 if shuf == 0
     ecdf(a);
 elseif shuf == 1 || shuf == 2
-    [f, x] = ecdf(a);
+    [f, x] = ecdf(a(:));
     hs2 = stairs(x,f);
     set(hs2,'LineStyle','--','Color','k')
 end
@@ -114,12 +114,25 @@ if ~multi_sesh && ~plot_shuf
     end
     
 elseif multi_sesh || plot_shuf % otherwise, plot as probabilities
-    n = histc(a, edges);
-    n_use = n(1:end-1);
+    if ~iscell(a) 
+        n = histc(abs(a), edges);
+    elseif iscell(a)
+        nn = cellfun(@(a) histc(abs(a), orient_edges), orient_diff,...
+        'UniformOutput',false);
+    
+    end
     if ~plot_shuf % Solid line with dots for real data
+        n_use = n(1:end-1);
         plot(centers, n_use/sum(n_use), '.-');
-    elseif plot_shuf % Dotted lines for shuffled data
-        plot(centers, n_use/sum(n_use), 'k--');
+    elseif plot_shuf
+        n_use = n(1:end-1,:);
+        prob_use = n_use./sum(n_use,1);
+%         plot(centers, n_use/sum(n_use), 'k--');  % Dotted lines for shuffled data
+%        CI95 = quantile(n(1:end-1,:)',[0.975 0.5 0.025]); % get 95% CI
+       CI95prob = quantile(prob_use',[0.975 0.5 0.025]); % get 95% CI
+%        CI95prob = CI95/size(a,1); % Make into probabilities
+       hCI = plot(centers, CI95prob, 'k-'); % plot
+       arrayfun(@(a) set(a,'LineStyle','--'), hCI([1 3])); % Set 95% CIs to dashed, leave median as solid
     end
     ylabel('Probability');
     

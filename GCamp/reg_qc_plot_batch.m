@@ -132,10 +132,14 @@ cm = flipud(colormap(jet(num_lines)));
 try
 if num_shuffles > 0
     for j = 2:2:4
-        cm_use = [0 0 0; cm];
+        if j == 2
+            cm_use= [0 0 0; cm];
+        elseif j == 4
+            cm_use = [0 0 0; 0 0 0; 0 0 0; cm];
+        end
         for k = 1: size(cm_use,1)
             ff.Children(j).Children(k).Color = cm_use(k,:);
-        end % Set Shuffled to black
+        end 
     end
 else
     for j = 2:2:4
@@ -157,7 +161,6 @@ end
 catch
     disp('bypassing colors for lines in reg_qc_plot_batch for now')
 end
-
 
 
 end

@@ -166,7 +166,8 @@ reg_stats.shuffle.avg_corr = avg_corr_shuf;
 rot_angle_range = 0; % Rotation angle - suggest keeping at zero
 
 reg_stats.shift.cent_d = [];
-reg_stats.shift.orient_diff = [];
+reg_stats.shift.orient_diff = cell(1,num_shifts);
+reg_stats.shift.orient_diff_cat = [];
 reg_stats.shift.avg_corr = [];
 reg_stats.shift.cent_angle = [];
 reg_stats.shift.shift_dist = shift_dist;
@@ -204,7 +205,8 @@ if num_shifts > 0
             'avg_corr', {ROIavg_base(valid_neurons), mapped_ROIavg(valid_neurons)},...
             'suppress_bar', true);
         reg_stats.shift.avg_corr = [reg_stats.shift.avg_corr; temp];
-        reg_stats.shift.orient_diff = [reg_stats.shift.orient_diff; temp2];
+        reg_stats.shift.orient_diff_cat = [reg_stats.shift.orient_diff_cat; temp2];
+        reg_stats.shift.orient_diff{j} = temp2;
         reg_stats.shift.cent_d = [reg_stats.shift.cent_d; temp3];
         reg_stats.shift.cent_angle = [reg_stats.shift.cent_angle; temp4];
         pp.progress;
