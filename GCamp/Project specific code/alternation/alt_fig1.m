@@ -40,14 +40,17 @@ linkaxes(ha,'x')
 ct_ROIs = NeuronImage(crosstalk_neurons);
 movie_file = fullfile(G45_alt(23).Location,'MotCorrMovie-Objects',...
     'Obj_1 - recording_20151001_163242.h5');
-ct_frame_nums = [753 883];
+bp_movie_file = fullfile(G45_alt(23).Location,'MotCorrMovie-Objects',...
+    'BPDFF.h5');
+ct_frame_nums = [753 883 1032];
 ct_frames = LoadFrames(movie_file, ct_frame_nums);
+ct_bp_frames = LoadFrames(bp_movie_file, ct_frame_nums);
 
 % Get neuron ROI boundaries
 for j = 1:2; b{j} = bwboundaries(ct_ROIs{j},'noholes'); end
 
 %% Plot ROIs on top of each frame
-for j = 1:2
+for j = length(ct_frame_nums)
     figure; set(gcf,'Position', [2210 400 650 500]);
     title(['CT event #' num2str(j)])
     imagesc_gray(squeeze(ct_frames(:,:,j))); 
@@ -60,13 +63,14 @@ end
 %% Neuron registration quality control
 
 G30regstats = reg_qc_plot_batch(G30_alt(1), G30_alt(2:end), ...
-    'num_shuffles', 1000);
+    'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
 
 G31regstats = reg_qc_plot_batch(G31_alt(1), G31_alt(2:end), ...
-    'num_shuffles', 1000);
+    'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
 
+%%
 G45regstats = reg_qc_plot_batch(G45_alt(1), G45_alt(2:end), ...
-    'num_shuffles', 1000);
+    'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
 
 %% G48 is more complicated since the field of view moves a few times over the 1.5
 % months. Below lists the registrations for the 4 good chunks of data. Very
@@ -74,13 +78,13 @@ G45regstats = reg_qc_plot_batch(G45_alt(1), G45_alt(2:end), ...
 
 G48_alt_nf = G48_alt(~G48_forced_bool); %  get non-forced sessions
 G48regstats_2to9 = reg_qc_plot_batch(G48_alt_nf(1), G48_alt_nf(2:9), ...
-    'num_shuffles', 1000);
+    'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
 G48regstats_3to13 = reg_qc_plot_batch(G48_alt_nf(2), G48_alt_nf(3:13),...
-    'num_shuffles', 1000);
+    'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
 G48regstats_12to16 = reg_qc_plot_batch(G48_alt_nf(11), G48_alt_nf(12:16), ...
-    'num_shuffles', 1000);
+    'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
 G48regstats_18to30 = reg_qc_plot_batch(G48_alt_nf(17), G48_alt_nf(18:30), ...
-    'num_shuffles', 1000);
+    'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
 
 %%
 
