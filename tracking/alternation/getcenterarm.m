@@ -8,7 +8,7 @@ function center = getcenterarm(x,y,w,l)
 %       x = x coordinates of the rectangle surrounding the center arm. 
 %       y = y coordinates of the rectangle surrounding the center arm. 
 %       w = width of arm, same value used in sections function
-%       l = length of shif from top/bottom of maze, same value used in 
+%       l = length of shift from top/bottom of maze, same value used in 
 %       sections function
 %
 
