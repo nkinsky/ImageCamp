@@ -62,30 +62,37 @@ end
 
 %% Neuron registration quality control
 
-G30regstats = reg_qc_plot_batch(G30_alt(1), G30_alt(2:end), ...
+[G30regstats, G30regstats_chance] = reg_qc_plot_batch(G30_alt(1), G30_alt(2:end), ...
     'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
-
-G31regstats = reg_qc_plot_batch(G31_alt(1), G31_alt(2:end), ...
-    'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
+save(fullfile(G30_alt(1).Location,'G30regstats_chance.mat'),'G30regstats_chance')
 
 %%
-G45regstats = reg_qc_plot_batch(G45_alt(1), G45_alt(2:end), ...
+[G31regstats, G31regstats_chance] = reg_qc_plot_batch(G31_alt(1), G31_alt(2:end), ...
     'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
+save(fullfile(G31_alt(1).Location,'G31regstats_chance.mat'),'G31regstats_chance')
+
+%%
+[G45regstats, G45regstats_chance] = reg_qc_plot_batch(G45_alt(1), G45_alt(2:end), ...
+    'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
+save(fullfile(G45_alt(1).Location,'G45regstats_chance.mat'),'G45regstats_chance')
 
 %% G48 is more complicated since the field of view moves a few times over the 1.5
 % months. Below lists the registrations for the 4 good chunks of data. Very
 % conservative.
 
 G48_alt_nf = G48_alt(~G48_forced_bool); %  get non-forced sessions
-G48regstats_2to9 = reg_qc_plot_batch(G48_alt_nf(1), G48_alt_nf(2:9), ...
-    'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
-G48regstats_3to13 = reg_qc_plot_batch(G48_alt_nf(2), G48_alt_nf(3:13),...
-    'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
-G48regstats_12to16 = reg_qc_plot_batch(G48_alt_nf(11), G48_alt_nf(12:16), ...
-    'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
-G48regstats_18to30 = reg_qc_plot_batch(G48_alt_nf(17), G48_alt_nf(18:30), ...
-    'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
-
+[G48regstats_2to9, G48regstats_2to9_chance] = reg_qc_plot_batch(G48_alt_nf(1), ...
+    G48_alt_nf(2:9), 'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
+save(fullfile(G48_alt(1).Location,'G48regstats_2to9_chance.mat'),'G48regstats_2to9_chance')
+[G48regstats_3to13, G48regstats_3to13_chance] = reg_qc_plot_batch(G48_alt_nf(2), ...
+    G48_alt_nf(3:13), 'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
+save(fullfile(G48_alt(1).Location,'G48regstats_3to13_chance.mat'),'G48regstats_3to13_chance')
+[G48regstats_12to16, G48regstats_12to16_chance] = reg_qc_plot_batch(G48_alt_nf(11),...
+    G48_alt_nf(12:16), 'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
+save(fullfile(G48_alt(1).Location,'G48regstats_12to16_chance.mat'),'G48regstats_12to16_chance')
+[G48regstats_18to30, G48regstats_18to30_chance] = reg_qc_plot_batch(G48_alt_nf(17),...
+    G48_alt_nf(18:30), 'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
+save(fullfile(G48_alt(1).Location,'G48regstats_18to30_chance.mat'),'G48regstats_18to30_chance')
 %%
 
 
