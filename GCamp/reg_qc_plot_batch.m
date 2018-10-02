@@ -1,4 +1,4 @@
-function [reg_stats, hfig] = reg_qc_plot_batch(base, reg, varargin)
+function [reg_stats, reg_stats_chance, hfig] = reg_qc_plot_batch(base, reg, varargin)
 % [reg_stats, hfig] = reg_qc_plot_batch(base, reg, num_shuffles (opt), ...
 %   num_shifts(opt), shift_dist(opt), ...)
 %
