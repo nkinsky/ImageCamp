@@ -20,16 +20,16 @@ for j = 1:num_sessions
     skip_perf = 0;
     ChangeDirectory_NK(sesh_sigtuning(j))
     if exist('sigSplitters.mat','file') ~= 2
-%         try
+        try
             load(PFname,'x','y','PSAbool');
             disp(['Running sigtuningAllCells for session ' ...
                 num2str(sesh_sigtuning(j).Session) ...
                 ' from ' sesh_sigtuning(j).Date])
             sigtuningAllCells(x,y,PSAbool);
-%         catch
+        catch
             disp('Required files missing - skipping for now')
             skip_perf = 1;
-%         end
+        end
     elseif exist('sigSplitters.mat','file') == 2
         disp(['sigTuningAllCells already run for session ' num2str(sesh_sigtuning(j).Session) ...
         ' from ' sesh_sigtuning(j).Date])
@@ -41,7 +41,7 @@ for j = 1:num_sessions
         perf(j).performance = sum(Alt.summary(:,3))/size(Alt.summary,1);
         load sigSplitters.mat
         perf(j).numSplitters = numSplitters;
-        perf(j).percentSplitters = numSplitters/length(neuronID);
+        perf(j).ratioSplitters = numSplitters/length(neuronID);
         perf(j).hand_perf = sesh_sigtuning(j).perf;
     end
 end
