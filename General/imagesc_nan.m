@@ -27,7 +27,7 @@ z = ip.Results.z;
 if isnan(z) % Plot in 2d using imagesc if no z-value specified
     h = imagesc(a);
     set(h,'alphadata',~isnan(a));
-    cm_out = colormap(cm);
+    cm_out = colormap(gca,cm);
     
     if nansum(a(:)) == 0
         caxis([0 1])
@@ -36,7 +36,7 @@ else
     h = surf(a);
     set(h,'CDataMode','manual','ZData',z*ones(size(h.ZData)),...
         'EdgeAlpha',0,'AlphaData', ~isnan(a));
-    cm_out = colormap(cm);
+    cm_out = colormap(gca,cm);
     
     if nansum(a(:)) == 0
         caxis([0 1])
