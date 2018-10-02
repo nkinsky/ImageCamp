@@ -140,6 +140,10 @@ end
 % sigtuning into not needing user input'; save Pos_align.mat trick_var.
 % Also put ICmovie_min_proj.tif there.
 
+%% 2.95) Run through get_center_manually for each mouse to designated the 
+% appropriate center stem location AND to align it between all sessions for
+% each mouse.
+
 
 %% 3) Run sigtuning_batch on all new sessions - note that this uses Placefields
 % that have been made using a 1 cm/s speed threshold and excludes all times
@@ -148,7 +152,9 @@ end
 % sesh_use = G30_alt;
 % sesh_use = complete_MD(sesh_use);
 % perf = sigtuning_batch(sesh_use, 'Placefields_cm1.mat');
-G31_alt = sigtuning_batch(complete_MD(G31_alt), 'Placefields_cm1.mat');
+% G30_alt = sigtuning_batch(complete_MD(G30_alt), 'Placefields_cm1.mat');
+
+% G31_alt = sigtuning_batch(complete_MD(G31_alt), 'Placefields_cm1.mat');
 G45_alt = sigtuning_batch(complete_MD(G45_alt), 'Placefields_cm1.mat');
 G48_alt = sigtuning_batch(complete_MD(G48_alt), 'Placefields_cm1.mat');
 
@@ -174,3 +180,34 @@ ChangeDirectory_NK(G48_alt(1)); save('G48_regstats','G48_regstats')
 % influences reactivation or recurrence of being a splitter
 
 % track_splitters - basic splitter ontogeny plots
+
+%% 6) Calculate splitter tuning curve corrs and TMap corrs
+sesh_use = G48_alt;
+num_shuffles = 1000;
+
+ncomps = length(sesh_use)*(length(sesh_use)-1)/2;
+hw = waitbar(0, ['Calculating splitter tuning curve corrs for ' ...
+    mouse_name_title(sesh_use(1).Animal) '...']);
+n = 1;
+for j = 1:length(sesh_use)-1
+    basedir = sesh_use(j).Location;
+    sesh1 = sesh_use(j);
+    for k = (j+1):length(sesh_use)
+        sesh2 = sesh_use(k);
+        [deltacurve_corr, PFcorr, deltacurve_corr_shuf, PFcorr_shuf, ...
+            sigsplit_ind] = split_tuning_corr(sesh1, sesh2, ...
+            'num_shuffles', 1000);
+        
+        savename = ['split_corrs - ' sesh_use(j).Date 's' num2str(sesh_use(j).Session) ...
+            'to ' sesh_use(k).Date 's' num2str(sesh_use(k).Session) '.mat'];
+        save(fullfile(sesh1.Location,savename), 'sesh1', 'sesh2', 'deltacurve_corr', 'PFcorr', ...
+            'deltacurve_corr_shuf', 'PFcorr_shuf', 'sigsplit_ind', 'num_shuffles')
+        save(fullfile(sesh2.Location,savename), 'sesh1', 'sesh2', 'deltacurve_corr', 'PFcorr', ...
+            'deltacurve_corr_shuf', 'PFcorr_shuf', 'sigsplit_ind', 'num_shuffles')
+
+        waitbar(n/ncomps, hw)
+        n = n+1;
+    end
+end
+close(hw)
+
