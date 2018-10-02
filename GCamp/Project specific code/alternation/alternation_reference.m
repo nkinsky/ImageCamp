@@ -142,3 +142,12 @@ alt_all_cell{1} = G30_alt; alt_all_cell{2} = G31_alt; %Parsed out by mouse
 alt_all_cell{3} = G45_alt; alt_all_cell{4} = G48_alt;
 alt_all = cat(2,alt_all_cell{:}); % All together
 alt_all = complete_MD(alt_all);
+
+%% G48 is complicated since the field of view moves a few times over the 1.5
+% months. Below lists the registrations for the 4 good chunks of data. Very
+% conservative.
+G48_alt_nf = G48_alt(~G48_forced_bool); %  get non-forced sessions
+G48_alt2 = G48_alt_nf(2:9);
+G48_alt3 = G48_alt_nf(3:13);
+G48_alt4 = G48_alt_nf(12:16);
+G48_alt5 = G48_alt_nf(18:30);
