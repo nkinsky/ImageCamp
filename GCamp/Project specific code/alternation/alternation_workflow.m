@@ -182,7 +182,7 @@ ChangeDirectory_NK(G48_alt(1)); save('G48_regstats','G48_regstats')
 % track_splitters - basic splitter ontogeny plots
 
 %% 6) Calculate splitter tuning curve corrs and TMap corrs
-sesh_use = G48_alt;
+sesh_use = G48_alt(13:end);
 num_shuffles = 1000;
 
 ncomps = length(sesh_use)*(length(sesh_use)-1)/2;
