@@ -1,5 +1,5 @@
 function [deltacurve_corr, PFcorr, deltacurve_corr_shuf, PFcorr_shuf, ...
-    sigsplit_ind] = split_tuning_corr(session1, session2, varargin)
+    sigsplit_ind, num_shuffles] = split_tuning_corr(session1, session2, varargin)
 % [deltacurve_corr, PFcorr, deltacurve_corr_shuf, PFcorr_shuf, ...
 %     sigsplit_ind] = split_tuning_corr(session1, session2, varargin)
 %   Gets correlations between splitter tuning curves (specifically, the
@@ -29,20 +29,39 @@ ip = inputParser;
 ip.addRequired('session1',@isstruct);
 ip.addRequired('session2',@isstruct);
 ip.addParameter('binthresh', 3, @(a) round(a) == a && a > 0);
-ip.addParameter('num_shuffles', 0, @(a) round(a) == a && a >= 0);
+ip.addParameter('num_shuffles', 1000, @(a) round(a) == a && a >= 0);
 ip.addParameter('PFfile', 'Placefields_cm1.mat', @ischar); % placefields file
+ip.addParameter('suppress_output', false, @islogical);
 ip.parse(session1, session2, varargin{:});
 binthresh = ip.Results.binthresh;
 num_shuffles = ip.Results.num_shuffles;
 PFfile = ip.Results.PFfile;
+suppress_output = ip.Results.suppress_output;
 session1 = add_workdir(session1);
 session2 = add_workdir(session2);
 
 sesh_use = session1;
 sesh_use(2) = session2;
 
-neuron_map = neuron_map_simple(session1, session2);
+neuron_map = neuron_map_simple(session1, session2,...
+    'suppress_output', suppress_output);
 valid_bool = neuron_map ~= 0 & ~isnan(neuron_map); % Get boolean of validly mapped neurons
+
+savename = ['split_corrs - ' sesh_use(1).Date 's' num2str(sesh_use(1).Session) ...
+    'to ' sesh_use(2).Date 's' num2str(sesh_use(2).Session) '.mat'];
+file1 = fullfile(sesh_use(1).Location, savename);
+file2 = fullfile(sesh_use(1).Location, savename);
+
+if exist(file1, 'file') || exist(file2, 'file')
+    if exist(file1, 'file')
+        load(file1) %#ok<*LOAD>
+    elseif exist(file2, 'file')
+        load(file2)
+    end
+    if ~suppress_output
+        disp('Loading pre-existing splitter and PF corrs...')
+    end
+elseif ~exist(file1, 'file') && ~exist(file2, 'file')
 %% Navigate to folder, load data, and register between sessions 
 for k = 1:2
     path = sesh_use(k).Location; 
@@ -123,6 +142,16 @@ parfor j = 1:num_shuffles
 end
 
 p.stop;
+
+%% Save everything in both directories with the same name for easy access later
+save(file1, 'sesh1', 'sesh2', 'deltacurve_corr', 'PFcorr', ...
+    'deltacurve_corr_shuf', 'PFcorr_shuf', 'sigsplit_ind', 'num_shuffles')
+save(file2, 'sesh1', 'sesh2', 'deltacurve_corr', 'PFcorr', ...
+    'deltacurve_corr_shuf', 'PFcorr_shuf', 'sigsplit_ind', 'num_shuffles')
+
+end
+
+
 
 end
 
