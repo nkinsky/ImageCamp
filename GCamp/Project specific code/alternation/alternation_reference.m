@@ -24,6 +24,7 @@ G30_alt(j).Date = '11_13_2014'; G30_alt(j).Session = 1; j = j+1;
 [G30_alt(:).Animal] = deal('GCamp6f_30');
 G30_alt = complete_MD(G30_alt);
 [G30_loop_bool, G30_forced_bool] = alt_id_sesh_type(G30_alt);
+G30_free_bool = ~G30_forced_bool & ~G30_loop_bool;
 
 j = 1; 
 G31_start = '11_25_2014';
@@ -39,6 +40,7 @@ G31_alt(j).Date = '12_11_2014'; G31_alt(j).Session = 1; j = j+1;
 [G31_alt(:).Animal] = deal('GCamp6f_31');
 G31_alt = complete_MD(G31_alt);
 [G31_loop_bool, G31_forced_bool] = alt_id_sesh_type(G31_alt);
+G31_free_bool = ~G31_forced_bool & ~G31_loop_bool;
 
 j = 1;
 G45_start = '09_08_2015';
@@ -73,6 +75,7 @@ G45_alt(j).Date = '10_07_2015'; G45_alt(j).Session = 1; j = j+1;
 [G45_alt(:).Animal] = deal('GCamp6f_45');
 G45_alt = complete_MD(G45_alt);
 [G45_loop_bool, G45_forced_bool] = alt_id_sesh_type(G45_alt);
+G45_free_bool = ~G45_forced_bool & ~G45_loop_bool;
  
 j = 1; 
 G48_start = '09_10_2015';
@@ -137,6 +140,7 @@ G48_alt(j).Date = '10_16_2015'; G48_alt(j).Session = 4; j = j+1; % Forced part
 [G48_alt(:).Animal] = deal('GCamp6f_48'); 
 G48_alt = complete_MD(G48_alt);
 [G48_loop_bool, G48_forced_bool] = alt_id_sesh_type(G48_alt);
+G48_free_bool = ~G48_forced_bool & ~G48_loop_bool;
 
 alt_all_cell{1} = G30_alt; alt_all_cell{2} = G31_alt; %Parsed out by mouse
 alt_all_cell{3} = G45_alt; alt_all_cell{4} = G48_alt;
