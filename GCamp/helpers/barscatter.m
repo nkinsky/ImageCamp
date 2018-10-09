@@ -5,7 +5,7 @@ function [ hbar, hs, p, cmat] = barscatter( varargin )
 %   tested for doing multiple conditions (e.g. 3 groups of 2
 %   bars/conditions each). Spits out non-parametric estimates of each group
 %   vs the others (kruskal-wallis + mult comp mat if > 2 groups, ranksum p
-%   if 2 groups)
+%   if 2 groups).
 
 ngrps = length(varargin);
 nconds = size(varargin{1},2);
