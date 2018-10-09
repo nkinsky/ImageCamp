@@ -50,7 +50,7 @@ valid_bool = neuron_map ~= 0 & ~isnan(neuron_map); % Get boolean of validly mapp
 savename = ['split_corrs - ' sesh_use(1).Date 's' num2str(sesh_use(1).Session) ...
     'to ' sesh_use(2).Date 's' num2str(sesh_use(2).Session) '.mat'];
 file1 = fullfile(sesh_use(1).Location, savename);
-file2 = fullfile(sesh_use(1).Location, savename);
+file2 = fullfile(sesh_use(2).Location, savename);
 
 if exist(file1, 'file') || exist(file2, 'file')
     if exist(file1, 'file')

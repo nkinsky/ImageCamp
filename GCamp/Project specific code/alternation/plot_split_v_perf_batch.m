@@ -29,7 +29,7 @@ end
 
 % Don't plot if both axes handles are set to NaN
 plot_flag = true;
-if isnan(ha_perf) && isnan(ha_time)
+if (~ishandle(ha_perf) && isnan(ha_perf)) && (~ishandle(ha_time) && isnan(ha_time))
     plot_flag = false;
 end
 
