@@ -4,12 +4,13 @@ num_animals = length(alt_all_cell);
 
 %% Plot Performance vs splitting
 plot_split_v_perf_batch( alt_all ); % Plot all alone
+%%
 figure;
 for j = 1:num_animals
     MD_use = alt_all_cell{j};
     ha_perf = subplot(2, 4, j);
     ha_time = subplot(2, 4, 4 + j);
-    plot_split_v_perf_batch( MD_use, ha_perf, ha_time );
+    plot_split_v_perf_batch( MD_use, [], ha_perf, ha_time );
     
 end
 % Plot combined
@@ -36,6 +37,10 @@ end
 close(hw)
 r_notime = 1; r_noperf = 1; r_both = 2;
 nsamp = 4*max_sesh_num;
+
+% Save below to deal with later.
+save(fullfile(G30_alt(1).Location,'perfomance_glm_results.mat'),...
+    'p_notime', 'p_noperf', 'p_both', 'glm_notime', 'glm_noperf', 'glm_both')
 
 %% Take home: No evidence to support proportion of splitters predicting 
 % performance. One mouse (G48) does support this, G31 supports the idea of
