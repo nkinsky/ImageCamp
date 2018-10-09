@@ -20,7 +20,7 @@ elseif ~exist(file1, 'file') && ~exist(file2, 'file')
     num_shuffles = 1000;
     [deltacurve_corr, PFcorr, deltacurve_corr_shuf, PFcorr_shuf, ~]...
         = split_tuning_corr(session1, session2, 'num_shuffles',...
-    num_shuffles);
+        num_shuffles, 'suppress_output', true);
 end
 
 if num_shuffles ~= 1000
