@@ -1,18 +1,29 @@
 function [ stay_prop_all, coactive_prop_all, cat_names ] = ...
-    alt_stab_v_cat_batch(day_lag, comp_type, mice_sesh, PFname )
+    alt_stab_v_cat_batch(day_lag, comp_type, mice_sesh, PFname, matchER )
 %  [stay_prop, coactive_prop, cat_names ] = alt_stab_v_cat_batch(...
 %       day_lag, comp_type, mouse1, mouse2,... )
 %   Batch function for getting splitter stability for all mice at the
-%   specified day lag. Comp_type = 'exact' only calculates metrics for that
+%   specified day lag.
+%
+%   Comp_type = 'exact' only calculates metrics for that
 %   exact day lag, 'le' calculates metrics for all sessions <= day_lag
 %   apart.
+%
 %   mice_sesh = data structure with all sessions for one mouse OR cell
 %   containing data structure for each mouse for combined plotting
 %   color_mice parameter set to true (default) colors each mouse's data
 %   point separately, false plots all in black
+%
+%   PFname = Placefields file name. default = Placefields_cm1.mat
+%
+%   match_ER: set to true to roughly match median event rates between all
+%   groups of neurons. default = false
 
-if nargin < 4
-    PFname = 'Placefields.mat';
+if nargin < 5
+    matchER = false; % Don't match event-rates between splitters and other cells by default
+    if nargin < 4
+        PFname = 'Placefields_cm1.mat';
+    end
 end
 
 % Deal out mice_sesh into appropriate variable (must be a cell)
@@ -58,7 +69,7 @@ for j = 1:num_mice
     for k = 1:size(seshs_use,1)
         [~, stay_prop, coactive_prop, cat_names] = alt_stability_v_cat(...
             sesh_temp(seshs_use(k,1)), sesh_temp(seshs_use(k,2)), ...
-            'plot_flag', false, 'PFname', PFname);
+            'plot_flag', false, 'PFname', PFname, 'matchER', matchER);
         stay_prop_all{j} = cat(1,stay_prop_all{j},stay_prop);
         coactive_prop_all{j} = cat(1,coactive_prop_all{j},coactive_prop);
     end
