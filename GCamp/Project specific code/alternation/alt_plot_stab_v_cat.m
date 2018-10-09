@@ -17,7 +17,7 @@ ip.addRequired('day_lag', @(a) round(a) == a && a >= 0);
 ip.addRequired('comp_type', @(a) strcmpi(a,'exact') || strcmpi(a,'le'));
 ip.addRequired('mice_sesh', @(a) isstruct(a) || iscell(a));
 ip.addOptional('color_mice', true, @islogical);
-ip.addParameter('PFname','Placefields.mat', @ischar);
+ip.addParameter('PFname','Placefields_cm1.mat', @ischar);
 ip.parse(day_lag, comp_type, mice_sesh, varargin{:});
 color_mice = ip.Results.color_mice;
 PFname = ip.Results.PFname;
