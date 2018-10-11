@@ -1,6 +1,6 @@
-function [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
-    p_anova, cmat, daydiff_mean  ] = track_splitters( MDbase, MDreg, ...
-    sigthresh, xlims, reg_type)
+function [ relymat, deltamaxmat, sigmat, onsetsesh, days_aligned,...
+    p_anova, cmat] = track_splitters( MDbase, MDreg, ...
+    sigthresh, xlims, free_only, ignore_sameday)
 % [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
 %     p_anova, cmat, daydiff_mean  ] = track_splitters( MDbase, MDreg, ...
 %   sigthresh, xlims)
@@ -21,36 +21,67 @@ function [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
 %   be overly conservative if you have one bad registration in the middle
 %   of your sessions.
 
-if nargin < 5
-    reg_type = 'pairwise'; % default reg type is pairwise, must specify using batch map
-    if nargin < 4
-        xlims = [-1.25, 1.25];
-        if nargin < 3
-            sigthresh = 3;
+%%% NRK - need free_only flag and ignore_same_day. Should ONLY be able to
+%%% set ignore_same_day = false if you have free_only=true.
+if nargin < 6
+    ignore_sameday = true;
+    if nargin < 5
+        free_only = true;
+        if nargin < 4
+            xlims = [-1.25, 1.25];
+            if nargin < 3
+                sigthresh = 3;
+            end
         end
     end
 end
+
+if ignore_sameday == false && free_only == false
+    disp('ignore_sameday=false and free_only=false')
+    error('I won''t let you look at forced vs free trial from the same day')
+end
+
+%%% NRK - how do I incorporate different batch_session_maps for G45 and
+%%% G48? just run this in two different ways and then average them for
+%%% each for group plots? Simple - just plot with those only...
+
 
 %% Step 1: Load batch neuron map and identify session indices for each
 % NK - do this for pair-wise sessions too? With try-catch clause?
 sesh = cat(2,MDbase,MDreg); % combine all into one structure
 sesh = complete_MD(sesh); % fill in all relevant info
 basedir = ChangeDirectory_NK(sesh(1),0); 
-if strcmpi(reg_type,'batch')
-    load(fullfile(basedir,'batch_session_map.mat'), 'batch_session_map'); % load map
-end
+% if strcmpi(reg_type,'batch')
+
+load(fullfile(basedir,'batch_session_map.mat'), 'batch_session_map'); % load map
+% end
 
 % get number of bins on stem
 load(fullfile(basedir,'sigSplitters.mat'),'deltacurve');
 length(deltacurve{find(~cellfun(@isempty, deltacurve),1,'first')}); %#ok<*IDISVAR,*USENS>
 
 % Get map between all sessions and related info
-% batch_map = batch_session_map.map;
+batch_map = batch_session_map.map;
 % % NK replace this with get_neuronmap_from_batchmap later
-% sesh_inds = arrayfun(@(a) get_session_index(a, batch_session_map.session),...
-%     sesh); % Get indices in map for each session 
+sesh_inds = arrayfun(@(a) get_session_index(a, batch_session_map.session),...
+    sesh); % Get indices in map for each session 
+
+% Get free and forced trials
+[loop_bool, forced_bool] = alt_id_sesh_type(sesh);
+free_bool = ~forced_bool & ~loop_bool;
+if free_only
+    sesh = sesh(free_bool);
+    batch_map = batch_map(:,free_bool);
+    sesh_inds = sesh_inds(free_bool);
+elseif ~free_only
+    sesh = sesh(~loop_bool);
+    batch_map = batch_map(:,~loop_bool);
+    sesh_inds = sesh_inds(~loop_bool);
+end
 num_sessions = length(sesh);
 num_neurons = size(batch_map,1);
+
+
 
 %% Step 2: Step through each session and load in 1-pval, deltacurve, 
 % and sigsplitting
@@ -64,18 +95,17 @@ num_neurons = size(batch_map,1);
 
 % Pre-allocate
 relymat = nan(num_neurons, num_sessions);
-deltamat = nan(num_neurons, num_sessions);
 deltamaxmat = nan(num_neurons, num_sessions);
 sigmat = nan(num_neurons, num_sessions);
 for j = 1:num_sessions
     
     % Get session and map indices to use
     sesh_use = sesh(j);
-%     map_use = batch_map(:,sesh_inds(j)+1);
-    map_use = neuron_map_simple(MDbase, sesh_use, 'batch_map', batch_session_map);
+    map_use = batch_map(:,sesh_inds(j)+1);
+%     map_use = neuron_map_simple(MDbase, sesh_use, 'batch_map', batch_session_map);
     
     % Get "splittiness" metrics and validly mapped cells for that session
-    [ rely_val, delta_max, sigsplitter_bool ] = ...
+    [ rely_val, delta_max, sigsplitter_bool , stem_bool] = ...
         parse_splitters( sesh_use.Location, sigthresh );
     valid_bool = ~isnan(map_use) & map_use ~= 0; % Get boolean for validly mapped cells
     
@@ -106,11 +136,18 @@ end
 
 num_splitters = length(splitters);
 dayarray = arrayfun(@(a) get_time_bw_sessions(sesh(1),a),sesh)+1;
+
+%%% NRK - ignore these? Yes, most straightforward - put in flag to do
+%%% so...should also put in flag for free_only 
 % Add in half day 2nd session to any day with 2 sessions
+
 dayarray(find(diff(dayarray) == 0)+1) = ...
-    dayarray(find(diff(dayarray) == 0)+1)+0.5; 
+    dayarray(find(diff(dayarray) == 0)+1)+0.25;
 dayarray = repmat(dayarray,num_splitters,1);
-keyboard
+
+
+
+% keyboard
 % NK put code here to grab hand checked reg matrix and discard any
 % registrations that aren't great by setting them as NaN? Then they
 % shouldn't plot...
@@ -119,24 +156,30 @@ onset2 = onsetsesh(splitters);
 onset_day = dayarray(sub2ind(size(dayarray),(1:size(dayarray,1))',onset2));
 days_aligned = dayarray - onset_day;
 
+if ignore_sameday
+    days_aligned(abs(days_aligned) == 0.25) = nan;
+    days_aligned = round(days_aligned);
+end
+
+keyboard
 %% Step 5: Plot
-relymat2 = relymat(splitters,:);
-deltamaxmat2 = deltamaxmat(splitters,:);
-valid_bool = ~isnan(relymat2);
+relymat = relymat(splitters,:);
+deltamaxmat = deltamaxmat(splitters,:);
+valid_bool = ~isnan(relymat) & ~isnan(days_aligned);
 unique_daydiff = unique(days_aligned(valid_bool));
 day_labels = arrayfun(@(a) num2str(a,'%0.2g'), unique_daydiff, ...
     'UniformOutput',false);
 
 figure('Position',[560 100 1060 890]);
 ha = subplot(2,1,1);
-scatterBox(deltamaxmat2(valid_bool),days_aligned(valid_bool), 'xLabels', day_labels, ...
+scatterBox(deltamaxmat(valid_bool),days_aligned(valid_bool), 'xLabels', day_labels, ...
     'yLabel', '\Deltacurve', 'h', ha);
 xlim(xlims)
 xlabel('Days From Splitter Onset')
 title(['Splitter Ontogeny - ' mouse_name_title(sesh(1).Animal)])
 
 ha = subplot(2,1,2);
-scatterBox(relymat2(valid_bool(:)),days_aligned(valid_bool(:)), 'xLabels', day_labels, ...
+scatterBox(relymat(valid_bool(:)),days_aligned(valid_bool(:)), 'xLabels', day_labels, ...
     'yLabel', 'reliability (1-p)', 'h', ha);
 xlim(xlims)
 xlabel('Days From Splitter Onset')
@@ -150,7 +193,7 @@ make_figure_pretty(gcf);
 %% Step 6: Run ANOVA on the 1 days before and after and Tukey test
 days_ba = -1.5:0.5:1.5;
 daysvalid = days_aligned(valid_bool);
-deltavalid = deltamaxmat2(valid_bool);
+deltavalid = deltamaxmat(valid_bool);
 ba_bool = arrayfun(@(a) ismember(a,days_ba),daysvalid);
 
 [p_anova, ~, stats] = anova1(deltavalid(ba_bool), daysvalid(ba_bool),'off');
@@ -158,6 +201,9 @@ ba_bool = arrayfun(@(a) ismember(a,days_ba),daysvalid);
 unique_days = unique(daysvalid(ba_bool));
 cmat(:,1) = unique_days(cmat(:,1));
 cmat(:,2) = unique_days(cmat(:,2));
+
+%% Step 7: put stats into plots!!! add subplots and dump pkw and post-hoc tests
+% for days -2 to 2 into there?
 
 end
 
