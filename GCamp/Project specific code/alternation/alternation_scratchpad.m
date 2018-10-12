@@ -274,6 +274,17 @@ batch_session_map48 = neuron_reg_batch(G48_alt(1), G48_alt(2:end));
 save(fullfile(G30_alt(1).Location,'batch_maps_all_mice.mat'), 'batch_session_map30',...
     'batch_session_map31', 'batch_session_map45', 'batch_session_map48')
 
-%%
+%% Run G48 batch_map in two different sections since registrations before/after
+% session 16 clump together.
 batch_session_map48a = neuron_reg_batch(G48_alt(1), G48_alt(2:16));
 batch_session_map4b8 = neuron_reg_batch(G48_alt(17), G48_alt(18:end));
+
+%% Plot out and save reg qc for each half of G48 since you forgot to do it
+% after above ran
+reg_qc_plot_batch(G48_alt(1), G48_alt(2:16), 'batch_mode', 1);
+reg_qc_plot_batch(G48_alt(17), G48_alt(18:end), 'batch_mode', 1);
+
+%% Run G45 batch_map in two different sections since registrations before/after
+% session 15 clump together.
+batch_session_map45a = neuron_reg_batch(G45_alt(1), G45_alt(2:15));
+batch_session_map45b = neuron_reg_batch(G45_alt(16), G45_alt(17:end));
