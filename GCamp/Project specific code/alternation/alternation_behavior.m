@@ -58,7 +58,7 @@ end
 %% Summarize Performance in Will's box-whisker plot
 position = [2300 460 610 350];
 [names,~,~,inds] = get_unique_values(alt_all);
-[perf, ~,~, acclim_bool, forced_bool] = get_split_v_perf(alt_all);
+[perf, split_prop,~, acclim_bool, forced_bool] = get_split_v_perf(alt_all);
 legit_bool = ~acclim_bool & ~forced_bool;
 scatterBox(perf(legit_bool), inds(legit_bool,1), 'xLabels', names, 'yLabel', ...
     'Performance','transparency', 0.7, 'sf', 0.025, 'position', position, ...
@@ -68,4 +68,6 @@ hcrit = plot(get(gca,'XLim'),[0.70 0.70],'r--');
 hchance = plot(get(gca,'XLim'),[0.5 0.5],'k:');
 legend(cat(1,hcrit,hchance),{'Criteria','Chance'})
 make_plot_pretty(gca)
+
+%% Breakdown splitter propotion
 
