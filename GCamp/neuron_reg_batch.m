@@ -1,5 +1,6 @@
-function [ batch_session_map ] = neuron_reg_batch(base_struct, reg_struct, varargin)
-% batch_session_map = neuron_reg_batch(base_struct, reg_struct, varargin)
+function [ batch_session_map ] = neuron_reg_batch(base_struct, reg_struct, ...
+    varargin)
+% batch_session_map = neuron_reg_batch(base_struct, reg_struct, ...)
 %   Registers the neurons in reg_struct to base_struct and also to each
 %   other.  It runs through this two ways: 1) by always registering each
 %   neuron to the base session, or for new neurons found after the first
