@@ -1,6 +1,6 @@
 function [ relymat, deltamaxmat, sigmat, onsetsesh, days_aligned,...
-    p_anova, cmat] = track_splitters( MDbase, MDreg, ...
-    sigthresh, xlims, free_only, ignore_sameday)
+    pkw, cmat] = track_splitters( MDbase, MDreg, ...
+    sigthresh, days_ba, free_only, ignore_sameday, norm_max)
 % [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
 %     p_anova, cmat, daydiff_mean  ] = track_splitters( MDbase, MDreg, ...
 %   sigthresh, xlims)
@@ -21,20 +21,25 @@ function [ relymat, deltamaxmat, sigmat, onsetsesh, days_aligned,...
 %   be overly conservative if you have one bad registration in the middle
 %   of your sessions.
 
-%%% NRK - need free_only flag and ignore_same_day. Should ONLY be able to
-%%% set ignore_same_day = false if you have free_only=true.
-if nargin < 6
-    ignore_sameday = true;
-    if nargin < 5
-        free_only = true;
-        if nargin < 4
-            xlims = [-1.25, 1.25];
-            if nargin < 3
-                sigthresh = 3;
+% Below is getting ridiculous.  Add input parser if you have any more
+if nargin < 7
+    % true = use normalized delta_max curves, false = use delta_max directly
+    norm_max = false; 
+    if nargin < 6
+        ignore_sameday = true;
+        if nargin < 5
+            free_only = true;
+            if nargin < 4
+                days_ba = 2;
+                if nargin < 3
+                    sigthresh = 3;
+                end
             end
         end
     end
 end
+
+xlims = [-days_ba - 0.5, days_ba + 0.5];
 
 if ignore_sameday == false && free_only == false
     disp('ignore_sameday=false and free_only=false')
@@ -71,17 +76,13 @@ sesh_inds = arrayfun(@(a) get_session_index(a, batch_session_map.session),...
 free_bool = ~forced_bool & ~loop_bool;
 if free_only
     sesh = sesh(free_bool);
-    batch_map = batch_map(:,free_bool);
     sesh_inds = sesh_inds(free_bool);
 elseif ~free_only
     sesh = sesh(~loop_bool);
-    batch_map = batch_map(:,~loop_bool);
     sesh_inds = sesh_inds(~loop_bool);
 end
 num_sessions = length(sesh);
 num_neurons = size(batch_map,1);
-
-
 
 %% Step 2: Step through each session and load in 1-pval, deltacurve, 
 % and sigsplitting
@@ -97,6 +98,7 @@ num_neurons = size(batch_map,1);
 relymat = nan(num_neurons, num_sessions);
 deltamaxmat = nan(num_neurons, num_sessions);
 sigmat = nan(num_neurons, num_sessions);
+dmax_normmat = nan(num_neurons, num_sessions);
 for j = 1:num_sessions
     
     % Get session and map indices to use
@@ -105,7 +107,7 @@ for j = 1:num_sessions
 %     map_use = neuron_map_simple(MDbase, sesh_use, 'batch_map', batch_session_map);
     
     % Get "splittiness" metrics and validly mapped cells for that session
-    [ rely_val, delta_max, sigsplitter_bool , stem_bool] = ...
+    [ rely_val, delta_max, sigsplitter_bool , stem_bool, dmax_norm] = ...
         parse_splitters( sesh_use.Location, sigthresh );
     valid_bool = ~isnan(map_use) & map_use ~= 0; % Get boolean for validly mapped cells
     
@@ -117,6 +119,7 @@ for j = 1:num_sessions
     sigmat(valid_stem_bool,j) = sigsplitter_bool(map_use(valid_stem_bool)); % Map sig
     relymat(valid_stem_bool,j) = rely_val(map_use(valid_stem_bool)); % Map rely_val
     deltamaxmat(valid_stem_bool,j) = delta_max(map_use(valid_stem_bool)); % Map delta_max
+    dmax_normmat(valid_stem_bool,j) = dmax_norm(map_use(valid_stem_bool)); % Map delta_max
     
 end
 
@@ -145,8 +148,6 @@ dayarray(find(diff(dayarray) == 0)+1) = ...
     dayarray(find(diff(dayarray) == 0)+1)+0.25;
 dayarray = repmat(dayarray,num_splitters,1);
 
-
-
 % keyboard
 % NK put code here to grab hand checked reg matrix and discard any
 % registrations that aren't great by setting them as NaN? Then they
@@ -161,24 +162,29 @@ if ignore_sameday
     days_aligned = round(days_aligned);
 end
 
-keyboard
 %% Step 5: Plot
 relymat = relymat(splitters,:);
 deltamaxmat = deltamaxmat(splitters,:);
+dmax_normmat = dmax_normmat(splitters,:);
 valid_bool = ~isnan(relymat) & ~isnan(days_aligned);
 unique_daydiff = unique(days_aligned(valid_bool));
 day_labels = arrayfun(@(a) num2str(a,'%0.2g'), unique_daydiff, ...
     'UniformOutput',false);
 
-figure('Position',[560 100 1060 890]);
-ha = subplot(2,1,1);
-scatterBox(deltamaxmat(valid_bool),days_aligned(valid_bool), 'xLabels', day_labels, ...
-    'yLabel', '\Deltacurve', 'h', ha);
+figure('Position',[1940, 64, 1833, 890]);
+ha = subplot(2,3,1:2);
+if ~norm_max
+    scatterBox(deltamaxmat(valid_bool),days_aligned(valid_bool), 'xLabels', day_labels, ...
+        'yLabel', '\Deltacurve', 'h', ha);
+elseif norm_max
+    scatterBox(dmax_normmat(valid_bool), days_aligned(valid_bool), 'xLabels', day_labels, ...
+        'yLabel', '\Delta_{curve}/\Sigmamax_{curve}', 'h', ha);
+end
 xlim(xlims)
 xlabel('Days From Splitter Onset')
 title(['Splitter Ontogeny - ' mouse_name_title(sesh(1).Animal)])
 
-ha = subplot(2,1,2);
+ha = subplot(2,3,4:5);
 scatterBox(relymat(valid_bool(:)),days_aligned(valid_bool(:)), 'xLabels', day_labels, ...
     'yLabel', 'reliability (1-p)', 'h', ha);
 xlim(xlims)
@@ -190,20 +196,42 @@ make_figure_pretty(gcf);
 % rely_by_day = arrayfun(@(a) relymat2(days_aligned == a), unique(days_aligned),...
 %     'UniformOutput',false);
 
-%% Step 6: Run ANOVA on the 1 days before and after and Tukey test
-days_ba = -1.5:0.5:1.5;
-daysvalid = days_aligned(valid_bool);
-deltavalid = deltamaxmat(valid_bool);
-ba_bool = arrayfun(@(a) ismember(a,days_ba),daysvalid);
+%% Step 6: Run ANOVA on the days before and after and Tukey test
+days_use = ceil(-days_ba:1:days_ba);
 
-[p_anova, ~, stats] = anova1(deltavalid(ba_bool), daysvalid(ba_bool),'off');
+% Get days to look at
+daysvalid = days_aligned(valid_bool);
+ba_bool = arrayfun(@(a) ismember(a, days_use),daysvalid);
+
+% Run for deltamax
+deltavalid = deltamaxmat(valid_bool);
+[pkw, ~, stats] = kruskalwallis(deltavalid(ba_bool), daysvalid(ba_bool),'off');
 [cmat, ~] = multcompare(stats,'Display','off');
 unique_days = unique(daysvalid(ba_bool));
 cmat(:,1) = unique_days(cmat(:,1));
 cmat(:,2) = unique_days(cmat(:,2));
 
-%% Step 7: put stats into plots!!! add subplots and dump pkw and post-hoc tests
-% for days -2 to 2 into there?
+subplot(2,3,3)
+text(0.1, 1, ['First sesh date = ' mouse_name_title(MDbase.Date)])
+text(0.1, 0.9, 'day1   day2   pval')
+text(0.1, 0.5, num2str(cmat(:,[1 2 6]), '%0.2g \t'))
+text(0.1, 0.95, ['pkw = ' num2str(pkw, '%0.2g')])
+axis off
+
+% run for relymat
+relyvalid = relymat(valid_bool);
+
+[pkw, ~, stats] = kruskalwallis(relyvalid(ba_bool), daysvalid(ba_bool),'off');
+[cmat, ~] = multcompare(stats,'Display','off');
+unique_days = unique(daysvalid(ba_bool));
+cmat(:,1) = unique_days(cmat(:,1));
+cmat(:,2) = unique_days(cmat(:,2));
+
+subplot(2,3,6)
+text(0.1, 0.9, 'day1   day2   pval')
+text(0.1, 0.3, num2str(cmat(:,[1 2 6]), '%0.2g \t'))
+text(0.1, 0.95, ['pkw = ' num2str(pkw, '%0.2g')])
+axis off
 
 end
 

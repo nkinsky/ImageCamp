@@ -33,7 +33,7 @@ load(fullfile(dirstr,['PlacefieldStats' name_append]),'PFnHits');
 NumTransients = get_num_trans(PSAbool);
 neurons_use = find(pval < pfilt);
 
-figure
+figure; set(gcf,'Position',[1965, 462, 1545, 452])
 h1(1) = subplot(1,3,1);
 h1(2) = subplot(1,3,2);
 h1(3) = subplot(1,3,3);
@@ -102,7 +102,9 @@ end
 
 %% Plot trajectory
 function [] = plot_traj(x,y,PSAuse)
-plot(y,x,'-',y(PSAuse),x(PSAuse),'r*');
+% plot(y,x,'-',y(PSAuse),x(PSAuse),'r*'); % Makes things match up with
+% TMaps
+plot(x,y,'-',x(PSAuse),y(PSAuse),'r*'); % Use for comparing to python PFs
 set(gca,'YDir','reverse');
 % axis tight
 axis off

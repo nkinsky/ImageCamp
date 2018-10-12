@@ -147,6 +147,12 @@ alt_all_cell{3} = G45_alt; alt_all_cell{4} = G48_alt;
 alt_all = cat(2,alt_all_cell{:}); % All together
 alt_all = complete_MD(alt_all);
 
+% sp cell splits out G45 and G48 sessions into halves corresponding to when
+% I get good registration between sessions
+alt_all_cell_sp{1} = G30_alt; alt_all_cell_sp{2} = G31_alt; %Parsed out by mouse
+alt_all_cell_sp{3} = G45_alt(1:15); alt_all_cell_sp{4} = G45_alt(16:end); 
+alt_all_cell_sp{5} = G48_alt(1:16); alt_all_cell_sp{6} = G48_alt(17:end);
+
 %% G48 is complicated since the field of view moves a few times over the 1.5
 % months. Below lists the registrations for the 4 good chunks of data. Very
 % conservative.
