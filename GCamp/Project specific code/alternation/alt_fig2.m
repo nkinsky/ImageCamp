@@ -108,4 +108,37 @@ axis off
 
 % NRK - return to the above when comparing place cell coactivity to
 % splitter cells!!!
-%% Probability 
+
+%% Splitter proportions for looping versus forced alternation versus free 
+% alternation sessions - need to account for differences in time of
+% session... do I see fewer for sessions that are shorter (e.g. short
+% sessions for G48 at the end?)
+sesh_use = G30_alt;
+grp_names = {'Free', 'Forced', 'Looping'};
+
+[perf, split_prop,~, acclim_bool, forced_bool] = get_split_v_perf(sesh_use);
+grps = ones(size(forced_bool)); % free alternation = 1
+grps(acclim_bool) = 3; % looping = 3
+grps(forced_bool) = 2; % forced = 2
+figure; set(gcf,'Position',[600 540 810 260])
+ha = subplot(1,2,1);
+scatterBox(split_prop, grps, 'xLabels', grp_names(unique(grps)),...
+    'yLabel', 'Proportion Splitters', 'h', ha)
+make_plot_pretty(gca)
+
+% Get stats for above
+[pkw, ~, stats] = kruskalwallis(split_prop, grps,'off');
+cmat = multcompare(stats, 'display', 'off');
+subplot(1,2,2)
+% Put names of all mice included here
+text(0.1, 1.0, 'Mice included:')
+text(0.1, 0.8, cellfun(@mouse_name_title, unique(arrayfun(@(a) a.Animal, ...
+    sesh_use, 'UniformOutput', false)),'UniformOutput', false))
+text(0.1, 0.4, 'g1   g2   \Delta_{LB}   \Delta_{est}   \Delta_{UB}   pval')
+text(0.1, 0.2, num2str(cmat, '%0.2g \t'))
+text(0.1, 0.1, ['pkw = ' num2str(pkw, '%0.2g')])
+axis off
+
+
+
+
