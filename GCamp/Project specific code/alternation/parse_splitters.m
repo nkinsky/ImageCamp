@@ -1,4 +1,4 @@
-function [ rely_val, delta_max, sigbool ] = parse_splitters( dir_use, sigthresh )
+function [ rely_val, delta_max, sigbool, stem_bool ] = parse_splitters( dir_use, sigthresh )
 % [ rely_val, delta_max, sigcbool ] = parse_splitters( dir_use, sigthresh )
 %   Pull out "splittiness" metrics: reliability value (1-p), and delta_max
 %   (maximum diff b/w L/R tuning curves) for all splitters, and boolean
