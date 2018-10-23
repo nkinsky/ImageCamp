@@ -1,16 +1,56 @@
 % Alternation Figure 5: Splitter Ontogeny
 
+%% Example Ontogeny Scenarios Plot
+figure; set(gcf,'Position',[34 200 1020 425]);
+curve = 0.02*randn(2,50);
+for j = 1:5
+    if j == 2 || j == 3
+        curve(1,20:30) = curve(1,20:30) + 0.2;
+    elseif j == 4 || j == 5
+        curve(1,20:30) = curve(1,20:30) - 0.2;
+    end
+%     curve = curve + 0.05*rand(2,50);
+    ha = subplot(3,5,j);
+    plot_smooth_curve(curve,ha);
+end
+
+for j = 1:5
+    if j == 3
+        curve(1,20:30) = curve(1,20:30) + 0.4;
+    elseif j == 4 
+        curve(1,20:30) = curve(1,20:30) - 0.4;
+    end
+%     curve = curve + 0.05*rand(2,50);
+    ha = subplot(3,5,5+j);
+    plot_smooth_curve(curve,ha);
+end
+
+for j = 1:5
+    if j == 3
+        curve(1,20:30) = curve(1,20:30) + 0.4;
+    elseif j == 4
+        curve(1,20:30) = curve(1,20:30) - 0.15;
+    end
+    curve(2,:) = circshift(curve(2,:),10);
+%     curve = curve + 0.05*rand(2,50);
+    ha = subplot(3,5,10+j);
+    plot_smooth_curve(curve,ha);
+end
+
 %% Plot for each mouse
 save_pdf = false;
 sigthresh = 3;
-days_ba = 2;
+days_ba = 5;
 free_only = true;
 ignore_sameday = true;
 norm_max = false;
 daydiff_all = [];
 dmean_all = [];
 rmean_all = [];
-alt_inds = [1 2 4 6]; % Use these groups of sessions in alt_all_cell_sp
+alt_inds = [1 2 3 4 5 6]; % Use these groups of sessions in alt_all_cell_sp - need
+% to figure out how to combine G45 1st and 2nd half and G48 1st and 2nd
+% half
+clear rmean_half1 rmean_half2 dmean_half1 dmean_half2
 for k = 1:length(alt_inds)
     j = alt_inds(k);
     [ relymat, deltamaxmat, sigmat, onsetsesh, days_aligned] = track_splitters(...
@@ -27,7 +67,31 @@ for k = 1:length(alt_inds)
         unique_daydiff);
     rmean = arrayfun(@(a) nanmean(relymat(days_aligned == a)), ...
         unique_daydiff);
+    if j == 3 || j == 5
+        rmean_half1 = rmean;
+        dmean_half1 = dmean;
+        daydiff1 = unique_daydiff;
+    elseif j == 4 || j == 6
+        rmean_half2 = rmean;
+        dmean_half2 = dmean;
+        daydiff2 = unique_daydiff;
+        
+        % Get averages of both halves
+        dmean_comb = [dmean_half1; dmean_half2];
+        rmean_comb = [rmean_half1; rmean_half2];
+        daydiff_comb = [daydiff1; daydiff2];
+        
+        unique_daydiff = unique([daydiff1; daydiff2]);
+        dmean = arrayfun(@(a) nanmean(dmean_comb(a == daydiff_comb)),...
+            unique_daydiff);
+        rmean = arrayfun(@(a) nanmean(rmean_comb(a == daydiff_comb)),...
+            unique_daydiff);
+        
+        clear rmean_half1 rmean_half2 dmean_half1 dmean_half2
+    end
     
+    disp(['size ddiff = ' num2str(length(unique_daydiff)), 'size dmean = ' ...
+        num2str(length(dmean))])
     daydiff_all = [daydiff_all; unique_daydiff];
     dmean_all = [dmean_all; dmean];
     rmean_all = [rmean_all; rmean];
@@ -38,7 +102,7 @@ end
 % way to demonstrate this... maybe do scatterBox for +/- 1 day and +/- 7
 % days
 %% Adjust below to do 1-3, 4-6, 7-9, etc.
-day_lims = [1 2];
+day_lims = [1 3];
 good_bool = abs(daydiff_all) <= day_lims(2) & abs(daydiff_all) >= day_lims(1)...
     | daydiff_all == 0;
 dayba = daydiff_all(good_bool);
@@ -51,18 +115,18 @@ hd = subplot(2,2,1); hr = subplot(2,2,3);
 xlab = {['-' num2str(day_lims(2)) ' to -' num2str(day_lims(1))], '0', ...
     [num2str(day_lims(1)) ' to ' num2str(day_lims(2))]};
 scatterBox(dmean_plot, dayba, 'xLabels', xlab, 'yLabel', '\Deltacurve_{mean}',...
-    'h', hd)
+    'h', hd);
 xlabel('Days from splitting onset')
 title('All Mice means')
 
 scatterBox(rmean_plot, dayba, 'xLabels', xlab, 'yLabel', 'rely_{mean} (1-p)',...
-    'h', hr)
+    'h', hr);
 xlabel('Days from splitting onset')
 title('All Mice means')
 
 % add in stats
 [pkwd, ~, statsd] = kruskalwallis(dmean_plot, dayba, 'off');
-cmatd = multcompare(stats,'display','off');
+cmatd = multcompare(statsd,'display','off');
 subplot(2,2,2)
 text(0.1, 0.65, 'g1   g2   pval')
 text(0.1, 0.5, num2str(cmatd(:,[1 2 6]), '%0.2g \t'))
@@ -70,7 +134,7 @@ text(0.1, 0.9, ['pkw = ' num2str(pkwd, '%0.2g')])
 axis off
 
 % add in stats
-[pkwr, ~, statsr] = kruskalwallis(dmean_plot, dayba, 'off');
+[pkwr, ~, statsr] = kruskalwallis(rmean_plot, dayba, 'off');
 cmatr = multcompare(statsr,'display','off');
 subplot(2,2,4)
 text(0.1, 0.65, 'g1   g2   pval')

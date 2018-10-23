@@ -4,7 +4,7 @@
 plotSigSplitters_bw_sesh(G45_alt(4), G45_alt(11));
 plotSigSplitters_bw_sesh(G45_alt(4), G45_alt(20));
 plotSigSplitters_bw_sesh(G45_alt(20),G45_alt(21));
-plotSigSplitters_bw_sesh(G30_alt(10),G30_alt(14));
+plotSigSplitters_bw_sesh(G30_alt(13),G30_alt(14));
 
 %% B - PF and splitter correlations versus time
 
@@ -21,6 +21,8 @@ for j = 1:4
         close(gcf)
     end
 end
+
+
 
 %% Prob maintains phenotype versus days...
 max_day_lag = 7;
@@ -113,6 +115,9 @@ axis off
 % alternation sessions - need to account for differences in time of
 % session... do I see fewer for sessions that are shorter (e.g. short
 % sessions for G48 at the end?)
+%
+% Take home is that splitter proportion is almost entirely predicted by
+% sesssion length, not performance or time.
 sesh_use = G30_alt;
 grp_names = {'Free', 'Forced', 'Looping'};
 
@@ -140,5 +145,15 @@ text(0.1, 0.1, ['pkw = ' num2str(pkw, '%0.2g')])
 axis off
 
 
+%%
+[~, ~, ~, G30glmall] = plot_split_v_perf_batch(G30_alt);
+printNK('G30 perf time ntrials v splitter proportion', 'alt')
+[~, ~, ~, G31glmall] = plot_split_v_perf_batch(G31_alt);
+printNK('G31 perf time ntrials v splitter proportion', 'alt')
+[~, ~, ~, G45glmall] = plot_split_v_perf_batch(G45_alt);
+printNK('G45 perf time ntrials v splitter proportion', 'alt')
+[~, ~, ~, G48glmall] = plot_split_v_perf_batch(G48_alt);
+printNK('G48 perf time ntrials v splitter proportion', 'alt')
 
-
+[~, ~, ~, allmice_glmall] = plot_split_v_perf_batch(alt_all);
+printNK('All Mice perf time ntrials v splitter proportion', 'alt')

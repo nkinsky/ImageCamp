@@ -42,7 +42,7 @@ movie_file = fullfile(G45_alt(23).Location,'MotCorrMovie-Objects',...
     'Obj_1 - recording_20151001_163242.h5');
 bp_movie_file = fullfile(G45_alt(23).Location,'MotCorrMovie-Objects',...
     'BPDFF.h5');
-ct_frame_nums = [753 883 1032];
+ct_frame_nums = [753 883 1010, 1032];
 ct_frames = LoadFrames(movie_file, ct_frame_nums);
 ct_bp_frames = LoadFrames(bp_movie_file, ct_frame_nums);
 
@@ -50,7 +50,7 @@ ct_bp_frames = LoadFrames(bp_movie_file, ct_frame_nums);
 for j = 1:2; b{j} = bwboundaries(ct_ROIs{j},'noholes'); end
 
 %% Plot ROIs on top of each frame
-for j = length(ct_frame_nums)
+for j = 1:length(ct_frame_nums)
     figure; set(gcf,'Position', [2210 400 650 500]);
     title(['CT event #' num2str(j)])
     imagesc_gray(squeeze(ct_frames(:,:,j))); 
@@ -78,7 +78,8 @@ save(fullfile(G45_alt(1).Location,'G45regstats_chance.mat'),'G45regstats_chance'
 
 %% G48 is more complicated since the field of view moves a few times over the 1.5
 % months. Below lists the registrations for the 4 good chunks of data. Very
-% conservative.
+% conservative. Note that in the end I use 1-16 and 17 to the end (using
+% total session numbering, not just free).
 
 G48_alt_nf = G48_alt(~G48_forced_bool); %  get non-forced sessions
 [G48regstats_2to9, G48regstats_2to9_chance] = reg_qc_plot_batch(G48_alt_nf(1), ...

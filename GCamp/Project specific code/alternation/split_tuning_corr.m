@@ -75,6 +75,7 @@ for k = 1:2
         sigcurve));
     sesh_use(k).num_neurons = length(deltacurve);
     
+    % Map all variables to each other.
     if k == 1
         sesh_use(k).deltacurve = deltacurve;
         sesh_use(k).TMap_gauss = TMap_gauss;
@@ -86,7 +87,7 @@ for k = 1:2
     sesh_use(k).stem_active_bool = ~cellfun(@isempty, sesh_use(k).deltacurve);
 end
 sigsplit_ind = sesh_use(1).sigSplitters;
-sigsplit_bool = false(sesh_use(1).num_neurons);
+sigsplit_bool = false(sesh_use(1).num_neurons,1);
 sigsplit_bool(sigsplit_ind) = true;
 
 
@@ -94,14 +95,17 @@ sigsplit_bool(sigsplit_ind) = true;
 TMap1 = sesh_use(1).TMap_gauss(valid_bool);
 TMap2 = sesh_use(2).TMap_gauss(valid_bool);
 
-active_stem_both = sesh_use(1).stem_active_bool & sesh_use(2).stem_active_bool;
+active_stem_both = sesh_use(1).stem_active_bool & sesh_use(2).stem_active_bool ...
+    & sigsplit_bool;
+arm_only = ~sesh_use(1).stem_active_bool & ~sesh_use(2).stem_active_bool & ...
+    ~sigsplit_bool;
 dcurve1 = sesh_use(1).deltacurve(active_stem_both);
 dcurve2 = sesh_use(2).deltacurve(active_stem_both);
+
 % Check to make sure curves are the same size - might be off a tiny bit due
 % to how LinearizeTrajectory works...
-%%
 if sum(active_stem_both) > 0
-    if length(dcurve1{1}) ~= length(dcurve2{1})
+    if length(dcurve1{1}) ~= length(dcurve2{1}) % resize if off
         dcurve2 = cellfun(@(a) resize(a,size(dcurve1{1})), dcurve2,...
             'UniformOutput', false);
     end
@@ -111,7 +115,8 @@ if sum(active_stem_both) > 0
 else
     deltacurve_corr = [];
 end
-%%
+
+% Get PF correlation values
 PFcorr = nan(length(neuron_map),1);
 PFcorr(valid_bool) = cellfun(@(a,b) corr(a(:), b(:), 'type', 'Spearman',...
     'rows','complete'), TMap1, TMap2);
@@ -135,7 +140,7 @@ parfor j = 1:num_shuffles
     PFcorr_shuf(:,j) = cellfun(@(a,b) corr(a(:), b(:), 'type', 'Spearman',...
     'rows','complete'), TMap1, TMap2(randperm(nactive_both)));
 
-% %     "Reduced overhead" code
+% %     "Reduced overhead" code - doesn't really change anything...
 % %      PFcorr_shuf(:,j) = cellfun(@(a,b) corr(a(:), b(:), 'type', 'Spearman',...
 % %         'rows','complete'), TMap1, TMap2_rand(:,j)');
     p.progress;
@@ -144,14 +149,12 @@ end
 p.stop;
 
 %% Save everything in both directories with the same name for easy access later
-save(file1, 'sesh1', 'sesh2', 'deltacurve_corr', 'PFcorr', ...
+save(file1, 'session1', 'session2', 'deltacurve_corr', 'PFcorr', ...
     'deltacurve_corr_shuf', 'PFcorr_shuf', 'sigsplit_ind', 'num_shuffles')
-save(file2, 'sesh1', 'sesh2', 'deltacurve_corr', 'PFcorr', ...
+save(file2, 'session1', 'session2', 'deltacurve_corr', 'PFcorr', ...
     'deltacurve_corr_shuf', 'PFcorr_shuf', 'sigsplit_ind', 'num_shuffles')
 
 end
-
-
 
 end
 
@@ -178,7 +181,6 @@ TMap_reg(valid_bool) = TMap(valid_map);
 TMap_zero = TMap{1};
 TMap_zero(~isnan(TMap_zero)) = 0;
 [TMap_reg{~valid_bool}] = deal(TMap_zero);
-
 
 end
 

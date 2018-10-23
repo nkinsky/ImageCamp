@@ -48,6 +48,12 @@ save(fullfile(G30_alt(1).Location,'perfomance_glm_results.mat'),...
 % results...better question might be how does splitting correlate with
 % memory load?
 
+%% Better support - proportion of splitters is mainly related to # trials. 
+% If I run code below I see a significant results for #trials in the glm
+% and a pval of 0.12 for performance and 0.88 for time
+
+[~,~,~, glm_all] = plot_split_v_perf_batch(alt_all);
+
 %% Plot performance for each trial for each mouse
 window = 5; % trial averaging window
 for j = 1:num_animals

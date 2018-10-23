@@ -67,6 +67,8 @@ end
 for j = 1:5
     if j == 3
         curve(1,20:30) = curve(1,20:30) + 0.4;
+    elseif j == 4
+        curve(1,20:30) = curve(1,20:30) - 0.15;
     end
     curve(2,:) = circshift(curve(2,:),10);
 %     curve = curve + 0.05*rand(2,50);

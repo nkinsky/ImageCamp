@@ -1,5 +1,5 @@
 function [ perf, split_prop, split_num, acclim_bool, forced_bool, perf_calc,...
-    perf_notes] = ...
+    perf_notes, num_trials] = ...
     get_split_v_perf( MD )
 %  [ perf, split_prop, split_num, valid_bool, forced_bool ] = ...
 %     get_split_v_perf( MD )
@@ -10,7 +10,7 @@ num_sessions = length(MD);
 %% Get performance for each session
 MD = complete_MD(MD); % Add in all data if not there already
 
-[perf_calc, perf_notes] = alt_get_perf(MD);
+[perf_calc, perf_notes, ~, num_trials] = alt_get_perf(MD);
 perf = nanmean([perf_calc, perf_notes],2); % Change this when you debug/check all auto calculated sessions
 
 % Get acclimation/forced sessions
