@@ -1,4 +1,5 @@
-function [] = splitcorr_v_time(sessions, comp_type, pval_thresh, ntrans_thresh)
+function [PFcorr_by_day, PFcorr_by_day_split, unique_lags] = ...
+    splitcorr_v_time(sessions, comp_type, pval_thresh, ntrans_thresh)
 % splitcorr_v_time(sessions, forced_only)
 %  Plots correlations between sessions for spliter tuning curves and place
 %  field TMaps. Must include ALL sessions for a given animal as an input
