@@ -33,7 +33,8 @@ switch location
     case 'russek'
         location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Presentations\Russek Day 2017\Poster';
     case '2env'
-        location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\2env\Figures';
+        location = 'J:\2env Figures - do not delete';
+%         location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\2env\Figures';
     case '2env_rot' % 2env rotation analysis figures
         location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\2env\Figures\Rotation Analysis';
     case 'NO'
