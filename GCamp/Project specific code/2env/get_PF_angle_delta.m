@@ -1,4 +1,5 @@
-function [ delta_angle, delta_pos, pos1, angles, delta_angle_shuf, neuronid, cdists1 ] = ...
+function [ delta_angle, delta_pos, pos1, angles, delta_angle_shuf, neuronid, ...
+    cdists1, delta_rad ] = ...
     get_PF_angle_delta( sesh1, sesh2, batch_map, TMap_type, bin_size, ...
     PCfilter, plot_flag, nshuf, half_use )
 % delta_angle = get_PF_angle_delta( sesh1, sesh2, neuron_map, ... )
@@ -90,7 +91,7 @@ for j = 1:2
     [yi, xi] = ind2sub(map_dim, imax);
     sessions(j).PFpos = [xi', yi'];
     sessions(j).cdists = sqrt((sessions(j).PFpos(:,1) - map_center(2)).^2 + ...
-        (sessions(j).PFpos(:,2) - map_center(2)).^2);
+        (sessions(j).PFpos(:,2) - map_center(1)).^2);
     
     % This method takes the placefield angle as the average of ALL its
     % fields in the case of multiple fields.
@@ -129,6 +130,7 @@ angles = nan(sum(valid_bool),2);
 angles(:,1) = sessions(1).PFangle2(valid_bool)';
 angles(:,2) = sessions(2).PFangle2(map_use(valid_bool))';
 cdists1 = sessions(1).cdists(valid_bool);
+delta_rad = cdists1 - sessions(2).cdists(map_use(valid_bool));
 delta_angle = diff(angles,1,2);
 delta_angle(delta_angle < 0) = delta_angle(delta_angle < 0) + 360;
 % Nan-value debugging - uncomment to examine why any NaN's are popping up.
@@ -158,6 +160,7 @@ if PCfilter
     pos2 = pos2(pf_either_bool,:);
     angles = angles(pf_either_bool,:);
     cdists1 = cdists1(pf_either_bool);
+    delta_rad = delta_rad(pf_either_bool);
     neuronid = neuronid(pf_either_bool,:);
 
 end
@@ -171,6 +174,7 @@ pos1 = pos1(~nan_bool,:);
 pos2 = pos2(~nan_bool,:);
 angles = angles(~nan_bool,:);
 cdists1 = cdists1(~nan_bool);
+delta_rad = delta_rad(~nan_bool);
 neuronid = neuronid(~nan_bool,:);
 
 pos_all = cat(3,pos1,pos2);

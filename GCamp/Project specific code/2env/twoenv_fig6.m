@@ -100,7 +100,7 @@ axis off
 printNK('Six Day Rotation Histogram - Circle G45','2env','append',true)
 
 %% Circle same day center-out
-[~, delta_mean_0, ~, p0, ~, coh_ratio_0] = plot_delta_angle_hist(...
+[~, delta_mean_0, ~, p0, ~, coh_ratio_0, ~, ~, ~, ~, ~, delta_rad_0] = plot_delta_angle_hist(...
     G45_oct(1), G45_oct(2), G45_oct(1), 'TMap_type', 'TMap_gauss',...
     'bin_size', 1, 'nshuf', 1000, 'coh_ang_thresh', 30);
 ylims = get(gca,'YLim');
@@ -109,13 +109,13 @@ set(gca,'YLim',ylims,'YTick',ylims)
 printNK('Oct center out lag 0 histo','2env')
 
 %% Circle 6 day center-out
-[~, delta_mean_6, ~, p6, ~, coh_ratio_6] = plot_delta_angle_hist(...
+[~, delta_mean_6, ~, p6, ~, coh_ratio_6, ~, ~, ~, ~, ~, delta_rad_6] = plot_delta_angle_hist(...
     G45_oct(1), G45_oct(8), G45_oct(1), 'TMap_type', 'TMap_gauss',...
     'bin_size', 1, 'nshuf', 1000, 'coh_ang_thresh', 30);
 ylims = get(gca,'YLim');
 make_plot_pretty(gca,'linewidth',1,'fontsize',14)
 set(gca,'YLim',ylims,'YTick',ylims)
-printNK('Oct center out lag 6 histo','2env')
+printNK('Oct center out lag 6 histo with y axis','2env')
 
 %% See twoenv_silent_cellPVs for PV vs day lag plots
 
