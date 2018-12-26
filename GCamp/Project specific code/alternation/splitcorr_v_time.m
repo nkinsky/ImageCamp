@@ -184,6 +184,9 @@ for j = 1:nlags
     daycount(j) = sum(lag_bool);
 end
 
+
+%%% NRK - make below into a plot function so that you can run for ALL
+%%% mice...
 % Set up plots
 figure; set(gcf, 'Position', [10 160 1900 800])
 hPF = subplot(2,2,1);

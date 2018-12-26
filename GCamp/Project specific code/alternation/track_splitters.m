@@ -1,8 +1,8 @@
 function [ relymat, deltamaxmat, sigmat, onsetsesh, days_aligned,...
-    pkw, cmat] = track_splitters( MDbase, MDreg, ...
-    sigthresh, days_ba, free_only, ignore_sameday, norm_max)
+    pkw, cmat, deltamax_normmat] = track_splitters( MDbase, MDreg, ...
+    sigthresh, days_ba, free_only, ignore_sameday, norm_max, nactive_thresh)
 % [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
-%     p_anova, cmat, daydiff_mean  ] = track_splitters( MDbase, MDreg, ...
+%     p_anova, cmat, deltamax_normmat] = track_splitters( MDbase, MDreg, ...
 %   sigthresh, xlims)
 %   track splitters across days by spitting out relymat and deltamat that
 %   tracks 1-pval and deltacurve from sigsplitters.mat for each neuron, and
@@ -21,18 +21,22 @@ function [ relymat, deltamaxmat, sigmat, onsetsesh, days_aligned,...
 %   be overly conservative if you have one bad registration in the middle
 %   of your sessions.
 
-% Below is getting ridiculous.  Add input parser if you have any more
-if nargin < 7
-    % true = use normalized delta_max curves, false = use delta_max directly
-    norm_max = false; 
-    if nargin < 6
-        ignore_sameday = true;
-        if nargin < 5
-            free_only = true;
-            if nargin < 4
-                days_ba = 2;
-                if nargin < 3
-                    sigthresh = 3;
+% Below is getting ridiculous.  Add input parser if you have any more after
+% SfN.
+if nargin < 8
+    nactive_thresh = 0;
+    if nargin < 7
+        % true = use normalized delta_max curves, false = use delta_max directly
+        norm_max = false;
+        if nargin < 6
+            ignore_sameday = true;
+            if nargin < 5
+                free_only = true;
+                if nargin < 4
+                    days_ba = 2;
+                    if nargin < 3
+                        sigthresh = 3;
+                    end
                 end
             end
         end
@@ -98,7 +102,7 @@ num_neurons = size(batch_map,1);
 relymat = nan(num_neurons, num_sessions);
 deltamaxmat = nan(num_neurons, num_sessions);
 sigmat = nan(num_neurons, num_sessions);
-dmax_normmat = nan(num_neurons, num_sessions);
+deltamax_normmat = nan(num_neurons, num_sessions);
 for j = 1:num_sessions
     
     % Get session and map indices to use
@@ -107,9 +111,11 @@ for j = 1:num_sessions
 %     map_use = neuron_map_simple(MDbase, sesh_use, 'batch_map', batch_session_map);
     
     % Get "splittiness" metrics and validly mapped cells for that session
-    [ rely_val, delta_max, sigsplitter_bool , stem_bool, dmax_norm] = ...
+    [ rely_val, delta_max, sigsplitter_bool , stem_bool, dmax_norm, nactive_stem] = ...
         parse_splitters( sesh_use.Location, sigthresh );
     valid_bool = ~isnan(map_use) & map_use ~= 0; % Get boolean for validly mapped cells
+    active_bool = nactive_stem >= nactive_thresh; % Boolean for cells above activity threshold
+    stem_bool = stem_bool & active_bool;
     
     % Map valid stem neurons to batch_map numbering scheme
     valid_stem_bool = false(num_neurons,1); 
@@ -119,7 +125,7 @@ for j = 1:num_sessions
     sigmat(valid_stem_bool,j) = sigsplitter_bool(map_use(valid_stem_bool)); % Map sig
     relymat(valid_stem_bool,j) = rely_val(map_use(valid_stem_bool)); % Map rely_val
     deltamaxmat(valid_stem_bool,j) = delta_max(map_use(valid_stem_bool)); % Map delta_max
-    dmax_normmat(valid_stem_bool,j) = dmax_norm(map_use(valid_stem_bool)); % Map delta_max
+    deltamax_normmat(valid_stem_bool,j) = dmax_norm(map_use(valid_stem_bool)); % Map delta_max
     
 end
 
@@ -165,7 +171,7 @@ end
 %% Step 5: Plot
 relymat = relymat(splitters,:);
 deltamaxmat = deltamaxmat(splitters,:);
-dmax_normmat = dmax_normmat(splitters,:);
+deltamax_normmat = deltamax_normmat(splitters,:);
 valid_bool = ~isnan(relymat) & ~isnan(days_aligned);
 unique_daydiff = unique(days_aligned(valid_bool));
 day_labels = arrayfun(@(a) num2str(a,'%0.2g'), unique_daydiff, ...
@@ -177,7 +183,7 @@ if ~norm_max
     scatterBox(deltamaxmat(valid_bool),days_aligned(valid_bool), 'xLabels', day_labels, ...
         'yLabel', '\Deltacurve', 'h', ha);
 elseif norm_max
-    scatterBox(dmax_normmat(valid_bool), days_aligned(valid_bool), 'xLabels', day_labels, ...
+    scatterBox(deltamax_normmat(valid_bool), days_aligned(valid_bool), 'xLabels', day_labels, ...
         'yLabel', '\Delta_{curve}/\Sigmamax_{curve}', 'h', ha);
 end
 xlim(xlims)

@@ -1,5 +1,5 @@
-function [ ] = alt_plot_perf_batch(MD, window, legend_flag)
-% alt_plot_perf_batch(MD, window, lc_omit )
+function [perf_plot ] = alt_plot_perf_batch(MD, window, legend_flag)
+% perf_by_day = alt_plot_perf_batch(MD, window, lc_omit )
 %   window default = 10 trial smoothing. Automatically omits files with
 %   "looping" or "forced" from plotting in the learning curves
 %   
@@ -31,12 +31,17 @@ for j = 1:num_sessions
 end
 
 % now plot learning curves
-subplot_auto(num_sessions + 1,num_sessions + 1);
+for j = 1:2
+    if j == 1
+        subplot_auto(num_sessions + 1,num_sessions + 1);
+    elseif j == 2
+       figure; set(gcf, 'Position', [2340, 190, 870, 520]) 
+    end
 perf_plot = 100*nanmean([perf_calc, perf_notes],2);
 sessions_plot = find(~omit_lc);
-plot(sessions_plot, perf_plot(~omit_lc),'.-')
+plot(sessions_plot, perf_plot(~omit_lc),'o-')
 hold on; plot([0.5, num_sessions + 0.5], [crit crit],'r--')
-xlim([0.5, num_sessions + 0.5]); ylim([-20 120]);
+xlim([0.5, num_sessions + 0.5]); ylim([50 90]);
 xlabel('Days'); ylabel('Performance')
 title(mouse_name_title(MD(1).Animal))
 make_plot_pretty(gca)

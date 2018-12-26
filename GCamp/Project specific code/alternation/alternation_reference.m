@@ -35,7 +35,12 @@ G31_alt(j).Date = '12_02_2014'; G31_alt(j).Session = 1; j = j+1;
 G31_alt(j).Date = '12_03_2014'; G31_alt(j).Session = 1; j = j+1;
 G31_alt(j).Date = '12_04_2014'; G31_alt(j).Session = 1; j = j+1;
 G31_alt(j).Date = '12_05_2014'; G31_alt(j).Session = 1; j = j+1;
+
+%%% Could use the below for behavioral tracking only!!!
 % G31_alt(j).Date = '12_08_2014'; G31_alt(j).Session = 1; j = j+1; % Bad imaging plane
+% G31_alt(j).Date = '12_09_2014'; G31_alt(j).Session = 1; j = j+1;
+% G31_alt(j).Date = '12_10_2014'; G31_alt(j).Session = 1; j = j+1;
+
 G31_alt(j).Date = '12_11_2014'; G31_alt(j).Session = 1; j = j+1;
 [G31_alt(:).Animal] = deal('GCamp6f_31');
 G31_alt = complete_MD(G31_alt);
@@ -151,6 +156,8 @@ alt_all_cell{1} = G30_alt; alt_all_cell{2} = G31_alt; %Parsed out by mouse
 alt_all_cell{3} = G45_alt; alt_all_cell{4} = G48_alt;
 alt_all = cat(2,alt_all_cell{:}); % All together
 alt_all = complete_MD(alt_all);
+[alt_all_loop_bool, alt_all_forced_bool] = alt_id_sesh_type(alt_all);
+alt_all_free_bool = ~alt_all_forced_bool & ~alt_all_loop_bool;
 
 % sp cell splits out G45 and G48 sessions into halves corresponding to when
 % I get good registration between sessions

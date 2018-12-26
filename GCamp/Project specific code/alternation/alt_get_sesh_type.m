@@ -1,7 +1,9 @@
 function [ legit_bool, acclim_bool, forced_bool ] = alt_get_sesh_type( MD )
 % [ legit_bool, acclim_bool, forced_bool ] = alt_get_sesh_type( MD )
 %  Gets boolean of legit alternation sessions (not forced or acclimation), 
-%  forced sessions, and acclimation sessions 
+%  forced sessions, and acclimation sessions. Legit can also be interpreted
+%  as free. Redundant with alt_id_sesh_type.
+
 num_sessions = length(MD);
 MD = complete_MD(MD); % complete it if not already done
 

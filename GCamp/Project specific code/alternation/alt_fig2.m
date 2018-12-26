@@ -1,4 +1,5 @@
-% Alt figure 2: tracking splitters across days
+% Alt figure 2: tracking splitters across days & relationship to
+% performance
 
 %% A - plot splitters across days
 plotSigSplitters_bw_sesh(G45_alt(4), G45_alt(11));
@@ -112,12 +113,11 @@ axis off
 % splitter cells!!!
 
 %% Splitter proportions for looping versus forced alternation versus free 
-% alternation sessions - need to account for differences in time of
-% session... do I see fewer for sessions that are shorter (e.g. short
-% sessions for G48 at the end?)
-%
 % Take home is that splitter proportion is almost entirely predicted by
-% sesssion length, not performance or time.
+% sesssion length, not performance or time. However, this also implies my
+% measurements are a bit wonky since it seems like splitter detection
+% depends on number of trials which implies it is a statistics issue.
+% Instead, see next section to look at performance vs. "splittiness"
 sesh_use = G30_alt;
 grp_names = {'Free', 'Forced', 'Looping'};
 
@@ -145,7 +145,7 @@ text(0.1, 0.1, ['pkw = ' num2str(pkw, '%0.2g')])
 axis off
 
 
-%%
+%% Save all the above.
 [~, ~, ~, G30glmall] = plot_split_v_perf_batch(G30_alt);
 printNK('G30 perf time ntrials v splitter proportion', 'alt')
 [~, ~, ~, G31glmall] = plot_split_v_perf_batch(G31_alt);
@@ -157,3 +157,146 @@ printNK('G48 perf time ntrials v splitter proportion', 'alt')
 
 [~, ~, ~, allmice_glmall] = plot_split_v_perf_batch(alt_all);
 printNK('All Mice perf time ntrials v splitter proportion', 'alt')
+
+%% Performance v splittiness
+% add noise to corr curves to give L/R only neurons a value (otherwise they go to NaN).
+inject_noise = true; 
+trial_thresh = 20;
+% halt = figure; set(gcf,'Position', [2130 440 960 460]);
+for j = 1:4
+    sesh_use = alt_all_cell{j};
+    plot_perf_v_split_metrics(sesh_use, true, inject_noise, trial_thresh);
+%     printNK(['Perf v split metrics - ' sesh_use(1).Animal],'alt')
+end
+%%
+plot_perf_v_split_metrics(alt_all, true, inject_noise, trial_thresh);
+printNK('Perf v split metrics - All Mice', 'alt')
+
+% Do the above but eliminate G48 who might be carrying the team for the
+% delta_max_norm metric
+plot_perf_v_split_metrics(alt_all(~arrayfun(@(a) ...
+    strcmpi(a.Animal,'GCaMP6f_48'),alt_all)), true, inject_noise, trial_thresh);
+printNK('Perf v split metrics - No G48 with LDA', 'alt')
+
+%% Breakdown above by individual mice - should probably do for different trial thresholds too
+
+% Use alt_all_cell_sp to divide up G45 and G48 into early and late sessions
+sesh_cell_use = alt_all_cell; 
+
+% Pre-allocate mean performance and dnorm arrays
+perf_mean = []; dnorm_mean = []; dint_mean = []; curve_corr_mean = [];
+rely_mean = []; discr_perf_mean = [];
+
+% Calculate values for each mouse
+for j = 1:length(sesh_cell_use)
+    split_metrics = plot_perf_v_split_metrics(sesh_cell_use{j}, ...
+        false, inject_noise, trial_thresh);
+    perf_mean = [perf_mean, nanmean(split_metrics.perf)];
+    dnorm_mean = [dnorm_mean, nanmean(split_metrics.dmax_norm_mean)];
+    dint_mean = [dint_mean, nanmean(split_metrics.dint_norm_mean)];
+    curve_corr_mean = [curve_corr_mean, nanmean(split_metrics.curve_corr_mean)];
+    rely_mean = [rely_mean, nanmean(split_metrics.rely_mean)];
+    discr_perf_mean = [discr_perf_mean, nanmean(split_metrics.discr_perf)];
+end
+
+% Plot points
+figure; set(gcf,'Position', [1964 157 1400 761]);
+h1 = subplot(2,3,1); h2 = subplot(2,3,2); h3 = subplot(2,3,3);
+h4 = subplot(2,3,4); h5 = subplot(2,3,5);
+
+alt_group_plot_perf_v_split(h1, dnorm_mean, perf_mean, ...
+    '|\Delta_{max}|_{norm}');
+alt_group_plot_perf_v_split(h2, dint_mean, perf_mean, ...
+    '\Sigma|\Delta|_{norm}');
+alt_group_plot_perf_v_split(h3, curve_corr_mean, perf_mean, ...
+    '\rho_{mean}');
+alt_group_plot_perf_v_split(h4, rely_mean, perf_mean, ...
+    'Reliability (1-p)');
+alt_group_plot_perf_v_split(h5, discr_perf_mean, perf_mean, ...
+    'Decoder (LDA) Accuracy (%)');
+subplot(2,3,6);
+text(0.1, 0.4, ['inject\_noise = ' num2str(inject_noise)])
+text(0.1, 0.6, ['ntrial_thresh = ' num2str(split_metrics.trial_thresh)])
+text(0.1, 0.8, ['nstem_thresh = ' num2str(split_metrics.nstem_thresh)])
+axis off
+
+% printNK('Perf v splittiness by mice','alt')
+
+%% Run decoder analysis - needed before running the code above!
+niters = 100; % num iterations
+leave_out_prop = 0.5;
+nshuf = 1000;
+
+% Pre-allocate #animals x niters x nsesh x nbins_stem
+tic
+% corr_ratio_mean_all = nan(4, niters, length(sesh_use), 12); 
+corr_ratio_mean_all = cell(1,4);
+corr_ratio_mean_shuf_all = cell(1,4);
+for n = 1:4
+    sesh_use = alt_all_cell{n}; % Grab all sessions for one animal
+    sesh_use = sesh_use(alt_get_sesh_type(sesh_use)); % Grab free sessions only
+    hw = waitbar(0, ['Running LDA analysis for ' ...
+        mouse_name_title(sesh_use(1).Animal) ' ...']); 
+    corr_ratio_mean_all{n} = nan(length(sesh_use), 12, niters);
+    corr_ratio_mean_shuf_all{n} = nan(length(sesh_use), 12, nshuf);
+    for j = 1:length(sesh_use)
+        LDAperf = nan(12,niters);
+%         try
+%             load(fullfile(sesh_use(j).Location,'LDAperf.mat'), 'LDAperf');
+%         catch
+            LDAperf_shuf = nan;
+            for k = 1:niters
+                % Correct ratio = average decoder performance along the whole stem
+                
+                try
+                    if k == 1
+                        [temp, LDAperf_shuf] = alt_LDA(sesh_use(j), ...
+                            leave_out_prop, nshuf);
+                    elseif k > 1 % Don't shuffle after 1st iteration
+                        temp = alt_LDA(sesh_use(j), leave_out_prop, 0);
+                    end
+                catch
+                    temp = nan;
+                end
+                
+                LDAperf(:,k) = temp;
+                waitbar(((j-1)*niters+k)/(niters*length(sesh_use)),hw);
+            end
+%         end
+        corr_ratio_mean_all{n}(j,:,:) = LDAperf;
+        corr_ratio_mean_shuf_all{n}(j,:,:) = LDAperf_shuf;
+        save(fullfile(sesh_use(j).Location,'LDAperf_w_shuf.mat'), 'LDAperf',...
+            'LDAperf_shuf', 'niters', 'nshuf', 'leave_out_prop');
+        waitbar(j/length(sesh_use),hw);
+        
+    end
+    close(hw);
+end
+toc
+
+%% Now do above but downsample each mouse's sessions to match that of G31 or
+% upsample/resample all the mice to match G48...
+[alt_c_match_min, alt_c_match_max] = match_sesh_num(alt_all_cell);
+plot_perf_v_split_metrics(cat(2,alt_c_match_min{:}));
+plot_perf_v_split_metrics(cat(2,alt_c_match_max{:}));
+
+%% Now do the above but shuffle everything and get a p-value for downsampling
+% then plot distribution
+nshuf = 1000;
+
+hw = waitbar(0,'Downsampling and calculating perf v splittiness pvals');
+pdown = nan(1,nshuf);
+for j = 1:nshuf
+    [alt_c_match_min, ~] = match_sesh_num(alt_all_cell);
+    [~, ~, ptemp] = plot_perf_v_split_metrics(cat(2,alt_c_match_min{:}), ...
+        false);    
+    waitbar(j/nshuf, hw);
+    pdown(j) = ptemp;
+end
+close(hw)
+
+
+%% Related to above - Performance versus ntrials...
+[alt_c_match_min, alt_c_match_max] = match_sesh_num(alt_all_cell);
+alt_plot_perf_v_ntrials(cat(2,alt_c_match_min{:}))
+
