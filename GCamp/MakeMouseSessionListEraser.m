@@ -1589,6 +1589,204 @@ MD(i).Freezing = NaN;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
 
+%% Marble 20
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_08_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble20_10Hz\20181008_1_openfield';
+end
+MD(i).Notes = 'Day -2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_08_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble20_10Hz\20181008_2_fcbox';
+end
+MD(i).Notes = 'Day -2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_09_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble20_10Hz\20181009_1_openfield';
+end
+MD(i).Notes = 'Day -1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_09_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble20_10Hz\20181009_2_fcbox';
+end
+MD(i).Notes = 'Day -1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_10_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble20_10Hz\20181010_1_openfield';
+end
+MD(i).Notes = 'Day 0';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_10_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble20_10Hz\20181010_2_fcbox';
+end
+MD(i).Notes = 'Day 0';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_10_2018';
+MD(i).Session = 3;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble20_10Hz\20181010_3_openfield';
+end
+MD(i).Notes = '4 hr';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_10_2018';
+MD(i).Session = 4;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble20_10Hz\20181010_4_fcbox';
+end
+MD(i).Notes = '4 hr';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_11_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble20_10Hz\20181011_1_openfield';
+end
+MD(i).Notes = 'Day 1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_11_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble20_10Hz\20181011_2_fcbox';
+end
+MD(i).Notes = 'Day 1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_12_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble20_10Hz\20181012_1_openfield';
+end
+MD(i).Notes = 'Day 2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_12_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble20_10Hz\20181012_2_fcbox';
+end
+MD(i).Notes = 'Day 2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_17_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble20_10Hz\20181017_1_openfield';
+end
+MD(i).Notes = 'Day 7';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_17_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble20_10Hz\20181017_2_fcbox';
+end
+MD(i).Notes = 'Day 7';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
 %% Marble 25
 i = i+1;
 MD(i).Animal = 'Marble25';

@@ -3,7 +3,7 @@
 %% Register sessions!
 [MD, ~, ref] = MakeMouseSessionListEraser('Nat');
 
-mouse_use = 'Marble14';
+mouse_use = 'Marble20';
 MDuse = MD(ref{find(strcmpi(mouse_use,ref(:,1))),2}: ...
     ref{find(strcmpi(mouse_use,ref(:,1))),3}); %#ok<FNDSB>
 nsesh = length(MDuse);
@@ -25,7 +25,7 @@ end
 close(hw)
 
 %% When done with above, run to qc registrations - use plot_registration
-mice_use = {'Marble06'};
+mice_use = {'Marble20'};
 for j = 1:length(mice_use)
     mouse_use = mice_use{j};
     MDuse = MD(ref{find(strcmpi(mouse_use,ref(:,1))),2}: ...
