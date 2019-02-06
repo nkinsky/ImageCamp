@@ -1,6 +1,5 @@
 function [ relymat, deltamaxmat, sigmat, onsetsesh, days_aligned,...
-    pkw, cmat, deltamax_normmat] = track_splitters( MDbase, MDreg, ...
-    sigthresh, days_ba, free_only, ignore_sameday, norm_max, nactive_thresh)
+    pkw, cmat, deltamax_normmat] = track_splitters( MDbase, MDreg, varargin)
 % [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
 %     p_anova, cmat, deltamax_normmat] = track_splitters( MDbase, MDreg, ...
 %   sigthresh, xlims)
@@ -21,27 +20,24 @@ function [ relymat, deltamaxmat, sigmat, onsetsesh, days_aligned,...
 %   be overly conservative if you have one bad registration in the middle
 %   of your sessions.
 
-% Below is getting ridiculous.  Add input parser if you have any more after
-% SfN.
-if nargin < 8
-    nactive_thresh = 0;
-    if nargin < 7
-        % true = use normalized delta_max curves, false = use delta_max directly
-        norm_max = false;
-        if nargin < 6
-            ignore_sameday = true;
-            if nargin < 5
-                free_only = true;
-                if nargin < 4
-                    days_ba = 2;
-                    if nargin < 3
-                        sigthresh = 3;
-                    end
-                end
-            end
-        end
-    end
-end
+
+%% Parse Inputs and set things up.
+ip = inputParser;
+ip.addRequired('MDbase', @isstruct);
+ip.addRequired('MDreg', @isstruct);
+ip.addOptional('sigthresh', 3,  @(a) a > 0 && round(a) == a);
+ip.addParameter('days_ba', 2, @(a) a > 0 && round(a) == a);
+ip.addParameter('free_only', true, @islogical);
+ip.addParameter('ignore_sameday', true, @islogical);
+ip.addParameter('norm_max', false, @islogical);
+ip.addParameter('nactive_thresh', 0,@(a) a >= 0 && round(a) == a);
+ip.parse(MDbase, MDreg, varargin{:});
+sigthresh = ip.Results.sigthresh;
+days_ba = ip.Results.days_ba;
+free_only = ip.Results.free_only;
+ignore_sameday = ip.Results.ignore_sameday;
+norm_max = ip.Results.norm_max;
+nactive_thresh = ip.Results.nactive_thresh;
 
 xlims = [-days_ba - 0.5, days_ba + 0.5];
 
@@ -49,11 +45,6 @@ if ignore_sameday == false && free_only == false
     disp('ignore_sameday=false and free_only=false')
     error('I won''t let you look at forced vs free trial from the same day')
 end
-
-%%% NRK - how do I incorporate different batch_session_maps for G45 and
-%%% G48? just run this in two different ways and then average them for
-%%% each for group plots? Simple - just plot with those only...
-
 
 %% Step 1: Load batch neuron map and identify session indices for each
 % NK - do this for pair-wise sessions too? With try-catch clause?

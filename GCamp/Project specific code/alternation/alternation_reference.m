@@ -1,6 +1,7 @@
 %% Alternation reference
 % File listing alternation sessions by mouse.
-[MD, ref] = MakeMouseSessionListNK('Nat');
+% [MD, ref] = MakeMouseSessionListNK('Nat');
+[MD, ref] = MakeMouseSessionListEraser('Nat');
 clear G30_alt G31_alt G45_alt G48_alt alt_all alt_all_cell
 
 j = 1; 

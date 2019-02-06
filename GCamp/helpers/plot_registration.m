@@ -1,4 +1,4 @@
-function [ ha, neuron_map ] = plot_registration( MD1, MD2, name_append, ha, base_session )
+function [ ha, neuron_map, hf ] = plot_registration( MD1, MD2, name_append, ha, base_session )
 % ha = plot_registration( MD1, MD2, name_append, ha, base_session )
 % Plots ROIs from each session overlaid on one another after registering
 % MD2 to MD1. Later goal is to have one plot be the registration and the

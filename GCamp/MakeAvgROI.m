@@ -7,7 +7,7 @@ function [ROIavg] = MakeAvgROI(NeuronImage,NeuronAvg)
     ROIavg = cell(1,nNeurons);
     for n=1:nNeurons
         ROIavg{n} = NeuronImage{n};
-        ROIavg{n}(logical(NeuronImage{n})) = NeuronAvg{n};
+        ROIavg{n}(logical(NeuronImage{n}==1)) = NeuronAvg{n};
     end
     
 %     save('MeanBlobs.mat','BinBlobs');

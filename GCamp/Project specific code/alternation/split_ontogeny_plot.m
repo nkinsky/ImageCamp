@@ -1,4 +1,5 @@
-function [pkw, stats, cmat] = split_ontogeny_plot(metric, daydiff, varargin)
+function [pkw, stats, cmat, hplot, hstats] = split_ontogeny_plot(metric, ...
+    daydiff, varargin)
 % [pkw, stats, cmat] = split_ontogeny_plot(daydiff, metric, group_size,...)
 %   Plots a given splitting metric versus days before/after splitter onset.
 %
@@ -38,10 +39,12 @@ max_day = ip.Results.max_day;
 
 %% Set up figure
 
+% Make new figure if no axes specified
 if isempty(ha)
-        set(gcf,'Position',[200 420 1340 390]);
-        ha(1) = subplot(1,3,1:2);
-        ha(2) = subplot(1,3,3);
+    figure;
+    set(gcf,'Position',[200 420 1340 390]);
+    ha(1) = subplot(1,3,1:2);
+    ha(2) = subplot(1,3,3);
 end
 
 hplot = ha(1);
