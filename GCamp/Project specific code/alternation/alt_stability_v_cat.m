@@ -1,5 +1,5 @@
-function [ ha, stay_prop, coactive_prop, cat_names, coactive_bool ] = alt_stability_v_cat(...
-    MDbase, MDreg, varargin )
+function [ ha, stay_prop, coactive_prop, cat_names, coactive_bool, ...
+    num_coactive ] = alt_stability_v_cat(MDbase, MDreg, varargin )
 % [ha, stay_prop, coactive_prop] = alt_stability_v_cat( MDbase, MDreg, ... )
 %   Gets and plots two cell stability metrics: coactivity probability, and probability of
 %   staying in the same category vs category for alternation task (stem 
@@ -70,11 +70,16 @@ if matchER
 end 
     
 % Calculate proportions
-[ stay_prop, coactive_prop, coactive_bool] = ...
+[ stay_prop, coactive_prop, ~, coactive_bool] = ...
     get_cat_stability(categories, neuron_map, 0:5);
 stay_prop = circshift(stay_prop,-1); % Shift so discarded cells are at the right
 cat_names = circshift(cat_names,-1);
 coactive_prop = circshift(coactive_prop,-1);
+
+% if any(coactive_prop == 0 | coactive_prop == 1)
+%     keyboard
+%     disp('Debugging alt_stability_v_cat for 0/1 prob. present...')
+% end
 %% Step 5: Plot it
 if plot_flag
     if isempty(ha)

@@ -23,7 +23,67 @@ for j = 1:4
     end
 end
 
+%% C - plot splitter proportion for each mouse across days relative to 
+% stem cells and ALL cells
+pval_thresh = 0.05;
+ntrans_thresh = 5;
+sig_thresh = 3;
 
+%pre-allocate - 1st row = proportion of stem active neurons, 2nd row = 
+% proportion of all neurons, 3rd row = num trials, 4th row = loop_bool, 5th
+% row = forced_bool, 6th row = free_bool
+split_ratios = arrayfun(@(a) nan(3,a), cellfun(@length, alt_all_cell_G30split),...
+    'UniformOutput', false);
+nsesh_total = sum(cellfun(@length, alt_all_cell_G30split));
+hw = waitbar(0, 'getting % splitters for all mice...');
+n = 1;
+for j = 1:6
+    sessions = alt_all_cell_G30split{j};
+    for k = 1:length(sessions)
+        try
+            % ID cell phenotype
+            categories = alt_parse_cell_category( sessions(k), pval_thresh, ...
+                ntrans_thresh, sig_thresh, 'Placefields_cm1.mat' );
+            
+            % Get ratio of all stem active neurons that are splitters
+            split_ratios{j}(1,k) = sum(categories == 1)/sum(ismember(categories,...
+                [1,2,4]));
+            
+            % Get ratio of all neurons that are splitters
+            split_ratios{j}(2,k) = sum(categories == 1)/length(categories);
+        catch
+            disp(['Error in session ' num2str(k) ' from mouse ' num2str(j)])
+        end
+        
+        % Get # trials per each session
+        load(fullfile(sessions(k).Location, 'Alternation.mat'));
+        split_ratios{j}(3,k) = size(Alt.summary,1);
+        
+        % Get free/forced/looping
+        [split_ratios{j}(4,k), split_ratios{j}(5,k), split_ratios{j}(6,k)] ...
+            = alt_id_sesh_type(sessions(k));
+        
+        
+        waitbar(n/nsesh_total,hw);
+        n = n+1;
+    end
+end
+close(hw)
+
+% Spit out rough numbers!
+mean(split_ratios{4}(1:3,split_ratios{4}(6,:)==1),2)
+
+% Spit out ratios for all mice
+rat_all = cat(2,split_ratios{:});
+nanmean(rat_all(1:3,rat_all(4,:) == 0 & rat_all(6,:) == 1),2) % free ratios mean
+
+rat_all2 = cat(2,split_ratios{3:6}); %breaks out G30 looped and forced separately
+forced_mean_min20 = nanmean(rat_all2(1:3, rat_all2(4,:) == 0 & rat_all2(5,:) == 1 & ...
+    rat_all2(3,:) >= 20),2) % forced ratios
+loop_mean_min20 = nanmean(rat_all2(1:3, rat_all2(4,:) == 1 & rat_all2(5,:) == 0 & ...
+    rat_all2(3,:) >= 20),2) % looping ratios
+forced_mean_nomin = nanmean(rat_all2(1:3, rat_all2(4,:) == 0 & rat_all2(5,:) == 1),2) % forced ratios
+loop_mean_nomin = nanmean(rat_all2(1:3, rat_all2(4,:) == 1 & rat_all2(5,:) == 0),2) % looping ratios
 
 %% Prob maintains phenotype versus days...
 max_day_lag = 7;

@@ -1,4 +1,4 @@
-function [ stay_prop_all, coactive_prop_all, cat_names, ncoactive_all ] = ...
+function [ stay_prop_all, coactive_prop_all, cat_names, ncoactive_all , ntrials1_all] = ...
     alt_stab_v_cat_batch(day_lag, comp_type, mice_sesh, PFname, matchER, trial_type )
 %  [stay_prop, coactive_prop, cat_names ] = alt_stab_v_cat_batch(...
 %       day_lag, comp_type, mouse1, mouse2,... )
@@ -91,6 +91,7 @@ end
 stay_prop_all = cell(num_mice,1);
 coactive_prop_all = cell(num_mice,1);
 ncoactive_all = cell(num_mice, 1);
+ntrials1_all = cell(num_mice, 1);
 for j = 1:num_mice
     seshs_use = good_seshs{j};
     sesh_temp = mice_sesh{j};
@@ -101,6 +102,10 @@ for j = 1:num_mice
         stay_prop_all{j} = cat(1,stay_prop_all{j},stay_prop);
         coactive_prop_all{j} = cat(1,coactive_prop_all{j}, coactive_prop);
         ncoactive_all{j} = cat(1, ncoactive_all{j}, sum(coactive_bool));
+        
+        % Get # trials here
+        ntrials1 = alt_get_ntrials(sesh_temp(seshs_use(k,1)));
+        ntrials1_all{j} = cat(1, ntrials1_all{j}, ntrials1);
 %         if any(stay_prop == 1)
 %             keyboard
 %         end

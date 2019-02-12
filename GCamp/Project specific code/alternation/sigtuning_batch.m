@@ -1,9 +1,15 @@
-function [perf] = sigtuning_batch(sesh_sigtuning, PFname)
-% perf = sigtuning_batch(sesh_sigtuning, PFname)
+function [perf] = sigtuning_batch(sesh_sigtuning, PFname, correct_only)
+% perf = sigtuning_batch(sesh_sigtuning, PFname, correct_only)
 %   Run sigtuning on all sessions in sesh_sigtuning. Spits out performance
 %   data including hand scored performance, automated performance, percent
 %   splitters and total number of splitters. Loads variables from PFname
-%   (e.g. Placefields_1cm.mat)
+%   (e.g. Placefields_1cm.mat). correct_only is an optional boolean.
+%   True(default) = include only true trials, false = include all trials
+%   (recommended ONLY for purely looping sessions).
+
+if nargin < 3
+    correct_only = true;
+end
 
 num_sessions = length(sesh_sigtuning);
 
@@ -25,7 +31,7 @@ for j = 1:num_sessions
             disp(['Running sigtuningAllCells for session ' ...
                 num2str(sesh_sigtuning(j).Session) ...
                 ' from ' sesh_sigtuning(j).Date])
-            sigtuningAllCells(x,y,PSAbool);
+            sigtuningAllCells(x,y,PSAbool,correct_only);
         catch
             disp('Required files missing - skipping for now')
             skip_perf = 1;

@@ -20,7 +20,8 @@ subplot(2,2,1)
 plot(x_adj_cm, y_adj_cm,'b-', ...
     x_adj_cm(divide_frame), y_adj_cm(divide_frame), 'r*')
 axis off
-title([mouse_name_title(sesh.Animal) ' ' mouse_name_title(sesh.Date) ' s' num2str(sesh.Session)])
+title([mouse_name_title(sesh.Animal) ' ' mouse_name_title(sesh.Date) ' s' ...
+    num2str(sesh.Session)])
 subplot(2,2,2)
 
 axis off
