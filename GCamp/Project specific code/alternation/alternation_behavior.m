@@ -58,13 +58,39 @@ save(fullfile(G30_alt(1).Location,'perfomance_glm_results.mat'),...
 window = 5; % trial averaging window
 for j = 1:num_animals
     MD_use = alt_all_cell{j};
-    alt_plot_perf_batch(MD_use, window, false)
+    alt_plot_perf_batch(MD_use, 'window', window, 'legend_flag', false,...
+        'lc_smooth_window', nan)
+end
+
+%% Ditto to above but loop through and spit out a file for each smoothing 
+% for learning curves from 3-6
+lc_sm_windows = 3:6;
+for k = 1:length(lc_sm_windows)
+    window = lc_sm_windows(k);
+    for j = 1:4
+        MD_use = alt_all_behavior_cell{j};
+        [~, hf_lc] = alt_plot_perf_batch(MD_use, 'window', window, 'legend_flag', false,...
+            'lc_smooth_window', window);
+        printNK(['Smoothed Learning Curves Window=' num2str(window)],'alt',...
+            'hfig', hf_lc, 'append', true);
+    end
+end
+
+%% Now spit out overlaid performance plots for classifying learning stages!
+lc_sm_windows = 3:6;
+for k = 1:length(lc_sm_windows)
+    window = lc_sm_windows(k);
+    [hsesh, hday] = alt_plot_lc_overlaid(alt_all_behavior_cell, window);
+    printNK('LCs overlaid by sesh', 'alt', 'hfig', hsesh, 'append', true);
+    printNK('LCs overlaid by day', 'alt', 'hfig', hday, 'append', true);
+    close(hsesh); close(hday);
 end
 
 %% Summarize Performance in Will's box-whisker plot
 position = [2300 460 610 350];
-[names,~,~,inds] = get_unique_values(alt_all);
-[perf, split_prop,~, acclim_bool, forced_bool] = get_split_v_perf(alt_all);
+[names,~,~,inds] = get_unique_values(alt_all_behavior);
+[perf, split_prop,~, acclim_bool, forced_bool] = ...
+    get_split_v_perf(alt_all_behavior);
 legit_bool = ~acclim_bool & ~forced_bool;
 scatterBox(perf(legit_bool), inds(legit_bool,1), 'xLabels', names, 'yLabel', ...
     'Performance','transparency', 0.7, 'sf', 0.025, 'position', position, ...
