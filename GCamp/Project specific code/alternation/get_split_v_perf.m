@@ -19,11 +19,20 @@ perf = nanmean([perf_calc, perf_notes],2); % Change this when you debug/check al
 %% Get prop splitters
 split_num = zeros(num_sessions,1);
 split_prop = zeros(num_sessions,1);
+error_bool = false;
 for j = 1:num_sessions
-    load(fullfile(MD(j).Location,'sigSplitters.mat'),'numSplitters',...
-        'tuningcurves');
-    split_num(j) = numSplitters;
-    split_prop(j) = numSplitters/length(tuningcurves);
+    try
+        load(fullfile(MD(j).Location,'sigSplitters.mat'),'numSplitters',...
+            'tuningcurves');
+        split_num(j) = numSplitters;
+        split_prop(j) = numSplitters/length(tuningcurves);
+    catch
+       error_bool = true; 
+    end
+end
+
+if error_bool
+    disp('Error getting splitter data for some sessions in get_split_v_perf!')
 end
 
 end
