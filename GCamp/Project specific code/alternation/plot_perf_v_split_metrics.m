@@ -1,4 +1,4 @@
-function [split_metrics, hmain] = plot_perf_v_split_metrics(sessions,...
+function [split_metrics, hmain, rhos, pvals] = plot_perf_v_split_metrics(sessions,...
     plot_flag, cnoise, trial_thresh)
 % [split_metrics, hmain]  = plot_perf_v_split_metrics(sessions, plot_flag, ...
 %   cnoise, ntrial_thresh)
@@ -92,15 +92,20 @@ if plot_flag
     % Plot performnace versus splitter metrics
     h1 = subplot(2,12,1:3); h2 = subplot(2,12,5:7); h3 = subplot(2,12,10:12);
     h4 = subplot(2,12,13:15); h5 = subplot(2,12,17:19);
-    plot_func(h1, rely_mean, perf_comb, 'Reliability (1-p)', true);
+    [rhos.rely, pvals.rely] = plot_func(h1, rely_mean, perf_comb, ...
+        'Reliability (1-p)', true);
     title(h1, unique_names); % put in names of all mice plotted
     % Don't plot this anymore - different levels of fluorescence between
     % animals affects it a lot!
 %     plot_func(h2, dmax_mean, perf_comb, '|\Delta_{max}|', true);
-    plot_func(h2, discr_perf, perf_comb, 'Decoder (LDA) Accuracy (%)', true);
-    plot_func(h3, dmax_norm_mean, perf_comb, '|\Delta_{max}|_{norm}', true); 
-    plot_func(h4, dint_norm_mean, perf_comb, '\Sigma|\Delta|_{norm}', true);
-    plot_func(h5, curve_corr_mean, perf_comb, '\rho_{mean}', true);
+    [rhos.LDA, pvals.LDA] = plot_func(h2, discr_perf, perf_comb, ...
+        'Decoder (LDA) Accuracy (%)', true);
+    [rhos.dmaxnorm, pvals.dmaxnorm] = plot_func(h3, dmax_norm_mean, perf_comb, ...
+        '|\Delta_{max}|_{norm}', true); 
+    [rhos.dint, pvals.dint] = plot_func(h4, dint_norm_mean, perf_comb, ...
+        '\Sigma|\Delta|_{norm}', true);
+    [rhos.rho, pvals.rho] = plot_func(h5, curve_corr_mean, perf_comb, ...
+        '\rho_{mean}', true);
     
     % Free vs Forced for all metrics - don't use ntrial_thresh here? Not
     % sure how useful this is anymore, keeping as legacy just in case
@@ -157,7 +162,7 @@ end
 end
 
 %% Plot function - plots performance vs. splittiness metric and puts stats on it
-function [] = plot_func(ax, metric, perf, metric_label, plot_stats)
+function [rho, p] = plot_func(ax, metric, perf, metric_label, plot_stats)
 
 % Get corr value and stats
 [rho, p] = corr(metric', perf', 'rows','complete');
