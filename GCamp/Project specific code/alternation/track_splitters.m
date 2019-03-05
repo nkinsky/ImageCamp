@@ -1,8 +1,10 @@
 function [ relymat, deltamaxmat, sigmat, onsetsesh, days_aligned,...
-    pkw, cmat, deltamax_normmat] = track_splitters( MDbase, MDreg, varargin)
+    pkw, cmat, deltamax_normmat, sesh_final] = ...
+    track_splitters( MDbase, MDreg, varargin)
 % [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
-%     p_anova, cmat, deltamax_normmat] = track_splitters( MDbase, MDreg, ...
-%   sigthresh, xlims)
+%   p_anova, cmat, deltamax_normmat, sesh_final] = ...
+%       track_splitters( MDbase, MDreg, sigthresh, xlims)
+%
 %   track splitters across days by spitting out relymat and deltamat that
 %   tracks 1-pval and deltacurve from sigsplitters.mat for each neuron, and
 %   onsetmat which identifies the day the neuron first achieves significant
@@ -19,6 +21,8 @@ function [ relymat, deltamaxmat, sigmat, onsetsesh, days_aligned,...
 %   base_directory). 'batch' generally gets more reliable results, but can
 %   be overly conservative if you have one bad registration in the middle
 %   of your sessions.
+%
+%   sesh_final = sessions used in analysis!
 
 
 %% Parse Inputs and set things up.
@@ -230,6 +234,8 @@ text(0.1, 0.3, num2str(cmat(:,[1 2 6]), '%0.2g \t'))
 text(0.1, 0.95, ['pkw = ' num2str(pkw, '%0.2g')])
 axis off
 
+%% Step 7: save save_final
+sesh_final = sesh;
 end
 
 
