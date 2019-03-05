@@ -337,7 +337,7 @@ toc
 %% Now do above but downsample each mouse's sessions to match that of G31 or
 % upsample/resample all the mice to match G48...
 [alt_c_match_min, alt_c_match_max] = match_sesh_num(alt_all_cell);
-plot_perf_v_split_metrics(cat(2,alt_c_match_min{:}));
+[~,~, rhos, pvals] = plot_perf_v_split_metrics(cat(2,alt_c_match_min{:}));
 plot_perf_v_split_metrics(cat(2,alt_c_match_max{:}));
 
 %% Now do the above but shuffle everything and get a p-value for downsampling
@@ -345,18 +345,59 @@ plot_perf_v_split_metrics(cat(2,alt_c_match_max{:}));
 nshuf = 1000;
 
 hw = waitbar(0,'Downsampling and calculating perf v splittiness pvals');
-pdown = nan(1,nshuf);
+pdown = struct([]);
+rhodown = struct([]);
 for j = 1:nshuf
     [alt_c_match_min, ~] = match_sesh_num(alt_all_cell);
-    [~, ~, ptemp] = plot_perf_v_split_metrics(cat(2,alt_c_match_min{:}), ...
-        false);    
+    [~, h, rhotemp, ptemp] = plot_perf_v_split_metrics(cat(2,alt_c_match_min{:}), ...
+        true);    
+    close(h)
     waitbar(j/nshuf, hw);
-    pdown(j) = ptemp;
+    pdown = cat(1, pdown, ptemp);
+    rhodown = cat(1, rhodown, rhotemp);
 end
 close(hw)
 
+save_file = fullfile(G30_alt(1).Location, ['perf_v_split_downsampled_stats_' ...
+    datestr(now,1)]);
+
+save(save_file, 'pdown', 'rhodown');
+
+%% Plot all the above metrics in hisogram format
+figure; set(gcf,'Position',[2400 560 870 405]);
+
+metrics = cat(2, cat(1,pdown.rely), cat(1,pdown.LDA), cat(1,pdown.dmaxnorm),...
+    cat(1,pdown.dint), cat(1,pdown.rho));
+titles = {'Rely Score', 'LDA Accuracy', '\Delta_{max,norm}', ...
+    '\Sigma|\Delta|_{norm}', '\rho'};
+
+xlims = [0 1; 0 1; 0 0.4; 0 0.4; 0 1];
+
+for j = 1:5
+    ha = subplot(2,3,j);
+    histogram(metrics(:,j)); hold on
+    plot(mean(metrics(:,j))*ones(1,2), get(gca,'YLim'), 'k--')
+    xlabel('pval'); ylabel('Count'); title(titles{j});
+    text(0.4*ha.XLim(2), 0.8*ha.YLim(2),['mean = ' ...
+        num2str(mean(metrics(:,j)),'%0.2g')])
+    ha.Box = 'off';
+    ha.XTick = xlims(j,:);
+    ha.XLim = xlims(j,:);
+end
+
+printNK('Downsampled perf_v_split pvalues','alt')
 
 %% Related to above - Performance versus ntrials...
 [alt_c_match_min, alt_c_match_max] = match_sesh_num(alt_all_cell);
 alt_plot_perf_v_ntrials(cat(2,alt_c_match_min{:}))
 
+%% Get # splitters for all mice each day
+nsplit = cell(1,4);
+for j = 1:4
+    sesh_use = alt_all_cell{j}(alt_all_free_boolc{j}); % Get free sessions for each mouse
+    nsplit{j} = nan(length(sesh_use),1);
+    for k = 1:length(sesh_use)
+       load(fullfile(sesh_use(k).Location,'sigSplitters.mat'),'numSplitters')
+       nsplit{j}(k) = numSplitters;
+    end
+end

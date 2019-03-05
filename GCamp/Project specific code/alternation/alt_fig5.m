@@ -49,14 +49,17 @@ daydiff_all = [];
 dmean_all = [];
 dnormmean_all = [];
 rmean_all = [];
+dnorm_mean_noalign_all = [];
+lc_stage_split_all = [];
 split_onset_bymouse = cell(1,6);
+split_onsetstage_bymouse = cell(1,6);
 % alt_inds = [1 2 3 4 5 6]; % Use these groups of sessions in alt_all_cell_sp - need
 clear rmean_half1 rmean_half2 dmean_half1 dmean_half2
 for j = 1:6 %k = 1:length(alt_inds)
 %     j = alt_inds(k);
 
     [ relymat, deltamaxmat, sigmat, onsetsesh, days_aligned, ~, ~, ...
-        deltamax_normmat] = track_splitters(alt_all_cell_sp{j}(1), ...
+        deltamax_normmat, sesh_final] = track_splitters(alt_all_cell_sp{j}(1), ...
         alt_all_cell_sp{j}(2:end), sigthresh, 'days_ba', days_ba, ...
         'free_only', free_only, 'ignore_sameday', ignore_sameday, ...
         'norm_max', norm_max, 'nactive_thresh', nactive_thresh);
@@ -76,6 +79,19 @@ for j = 1:6 %k = 1:length(alt_inds)
         unique_daydiff);
     
     split_onset_bymouse{j} = onsetsesh;
+    
+    % Find what stage of learning splitter onset occurs in
+    split_onsetstage_bymouse{j} = assign_onset_stage(alt_all_cell_sp{j}, ...
+        learning_stage_ends_sp(j,:), onsetsesh);
+    
+    % Ditto for learning day
+    lc_stage_split = assign_onset_stage(alt_all_cell_sp{j}, ...
+        learning_stage_ends_sp(j,:), 1:size(deltamax_normmat,2));
+    lc_stage_split_all = [lc_stage_split_all, lc_stage_split];
+    
+    % Now get mean MI for each day
+    dnorm_mean_noalign = nanmean(deltamax_normmat,1);
+    dnorm_mean_noalign_all = [dnorm_mean_noalign_all, dnorm_mean_noalign];
     
     % Average together 1st and 2nd halves of G45 and G48 for splitter
     % metrics
@@ -140,7 +156,11 @@ daydiff_arms_all = [];
 daydiff_stem_all = [];
 MImat_arms_all = [];
 MImat_stem_all = [];
+MImean_arms_noalign_all = [];
+MImean_stem_noalign_all = [];
+lc_stage_pcs_all = [];
 pc_onset_bymouse = cell(1,6);
+pc_onsetstage_bymouse = cell(1,6);
 % alt_inds = [1 2 3 4 5 6]; % Use these groups of sessions in alt_all_cell_sp - need
 % to figure out how to combine G45 1st and 2nd half and G48 1st and 2nd
 % half
@@ -169,6 +189,22 @@ for j=1:6 %k = 1:length(alt_inds)
         unique_daydiff_arms);
     
     pc_onset_bymouse{j} = onsetsesh;
+    
+    % Find what stage of learning pc onset occurs in
+    pc_onsetstage_bymouse{j} = assign_onset_stage(alt_all_cell_sp{j}, ...
+        learning_stage_ends_sp(j,:), onsetsesh);
+    
+    % Ditto for learning day
+    lc_stage_pcs = assign_onset_stage(alt_all_cell_sp{j}, ...
+        learning_stage_ends_sp(j,:), 1:size(MImat_arms,2));
+    lc_stage_pcs_all = [lc_stage_pcs_all, lc_stage_pcs];
+    
+    % Now get mean MI for each day
+    MIarms_mean_noalign = nanmean(MImat_arms,1);
+    MIstem_mean_noalign = nanmean(MImat_stem,1);
+    MImean_arms_noalign_all = [MImean_arms_noalign_all, MIarms_mean_noalign];
+    MImean_stem_noalign_all = [MImean_stem_noalign_all, MIstem_mean_noalign];
+ 
     
     if j == 3 || j == 5
         MIarms_half1 = MIarms_mean;
@@ -243,6 +279,26 @@ plot_phenotype_onset(cat(1,pc_onset_bymouse{[1 2 3 5]}), ...
 printNK('Split and PC absolute onset days All Mice', 'alt');
 
 
+
+
+%% Do above but by learning stage
+plot_phenotype_onset(cat(1,pc_onsetstage_bymouse{:}), ...
+    cat(1,split_onsetstage_bymouse{:}),'All Mice/Sessions by Learning Stage')
+
+%% Now plot mean MI and dnorm versus learning stage
+scatterBox(MImat_stem_noalign_all, lc_stage_pcs_all,'xLabels',...
+    {'Early','Middle','Late'},'ylabel','MI_{mean}'); 
+xlabel('Learning Stage')
+make_plot_pretty(gca)
+printNK('Mutual Information vs. Learning Stage All Mice','alt')
+pkw_pc = kruskalwallis(MImat_stem_noalign_all, lc_stage_pcs_all,'off');
+
+scatterBox(dnorm_mean_noalign_all, lc_stage_split_all,'xLabels',...
+    {'Early','Middle','Late'},'ylabel','\Deltamax_{mean}'); 
+xlabel('Learning Stage')
+make_plot_pretty(gca)
+printNK('Dnorm_mean vs. Learning Stage All Mice','alt')
+pkw_sp = kruskalwallis(dnorm_mean_noalign_all, lc_stage_split_all,'off');
 
 
 

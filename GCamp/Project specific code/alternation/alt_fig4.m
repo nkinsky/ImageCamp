@@ -37,25 +37,40 @@ for j = 1:4
 end
 close(hw)
 
-%% Reactivation Probability versus time - all mouse examples
-sesh_use = alt_all_cell;
+%% Reactivation Probability at different time lags
+sesh_use = alt_all_cell; %alt_all_cell = all mice, alt_all_cell[1} = mouse 1
 matchER = true;
 trial_type = 'free_only';
 
-% One day looks great
+% One day looks great - all mice
 alt_plot_stab_v_cat(1, 'exact', sesh_use, false, 'PFname', 'Placefields_cm1.mat', ...
     'matchER', matchER, 'trial_type', trial_type);
+printNK(['All Mice Split v PC Prob present at 1 day lag matchER=' ...
+    num2str(matchER)],'alt')
 
-% 5 and 7 day don't exactly match the section below, maybe due to
-% non-parametric stats in this 
-alt_plot_stab_v_cat(4, 'exact', sesh_use, false, 'PFname', 'Placefields_cm1.mat', ...
+% 7 day - all mice
+alt_plot_stab_v_cat(7, 'exact', sesh_use, false, 'PFname', 'Placefields_cm1.mat', ...
     'matchER', matchER, 'trial_type', trial_type);
+printNK(['All Mice Split v PC Prob present at 7 day lag matchER=' ...
+    num2str(matchER)],'alt')
+
+% One day for G48
+alt_plot_stab_v_cat(1, 'exact', alt_all_cell{4}, false, 'PFname', ...
+    'Placefields_cm1.mat', 'matchER', matchER, 'trial_type', trial_type);
+printNK(['G48 Split v PC Prob present at 1 day lag matchER=' ...
+    num2str(matchER)],'alt')
+
+% 7 day - G45
+alt_plot_stab_v_cat(7, 'exact', alt_all_cell{3}, false, 'PFname', 'Placefields_cm1.mat', ...
+    'matchER', matchER, 'trial_type', trial_type);
+printNK(['G45 Split v PC Prob present at 7 day lag matchER=' ...
+    num2str(matchER)],'alt')
 
 %% Prob maintains phenotype versus days...looks good when I include ALL sessions
 % but falls apart a bit when I don't include forced sessions. Could be due
 % to a lot of shorter sessions with G48. Might need to only include
 % sessions that were longer than a certain amount of time...yes!!!
-max_day_lag = 14;
+max_day_lag = 21;
 sessions = alt_all_cell; % Change this to make plots for each mouse...
 matchER = true; % March event-rate in non-splitters to splitters
 trial_type = 'free_only'; % 'no_loop';
@@ -126,6 +141,7 @@ end
 % phenotype in G30 lag 5 and G48 lag 8,9,10,and 13 analyses. Recommend
 % including since they are still real, especially since it only occurs for
 % one phenotype at a time!
+alpha = 0.05; % significance level
 elim_outliers = false; 
 ntrial_thresh = 20; % exclude any session comparisons with less than this many trials in 1st session
 figure; set(gcf,'Position',[2030 240 890 740])
@@ -141,35 +157,60 @@ end
 ntrial_bool = ntrials1_all >= ntrial_thresh;
 good_bool = ~outlier_bool & ntrial_bool;
     
+%%% NRK - below is plotting pairs of points where one does not have at
+%%% least 10 cells, which is below our #cells threshold. This is ok because
+%%% while they are plotted they are NOT used for stats!
+
+% Plot spliiters
 [~,~, hs_sp] = scatterBox(coactive_prop_all(good_bool,1), ...
     grps_all(good_bool,1), 'xLabels', ...
     arrayfun(@num2str, 0:max_day_lag, 'UniformOutput', false), ...
     'yLabel', 'Prob. Co-active', 'h', h, 'plotBox', false, 'transparency', 0.3,...
     'circleColors', [0, 0.7, 0]);
+
+% Plot arm PCs
 [~, ~, hs_apc] = scatterBox(coactive_prop_all(good_bool,3), ...
     grps_all(good_bool,1), 'xLabels', ...
     arrayfun(@num2str, 0:max_day_lag, 'UniformOutput', false), ...
     'yLabel', 'Prob. Co-active', 'h', h, 'plotBox', false, ...
     'circleColors', [0.7, 0, 0], 'transparency', 0.3);
 
-
+% Label stuff
 legend(cat(1,hs_sp,hs_apc), {'Splitters', 'Arm PCs'})
 plot((0:max_day_lag)', stay_mean(:,1),'g-')
 plot((0:max_day_lag)', stay_mean(:,3),'r-')
 xlabel('Lag (days)')
-title(['All Mice, matchER=' num2str(matchER) ' trial\_type=' trial_type])
+title(['All Mice, matchER=' num2str(matchER) ' trial\_type=' ...
+    mouse_name_title(trial_type)])
 make_plot_pretty(gca)
 
+% Get ranksum and signed-test stats
 prks = arrayfun(@(a) ranksum(coactive_prop_all(a == grps_all(:,1) & good_bool,1), ...
     coactive_prop_all(a == grps_all(:,1) & good_bool,3)),1:max_day_lag);
 psign = arrayfun(@(a) signtest(coactive_prop_all(a == grps_all(:,1) & good_bool,1), ...
-    coactive_prop_all(a == grps_all(:,1) & good_bool,3)),1:max_day_lag);
+    coactive_prop_all(a == grps_all(:,1) & good_bool,3),'tail','right'),1:max_day_lag);
+prsign = arrayfun(@(a) signrank(coactive_prop_all(a == grps_all(:,1) & good_bool,1), ...
+    coactive_prop_all(a == grps_all(:,1) & good_bool,3),'tail','right'),1:max_day_lag);
+
+% Set-up holm-bonferroni correction
+ngrps = length(unique(grps_all));
+pthresh = alpha/ngrps:alpha/ngrps:alpha; % set up incremental sig levels
+[~, isort] = sort(psign); % get indices for signed-test values sorted from smallest to largest
+pthresh_holm_sort = nan(1,ngrps);
+pthresh_holm_sort(isort) = pthresh; % Put significance values in appropriate place
+days_pass_holm = find(prsign < pthresh_holm_sort);
 
 subplot(3,1,3)
-text(0.1, 0.7, 'Ranksum results below')
-text(0.1, 0.5, num2str(prks))
-text(0.1, 0.3, 'Signed-test results below')
-text(0.1, 0.1, num2str(psign))
+text(0.1, 1.1, '2-sided Ranksum results below')
+text(0.1, 1.0, num2str(prks))
+text(0.1, 0.8, '1-sided Signed-test results below')
+text(0.1, 0.7, num2str(psign))
+text(0.1, 0.5, '1-sided Signed-rank test results below')
+text(0.1, 0.4, num2str(prsign))
+text(0.1, 0.2, 'Days passing signed-rank test after holm-bonferroni correction')
+text(0.1, 0.1, num2str(days_pass_holm))
+text(0.1, -0.1, 'Days passing signed-rank test after Bonferroni correction')
+text(0.1, -0.2, num2str(find(prsign < alpha/ngrps)))
 axis off
 
 % Adjust groups of data to offset and see pattern a bit better.
@@ -184,9 +225,8 @@ printNK(['Coactivity vs time - All Mice matchER=' num2str(matchER)...
 figure; set(gcf,'Position',[2030 240 890 740])
 hd = subplot(3,1,1:2);
 
-
-[~,~, hs_diff] = scatterBox(coactive_prop_all(good_bool,1) - ...
-    coactive_prop_all(good_bool,3), grps_all(good_bool,1), 'xLabels', ...
+diff_all = coactive_prop_all(good_bool,1) - coactive_prop_all(good_bool,3);
+[~,~, hs_diff] = scatterBox(diff_all, grps_all(good_bool,1), 'xLabels', ...
     arrayfun(@num2str, 0:max_day_lag, 'UniformOutput', false), ...
     'yLabel', 'Delta Prob. Co-active', 'h', hd, 'plotBox', false, 'transparency', 0.3,...
     'circleColors', [0.3, 0.3, 0.3]);
@@ -271,11 +311,21 @@ num_trans = get_num_activations(PSAbool);
 load('sigSplitters.mat', 'sigcurve')
 sigSplitters = find(cellfun(@(a) sum(a) >= 3, sigcurve));
 load('Placefields_cm1.mat', 'pval')
-histogram(num_trans,0:5:185,'Normalization','probability')
-hold on; histogram(num_trans(sigSplitters),0:5:185,'Normalization','probability')
-hold on; histogram(num_trans(pval < 0.05),0:5:185,'Normalization','probability')
-hold on; histogram(num_trans(pval < 0.01),0:5:185,'Normalization','probability')
+% histogram(num_trans,0:5:185,'Normalization','probability')
 
+figure; set(gcf,'Position',[2676 327 700 442]);
+hold on; hsp = histogram(num_trans(sigSplitters),0:5:185,'Normalization',...
+    'probability');
+hold on; hpf = histogram(num_trans(pval < 0.05),0:5:185,'Normalization',...
+    'probability');
+legend(cat(1,hsp,hpf),{'Splitters','Arm PCs'})
+ylabel('Probability'); xlabel('Num. Ca^{2+} events')
+plot(ones(1,2)*mean(num_trans(sigSplitters)), get(gca,'YLim'),'b-')
+plot(ones(1,2)*mean(num_trans(pval < 0.05)), get(gca,'YLim'),'r-')
+make_plot_pretty(gca);
+% hold on; histogram(num_trans(pval < 0.01),0:5:185,'Normalization','probability')
+
+printNK('Example Event Rate Comparison Between Splitters and Arm PCs','alt')
 %% PF versus splitter tuning fidelity across days
 [PFcorr_by_day, PFcorr_by_day_split, unique_lags] = ...
     splitcorr_v_time(G48_alt, 'free_only');
