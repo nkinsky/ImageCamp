@@ -2632,36 +2632,52 @@ MD(i).perf = 70;
 % MD(i).Notes = 'Correct Right Trials Only';
 % MD(i).Pix2CM = 0.15;
 
-% Bad Motion Correction for this session.
-% i = i+1;
-% MD(i).Animal = 'GCamp6f_31';
-% MD(i).Date = '12_08_2014';
-% MD(i).Session = 1;
-% MD(i).Env = 'alternation';
-% MD(i).Room = '2 Cu 201B';
-% if (strcmp(userstr,'Nat'))
-%     MD(i).Location = 'J:\GCamp Mice\Working\G31\alternation\12_08_2014\Working';
-% end
-% MD(i).Notes = '';
-% MD(i).Pix2CM = 0.15;
-% MD(i).perf = 85;
+% Bad Motion Correction for this session. only used for behavior
+i = i+1;
+MD(i).Animal = 'GCamp6f_31';
+MD(i).Date = '12_08_2014';
+MD(i).Session = 1;
+MD(i).Env = 'alternation';
+MD(i).Room = '2 Cu 201B';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'D:\GCamp mice\G31\alternation\12_08_2014\Working';
+end
+MD(i).Notes = '';
+MD(i).Pix2CM = 0.15;
+MD(i).perf = 85;
 
 
-% Bad imaging plane - don't use
-% i = i+1;
-% MD(i).Animal = 'GCamp6f_31';
-% MD(i).Date = '12_09_2014';
-% MD(i).Session = 1;
-% MD(i).Env = 'alternation';
-% MD(i).Room = '2 Cu 201B';
-% if (strcmp(userstr,'Nat'))
-%     MD(i).Location = 'J:\GCamp Mice\Working\G31\alternation\12_09_2014\Working';
-% elseif (strcmp(userstr,'Will'))
-%     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_31\Alternation\12_09_2014';
-% end
-% MD(i).Notes = 'Will Method';
-% MD(i).Pix2CM = 0.15;
-% MD(i).perf = 77.5;
+% Bad imaging plane - only used for behavior
+i = i+1;
+MD(i).Animal = 'GCamp6f_31';
+MD(i).Date = '12_09_2014';
+MD(i).Session = 1;
+MD(i).Env = 'alternation';
+MD(i).Room = '2 Cu 201B';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'D:\GCamp mice\G31\alternation\12_09_2014\Working';
+elseif (strcmp(userstr,'Will'))
+    MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_31\Alternation\12_09_2014';
+end
+MD(i).Notes = 'Will Method';
+MD(i).Pix2CM = 0.15;
+MD(i).perf = 77.5;
+
+% Bad imaging plane - only used for behavior
+i = i+1;
+MD(i).Animal = 'GCamp6f_31';
+MD(i).Date = '12_10_2014';
+MD(i).Session = 1;
+MD(i).Env = 'alternation';
+MD(i).Room = '2 Cu 201B';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = '';
+elseif (strcmp(userstr,'Will'))
+   
+end
+MD(i).Notes = 'Will Method';
+MD(i).Pix2CM = 0.15;
+MD(i).perf = 75.0;
 
 i = i+1;
 MD(i).Animal = 'GCamp6f_31';
@@ -2671,12 +2687,25 @@ MD(i).Env = 'alternation';
 MD(i).Room = '2 Cu 201B';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp mice\G31\alternation\12_11_2014\Working';
-elseif (strcmp(userstr,'Nat'))
-    MD(i).Location = 'j:\GCamp Mice\Working\G31\alternation\12_11_2014\Working';
 end
 MD(i).Notes = 'Will Method';
 MD(i).Pix2CM = 0.15;
 MD(i).perf = 70;
+
+%%% Bad imaging plane (Will lifted by tether halfway through by accident) 
+%%% Use only for behavior!
+i = i+1;
+MD(i).Animal = 'GCamp6f_31';
+MD(i).Date = '12_12_2014';
+MD(i).Session = 1;
+MD(i).Env = 'alternation';
+MD(i).Room = '2 Cu 201B';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = '';
+end
+MD(i).Notes = 'Will Method';
+MD(i).Pix2CM = 0.15;
+MD(i).perf = 85;
 
 G31.alternation(2) = i;
 G31.all(2) = i;
