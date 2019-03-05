@@ -1,5 +1,5 @@
-function [ ha, stay_prop, coactive_prop, cat_names, coactive_bool, ...
-    num_coactive ] = alt_stability_v_cat(MDbase, MDreg, varargin )
+function [ ha, stay_prop, coactive_prop, cat_names, coactive_bool] = ...
+    alt_stability_v_cat(MDbase, MDreg, varargin)
 % [ha, stay_prop, coactive_prop] = alt_stability_v_cat( MDbase, MDreg, ... )
 %   Gets and plots two cell stability metrics: coactivity probability, and probability of
 %   staying in the same category vs category for alternation task (stem 

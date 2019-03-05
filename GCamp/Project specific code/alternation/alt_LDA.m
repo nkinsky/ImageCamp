@@ -1,4 +1,5 @@
-function [corr_bin_ratio, corr_bin_ratio_shuf] = alt_LDA(session, leave_out_prop, nshuf)
+function [corr_bin_ratio, corr_bin_ratio_shuf] = alt_LDA(session, leave_out_prop, ...
+    nshuf)
 % [corr_bin_ratio, corr_bin_ratio_shuf] = alt_LDA(session, leave_out_prop, nshuf)
 %   Trains an LDA classifier on a given session and calculates its success
 %   in ~2cm bins across the stem. Spits out values for shuffled
