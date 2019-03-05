@@ -64,6 +64,34 @@ G31_alt = complete_MD(G31_alt);
 [G31_loop_bool, G31_forced_bool] = alt_id_sesh_type(G31_alt);
 G31_free_bool = ~G31_forced_bool & ~G31_loop_bool;
 
+%%% G31 behavior only!
+j = 1; 
+G31behavior_start = '11_25_2014';
+% G31_alt(j).Date = '11_24_2014'; G31_alt(j).Session = 1; j = j+1; % Acclimation (free roaming) no good lap data
+G31behavior_alt(j).Date = '11_25_2014'; G31behavior_alt(j).Session = 1; j = j+1;
+G31behavior_alt(j).Date = '11_26_2014'; G31behavior_alt(j).Session = 1; j = j+1;
+G31behavior_alt(j).Date = '12_02_2014'; G31behavior_alt(j).Session = 1; j = j+1;
+G31behavior_alt(j).Date = '12_03_2014'; G31behavior_alt(j).Session = 1; j = j+1;
+G31behavior_alt(j).Date = '12_04_2014'; G31behavior_alt(j).Session = 1; j = j+1;
+G31behavior_alt(j).Date = '12_05_2014'; G31behavior_alt(j).Session = 1; j = j+1;
+
+%%% For behavioral tracking only - bad imaging data!!!
+G31behavior_alt(j).Date = '12_08_2014'; G31behavior_alt(j).Session = 1; j = j+1; % Bad imaging plane
+G31behavior_alt(j).Date = '12_09_2014'; G31behavior_alt(j).Session = 1; j = j+1;
+
+%%% Need tracking correction! %%%
+G31behavior_alt(j).Date = '12_10_2014'; G31behavior_alt(j).Session = 1; j = j+1;
+
+G31behavior_alt(j).Date = '12_11_2014'; G31behavior_alt(j).Session = 1; j = j+1;
+
+%%% Need tracking correction! %%%
+G31behavior_alt(j).Date = '12_12_2014'; G31behavior_alt(j).Session = 1; j = j+1;
+
+[G31behavior_alt(:).Animal] = deal('GCamp6f_31');
+G31behavior_alt = complete_MD(G31behavior_alt);
+[G31behavior_loop_bool, G31behavior_forced_bool] = alt_id_sesh_type(G31behavior_alt);
+G31behavior_free_bool = ~G31behavior_forced_bool & ~G31behavior_loop_bool;
+
 j = 1;
 G45_start = '09_08_2015';
 G45_alt(j).Date = '09_08_2015'; G45_alt(j).Session = 1; j = j+1; 
@@ -180,6 +208,14 @@ alt_all = complete_MD(alt_all);
 [alt_all_loop_bool, alt_all_forced_bool] = alt_id_sesh_type(alt_all);
 alt_all_free_bool = ~alt_all_forced_bool & ~alt_all_loop_bool;
 
+% Create alt_all for behavior including behavior but bad imaging sessions
+% from G31
+alt_all_behavior_cell{1} = G30_alt; alt_all_behavior_cell{2} = G31behavior_alt;
+alt_all_behavior_cell{3} = G45_alt; alt_all_behavior_cell{4} = G48_alt;
+
+alt_all_behavior = cat(2, alt_all_behavior_cell{:});
+alt_all_behavior = complete_MD(alt_all_behavior);
+
 alt_all_free_boolc{1} = G30_free_bool;
 alt_all_free_boolc{2} = G31_free_bool;
 alt_all_free_boolc{3} = G45_free_bool;
@@ -190,6 +226,35 @@ alt_all_free_boolc{4} = G48_free_bool;
 alt_all_cell_sp{1} = G30_alt; alt_all_cell_sp{2} = G31_alt; %Parsed out by mouse
 alt_all_cell_sp{3} = G45_alt(1:15); alt_all_cell_sp{4} = G45_alt(16:end); 
 alt_all_cell_sp{5} = G48_alt(1:16); alt_all_cell_sp{6} = G48_alt(17:end);
+
+%% Set up learning stage data - sessions are when each stage ends! Based on
+% normalizing each mouse's smoothed learning curve (4 session window) and
+% looking for sections in bottom 3rd(early), middle 3rd(middle), and top
+% 3rd (late). Below is last session in each group!
+learning_stage_ends(1,1) = G30_alt(6); learning_stage_ends(1,2) = G30_alt(9);
+learning_stage_ends(1,3) = G30_alt(end);
+learning_stage_ends(2,1) = G31_alt(4); learning_stage_ends(2,2) = G31_alt(4);
+learning_stage_ends(2,3) = G31_alt(end);
+learning_stage_ends(3,1) = G45_alt(6); learning_stage_ends(3,2) = G45_alt(15);
+learning_stage_ends(3,3) = G45_alt(end);
+learning_stage_ends(4,1) = G48_alt(9); learning_stage_ends(4,2) = G48_alt(31);
+learning_stage_ends(4,3) = G48_alt(end-1);
+
+%% Set up learning data but with G45 and G48 split into two groups to match
+% alt_all_cell_sp above!
+
+learning_stage_ends_sp(1,1) = G30_alt(6); learning_stage_ends_sp(1,2) = G30_alt(9);
+learning_stage_ends_sp(1,3) = G30_alt(end);
+learning_stage_ends_sp(2,1) = G31_alt(4); learning_stage_ends_sp(2,2) = G31_alt(4);
+learning_stage_ends_sp(2,3) = G31_alt(end);
+learning_stage_ends_sp(3,1) = G45_alt(6); learning_stage_ends_sp(3,2) = G45_alt(15);
+learning_stage_ends_sp(3,3) = G45_alt(end);
+learning_stage_ends_sp(4,1) = G45_alt(6); learning_stage_ends_sp(4,2) = G45_alt(15);
+learning_stage_ends_sp(4,3) = G45_alt(end);
+learning_stage_ends_sp(5,1) = G48_alt(9); learning_stage_ends_sp(5,2) = G48_alt(31);
+learning_stage_ends_sp(5,3) = G48_alt(end-1);
+learning_stage_ends_sp(6,1) = G48_alt(9); learning_stage_ends_sp(6,2) = G48_alt(31);
+learning_stage_ends_sp(6,3) = G48_alt(end-1);
 
 %% G48 is complicated since the field of view moves a few times over the 1.5
 % months. Below lists the registrations for the 4 good chunks of data. Very
