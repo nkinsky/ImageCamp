@@ -1,6 +1,7 @@
 function [MD, session_ref] = MakeMouseSessionListER(userstr)
 % this function makes a list of the location of all sessions on disk
 % session_ref: gives you the start and end indices of session types
+%define userstr as the computer being used ie: 'eichentron' or 'mouseimage'
 
 CurrDir = pwd;
 
@@ -22,6 +23,7 @@ MD(i).Freezing = NaN;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
 
+i = i+1;
 MD(i).Animal = 'Marble_3';
 MD(i).Date = 'pre-open_1';
 MD(i).Session = 1;
@@ -62,7 +64,6 @@ MD(i).Notes = 'Control';
 MD(i).Freezing = NaN;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
-
 
 i = i+1;
 MD(i).Animal = 'Marble_3';
@@ -1480,7 +1481,3069 @@ end
 MD(i).Notes = '1 Shock';
 MD(i).Freezing = 12.02;
 
+%% Marble7
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_19_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_7_final\20180319_1_openfield\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
 
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_19_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_7_final\20180319_2_fcbox\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_20_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_7_final\20180320_1_openfield\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_20_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_7_final\20180320_2_fcbox\Imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_21_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_7_final\20180321_1_openfield\Imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_21_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_7_final\20180321_2_fcbox\Imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_21_2018';
+MD(i).Session = 3;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_7_final\20180321_3_openfield\Imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_21_2018';
+MD(i).Session = 4;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_7_final\20180321_4_openfield\Imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_22_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_7_final\20180322_1_openfield\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_22_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_7_final\20180322_2_fcbox\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_23_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_7_final\20180323_1_openfield\Imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_23_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_7_final\20180323_2_fcbox\Imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_28_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_7_final\20180328_1_openfield\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble7';
+MD(i).Date = '03_28_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_7_final\20180328_2_fcbox\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+%% Marble 6
+i = i+1;
+MD(i).Animal = 'Marble6';
+MD(i).Date = '04_17_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_6_final\20180417_1_openfield\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble6';
+MD(i).Date = '04_17_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_6_final\20180417_2_fcbox\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble6';
+MD(i).Date = '04_18_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_6_final\20180418_1_openfield\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble6';
+MD(i).Date = '04_18_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_6_final\20180418_2_fcbox\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble6';
+MD(i).Date = '04_19_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_6_final\20180419_1_openfield\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble6';
+MD(i).Date = '04_19_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_6_final\20180419_2_fcbox\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble6';
+MD(i).Date = '04_19_2018';
+MD(i).Session = 3;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_6_final\20180419_3_openfield\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble6';
+MD(i).Date = '04_19_2018';
+MD(i).Session = 4;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_6_final\20180419_4_fcbox\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble6';
+MD(i).Date = '04_20_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_6_final\20180420_1_openfield\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble6';
+MD(i).Date = '04_20_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_6_final\20180420_2_fcbox\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble6';
+MD(i).Date = '04_21_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_6_final\20180421_1_openfield\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble6';
+MD(i).Date = '04_21_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_6_final\20180421_2_fcbox\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble6';
+MD(i).Date = '04_26_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_6_final\20180426_1_openfield\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble6';
+MD(i).Date = '04_26_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_6_final\20180426_2_fcbox\imaging';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+%% Marble 11
+
+i = i+1;
+MD(i).Animal = 'Marble11';
+MD(i).Date = '05_28_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\marble_11_final\20180528_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble11';
+MD(i).Date = '05_28_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\marble_11_final\20180528_2_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble11';
+MD(i).Date = '05_29_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\marble_11_final\20180529_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble11';
+MD(i).Date = '05_29_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\marble_11_final\20180529_2_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble11';
+MD(i).Date = '05_30_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\marble_11_final\20180530_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble11';
+MD(i).Date = '05_30_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\marble_11_final\20180530_2_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble11';
+MD(i).Date = '05_30_2018';
+MD(i).Session = 3;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\marble_11_final\20180530_3_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble11';
+MD(i).Date = '05_30_2018';
+MD(i).Session = 4;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\marble_11_final\20180530_4_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble11';
+MD(i).Date = '05_31_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\marble_11_final\20180531_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble11';
+MD(i).Date = '05_31_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\marble_11_final\20180531_2_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble11';
+MD(i).Date = '06_01_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\marble_11_final\20180601_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble11';
+MD(i).Date = '06_01_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\marble_11_final\20180601_2_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble11';
+MD(i).Date = '06_06_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\marble_11_final\20180606_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble11';
+MD(i).Date = '06_06_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\marble_11_final\20180606_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+%% Marble 12 Some have been run through tenaspis but not finished
+i = i+1;
+MD(i).Animal = 'Marble12';
+MD(i).Date = '05_13_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_12_final_inside\Marble_12_final\20180513_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble12';
+MD(i).Date = '05_13_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_12_final_inside\Marble_12_final\20180513_2_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble12';
+MD(i).Date = '05_14_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_12_final_inside\Marble_12_final\20180514_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble12';
+MD(i).Date = '05_14_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_12_final_inside\Marble_12_final\20180514_2_fc';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble12';
+MD(i).Date = '05_15_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_12_final_inside\Marble_12_final\20180515_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble12';
+MD(i).Date = '05_15_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_12_final_inside\Marble_12_final\20180515_2_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble12';
+MD(i).Date = '05_15_2018';
+MD(i).Session = 3;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_12_final_inside\Marble_12_final\20180515_3_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble12';
+MD(i).Date = '05_15_2018';
+MD(i).Session = 4;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_12_final_inside\Marble_12_final\20180515_4_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble12';
+MD(i).Date = '05_16_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_12_final_inside\Marble_12_final\20180516_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble12';
+MD(i).Date = '05_16_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_12_final_inside\Marble_12_final\20180516_2_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble12';
+MD(i).Date = '05_17_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_12_final_inside\Marble_12_final\20180517_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble12';
+MD(i).Date = '05_17_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_12_final_inside\Marble_12_final\20180517_2_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble12';
+MD(i).Date = '05_22_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_12_final_inside\Marble_12_final\20180522_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble12';
+MD(i).Date = '05_22_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'I:\Imaging\Marble_12_final_inside\Marble_12_final\20180522_2_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+%% Marble 17
+i = i+1;
+MD(i).Animal = 'Marble17';
+MD(i).Date = '09_17_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_17\Marble_17_final\20180917_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble17';
+MD(i).Date = '09_17_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_17\Marble_17_final\20180917_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble17';
+MD(i).Date = '09_18_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_17\Marble_17_final\20180918_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble17';
+MD(i).Date = '09_18_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_17\Marble_17_final\20180918_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble17';
+MD(i).Date = '09_19_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_17\Marble_17_final\20180919_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble17';
+MD(i).Date = '09_19_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_17\Marble_17_final\20180919_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble17';
+MD(i).Date = '09_19_2018';
+MD(i).Session = 3;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_17\Marble_17_final\20180919_3';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble17';
+MD(i).Date = '09_19_2018';
+MD(i).Session = 4;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_17\Marble_17_final\20180919_4';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble17';
+MD(i).Date = '09_20_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_17\Marble_17_final\20180920_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble17';
+MD(i).Date = '09_20_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_17\Marble_17_final\20180920_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble17';
+MD(i).Date = '09_21_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_17\Marble_17_final\20180921_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble17';
+MD(i).Date = '09_21_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_17\Marble_17_final\20180921_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble17';
+MD(i).Date = '09_26_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_17\Marble_17_final\20180926_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble17';
+MD(i).Date = '09_26_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_17\Marble_17_final\20180926_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+%% Marble 14
+i = i+1;
+MD(i).Animal = 'Marble14';
+MD(i).Date = '08_14_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_14\Marble_14_final\20180814_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble14';
+MD(i).Date = '08_14_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_14\Marble_14_final\20180814_2_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble14';
+MD(i).Date = '08_15_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_14\Marble_14_final\20180815_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble14';
+MD(i).Date = '08_15_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_14\Marble_14_final\20180815_2_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble14';
+MD(i).Date = '08_16_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_14\Marble_14_final\20180816_1_openfield';
+end
+MD(i).Notes = 'Control' ;
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble14';
+MD(i).Date = '08_16_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_14\Marble_14_final\20180816_2_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble14';
+MD(i).Date = '08_16_2018';
+MD(i).Session = 3;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_14\Marble_14_final\20180816_3_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble14';
+MD(i).Date = '08_16_2018';
+MD(i).Session = 4;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_14\Marble_14_final\20180816_4_fcbox';
+end
+MD(i).Notes = 'Control poor motion correction';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble14';
+MD(i).Date = '08_17_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_14\Marble_14_final\20180817_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble14';
+MD(i).Date = '08_17_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_14\Marble_14_final\20180817_2_fcbox';
+end
+MD(i).Notes = 'Control poor motion correction';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble14';
+MD(i).Date = '08_18_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_14\Marble_14_final\20180818_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+%%%% SECOND SESSION ON 08-18-2018 DOES NOT HAVE A GOOD MIN PROJECTION
+%%i = i+1;
+%%MD(i).Animal = 'Marble14';
+%%MD(i).Date = '08_18_2018';
+%%MD(i).Session = 2;
+%%MD(i).Env = 'shock';
+%%MD(i).Room = 'CILSE 721 F';
+%%if (strcmp(userstr,'Eichentron'))
+%%MD(i).Location = '';
+%%elseif strcmp(userstr, 'mouseimage')
+%%MD(i).Location =  'M:\Marble_14\Marble_14_final\20180818_1_openfield';
+%%end
+%%MD(i).Notes = 'Control';
+%%MD(i).Freezing = NaN;
+%%MD(i).Shockdur = NaN; 
+%%MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble14';
+MD(i).Date = '08_23_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_14\Marble_14_final\20180823_1_openfield';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble14';
+MD(i).Date = '08_23_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'M:\Marble_14\Marble_14_final\20180823_2_fcbox';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+%% Marble 19
+i = i+1;
+MD(i).Animal = 'Marble19';
+MD(i).Date = '09_24_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_19\Marble_19_Final\20180924_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble19';
+MD(i).Date = '09_24_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_19\Marble_19_Final\20180924_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble19';
+MD(i).Date = '09_25_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_19\Marble_19_Final\20180925_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble19';
+MD(i).Date = '09_25_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_19\Marble_19_Final\20180925_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble19';
+MD(i).Date = '09_26_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_19\Marble_19_Final\20180926_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble19';
+MD(i).Date = '09_26_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_19\Marble_19_Final\20180926_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble19';
+MD(i).Date = '09_26_2018';
+MD(i).Session = 3;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_19\Marble_19_Final\20180926_3';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble19';
+MD(i).Date = '09_26_2018';
+MD(i).Session = 4;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_19\Marble_19_Final\20180926_4';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble19';
+MD(i).Date = '09_27_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_19\Marble_19_Final\20180927_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble19';
+MD(i).Date = '09_27_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_19\Marble_19_Final\20180927_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble19';
+MD(i).Date = '09_28_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_19\Marble_19_Final\20180928_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble19';
+MD(i).Date = '09_28_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+MD(i).Location =  'D:\Marble_19\Marble_19_Final\20180928_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble19';
+MD(i).Date = '10_03_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_19\Marble_19_Final\20181003_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble19';
+MD(i).Date = '10_03_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_19\Marble_19_Final\20181003_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+%% Marble 20
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_08_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_20\Marble_20_final\20181008_from_scratch\20181008_1_fromscratch';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_08_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_20\Marble_20_final\20181008_from_scratch\20181008_2_fromscratch';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_09_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_20\Marble_20_final\20181009_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_09_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_20\Marble_20_final\20181009_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_10_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_20\Marble_20_final\20181010_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_10_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_20\Marble_20_final\20181010_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_10_2018';
+MD(i).Session = 3;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_20\Marble_20_final\20181010_3';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_10_2018';
+MD(i).Session = 4;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_20\Marble_20_final\20181010_4';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_11_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_20\Marble_20_final\20181011_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_11_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_20\Marble_20_final\20181011_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_12_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_20\Marble_20_final\20181012_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_12_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_20\Marble_20_final\20181012_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_17_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_20\Marble_20_final\20181017_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble20';
+MD(i).Date = '10_17_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_20\Marble_20_final\20181017_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+%% Marble 18
+
+% i = i+1;
+% MD(i).Animal = 'Marble18';
+% MD(i).Date = '09_17_2018';
+% MD(i).Session = 1;
+% MD(i).Env = 'open';
+% MD(i).Room = 'CILSE 721 F';
+% if (strcmp(userstr,'Eichentron'))
+%     MD(i).Location = '';
+% elseif strcmp(userstr, 'mouseimage')
+%     MD(i).Location =  'D:\Marble_18\Marble_18_final\20180917';
+% end
+% MD(i).Notes = 'Control';
+% MD(i).Freezing = NaN;
+% MD(i).Shockdur = NaN; 
+% MD(i).Shocklevel = NaN;
+% 
+% i = i+1;
+% MD(i).Animal = 'Marble18';
+% MD(i).Date = '09_17_2018';
+% MD(i).Session = 2;
+% MD(i).Env = 'shock';
+% MD(i).Room = 'CILSE 721 F';
+% if (strcmp(userstr,'Eichentron'))
+%     MD(i).Location = '';
+% elseif strcmp(userstr, 'mouseimage')
+%     MD(i).Location =  'D:\Marble_18\Marble_18_final\20180917_2';
+% end
+% MD(i).Notes = 'Control';
+% MD(i).Freezing = NaN;
+% MD(i).Shockdur = NaN; 
+% MD(i).Shocklevel = NaN;
+% 
+% 
+% i = i+1;
+% MD(i).Animal = 'Marble18';
+% MD(i).Date = '09_18_2018';
+% MD(i).Session = 1;
+% MD(i).Env = 'open';
+% MD(i).Room = 'CILSE 721 F';
+% if (strcmp(userstr,'Eichentron'))
+%     MD(i).Location = '';
+% elseif strcmp(userstr, 'mouseimage')
+%     MD(i).Location =  'D:\Marble_18\Marble_18_final\20180918_1';
+% end
+% MD(i).Notes = 'Control';
+% MD(i).Freezing = NaN;
+% MD(i).Shockdur = NaN; 
+% MD(i).Shocklevel = NaN;
+% 
+% i = i+1;
+% MD(i).Animal = 'Marble18';
+% MD(i).Date = '09_18_2018';
+% MD(i).Session = 2;
+% MD(i).Env = 'shock';
+% MD(i).Room = 'CILSE 721 F';
+% if (strcmp(userstr,'Eichentron'))
+%     MD(i).Location = '';
+% elseif strcmp(userstr, 'mouseimage')
+%     MD(i).Location =  'D:\Marble_18\Marble_18_final\20180918_2';
+% end
+% MD(i).Notes = 'Control';
+% MD(i).Freezing = NaN;
+% MD(i).Shockdur = NaN; 
+% MD(i).Shocklevel = NaN;
+% 
+% i = i+1;
+% MD(i).Animal = 'Marble18';
+% MD(i).Date = '09_19_2018';
+% MD(i).Session = 1;
+% MD(i).Env = 'open';
+% MD(i).Room = 'CILSE 721 F';
+% if (strcmp(userstr,'Eichentron'))
+%     MD(i).Location = '';
+% elseif strcmp(userstr, 'mouseimage')
+%     MD(i).Location =  'D:\Marble_18\Marble_18_final\20180919_1';
+% end
+% MD(i).Notes = 'Control';
+% MD(i).Freezing = NaN;
+% MD(i).Shockdur = NaN; 
+% MD(i).Shocklevel = NaN;
+% 
+% i = i+1;
+% MD(i).Animal = 'Marble18';
+% MD(i).Date = '09_19_2018';
+% MD(i).Session = 2;
+% MD(i).Env = 'shock';
+% MD(i).Room = 'CILSE 721 F';
+% if (strcmp(userstr,'Eichentron'))
+%     MD(i).Location = '';
+% elseif strcmp(userstr, 'mouseimage')
+%     MD(i).Location =  'D:\Marble_18\Marble_18_final\20180919_2';
+% end
+% MD(i).Notes = 'Control';
+% MD(i).Freezing = NaN;
+% MD(i).Shockdur = NaN; 
+% MD(i).Shocklevel = NaN;
+
+%% Marble_24
+i = i+1;
+MD(i).Animal = 'Marble24';
+MD(i).Date = '11_26_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_24\Marble_24_final\20181126_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble24';
+MD(i).Date = '11_26_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_24\Marble_24_final\20181126_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble24';
+MD(i).Date = '11_27_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_24\Marble_24_final\20181127_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble24';
+MD(i).Date = '11_27_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_24\Marble_24_final\20181127_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble24';
+MD(i).Date = '11_28_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_24\Marble_24_final\20181128_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble24';
+MD(i).Date = '11_28_2018';
+MD(i).Session = 3;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_24\Marble_24_final\20181128_3';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble24';
+MD(i).Date = '11_28_2018';
+MD(i).Session = 4;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_24\Marble_24_final\20181128_4';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble24';
+MD(i).Date = '11_29_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_24\Marble_24_final\20181129_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble24';
+MD(i).Date = '11_29_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_24\Marble_24_final\20181129_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble24';
+MD(i).Date = '11_30_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_24\Marble_24_final\20181130_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble24';
+MD(i).Date = '11_30_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_24\Marble_24_final\20181130_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble24';
+MD(i).Date = '11_05_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_24\Marble_24_final\20181205_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble24';
+MD(i).Date = '11_05_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_24\Marble_24_final\20181205_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+%% Marble 25
+
+i = i+1;
+MD(i).Animal = 'Marble25';
+MD(i).Date = '12_03_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_25\Marble_25_final\20181203_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble25';
+MD(i).Date = '12_03_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_25\Marble_25_final\20181203_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble25';
+MD(i).Date = '12_04_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_25\Marble_25_final\20181204_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble25';
+MD(i).Date = '12_04_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_25\Marble_25_final\20181204_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble25';
+MD(i).Date = '12_05_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_25\Marble_25_final\20181205_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+%%shock recording is crap 
+
+i = i+1;
+MD(i).Animal = 'Marble25';
+MD(i).Date = '12_05_2018';
+MD(i).Session = 3;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_25\Marble_25_final\20181205_3';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble25';
+MD(i).Date = '12_05_2018';
+MD(i).Session = 4;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_25\Marble_25_final\20181205_4';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble25';
+MD(i).Date = '12_06_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_25\Marble_25_final\20181206_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble25';
+MD(i).Date = '12_06_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_25\Marble_25_final\20181206_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble25';
+MD(i).Date = '12_07_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_25\Marble_25_final\20181207_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble25';
+MD(i).Date = '12_07_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_25\Marble_25_final\20181207_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble25';
+MD(i).Date = '12_12_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_25\Marble_25_final\20181212_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble25';
+MD(i).Date = '12_12_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_25\Marble_25_final\20181212_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+%%G_D_6
+
+i = i+1;
+MD(i).Animal = 'G_D_6';
+MD(i).Date = '01_14_2019';
+MD(i).Session = 1;
+MD(i).Env = 'octogon';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\G_d_6\G_D_6_final\20190114_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'G_D_6';
+MD(i).Date = '01_14_2019';
+MD(i).Session = 2;
+MD(i).Env = 'octogon';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\G_d_6\G_D_6_final\20190114_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'G_D_6';
+MD(i).Date = '01_15_2019';
+MD(i).Session = 1;
+MD(i).Env = 'octogon';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\G_d_6\G_D_6_final\20190115_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'G_D_6';
+MD(i).Date = '01_15_2019';
+MD(i).Session = 2;
+MD(i).Env = 'octogon';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\G_d_6\G_D_6_final\20190115_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+%% Marble 26
+
+i = i+1;
+MD(i).Animal = 'Marble_26';
+MD(i).Date = '12_03_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_26\Marble_26_final\20181203_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_26';
+MD(i).Date = '12_03_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_26\Marble_26_final\20181203_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_26';
+MD(i).Date = '12_04_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_26\Marble_26_final\20181204_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_26';
+MD(i).Date = '12_04_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_26\Marble_26_final\20181204_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_26';
+MD(i).Date = '12_05_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_26\Marble_26_final\20181205_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+% Not enough cells to run plot_traces_outlines2
+i = i+1;
+MD(i).Animal = 'Marble_26';
+MD(i).Date = '12_05_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_26\Marble_26_final\20181205_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_26';
+MD(i).Date = '12_05_2018';
+MD(i).Session = 3;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_26\Marble_26_final\20181205_3';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_26';
+MD(i).Date = '12_05_2018';
+MD(i).Session = 4;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_26\Marble_26_final\20181205_4';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_26';
+MD(i).Date = '12_06_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_26\Marble_26_final\20181206_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_26';
+MD(i).Date = '12_06_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_26\Marble_26_final\20181206_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble_26';
+MD(i).Date = '12_07_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_26\Marble_26_final\20181207_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_26';
+MD(i).Date = '12_07_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_26\Marble_26_final\20181207_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble_26';
+MD(i).Date = '12_12_2018';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_26\Marble_26_final\20181212_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_26';
+MD(i).Date = '12_12_2018';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_26\Marble_26_final\20181212_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+%% Marble 29
+
+i = i+1;
+MD(i).Animal = 'Marble_29';
+MD(i).Date = '01_14_2019';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_29\Marble_29_final\20190114_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_29';
+MD(i).Date = '01_14_2019';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_29\Marble_29_final\20190114_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble_29';
+MD(i).Date = '01_15_2019';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_29\Marble_29_final\20190115_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_29';
+MD(i).Date = '01_15_2019';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_29\Marble_29_final\20190115_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_29';
+MD(i).Date = '01_16_2019';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_29\Marble_29_final\20190116_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_29';
+MD(i).Date = '01_16_2019';
+MD(i).Session = 3;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_29\Marble_29_final\20190116_3';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_29';
+MD(i).Date = '01_16_2019';
+MD(i).Session = 4;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_29\Marble_29_final\20190116_4';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_29';
+MD(i).Date = '01_17_2019';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_29\Marble_29_final\20190117_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_29';
+MD(i).Date = '01_17_2019';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_29\Marble_29_final\20190117_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble_29';
+MD(i).Date = '01_18_2019';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_29\Marble_29_final\20190118_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble_29';
+MD(i).Date = '01_18_2019';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_29\Marble_29_final\20190118_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble_29';
+MD(i).Date = '01_25_2019';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_29\Marble_29_final\20190125_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_29';
+MD(i).Date = '01_25_2019';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_29\Marble_29_final\20190125_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+%% Marble 27 
+i = i+1;
+MD(i).Animal = 'Marble_27';
+MD(i).Date = '01_28_2019';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_27\Marble_27_final\20190128_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_27';
+MD(i).Date = '01_28_2019';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_27\Marble_27_final\20190128_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_27';
+MD(i).Date = '01_29_2019';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_27\Marble_27_final\20190129_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_27';
+MD(i).Date = '01_29_2019';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_27\Marble_27_final\20190129_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_27';
+MD(i).Date = '01_30_2019';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_27\Marble_27_final\20190130_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_27';
+MD(i).Date = '01_30_2019';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_27\Marble_27_final\20190130_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_27';
+MD(i).Date = '01_30_2019';
+MD(i).Session = 3;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_27\Marble_27_final\20190130_3';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble_27';
+MD(i).Date = '01_30_2019';
+MD(i).Session = 4;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_27\Marble_27_final\20190130_4';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble_27';
+MD(i).Date = '01_31_2019';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_27\Marble_27_final\20190131_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_27';
+MD(i).Date = '01_31_2019';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_27\Marble_27_final\20190131_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_27';
+MD(i).Date = '02_01_2019';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_27\Marble_27_final\20190201_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_27';
+MD(i).Date = '02_01_2019';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_27\Marble_27_final\20190201_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
+i = i+1;
+MD(i).Animal = 'Marble_27';
+MD(i).Date = '02_06_2019';
+MD(i).Session = 1;
+MD(i).Env = 'open';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_27\Marble_27_final\20190206_1';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble_27';
+MD(i).Date = '02_06_2019';
+MD(i).Session = 2;
+MD(i).Env = 'shock';
+MD(i).Room = 'CILSE 721 A';
+if (strcmp(userstr,'Eichentron'))
+    MD(i).Location = '';
+elseif strcmp(userstr, 'mouseimage')
+    MD(i).Location =  'D:\Marble_27\Marble_27_final\20190206_2';
+end
+MD(i).Notes = 'Control';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+%% 
 %% Compile session_ref
 animal_sesh_list = arrayfun(@(a) a.Animal,MD,'UniformOutput',0);
 unique_animals = unique(animal_sesh_list); % Get animal names
