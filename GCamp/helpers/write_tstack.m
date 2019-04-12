@@ -15,9 +15,11 @@ elseif exist_file
 end
 
 % Now write the rest of the images
-for j = 2:nFrames
-    imwrite(squeeze(array_in3d(:,:,j)), out_file, 'Compression', 'None',...
-        'WriteMode', 'Append');
+if nFrames > 1 % only do this if you have more than one input frame
+    for j = 2:nFrames
+        imwrite(squeeze(array_in3d(:,:,j)), out_file, 'Compression', 'None',...
+            'WriteMode', 'Append');
+    end
 end
 
 %% Below is supposed to be new and fancy and fast but is way too complicated

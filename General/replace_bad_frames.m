@@ -5,9 +5,37 @@ function [] = replace_bad_frames(infile,outfile,bad_frames,replace_frames)
 % replace_frames. replace_frames is either one frame index or an array of frame
 % indices that matches the length of bad_frames.  If it is just one frame,
 % that frame will replace all the bad frames.
+%
+% Example to fix bad frames in a tiff file
+%
+% % Load file with bad frames
+% tstack_bad = TIFFStack('badfile.tiff');
+%
+% % Scroll through and ID bad frames (you know they start around frame
+% % 100 from Inscopix). Note them down.
+% scroll_tiff_frames(tstack_bad, 100);
+%
+%  % say you identified frames 125 and 135-140 as bad, note them down and
+%  % note the frames you want to replace them with (usually the previous
+%  % good frame)
+% bad_frames = [125 135:140];
+% replace_frames = [124 134 134 134 134 134 134];
+% 
+% % Now run replace_bad_frames
+% replace_bad_frames('badfile.tiff','badfile_fixed.tiff', bad_frames...,
+%   replace_frames);
+% 
+% % Check your work! Make a minimum projection...
+% tstack_fixed = TIFFStack('badfile_fixed.tiff');
+% figure; imagesc(min(tstack_fixed(:,:,:),[],3)); colormap(gray);
+
+
+if exist(outfile, 'file') == 2
+    error('out_file already exists. Delete and start over or use different name')
+end
 
 % Get filetype
-[~,~,ext] = fileparts(file); 
+[~,~,ext] = fileparts(infile); 
 filetype = ext(2:end);
 
 % Set things up
@@ -73,11 +101,28 @@ switch filetype
         nbad = size(bad_epochs,1);
         rowg = 1;
         rowb = 1;
+        bf_curr_ind = 1;
         
-        while rowg < ngood || rob < nbad
-           if rowg == 1 && rowb == 1
-               
+        while rowg <= ngood || rowb <= nbad
             
+            % Need to error check all of the code below
+            if strcmpi(curr_epoch ,'good')
+                frames_write = tstack(:,:, ...
+                    good_epochs(rowg,1):good_epochs(rowg,2));
+                write_tstack(outfile, frames_write);
+                curr_epoch = 'bad';
+                rowg = rowg + 1;
+            elseif strcmpi(curr_epoch, 'bad')
+                len_epoch = diff(bad_epochs(rowb,:))+1;
+                rep_frame_nums = replace_frames(bf_curr_ind:...
+                    (bf_curr_ind + len_epoch-1));
+                frames_write = tstack(:,:,rep_frame_nums);
+                write_tstack(outfile, frames_write);
+                curr_epoch = 'good';
+                rowb = rowb + 1;
+                bf_curr_ind = bf_curr_ind + len_epoch ;
+            end
+               
         end
 end
 
