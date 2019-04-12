@@ -21,10 +21,13 @@ nneurons = size(PSAbool,1);
 neurons_use = randperm(nneurons,10);
 traces = NeuronTraces.LPtrace(neurons_use,:);
 PSA_use = PSAbool(neurons_use,:);
-h = figure; set(gcf,'Position',[120 220 1550 600]);
-h1 = subplot(1,2,1); h2 = subplot(1,2,2);
-plot_neuron_outlines(base_image, NeuronImage, h1)
-plot_neuron_traces(traces, nan, h2, 'SR', 20, 'PSAbool', PSA_use);
+h = figure; set(gcf,'Position',[5 70 1550 750]);
+h1 = subplot(2,2,1); h2 = subplot(2,2,[2 4]);
+h3 = subplot(2,2,3);
+plot_neuron_outlines(base_image, NeuronImage, h3)
+[~, colors] = plot_neuron_outlines(base_image, NeuronImage(neurons_use), h1);
+plot_neuron_traces(traces, nan, h2, 'SR', 20, ...
+    'PSAbool', PSA_use, 'color_table', colors);
 
 end
 
