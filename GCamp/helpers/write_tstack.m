@@ -18,7 +18,7 @@ tagstruct.RowsPerStrip = 1;
 tagstruct.BitsPerSample = 16;
 tagstruct.Compression = Tiff.Compression.None;
 % SampleFormat: Tiff.SampleFormat.UInt
-tagstruct.SamplesPerPixel = 1;
+tagstruct.SamplesPerPixel = size(array_in3d, 3);
 tagstruct.PlanarConfiguration = Tiff.PlanarConfiguration.Chunky;
 % Orientation: Tiff.Orientation.TopLeft
 
