@@ -35,23 +35,51 @@ if length(bad_frames) ~= length(replace_frames)
 end
 
 % Loop through and replace frames!
-h5create(outfile,'/Object',info.Dataspace.Size,'ChunkSize',[XDim YDim 1 1],'Datatype','uint16');
-
-p = ProgressBar(NumFrames);
-for i = 1:NumFrames
-    
-    if sum(i == bad_frames) > 0
-        replace_ind = (i == bad_frames); % get index of bad frame to replace
-        F{i} = h5read(infile,'/Object',[1 1 replace_frames(replace_ind) 1],[XDim YDim 1 1]);
-        h5write(outfile,'/Object',uint16(F{i}),[1 1 i 1],[XDim YDim 1 1]);
-    else
-        F{i} = h5read(infile,'/Object',[1 1 i 1],[XDim YDim 1 1]);
-        h5write(outfile,'/Object',uint16(F{i}),[1 1 i 1],[XDim YDim 1 1]);
-    end
-    p.progress;
-
+switch filetype
+    case 'h5'
+        
+        h5create(outfile,'/Object',info.Dataspace.Size,'ChunkSize',[XDim YDim 1 1],'Datatype','uint16');
+        
+        p = ProgressBar(NumFrames);
+        for i = 1:NumFrames
+            
+            if sum(i == bad_frames) > 0
+                replace_ind = (i == bad_frames); % get index of bad frame to replace
+                F{i} = h5read(infile,'/Object',[1 1 replace_frames(replace_ind) 1],[XDim YDim 1 1]);
+                h5write(outfile,'/Object',uint16(F{i}),[1 1 i 1],[XDim YDim 1 1]);
+            else
+                F{i} = h5read(infile,'/Object',[1 1 i 1],[XDim YDim 1 1]);
+                h5write(outfile,'/Object',uint16(F{i}),[1 1 i 1],[XDim YDim 1 1]);
+            end
+            p.progress;
+            
+        end
+        p.stop;
+        
+    case {'tif', 'tiff'}
+        %%% NRK - need to loop through and find chunks of bad frames
+        %%% together. Write chunk of good frames, then write chunk of bad
+        %%% frames, then write good, etc. 
+        bad_bool = false(1,100);
+        bad_bool(bad_frames) = true;
+        good_epochs = NP_FindSupraThresholdEpochs(~bad_bool,eps,false);
+        bad_epochs = NP_FindSupraThresholdEpochs(bad_bool,eps, false);
+        if ismember(1, good_epochs)
+            curr_epoch = 'good';
+        elseif ismember(1, bad_epochs)
+            curr_epoch = 'bad';
+        end
+        ngood = size(good_epochs,1);
+        nbad = size(bad_epochs,1);
+        rowg = 1;
+        rowb = 1;
+        
+        while rowg < ngood || rob < nbad
+           if rowg == 1 && rowb == 1
+               
+            
+        end
 end
-p.stop;
 
 toc
 end
