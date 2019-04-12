@@ -1,3 +1,4 @@
+% ANTIQUATED
 % Script to approximate cell registration between days for alternation
 % sessions and see if splitters continue to split
 

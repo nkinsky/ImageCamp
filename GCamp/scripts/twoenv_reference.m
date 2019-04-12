@@ -171,6 +171,8 @@ all_oct = cat(2,G30_oct,G31_oct,G45_oct,G48_oct);
 all_oct2 = complete_MD(cat(1,G30_oct,G31_oct,G45_oct,G48_oct));
 all_sesh2 = cat(1,G30_botharenas, G31_botharenas, G45_botharenas,...
     G48_botharenas);
+all_best_ang2 = cat(1, G30_both_best_angle, G31_both_best_angle,...
+    G45_both_best_angle, G48_both_best_angle);
 square_days = [ 1 1 4 4 5 6 7 7];
 circle_days = [2 2 3 3 5 6 8 8];
 all_days = [1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8];

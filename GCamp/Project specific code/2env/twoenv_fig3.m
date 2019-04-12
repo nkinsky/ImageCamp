@@ -437,7 +437,7 @@ make_plot_pretty(gca,'linewidth',1,'fontsize',14)
 set(gca,'YLim',[0 50],'YTick',0:25:50,'XLim',[-10 370])
 printNK('Octagon to octagon mismatch histo example','2env')
 
-%% Example square session
+%% Example square session - mismatch
 [~, delta_mean_s, ~, ps, ~, coh_ratio_s] = plot_delta_angle_hist(...
     G48_square(3), G48_square(5), G48_square(1), 'TMap_type', 'TMap_gauss',...
     'bin_size', 1, 'nshuf', 1000);
@@ -446,5 +446,21 @@ make_plot_pretty(gca,'linewidth',1,'fontsize',14)
 set(gca,'YLim',[0 40],'YTick',0:20:40,'XLim',[-10 370])
 printNK('Square to square mismatch histo example','2env')
 
+%% Example square local session
+[~, delta_mean_sl, ~, psl, ~, coh_ratio_sl] = plot_delta_angle_hist(...
+    G31_square(1), G31_square(2), G31_square(1), 'TMap_type', 'TMap_gauss',...
+    'bin_size', 1, 'nshuf', 1000);
+% ylims = get(gca,'YLim');
+make_plot_pretty(gca,'linewidth',1,'fontsize',14)
+set(gca,'YLim',[0 40],'YTick',0:20:40,'XLim',[-10 370])
+printNK('Square to square local histo example','2env')
 
+%% Example square distal session
+[~, delta_mean_sd, ~, psd, ~, coh_ratio_sd] = plot_delta_angle_hist(...
+    G48_square(7), G48_square(8), G48_square(1), 'TMap_type', 'TMap_gauss',...
+    'bin_size', 1, 'nshuf', 1000);
+% ylims = get(gca,'YLim');
+make_plot_pretty(gca,'linewidth',1,'fontsize',14)
+set(gca,'YLim',[0 40],'YTick',0:20:40,'XLim',[-10 370])
+printNK('Square to square distal histo example','2env')
 

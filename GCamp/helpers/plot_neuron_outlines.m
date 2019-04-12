@@ -34,9 +34,9 @@ else
 end
 
 ip = inputParser;
-ip.addRequired('base_image',@(a) isnumeric(a));
-ip.addRequired('NeuronImage',@(a) iscell(a) || isnumeric(a));
-ip.addOptional('h',nan,@ishandle);
+ip.addRequired('base_image', @(a) isnumeric(a));
+ip.addRequired('NeuronImage', @(a) iscell(a) || isnumeric(a));
+ip.addOptional('h', nan, @(a) isempty(a) || ishandle(a) || isnan(a));
 ip.addParameter('colors', nan, @(a) (isnumeric(a) && size(a,2) == 3) || ...
     (ischar(a) && size(a,2) == 1));
 ip.addParameter('scale_bar',true, @islogical)
@@ -47,7 +47,7 @@ colors = ip.Results.colors;
 scale_bar = ip.Results.scale_bar;
 
 %% Set up variables and figures
-if ~ishandle(h)
+if isempty(h) || ~ishandle(h)
     figure; h = gca;
 end
 

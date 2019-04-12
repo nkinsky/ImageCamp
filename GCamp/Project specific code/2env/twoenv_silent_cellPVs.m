@@ -118,6 +118,7 @@ for k = 1:3
 end
 %% Plot PV curves for all mice combined
 % load(opt_data);
+remove_day7 = true; % Remove day 7 data per reviewer comment due to small # of data points
 silent_thresh_array = [nan 0 1];
 figure(602); set(gcf,'Position',[2150 20 1400 940]);
 pt_colors = [0 0 0; 0 0 0; 1 0 0];
@@ -167,8 +168,16 @@ for silent_ind = 1:3% 1:3
     hshufline = plot((0:7)', CIplot(:,1), 'Color', [1 0 1 0.7], 'LineStyle', ':');
     legend(cat(1,h1,h2,h3,hshufline), {'Same Arena', 'Different Arena', ...
         'Local Aligned', 'Shuffled'})
+    if remove_day7
+        for j = 1:7 
+            h_use = hs.Children(j); 
+            day7_bool = round(h_use.XData) == 7; 
+            h_use.XData(day7_bool) = nan; 
+        end
+        xlim([-0.5 6.5])
+    end
     make_plot_pretty(gca)
-
+    
 end
 subplot(2,2,4)
 text(0.2,0.8,['Lccal aligned = ' ...
@@ -182,14 +191,20 @@ axis off
 
 %% Get rudimentary stats for all mice - ttest of real vs shuffled data
 pmat_comb = nan(3,3,7);
+pmat_rk_comb = nan(3,3,7);
 for m = 1:3
     for k = 1:3
         [~, pmat_comb(m,k,:)] = cellfun(@(a,b) ttest2(a(:),b(:),'tail','right'), ...
+            corrs_byday_all{m,k},shuf_byday_all{m,k});
+        pmat_rk_comb(m,k,:) = cellfun(@(a,b) ranksum(a(:),b(:),'tail','right'), ...
             corrs_byday_all{m,k},shuf_byday_all{m,k});
     end
 end
 
 hmat_comb = pmat_comb < 0.05/7; % Check significance level after Bonferroni connection
+hmat_rk_comb = pmat_rk_comb < 0.05/7;
+% Results of rank-sum test are that all time points are significant except
+% for 7 day lag b/w different arenas with silent cells included.
 
 num_animals = length(Mouse);
 pmat_comb_bymouse = nan(num_animals,3,3,7);

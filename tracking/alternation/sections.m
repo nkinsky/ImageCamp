@@ -49,10 +49,12 @@ while skewed
     
     if exist(fullfile(pwd,'Pos_align.mat'),'file') % Skip rotating if already done.
         [rot_x,rot_y,rotang] = rotate_traj(x,y,0);
+        disp('ASSUMING DATA ALREADY ROTATED: Pos_align.mat file found')
     else
         %Try loading previous rotation angle.
         try
             load(fullfile(pwd,'rotated.mat'));
+            disp('Rotated data already found in rotated.mat')
             % Run the rotation anyway if manual override is specified
             if manual_rot_overwrite == 1
                 [rot_x,rot_y,rotang] = rotate_traj(x,y);
@@ -72,8 +74,15 @@ while skewed
     l = (xmax-xmin)/8.1; %80;   Shift from top/bottom of maze for center stem.
     
     %Find center arm borders.
-    center = getcenterarm(rot_x,rot_y,w,l);
-    
+    if exist('centerarm_manual.mat', 'file')
+        load('centerarm_manual.mat', 'center', 'xmin', 'xmax', 'ymin', 'ymax');
+        disp('Loading manually entered center arm location')
+        w = (ymax-ymin)/5; %40;   Width of arms.
+        l = ((xmax-xmin)-(center.x(2) - center.x(1)))/2;
+    else
+        center = getcenterarm(rot_x,rot_y,w,l);
+    end
+   
     %Left arm.
     left.x = [xmin+l, xmax, xmax, xmin+l];
     left.y = [ymin, ymin, ymin+w, ymin+w];
@@ -144,7 +153,7 @@ while skewed
             if manual_rot_overwrite == 1
                 save rotated rotang rot_x rot_y;
             end
-        elseif strcmp(satisfied,'n');  %Delete last rotation and try again.
+        elseif strcmp(satisfied,'n')  %Delete last rotation and try again.
             if exist(fullfile(pwd, 'rotated.mat'), 'file') == 2
                 delete rotated.mat;
             end

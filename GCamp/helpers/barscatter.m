@@ -1,11 +1,11 @@
 function [ hbar, hs, p, cmat] = barscatter( varargin )
-% [ hbar, hs, p, cmat ] = barscatter( varargin )
+% [ hbar, hs, p, cmat ] = barscatter( data1, data2, ... )
 %   produces a bar plot of means of data1, data2,... with a scatter plot of
 %   of each data point in data1 overlaid. Plots into current axes. Not yet
 %   tested for doing multiple conditions (e.g. 3 groups of 2
 %   bars/conditions each). Spits out non-parametric estimates of each group
 %   vs the others (kruskal-wallis + mult comp mat if > 2 groups, ranksum p
-%   if 2 groups)
+%   if 2 groups).
 
 ngrps = length(varargin);
 nconds = size(varargin{1},2);
@@ -44,6 +44,7 @@ elseif ngrps > 2
     cmat = multcompare(stats,'display','off');
 end
 
+hold off
 
 end
 

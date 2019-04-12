@@ -19,6 +19,9 @@ nshuf = 1000;
 coh_ang_thresh = 30; % used for calculating significance values and # cells close to mean
 plot_hists = true; % true = plot histograms for all mice/session-pairs
 plot_entry = false; % true = plot entry breakdown for all animals
+
+load_existing = 1; % 0 = run again, 1 = load PCfilter = false, 1000 shuf data
+
 %% Calculate rotation angles for all square session-pairs
 % Shuffle, get p value, and apply CIs from shuffled data! - shuffle cell
 % identity between session, get # neurons <30 degrees from median of actual
@@ -30,6 +33,7 @@ plot_entry = false; % true = plot entry breakdown for all animals
 % Last but not least - run this on place cells ONLY to see if you get less
 % random remapping neurons and tighther clustering around median value.
 
+if load_existing == 0
 mismatch_ang_all_sq = cell(1,4);
 mismatch_bool_all_sq = false(4,8,8);
 delta_angle_med_sq = nan(4,8,8);
@@ -48,6 +52,61 @@ for j = 1:4
     end
 end 
 toc
+
+%% Calculate rotation angles for all octagon session-pairs
+mismatch_ang_all_oct = cell(1,4);
+mismatch_bool_all_oct = false(4,8,8);
+delta_angle_med_oct = nan(4,8,8);
+arena_rot_oct = nan(4,8,8);
+pshuf_oct = nan(4,8,8);
+ncells_oct = nan(4,8,8);
+coh_ratio_oct = nan(4,8,8);
+tic
+for j = 1:4
+    [~, delta_angle_med_oct(j,:,:), arena_rot_oct(j,:,:), pshuf_oct(j,:,:),...
+        ncells_oct(j,:,:), coh_ratio_oct(j,:,:)] = ...
+        plot_pfangle_batch(all_oct2(j,:), [], nshuf, PCfilter, ...
+        coh_ang_thresh, plot_hists);
+    if plot_hists
+        printNK(['Octagon pf_rot_histograms - Mouse ' num2str(j) '_PF' ...
+            num2str(PCfilter) '_cohthresh' num2str(round(coh_ang_thresh))],'2env')
+    end
+end
+toc
+
+%% Do the same for circ2square
+delta_angle_med_c2s = nan(4,8,8);
+arena_rot_c2s = nan(4,8,8);
+pshuf_c2s = nan(4,8,8);
+ncells_c2s = nan(4,8,8);
+coh_ratio_c2s = nan(4,8,8);
+tic
+for j = 1:4
+    [~, delta_angle_med_c2s(j,:,:), arena_rot_c2s(j,:,:), pshuf_c2s(j,:,:),...
+        ncells_c2s(j,:,:), coh_ratio_c2s(j,:,:)] = ...
+    plot_pfangle_batch(all_square2(j,:), all_oct2(j,:), nshuf,...
+        PCfilter, coh_ang_thresh, plot_hists);
+    if plot_hists
+        printNK(['Circ2square pf_rot_histograms - Mouse ' num2str(j) '_PF' ...
+            num2str(PCfilter) '_cohthresh' num2str(round(coh_ang_thresh))],'2env')
+    end
+end
+toc
+
+gr_bool_c2s = pshuf_c2s > 0.05/64;
+
+% Save everything in workspace
+save(fullfile(ChangeDirectory_NK(G30_square(1),0),...
+    ['2env_misma_coh' num2str(round(coh_ang_thresh)) '_shuf' ...
+    num2str(nshuf) '-' datestr(now,29) '.mat'])); %'ncells_sq','coh_ratio_sq',...
+%     'ncells_oct','coh_ratio_oct','ncells_c2s','coh_ratio_c2s')
+
+elseif load_existing == 1
+    
+    load(fullfile(ChangeDirectory_NK(G30_square(1),0), ...
+        '2env_misma_coh30_shuf1000-2018-06-01.mat'));
+end
+
 %% Classify square session-pairs
 % Figure out a global remapping metric here and apply it!!! 
 gr_bool_sq = pshuf_sq > 0.05/28; % Get global remapping session-pairs
@@ -69,26 +128,6 @@ for j = 1:4
     mismatch_ang_all_sq{j} =  delta_temp(mismatch_bool & ~gr_use);
     mismatch_bool_all_sq(j,:,:) = mismatch_bool;
 end
-%% Calculate rotation angles for all octagon session-pairs
-mismatch_ang_all_oct = cell(1,4);
-mismatch_bool_all_oct = false(4,8,8);
-delta_angle_med_oct = nan(4,8,8);
-arena_rot_oct = nan(4,8,8);
-pshuf_oct = nan(4,8,8);
-ncells_oct = nan(4,8,8);
-coh_ratio_oct = nan(4,8,8);
-tic
-for j = 1:4
-    [~, delta_angle_med_oct(j,:,:), arena_rot_oct(j,:,:), pshuf_oct(j,:,:),...
-        ncells_oct(j,:,:), coh_ratio_oct(j,:,:)] = ...
-        plot_pfangle_batch(all_oct2(j,:), [], nshuf, PCfilter, ...
-        coh_ang_thresh, plot_hists);
-    if plot_hists
-        printNK(['Octagon pf_rot_histograms - Mouse ' num2str(j) '_PF' ...
-            num2str(PCfilter) '_cohthresh' num2str(round(coh_ang_thresh))],'2env')
-    end
-end
-toc
 %% Classify octagon session-pairs
 % NK to-do: classify global remapping sessions and exclude those from
 % mismatch_bool below.
@@ -112,31 +151,6 @@ for j = 1:4
     mismatch_bool_all_oct(j,:,:) = mismatch_bool;
 end
 
-%% Do the same for circ2square
-delta_angle_med_c2s = nan(4,8,8);
-arena_rot_c2s = nan(4,8,8);
-pshuf_c2s = nan(4,8,8);
-ncells_c2s = nan(4,8,8);
-coh_ratio_c2s = nan(4,8,8);
-tic
-for j = 1:4
-    [~, delta_angle_med_c2s(j,:,:), arena_rot_c2s(j,:,:), pshuf_c2s(j,:,:),...
-        ncells_c2s(j,:,:), coh_ratio_c2s(j,:,:)] = ...
-    plot_pfangle_batch(all_square2(j,:), all_oct2(j,:), nshuf,...
-        PCfilter, coh_ang_thresh, plot_hists);
-    if plot_hists
-        printNK(['Circ2square pf_rot_histograms - Mouse ' num2str(j) '_PF' ...
-            num2str(PCfilter) '_cohthresh' num2str(round(coh_ang_thresh))],'2env')
-    end
-end
-toc
-
-gr_bool_c2s = pshuf_c2s > 0.05/64;
-
-save(fullfile(ChangeDirectory_NK(G30_square(1),0),...
-    ['2env_misma_coh' num2str(round(coh_ang_thresh)) '_shuf' ...
-    num2str(nshuf) '-' datestr(now,29) '.mat']),'ncells_sq','coh_ratio_sq',...
-    'ncells_oct','coh_ratio_oct','ncells_c2s','coh_ratio_c2s')
 %% Calculate how much each mouse uses right angles to orient each map
 right_lims = repmat((0:90:360)',1,2)+ [-22.5 22.5];
 sq_rightang_bool = cellfun(@(a) bw_bool(a,right_lims),...
@@ -186,7 +200,7 @@ hc2 = plot(edges_use2,1/nbins2*ones(size(edges_use2)),'r--');
 hold off
 legend(cat(1,hsq2,hoct2,hc2),{'Square','Octagon','Chance'},...
     'Location','NorthWest')
-xlim([-22.5 382.5])
+xlim([-22.5 382.5]); ylim([0 0.4])
 set(gca,'XTick',0:45:360,'XTickLabels', ...
     arrayfun(@num2str,0:45:360,'UniformOutput',false));
 ylabel('Probability')
@@ -199,19 +213,27 @@ sq_right_ratio = sum(cat(1,sq_rightang_bool{:}))/...
     length(cat(1,sq_rightang_bool{:}));
 oct_right_ratio = sum(cat(1,oct_rightang_bool{:}))/...
     length(cat(1,oct_rightang_bool{:}));
-ha = bar(1:2,[sq_right_ratio, oct_right_ratio; nan, nan]);
-offsets = [ha(1).XOffset, ha(2).XOffset];
-hold on
+% ha = bar(1:2,[sq_right_ratio, oct_right_ratio; nan, nan]);
+% offsets = [ha(1).XOffset, ha(2).XOffset];
+% hold on
 right_rat_all = nan(4,2);
 groups = repmat([1,2],4,1);
 for j = 1:4
    sq_use =  sum(sq_rightang_bool{j})/length(sq_rightang_bool{j});
    oct_use =  sum(oct_rightang_bool{j})/length(oct_rightang_bool{j});
-   xplot = 1 + offsets;
-   plot(xplot + randn(size(xplot))*0.03,[sq_use, oct_use],'ko')
+%    xplot = 1 + offsets;
    right_rat_all(j,:) = [sq_use, oct_use];
 end
+ha = bar(1:2,[mean(right_rat_all,1); nan, nan]);
+hold on
+offsets = [ha(1).XOffset, ha(2).XOffset];
+xplot = repmat(1 + offsets,4,1);
+xplot = xplot + randn(size(xplot))*0.03;
+plot(xplot(:),right_rat_all(:),'ko'); 
+hc = plot([0.7 1.3], [0.5 0.5],'k--');
+legend(hc,'Chance')
 xlim([0.6 3.4]); ylim([0 1.2])
+set(gca,'YTick',0:0.2:1)
 ylabel('Proportion')
 title('Proportion mismatch sessions at right angles')
 legend(ha,{'Square','Circle'})
@@ -341,8 +363,11 @@ xlim([1.5 3.5])
 % Stats
 subplot(3,3,9)
 [pkw,~,statskw] = kruskalwallis(gr_breakdown,{'Square','Oct','Oct2Sq'},'off');
+prks_circ_v_sq = ranksum(gr_breakdown(:,1), gr_breakdown(:,2));
 text(0.1,0.5, ['pkw circ\_win v sq\_win v c2s coh prop diff = ' ...
     num2str(pkw,'%0.2f')])
+text(0.1,0.3, ['prks circ\_win v sq\_win coh prop diff = ' ...
+    num2str(prks_circ_v_sq,'%0.2f')])
 axis off
 
 make_figure_pretty(gcf)

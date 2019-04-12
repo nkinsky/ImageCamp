@@ -1,8 +1,9 @@
 function [ ha ] = plot_reg_neurons( neuron_map, reginfo, ROIs1, ROIs2, do_reg, ha )
 % ha = plot_reg_neurons( neuron_map, tform, base_ref, ROIs1, ROIs2, do_reg, ha )
+%   Parent function (easier to use) is plot_registration.
 %   Plots neurons overlaid on top of one another. neuron_map maps neurons
 %   in session 2 to session 1. reginfo comes from image_registerX. do_reg =
-%   false does NOT register ROIs2 to ROIs1 (default = true).
+%   false does NOT register ROIs2 to ROIs1 (default = true). 
 
 if nargin < 6 || isempty(ha) || ~ishandle(ha)
     figure; set(gcf,'Position',[700 220 980 720]);

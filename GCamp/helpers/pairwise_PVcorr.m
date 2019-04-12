@@ -1,11 +1,13 @@
-function [ corrs, PV1_use, PV2_use, final_filter ] = pairwise_PVcorr(...
+function [ corrs, PV1_use, PV2_use, final_filter, PV1, PV2 ] = pairwise_PVcorr(...
     MD1, MD2, varargin )
 % [corrs, PV1_use, PV2_use, final_filter] = pairwise_PVcorr( MD1, MD2, ... )
 %   Gets pairwise PV correlations between MD1 and MD2. Spits out PV
 %   correlations (Spearman) at each spatial bin and nBinsX x nBinsy x
 %   num_neurons arrays of mean calcium event rate in each bin for all
-%   neurons mapped between sessions.  
-%
+%   neurons mapped between sessions.  PV1 and PV2 are full PVs including
+%   cells that do not pass the filter. Pv1_use and PV2_use include only
+%   cells that pass the filter.
+
 %   Optional name-value inputs:
 %
 %   silent_thresh: nan (default) = include only cells active in BOTH
@@ -51,7 +53,8 @@ ip.addParameter('map_name_append',cell(1,2),@iscell); % name appened to neuron_m
 ip.addParameter('PFname_append',cell(1,2),@iscell);
 ip.addParameter('TMap_use','unsmoothed',@(a) ischar(a) && strcmpi(a,'gauss') || ...
     strcmpi(a,'unsmoothed'));
-ip.addParameter('half_flag',false, @islogical); 
+% ip.addParameter('half_flag', false, @islogical); 
+ip.addParameter('half_use', [nan nan], @(a) all(a == 1 | a == 2));
 % nan = don't include silent cells, a = include only those with < a%
 % overlapping pixels with the second session
 ip.addParameter('silent_thresh', nan, @(a) isnan(a) || a >=0 && a <= 1); 
@@ -64,20 +67,37 @@ ip.parse(MD1, MD2, varargin{:});
 map_name_append = ip.Results.map_name_append;
 PFname_append = ip.Results.PFname_append;
 TMap_use = ip.Results.TMap_use;
-half_flag = ip.Results.half_flag;
+half_use = ip.Results.half_use;
 silent_thresh = ip.Results.silent_thresh;
 pval_thresh = ip.Results.pval_thresh;
 ntrans_thresh = ip.Results.ntrans_thresh;
 custom_filter = ip.Results.custom_filter;
 
+if all(isnan(half_use))
+    half_flag = false;
+elseif all(half_use == 1 | half_use == 2)
+    half_flag = true;
+else
+    error('half_use must either be all nans or all 1s/2s')
+end
 
 %% Step 1: Complete MDs and load in tmaps
 sesh = complete_MD(MD1); sesh(2) = complete_MD(MD2);
 for j = 1:2
     sesh(j).PV = get_PV_from_TMap(sesh(j), 'PFname_append', PFname_append{j},...
         'TMap_use', TMap_use, 'half_flag', half_flag);
-    load(fullfile(sesh(j).Location,['Placefields' PFname_append{j} '.mat']),...
-        'PSAbool','pval');
+    if half_flag
+        sesh(j).PV = squeeze(sesh(j).PV(half_use(j),:,:,:));
+    end
+    
+    if ~half_flag
+        load(fullfile(sesh(j).Location,['Placefields' PFname_append{j} '.mat']),...
+            'PSAbool','pval');
+    else
+       load(fullfile(sesh(j).Location,['Placefields' PFname_append{j} '.mat']))
+       pval = Placefields_halves{half_use(j)}.pval;
+       PSAbool = Placefields_halves{half_use(j)}.PSAbool;
+    end
     sesh(j).pval_filt = pval < pval_thresh;
     sesh(j).ntrans_filt = get_num_trans(PSAbool) >= ntrans_thresh;
 end

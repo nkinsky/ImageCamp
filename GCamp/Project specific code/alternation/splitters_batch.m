@@ -7,8 +7,9 @@ for j = 1:length(sesh)
    cd(sesh(j).dirstr);
    load(fullfile(sesh(j).dirstr,'Placefields.mat'),'PSAbool','x','y',...
        'xEdges','yEdges')
+   % pretty sure this is redundant - all data in PSAbool should be in arena!!!
    in_arena = (y > min(yEdges) & y < max(yEdges) & x > min(xEdges) & ...
-       x < max(xEdges));
+       x < max(xEdges)); 
    x = x(in_arena); y = y(in_arena);
    PSAbool = PSAbool(:,in_arena);
    sigtuningAllCells(x,y,PSAbool)

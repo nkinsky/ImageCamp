@@ -1,4 +1,5 @@
-function [ delta_angle, delta_pos, pos1, angles, delta_angle_shuf, neuronid ] = ...
+function [ delta_angle, delta_pos, pos1, angles, delta_angle_shuf, neuronid, ...
+    cdists1, delta_rad ] = ...
     get_PF_angle_delta( sesh1, sesh2, batch_map, TMap_type, bin_size, ...
     PCfilter, plot_flag, nshuf, half_use )
 % delta_angle = get_PF_angle_delta( sesh1, sesh2, neuron_map, ... )
@@ -25,12 +26,19 @@ end
 sesh1 = complete_MD(sesh1); sesh2 = complete_MD(sesh2);
 
 sessions = cat(1,sesh1,sesh2);
-batch_map = fix_batch_session_map(batch_map);
-sesh_index = arrayfun(@(a) get_session_index(a, batch_map.session), sessions);
 [~, PFrot_use] = arrayfun(@get_rot_from_db, sessions);
-
-map_use = get_neuronmap_from_batchmap(batch_map, sesh_index(1), ...
-    sesh_index(2));
+if ~isempty(batch_map)
+    batch_map = fix_batch_session_map(batch_map);
+    sesh_index = arrayfun(@(a) get_session_index(a, batch_map.session), sessions);
+    map_use = get_neuronmap_from_batchmap(batch_map, sesh_index(1), ...
+        sesh_index(2));
+elseif isempty(batch_map)
+    temp = neuron_registerMD(sesh1, sesh2);
+    map_use = zeros(size(temp.neuron_id));
+    map_use(cellfun(@(a) ~isempty(a) && ~isnan(a) && a ~= 0, temp.neuron_id)) = ...
+        cell2mat(temp.neuron_id(cellfun(@(a) ~isempty(a) && ~isnan(a) && a ~= 0,...
+        temp.neuron_id)));
+end
 valid_bool = ~isnan(map_use) & (map_use ~= 0); % Get validly mapped neurons
 %%
 % rot_to_match = 0; % How much to rotate TMap to match actual trajectory
@@ -82,6 +90,8 @@ for j = 1:2
     [~, imax] = cellfun(@(a) max(a(:)), sessions(j).TMap);
     [yi, xi] = ind2sub(map_dim, imax);
     sessions(j).PFpos = [xi', yi'];
+    sessions(j).cdists = sqrt((sessions(j).PFpos(:,1) - map_center(2)).^2 + ...
+        (sessions(j).PFpos(:,2) - map_center(1)).^2);
     
     % This method takes the placefield angle as the average of ALL its
     % fields in the case of multiple fields.
@@ -93,6 +103,8 @@ for j = 1:2
         else
             sessions(j).PFangle2(k) = circ_rad2ang(circ_mean(circ_ang2rad(...
                 atan2d(cents(:,1)-map_center(2),cents(:,2)-map_center(1)))));
+%             sessions(j).cdists(k) = sqrt((cents(:,1)-map_center(2)).^2 + ...
+%                 (cents(:,2)-map_center(1)).^2); % Get distance from center too
         end
     end
     sessions(j).PFangle2(sessions(j).PFangle2 < 0) = ...
@@ -117,6 +129,8 @@ neuronid(:,2) = map_use(valid_bool);
 angles = nan(sum(valid_bool),2);
 angles(:,1) = sessions(1).PFangle2(valid_bool)';
 angles(:,2) = sessions(2).PFangle2(map_use(valid_bool))';
+cdists1 = sessions(1).cdists(valid_bool);
+delta_rad = cdists1 - sessions(2).cdists(map_use(valid_bool));
 delta_angle = diff(angles,1,2);
 delta_angle(delta_angle < 0) = delta_angle(delta_angle < 0) + 360;
 % Nan-value debugging - uncomment to examine why any NaN's are popping up.
@@ -141,10 +155,12 @@ if PCfilter
     pf_either_bool = any(pf_bool,2);
     
     delta_angle = delta_angle(pf_either_bool);
-    delta_pos = delta_pos(pf_either_bool);
-    pos1 = pos1(pf_either_bool);
-    pos2 = pos2(pf_either_bool);
+    delta_pos = delta_pos(pf_either_bool,:);
+    pos1 = pos1(pf_either_bool,:);
+    pos2 = pos2(pf_either_bool,:);
     angles = angles(pf_either_bool,:);
+    cdists1 = cdists1(pf_either_bool);
+    delta_rad = delta_rad(pf_either_bool);
     neuronid = neuronid(pf_either_bool,:);
 
 end
@@ -153,10 +169,12 @@ end
 % above speed threshold in one session)
 nan_bool = isnan(delta_angle);
 delta_angle = delta_angle(~nan_bool);
-delta_pos = delta_pos(~nan_bool);
-pos1 = pos1(~nan_bool);
-pos2 = pos2(~nan_bool);
+delta_pos = delta_pos(~nan_bool,:);
+pos1 = pos1(~nan_bool,:);
+pos2 = pos2(~nan_bool,:);
 angles = angles(~nan_bool,:);
+cdists1 = cdists1(~nan_bool);
+delta_rad = delta_rad(~nan_bool);
 neuronid = neuronid(~nan_bool,:);
 
 pos_all = cat(3,pos1,pos2);
@@ -180,7 +198,9 @@ if plot_flag
     h(2,1) = subplot(2,2,3); h(2,2) = subplot(2,2,4);
     
     neurons_all{1} = find(valid_bool);
+    neurons_all{1} = neurons_all{1}(~nan_bool);
     neurons_all{2} = map_use(valid_bool);
+    neurons_all{2} = neurons_all{2}(~nan_bool);
     for j=1:length(delta_angle)
         
         for k = 1:2

@@ -1,5 +1,8 @@
-function [ neuron_map] = neuron_register( mouse_name, base_date, base_session, reg_date, reg_session, varargin)
-% neuron_map = neuron_register( mouse_name, base_date, base_session, reg_date, reg_session, check_neuron_mapping, ...)
+function [ neuron_map] = neuron_register( mouse_name, base_date, base_session, ...
+    reg_date, reg_session, varargin)
+% neuron_map = neuron_register( mouse_name, base_date, base_session, ...
+%   reg_date, reg_session, check_neuron_mapping, ...)
+%
 %   Registers neurons from one session to another based on the minimum
 %   projection of each session.
 %
@@ -45,6 +48,8 @@ function [ neuron_map] = neuron_register( mouse_name, base_date, base_session, r
 %       an additional translation of 3 pixels in the x-direction and 4
 %       pixels in the y-direction).  If specified but left empty the
 %       original transform matrix will be used.
+%
+%       There are others like 'suppress_output' in actual code.
 %
 %   OUTPUTS 
 %       neuron_map contains the following fields and is also saved in the
@@ -97,6 +102,7 @@ p.addParameter('multi_map_method', 2, ...
 p.addParameter('min_thresh', 3, @isnumeric);
 p.addParameter('save_on', true, @(a) islogical(a) || a == 0 || a == 1);
 p.addParameter('suppress_output', false, @(a) islogical(a) || a == 0 || a == 1);
+p.addParameter('regtype','rigid',@ischar); 
 p.KeepUnmatched = true;
 p.parse(mouse_name, base_date, base_session, reg_date, reg_session, ...
     varargin{:});
@@ -112,10 +118,12 @@ multi_map_method = p.Results.multi_map_method;
 min_thresh = p.Results.min_thresh;
 save_on = p.Results.save_on;
 suppress_output = p.Results.suppress_output;
+regtype = p.Results.regtype;
 %% 2: Perform Image Registration
 [RegistrationInfoX, imreg_unique_filename] = image_registerX(mouse_name, base_date, base_session, ...
     reg_date, reg_session, manual_reg_enable,'use_neuron_masks',use_neuron_masks,...
-    'suppress_output', suppress_output,'name_append',name_append);
+    'suppress_output', suppress_output,'name_append',name_append,...
+    'regtype', regtype);
 
 % 2A:Adjust Image Registration for alternate tform
 % save_alt = 0;
@@ -163,7 +171,7 @@ end
 % Check to see if this has already been run - if so, skip all of the stuff
 % below
 try
-    load(map_unique_filename)
+    load(map_unique_filename, 'neuron_map')
     if ~suppress_output
         disp('Neuron Registration Already ran! Using existing neuron map file');
     end
@@ -416,8 +424,16 @@ if ~suppress_output
     map_use = neuronmap_cell2mat(neuron_id);
     plot_reg_neurons(map_use, RegistrationInfoX, sesh(1).NeuronImage_reg,...
         sesh(2).NeuronImage_reg, false);
-    xlabel([mouse_name_title(mouse_name) ' ' mouse_name_title(base_date) ' session ' num2str(base_session) ...
-            ' to ' mouse_name_title(reg_date) ' session ' num2str(reg_session)]);
+
+% Below code doesn't work because I turn off axes in plot_reg_neurons
+%     xlabel([mouse_name_title(mouse_name) ' ' mouse_name_title(base_date) ' session ' num2str(base_session) ...
+%             ' to ' mouse_name_title(reg_date) ' session ' num2str(reg_session)]);
+
+        % Add in mouse name and sessions to title
+        title_use = get(gca,'Title');
+        title_use.String = {title_use.String, mouse_name_title(mouse_name), ...
+            [mouse_name_title(base_date) '-s' num2str(base_session) ' to ' ...
+            mouse_name_title(reg_date) '-s' num2str(reg_session)]};
 end
 
 

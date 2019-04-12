@@ -12,14 +12,19 @@ if nargin < 2
     set(gcf,'Position',[1070 250 700 600]);
     ha = gca;
 end
+axes(ha)
 
 legit_bool = ~acclim_bool & ~forced_bool;
 hpts = plot(perf(legit_bool), split_prop(legit_bool),'o');
 xlabel('Performance'); ylabel('Splitter Cell Proportion')
 
 hold on
-plot(perf(acclim_bool), split_prop(acclim_bool),'x')
-plot(perf(forced_bool), split_prop(forced_bool),'*')
+hacclim = plot(perf(acclim_bool), split_prop(acclim_bool),'x');
+hforced = plot(perf(forced_bool), split_prop(forced_bool),'*');
+hcomb = cat(1,hpts,hacclim,hforced);
+hbool = [~isempty(hpts); ~isempty(hacclim); ~isempty(hforced)];
+legend_text = {'Free', 'Acclimation', 'Forced'};
+legend(hcomb, legend_text(hbool), 'Location', 'Northwest')
 
 %% Fit line to legit data points & get correlation
 if linreg

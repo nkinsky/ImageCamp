@@ -17,7 +17,9 @@ ip = inputParser;
 ip.addRequired('categories', @(a) iscell(a) && length(a) == 2 && ...
     size(a{1},2) == 1 && size(a{2},2) == 1);
 ip.addRequired('neuron_map', @isnumeric);
+ip.addParameter('n_thresh', 10, @isnumeric); % NaN out any categories with less than this many neurons
 ip.parse(categories, neuron_map);
+n_thresh = ip.Results.n_thresh;
 
 %% Rearrange and map categories
 coactive_bool = ~isnan(neuron_map) & neuron_map ~= 0;
@@ -34,14 +36,23 @@ for j = 1:length(cat_designations)
     cat_use = cat_designations(j);
     num_stay = sum(stay_bool & (category_array(:,2) == cat_use));
     stay_prop(j) = num_stay/sum((category_array(:,1) == cat_use));
+    
+    if sum((category_array(:,1) == cat_use)) < n_thresh
+        stay_prop(j) = nan;
+    end
 end
 
 %% Now step through and get proportions that are coactive in each category
 coactive_prop = zeros(1,length(cat_designations));
+num_coactive = zeros(1,length(cat_designations));
 for j = 1:length(cat_designations)
     cat_use = cat_designations(j);
-    num_coactive = sum(coactive_bool & (categories{1} == cat_use));
-    coactive_prop(j) = num_coactive/sum(categories{1} == cat_use);
+    num_coactive(j) = sum(coactive_bool & (categories{1} == cat_use));
+    coactive_prop(j) = num_coactive(j)/sum(categories{1} == cat_use);
+    
+    if sum(categories{1} == cat_use) < n_thresh
+        coactive_prop(j) = nan;
+    end
 end
 
 temp = stay_bool;
@@ -50,6 +61,11 @@ stay_bool(coactive_bool) = temp;
 
 category2 = nan(size(coactive_bool));
 category2(coactive_bool) = category_array(:,2);
+
+% if any(coactive_prop == 0 | coactive_prop == 1)
+%     keyboard
+%     disp('Debugging get_cat_stability for 0/1 prob. present...')
+% end
 
 end
 

@@ -1,5 +1,5 @@
-function [ categories, cat_nums, cat_names ] = alt_parse_cell_category( sesh, pval_thresh,...
-    ntrans_thresh, sigthresh, PFname )
+function [ categories, cat_nums, cat_names ] = alt_parse_cell_category( ...
+    sesh, pval_thresh, ntrans_thresh, sigthresh, PFname )
 % [categories, names] = alt_parse_cell_category( sesh, pval_thresh, ntrans_thresh, sigthresh... )
 %
 %   Breaks out cells in sesh into 6 categories identified by number in

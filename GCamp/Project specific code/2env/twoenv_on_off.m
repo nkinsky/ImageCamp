@@ -17,7 +17,7 @@
 % Show that there is no difference for local vs mismatch pairs.
 
 load_existing = true; % Set to false if you want to run from scratch, true = run existing files
-filt_use = 'none';
+filt_use = 'pval';
 
 %% Get silent/new cells for square
 if ~load_existing
@@ -64,8 +64,8 @@ p.stop;
 
 % Ditto for circ2square
 good_map_c2s = cell(4,8,8);
-become_silent_c2s = cell(4,8,8);
-new_cells_c2s = cell(4,8,8);
+square_only = cell(4,8,8); % Since square is always first, cells that become silent in the 2nd session are square cells
+circle_only = cell(4,8,8); % Since circle is always second below, cells that become active in the 2nd session are circle cells
 p = ProgressBar(4*28);
 for j = 1:4
     
@@ -73,7 +73,7 @@ for j = 1:4
     batch_map = fix_batch_session_map(batch_session_map);
     for k = 1:8
         for ll = 1:8
-            [good_map_c2s{j,k,ll}, become_silent_c2s{j,k,ll}, new_cells_c2s{j,k,ll}] = ...
+            [good_map_c2s{j,k,ll}, square_only{j,k,ll}, circle_only{j,k,ll}] = ...
                 classify_cells(all_square2(j,k), all_oct2(j,ll),0,...
                 '', 'batch_map',batch_map);
             p.progress;
@@ -90,10 +90,11 @@ p.stop;
 save(fullfile(ChangeDirectory_NK(G30_square(1),0),...
     ['2env_cell_classications-' datestr(now,29) '.mat']),'become_silent_sq',...
     'new_cells_sq', 'become_silent_oct', 'new_cells_oct', ...
-    'become_silent_c2s', 'new_cells_c2s');
+    'square_only', 'circle_only')
+%'become_silent_c2s', 'new_cells_c2s');
 else
     load(fullfile(ChangeDirectory_NK(G30_square(1),0),...
-        '2env_cell_classications-2018-05-08.mat'))
+        '2env_cell_classications-2018-05-31.mat'))
 end
 
 %% Get DI
@@ -149,16 +150,35 @@ CIall_mean = squeeze(nanmean(CIall,5));
 % silent cell from registration
 load(fullfile(ChangeDirectory_NK(G30_square(1),0),...
     '2env_popstats_coh30_shuf1000-2018-05-05.mat'));
+% Also in 2env_misma_coh... files in same directory
+
+% Set up boolean designating is square cells are on or off cells
+sq_is_off = true(8);
+sq_is_off(3:5,1:4) = false;
+sq_is_off(6,1:5) = false;
+sq_is_off(7:8,1:6) = false;
 
 cell_cat_breakdown_c2s = nan(4,8,8,4); % mice x sesh_sq x sesh_oct x cat (ncoh, ngr, n_on, n_off)
+cell_cat_breakdown_c2s_a = nan(4,8,8,4); % mice x sesh_sq x sesh_oct x cat (ncoh, ngr, n_on, n_off)
 for j = 1:4
     ncoh = squeeze(coh_ratio_c2s(j,:,:)).*squeeze(ncells_c2s(j,:,:)); % c
     ngr = squeeze(ncells_c2s(j,:,:)) - ncoh;
-    n_on = cellfun(@(a) sum(a == 1), Mouse(j).DI.circ2square(1).DI(1:8,1:8));
-    n_off = cellfun(@(a) sum(a == -1), Mouse(j).DI.circ2square(1).DI(1:8,1:8));
-    nsilent = cellfun(@length, squeeze(become_silent_c2s(j,:,:)));
-    nnew = cellfun(@length, squeeze(new_cells_c2s(j,:,:)));
-    cell_cat_breakdown_c2s(j,:,:,:) = cat(3, ncoh, ngr, n_on + nnew, n_off + nsilent);
+    nsqDI = cellfun(@(a) sum(a == 1), Mouse(j).DI.circ2square(1).DI(1:8,1:8));
+    noctDI = cellfun(@(a) sum(a == -1), Mouse(j).DI.circ2square(1).DI(1:8,1:8));
+   
+    nsq = cellfun(@length, squeeze(square_only(j,:,:)));
+    ncir = cellfun(@length, squeeze(circle_only(j,:,:)));
+
+    %     n_on = cellfun(@(a) sum(a == 1), Mouse(j).DI.circ2square(1).DI(1:8,1:8));
+    %     n_off = cellfun(@(a) sum(a == -1), Mouse(j).DI.circ2square(1).DI(1:8,1:8));
+    n_off_tot = nan(8,8); n_on_tot = nan(8,8);
+    n_off_tot(sq_is_off) = nsqDI(sq_is_off) + nsq(sq_is_off);
+    n_off_tot(~sq_is_off) = noctDI(~sq_is_off) + ncir(~sq_is_off);
+    n_on_tot(~sq_is_off) = nsqDI(~sq_is_off) + nsq(~sq_is_off);
+    n_on_tot(sq_is_off) = noctDI(sq_is_off) + ncir(sq_is_off);
+    cell_cat_breakdown_c2s_a(j,:,:,:) = cat(3, ncoh, ngr, nsqDI + nsq,...
+        noctDI + ncir);
+    cell_cat_breakdown_c2s(j,:,:,:) = cat(3, ncoh, ngr, n_on_tot, n_off_tot);
 end
 
 cell_cat_breakdown_sq = nan(4,8,8,4); % mice x sesh_sq x sesh_sq x cat (ncoh, ngr, n_on, n_off)
@@ -265,8 +285,8 @@ pon_rks = ranksum(win0_all_prop(:,3),bw0_dur_prop(:,3));
 poff_rks = ranksum(win0_all_prop(:,4),bw0_dur_prop(:,4));
 ponoff_win_rks = ranksum(win0_all_prop(:,3),win0_all_prop(:,4));
 ponoff_bw_rks = ranksum(bw0_dur_prop(:,3),bw0_dur_prop(:,4));
-pcoh_win = signtest(win0_all_prop(:,1), sum(hbar(1).YData(1:2))/6);
-pcoh_bw = signtest(bw0_dur_prop(:,1), sum(hbar(2).YData(1:2))/6);
+pcoh_win = signrank(win0_all_prop(:,1), sum(hbar(1).YData(1:2))/6);
+pcoh_bw = signrank(bw0_dur_prop(:,1), sum(hbar(2).YData(1:2))/6);
 
 subplot(2,4,4)
 title('ranksum test results')
@@ -378,8 +398,8 @@ pon_rks = ranksum(win1_all_prop(:,3),bw1_all_prop(:,3));
 poff_rks = ranksum(win1_all_prop(:,4),bw1_all_prop(:,4));
 ponoff_win_rks = ranksum(win1_all_prop(:,3),win1_all_prop(:,4));
 ponoff_bw_rks = ranksum(bw1_all_prop(:,3),bw1_all_prop(:,4));
-pcoh_win = signtest(win1_all_prop(:,1), sum(hbar(1).YData(1:2))/6);
-pcoh_bw = signtest(bw1_all_prop(:,1), sum(hbar(2).YData(1:2))/6);
+pcoh_win = signrank(win1_all_prop(:,1), sum(hbar(1).YData(1:2))/6);
+pcoh_bw = signrank(bw1_all_prop(:,1), sum(hbar(2).YData(1:2))/6);
 
 subplot(2,4,8)
 title('ranksum test results')
@@ -480,11 +500,11 @@ pon_rks = ranksum(win1_prop2(:,1), bw1_prop2(:,1));
 poff_rks = ranksum(win1_prop2(:,2), bw1_prop2(:,2));
 ponoff_win_rks = ranksum(win1_prop2(:,1),win1_prop2(:,2));
 ponoff_bw_rks = ranksum(bw1_prop2(:,1),bw1_prop2(:,2));
-pcoh_win = signtest(win1_prop1(:,1), 1/6);
-pcoh_bw = signtest(win1_prop2(:,1), 1/6);
+pcoh_win = signrank(win1_prop1(:,1), 1/6);
+pcoh_bw = signrank(win1_prop2(:,1), 1/6);
 pPV_rks = ranksum(PV_win1_bef(:),PV_bw1_ba(:));
-pPVbw_v_95CI = signtest(PV_bw1_ba(:), CI_bw1_ba(1));
-pPVwin_v_95CI = signtest(PV_win1_bef(:), CI_win1_bef(1));
+pPVbw_v_95CI = signrank(PV_bw1_ba(:), CI_bw1_ba(1));
+pPVwin_v_95CI = signrank(PV_win1_bef(:), CI_win1_bef(1));
 
 subplot(2,3,4)
 title('ranksum test results')
@@ -523,6 +543,7 @@ sesh_ind_bw = [9 10; 10 9; 9 10; 9 10];
 
 ncells_conn = nan(8,4,4);
 coh_ratio_conn = nan(8,4,4);
+dconn_mean = nan(8,4,4);
 
 try close(650); end; try close(651); end
 
@@ -530,7 +551,8 @@ for m = 0:1
     figure(650+m); set(gcf,'Position', [2000, 270 - 200*m, 1820, 700])
     for j = 1:4
         for k = 1:2
-            [~, ~, ~, ~, ncells_conn(j+4*m, mat_ind_win(k,1), mat_ind_win(k,2)), ...
+            [~, dconn_mean(j+4*m, mat_ind_win(k,1), mat_ind_win(k,2)), ~, ~, ...
+                ncells_conn(j+4*m, mat_ind_win(k,1), mat_ind_win(k,2)), ...
                 coh_ratio_conn(j+4*m, mat_ind_win(k,1), mat_ind_win(k,2))] = ...
                 plot_delta_angle_hist(all_sessions2(j,sesh_ind_win(k,1)+2*m), ...
                 all_sessions2(j,sesh_ind_win(k,2)+2*m), all_sessions2(j,1), 'circ2square', ...
@@ -541,7 +563,8 @@ for m = 0:1
         end
         
         for k = 1:4
-            [~, ~, ~, ~, ncells_conn(j+4*m, mat_ind_bw(k,1), mat_ind_bw(k,2)), ...
+            [~, dconn_mean(j+4*m, mat_ind_bw(k,1)), ~, ~, ...
+                ncells_conn(j+4*m, mat_ind_bw(k,1), mat_ind_bw(k,2)), ...
                 coh_ratio_conn(j+4*m, mat_ind_bw(k,1), mat_ind_bw(k,2))] = ...
                 plot_delta_angle_hist(all_sessions2(j,sesh_ind_bw(k,1)+2*m), ...
                 all_sessions2(j,sesh_ind_bw(k,2)+2*m), all_sessions2(j,1), 'circ2square', ...
@@ -553,6 +576,9 @@ for m = 0:1
     end
 end
 
+%% Get mean and std of rotation between maps during connection
+conn_mean = circ_mean(dconn_mean(~isnan(dconn_mean(:))));
+conn_std = circ_std(dconn_mean(~isnan(dconn_mean(:))));
 %% Get on/off cells
 % Mouseconn2 = load(fullfile(ChangeDirectory_NK(G30_square(1),0),...
 %     '2env_PV_conn_1shuffles-2018-05-09.mat'));
@@ -719,8 +745,8 @@ pon_rks = ranksum(conn0_win_prop(:,3),conn0_bw_prop(:,3));
 poff_rks = ranksum(conn0_win_prop(:,4),conn0_bw_prop(:,4));
 ponoff_win_rks = ranksum(conn0_win_prop(:,3),conn0_win_prop(:,4));
 ponoff_bw_rks = ranksum(conn0_bw_prop(:,3),conn0_bw_prop(:,4));
-pcoh_win = signtest(conn0_win_prop(:,1), sum(hbar(1).YData(1:2))/6);
-pcoh_bw = signtest(conn0_bw_prop(:,1), sum(hbar(2).YData(1:2))/6);
+pcoh_win = signrank(conn0_win_prop(:,1), sum(hbar(1).YData(1:2))/6);
+pcoh_bw = signrank(conn0_bw_prop(:,1), sum(hbar(2).YData(1:2))/6);
 
 subplot(2,3,6)
 title('ranksum test results')
@@ -808,6 +834,7 @@ set(gca,'XTickLabels',{'Same','Diff'})
 ylabel('\rho_{PV,mean}')
 legend(hCI(1:2),{'mean CI','95% CI'})
 make_plot_pretty(gca)
+ylim([-0.2 0.5])
 hwin.MarkerEdgeAlpha = 0.5;
 hwin.SizeData = 24;
 hbw.MarkerEdgeAlpha = 0.5;
@@ -820,12 +847,12 @@ pon_rks = ranksum(conn_win_prop2(:,1), conn_bw_prop2(:,1));
 poff_rks = ranksum(conn_win_prop2(:,2), conn_bw_prop2(:,2));
 ponoff_win_rks = ranksum(conn_win_prop2(:,1),conn_win_prop2(:,2));
 ponoff_bw_rks = ranksum(conn_bw_prop2(:,1),conn_bw_prop2(:,2));
-pcoh_win = signtest(conn_win_prop1(:,1), 1/6);
-pcoh_bw = signtest(conn_win_prop2(:,1), 1/6);
+pcoh_win = signrank(conn_win_prop1(:,1), 1/6);
+pcoh_bw = signrank(conn_win_prop2(:,1), 1/6);
 pPV_rks = ranksum(PVconn0_win(:),PVconn0_bw(:));
-pPVbw_v_95CI = signtest(PVconn0_bw(:), bw_CI(1),'tail','right');
-pPVbw_v_meanDI = signtest(PVconn0_bw(:), bw_CI(2));
-pPVwin_v_95CI = signtest(PVconn0_win(:), win_CI(1));
+pPVbw_v_95CI = signrank(PVconn0_bw(:), bw_CI(1),'tail','right');
+pPVbw_v_meanDI = signrank(PVconn0_bw(:), bw_CI(2));
+pPVwin_v_95CI = signrank(PVconn0_win(:), win_CI(1));
 
 subplot(2,3,4)
 title('ranksum test results')
@@ -896,50 +923,7 @@ for m = 0
     end
 end
 
-%% Make PV plot of same vs diff arenas
-PVbw_all = squeeze(PVcorrs_all(3,:,:,:,1));
-PVwin_all = cat(1,squeeze(PVcorrs_all(1,:,:,:,1)),...
-    squeeze(PVcorrs_all(2,:,:,:,1)));
-xPVall = cat(1,PVwin_all(:),PVbw_all(:));
-grps_PVall = cat(1, ones(512,1), 2*ones(256,1));
-CIbw_all = nanmean(reshape(CIall_mean(3,:,:,:),[],3),1);
-CIwin_all = nanmean(reshape(CIall_mean(1:2,:,:,:),[],3),1);
 
-try close(657); end
-figure(657); set(gcf,'Position',[2500 420 600 380]);
-
-subplot(1,2,1);
-hbar = bar([nanmean(xPVall(grps_PVall == 1)), ...
-    nanmean(xPVall(grps_PVall == 2))]);
-hold on
-xvaloff = ones(size(xPVall(grps_PVall == 1))) + ...
-    0.06*randn(size(xPVall(grps_PVall == 1)));
-hwin = scatter(xvaloff,xPVall(grps_PVall == 1),'ko');
-xvaloff = 2*ones(size(xPVall(grps_PVall == 2))) + ...
-    0.06*randn(size(xPVall(grps_PVall == 2)));
-hbw = scatter(xvaloff,xPVall(grps_PVall == 2),'ko');
-xlim([0 3])
-
-hCI = plot([1 2], [CIwin_all(2), CIbw_all(2)], 'k-', ...
-    [1 2], [CIwin_all([1 3]); CIbw_all([1 3])], 'k--');
-
-title(['All PVs PCfilt=' filt_use])
-set(gca,'XTickLabels',{'Same','Diff'})
-legend(hCI(1:2),{'mean CI','95% CI'})
-ylabel('\rho_{PV,mean}')
-make_plot_pretty(gca)
-set(gca,'Ylim',[-0.2 0.6])
-hwin.MarkerEdgeAlpha = 0.5;
-hwin.SizeData = 24;
-hbw.MarkerEdgeAlpha = 0.5;
-hbw.SizeData = 24;
-
-subplot(1,2,2)
-prs = ranksum(xPVall(grps_PVall == 1), xPVall(grps_PVall == 2));
-text(0.1,0.5,['prksum = ' num2str(prs,'%0.2g')])
-axis off
-
-printNK(['PV Same v Diff Plot PCfilt=' filt_use],'2env')
 
 %% Get DI
 DIconn1conn2 = cell(8,8,4); % animal x day1 sesh x day2 sesh
@@ -1111,6 +1095,8 @@ if strcmpi(day_lag, '01')
         day65bw./sum(day65bw,2)); %Same day, 1 day apart, 1 day apart
 elseif strcmpi(day_lag, '1')
     bw01_dur_prop = cat(1, day56bw./sum(day56bw,2), day65bw./sum(day65bw,2)); %1 day apart, 1 day apart
+elseif strcmpi(day_lag, '0')
+    bw01_dur_prop = bw0_dur_prop;
 end
 bw01_bef_prop = bw1_all_prop(1:32,:); % 1 day apart only
 bw01_aft_prop = bw1_all_prop(33:48,:); % 1 day apart only
@@ -1123,13 +1109,16 @@ PVwin01_bef = cat(1, PV_win1_bef, PVwin0_1, PVwin0_2); % 1 day (oct day1-2), 0 d
 PVwin01_aft = PVwin0_3;
 PVwin01_dur = cat(1, reshape(squeeze(PVcorrs_all(1:2,:,5:6,5:6,1)),[],1),...
     PVconn0_win(:));
-PVbw_bef = cat(1, PV1, PV2);
-PVbw_aft = PV3;
+PVbw1_bef = cat(1, PV1, PV2);
+PVbw1_aft = PV3;
 if strcmpi(day_lag, '01')
     PVbw_dur = reshape(squeeze(PVcorrs_all(3,:,5:6,5:6,1)),[],1); % 0 and 1 days
 elseif strcmpi(day_lag, '1')
     PVbw_dur = reshape(cat(1, squeeze(PVcorrs_all(3,:,5,6,1)), ...
         squeeze(PVcorrs_all(3,:,6,5,1))),[],1); % 1 day apart only
+elseif strcmpi(day_lag, '0')
+    PVbw_dur = reshape(squeeze(cat(3, PVcorrs_all(3,:,5,5,1), ...
+        PVcorrs_all(3,:,6,6,1))),[],1); % 0 and 1 days
 end
 
 % DIs
@@ -1139,31 +1128,43 @@ if strcmpi(day_lag, '01')
         cellfun(@(a) nanmean(abs(a(abs(a) ~= 1))), during1_DI_allc));
 elseif strcmpi(day_lag, '1')
     DIdur_nosil = cellfun(@(a) nanmean(abs(a(abs(a) ~= 1))), during1_DI_allc);
+elseif strcmpi(day_lag, '0')
+    DIdur_nosil = cellfun(@(a) nanmean(abs(a(abs(a) ~= 1))), during0_DI_allc);
 end
         
 DIaft_nosil = cellfun(@(a) nanmean(abs(a(abs(a) ~= 1))), after_DI_allc);
 
 try close(680); end
-figure(680); set(gcf,'Position',[480 230 1340 700])
+figure(680); set(gcf,'Position',[480 50 1340 900])
 
 % NRK - need shuffled 95% CIs here...
-subplot(2,4,1)
-[~, ~, pkw_PVbda, cPV_bda] = barscatter(PVbw_bef, PVbw_dur, PVbw_aft);
+subplot(3,4,1)
+[~, ~, pkw_PVbda, cPV_bda] = barscatter(PVbw1_bef, PVbw_dur, PVbw1_aft);
 set(gca,'XTick',1:3,'XTickLabel',{'Before', 'During', 'After'});
 ylabel('\rho_{PV,mean}')
 title(['Day Lag = ' day_lag ' all plots'])
 make_plot_pretty(gca,'linewidth', 1, 'fontsize', 7)
 
-subplot(2,4,5)
+subplot(3,4,9)
+[~, ~, prks_PVba] = barscatter(PVbw1_bef, PVbw1_aft);
+set(gca,'XTick',1:2,'XTickLabel',{'Before', 'After'});
+xlim([0 3])
+ylabel('\rho_{PV,mean}')
+title(['Day Lag = ' day_lag ' all plots'])
+make_plot_pretty(gca,'linewidth', 1, 'fontsize', 7)
+
+subplot(3,4,5)
 text(0.1, 0.9, ['pkw = ' num2str(pkw_PVbda,'%0.2g')]);
 text(0.1, 0.8, 'Tukey tests results:')
-text(0.1, 0.7, ['p_bd = ' num2str(cPV_bda(1,6),'%0.2g')]);
-text(0.1, 0.6, ['p_ba = ' num2str(cPV_bda(2,6),'%0.2g')]);
-text(0.1, 0.5, ['p_da = ' num2str(cPV_bda(3,6),'%0.2g')]);
+text(0.1, 0.7, ['p\_bd = ' num2str(cPV_bda(1,6),'%0.2g')]);
+text(0.1, 0.6, ['p\_ba = ' num2str(cPV_bda(2,6),'%0.2g')]);
+text(0.1, 0.5, ['p\_da = ' num2str(cPV_bda(3,6),'%0.2g')]);
 text(0.1, 0.3, ['pval filt = ' filt_use])
+text(0.1, 0.1, ['prks_ba = ' num2str(prks_PVba,'%0.2g')]);
 axis off
 
-subplot(2,4,2)
+
+subplot(3,4,2)
 [hbar, ~, pkw_cohbda, c_cohbda] = barscatter(...
     bw01_bef_prop(:,1)./sum(bw01_bef_prop(:,1:2),2), ...
     bw01_dur_prop(:,1)./sum(bw01_dur_prop(:,1:2),2),...
@@ -1173,16 +1174,27 @@ ylabel('Proportion Co-Active Cells')
 title('Coherent (<30) Cells')
 make_plot_pretty(gca,'linewidth', 1, 'fontsize', 7)
 
-subplot(2,4,6)
+subplot(3,4,10)
+[hbar, ~, prks_cohba] = barscatter(...
+    bw01_bef_prop(:,1)./sum(bw01_bef_prop(:,1:2),2), ...
+    bw01_aft_prop(:,1)./sum(bw01_aft_prop(:,1:2),2));
+set(gca,'XTick',1:3,'XTickLabel',{'Before', 'After'});
+xlim([0 3])
+ylabel('Proportion Co-Active Cells')
+title('Coherent (<30) Cells')
+make_plot_pretty(gca,'linewidth', 1, 'fontsize', 7)
+
+subplot(3,4,6)
 text(0.1, 0.9, ['pkw = ' num2str(pkw_cohbda,'%0.2g')]);
 text(0.1, 0.8, 'Tukey tests results:')
 text(0.1, 0.7, ['p_bd = ' num2str(c_cohbda(1,6),'%0.2g')]);
 text(0.1, 0.6, ['p_ba = ' num2str(c_cohbda(2,6),'%0.2g')]);
 text(0.1, 0.5, ['p_da = ' num2str(c_cohbda(3,6),'%0.2g')]);
 text(0.1, 0.3, ['pval filt = ' filt_use])
+text(0.1, 0.1, ['prks_ba = ' num2str(prks_cohba,'%0.2g')]);
 axis off
 
-subplot(2,4,3)
+subplot(3,4,3)
 [hbar, ~, pkw_onoffbda, c_onoffbda] = barscatter(bw01_bef_prop(:,3:4), ...
     bw01_dur_prop(:,3:4), bw01_aft_prop(:,3:4));
 set(gca,'XTick',1:3,'XTickLabel',{'Before', 'During', 'After'});
@@ -1191,7 +1203,7 @@ title('On/Off Cells')
 legend(hbar,{'On','Off'})
 make_plot_pretty(gca,'linewidth', 1, 'fontsize', 7)
 
-subplot(2,4,7)
+subplot(3,4,7)
 text(0.1, 0.9, ['pkw = ' num2str(pkw_onoffbda,'%0.2g')]);
 text(0.1, 0.8, 'Tukey tests results:')
 text(0.1, 0.7, ['p_bd = ' num2str(c_onoffbda(1,6),'%0.2g')]);
@@ -1200,7 +1212,7 @@ text(0.1, 0.5, ['p_da = ' num2str(c_onoffbda(3,6),'%0.2g')]);
 text(0.1, 0.3, ['pval filt = ' filt_use])
 axis off
 
-subplot(2,4,4)
+subplot(3,4,4)
 [hbar, ~, pkw_DIbda, c_DIbda] = barscatter(DIbef_nosil,...
     DIdur_nosil, DIaft_nosil);
 set(gca,'XTick',1:3,'XTickLabel',{'Before', 'During', 'After'});
@@ -1208,7 +1220,7 @@ ylabel('|DI|_{mean}')
 title('No silent cells included')
 make_plot_pretty(gca,'linewidth', 1, 'fontsize', 7)
 
-subplot(2,4,8)
+subplot(3,4,8)
 text(0.1, 0.9, ['pkw = ' num2str(pkw_DIbda,'%0.2g')]);
 text(0.1, 0.8, 'Tukey tests results:')
 text(0.1, 0.7, ['p_bd = ' num2str(c_DIbda(1,6),'%0.2g')]);
@@ -1217,6 +1229,198 @@ text(0.1, 0.5, ['p_da = ' num2str(c_DIbda(3,6),'%0.2g')]);
 text(0.1, 0.3, ['pval filt = ' filt_use])
 axis off
 
+subplot(3,4,11)
+bw01bef_onoffc = bw01_bef_prop(:,3:4);
+bw01aft_onoffc = bw01_aft_prop(:,3:4);
+[hbar, ~, prks_onoffbd] = barscatter(bw01bef_onoffc, bw01aft_onoffc);
+set(gca,'XTick',1:2,'XTickLabel',{'Before','After'});
+ylabel('Proportion Total Cells')
+title('On/Off Cells')
+make_plot_pretty(gca,'linewidth', 1, 'fontsize', 7)
+
+prks_on_v_off_bef = ranksum(bw01bef_onoffc(:,1),bw01bef_onoffc(:,2));
+prks_on_v_off_aft = ranksum(bw01aft_onoffc(:,1),bw01aft_onoffc(:,2));
+prks_on_bef_v_aft = ranksum(bw01bef_onoffc(:,1),bw01aft_onoffc(:,1));
+prks_off_bef_v_aft = ranksum(bw01bef_onoffc(:,2),bw01aft_onoffc(:,2));
+
+subplot(3,4,12)
+text(0.1, 0.9, ['prks\_on\_v\_off\_bef  = ' num2str(prks_on_v_off_bef,'%0.2g')]);
+text(0.1, 0.8, ['prks\_on\_v\_off\_aft  = ' num2str(prks_on_v_off_aft,'%0.2g')]);
+text(0.1, 0.7, ['prks\_on\_bef\_v\_aft = ' num2str(prks_on_bef_v_aft,'%0.2g')]);
+text(0.1, 0.6, ['prks\_off\_bef\_v\_aft = ' num2str(prks_off_bef_v_aft,'%0.2g')]);
+text(0.1, 0.4, ['prks\_ondoff(combined)\_bef\_v\_aft = ' num2str(...
+    ranksum(bw01bef_onoffc(:),bw01aft_onoffc(:)),'%0.2g')]);
+axis off
+
 printNK(['Cell Class between arenas BDA filt_' filt_use ' day_lag_' ...
     day_lag],'2env')
+
+%%
+try close(690); end
+figure(690); 
+set(gcf,'Position',[1000 100 780 840])
+
+subplot(2,3,1)
+[~, ~, prks_PVba] = barscatter(PVbw1_bef, PVbw1_aft);
+set(gca,'XTick',1:2,'XTickLabel',{'Before', 'After'});
+xlim([0 3])
+ylabel('\rho_{PV,mean}')
+title(['Day Lag = ' day_lag ' all plots'])
+make_plot_pretty(gca,'linewidth', 1, 'fontsize', 7)
+
+subplot(2,3,4)
+text(0.1, 0.7, ['prks\_PV\_ba  = ' num2str(prks_PVba,'%0.2g')]);
+text(0.1, 0.9, ['filt use = ' filt_use])
+axis off
+
+subplot(2,3,2)
+[hbar, ~, prks_cohba] = barscatter(...
+    bw01_bef_prop(:,1)./sum(bw01_bef_prop(:,1:2),2), ...
+    bw01_aft_prop(:,1)./sum(bw01_aft_prop(:,1:2),2));
+set(gca,'XTick',1:3,'XTickLabel',{'Before', 'After'});
+xlim([0 3])
+ylabel('Proportion Co-Active Cells')
+title('Coherent (<30) Cells')
+make_plot_pretty(gca,'linewidth', 1, 'fontsize', 7)
+
+subplot(2,3,5)
+text(0.1, 0.9, ['prks\_coh\_ba  = ' num2str(prks_cohba,'%0.2g')]);
+axis off
+
+subplot(2,3,3)
+bw01bef_onoffc = bw01_bef_prop(:,3:4);
+bw01aft_onoffc = bw01_aft_prop(:,3:4);
+[hbar, ~, prks_onoffbd] = barscatter(bw01bef_onoffc, bw01aft_onoffc);
+set(gca,'XTick',1:2,'XTickLabel',{'Before','After'},'XLim', [0 3]);
+ylabel('Proportion Total Cells')
+title('On/Off Cells')
+make_plot_pretty(gca,'linewidth', 1, 'fontsize', 7)
+
+prks_on_v_off_bef = ranksum(bw01bef_onoffc(:,1),bw01bef_onoffc(:,2));
+prks_on_v_off_aft = ranksum(bw01aft_onoffc(:,1),bw01aft_onoffc(:,2));
+prks_on_bef_v_aft = ranksum(bw01bef_onoffc(:,1),bw01aft_onoffc(:,1));
+prks_off_bef_v_aft = ranksum(bw01bef_onoffc(:,2),bw01aft_onoffc(:,2));
+
+subplot(2,3,6)
+text(0.1, 0.9, ['prks\_on\_v\_off\_bef  = ' num2str(prks_on_v_off_bef,'%0.2g')]);
+text(0.1, 0.8, ['prks\_on\_v\_off\_aft  = ' num2str(prks_on_v_off_aft,'%0.2g')]);
+text(0.1, 0.7, ['prks\_on\_bef\_v\_aft = ' num2str(prks_on_bef_v_aft,'%0.2g')]);
+text(0.1, 0.6, ['prks\_off\_bef\_v\_aft = ' num2str(prks_off_bef_v_aft,'%0.2g')]);
+text(0.1, 0.4, ['prks\_onoffcomb\_bef\_v\_aft = ' num2str(...
+    ranksum(bw01bef_onoffc(:),bw01aft_onoffc(:)),'%0.2g')]);
+axis off
+
+printNK(['Cell Class between arenas before after filt_' filt_use ' day_lag_' ...
+    day_lag],'2env')
+
+%% Make PV plot of same vs diff arenas
+PVbw_all = squeeze(PVcorrs_all(3,:,:,:,1));
+PVwin_all = cat(1,squeeze(PVcorrs_all(1,:,:,:,1)),...
+    squeeze(PVcorrs_all(2,:,:,:,1)));
+xPVall = cat(1,PVwin_all(:),PVbw_all(:));
+grps_PVall = cat(1, ones(512,1), 2*ones(256,1));
+CIbw_all = nanmean(reshape(CIall_mean(3,:,:,:),[],3),1);
+CIwin_all = nanmean(reshape(CIall_mean(1:2,:,:,:),[],3),1);
+
+try close(657); end
+figure(657); set(gcf,'Position',[2500 100 1200 760]);
+
+subplot(2,4,1);
+hbar = bar([nanmean(xPVall(grps_PVall == 1)), ...
+    nanmean(xPVall(grps_PVall == 2))]);
+hold on
+xvaloff = ones(size(xPVall(grps_PVall == 1))) + ...
+    0.06*randn(size(xPVall(grps_PVall == 1)));
+hwin = scatter(xvaloff,xPVall(grps_PVall == 1),'ko');
+xvaloff = 2*ones(size(xPVall(grps_PVall == 2))) + ...
+    0.06*randn(size(xPVall(grps_PVall == 2)));
+hbw = scatter(xvaloff,xPVall(grps_PVall == 2),'ko');
+xlim([0 3])
+
+hCI = plot([1 2], [CIwin_all(2), CIbw_all(2)], 'k-', ...
+    [1 2], [CIwin_all([1 3]); CIbw_all([1 3])], 'k--');
+
+title(['All PVs PCfilt=' filt_use])
+set(gca,'XTickLabels',{'Same','Diff'})
+legend(hCI(1:2),{'mean CI','95% CI'})
+ylabel('\rho_{PV,mean}')
+make_plot_pretty(gca)
+set(gca,'Ylim',[-0.2 0.6])
+hwin.MarkerEdgeAlpha = 0.5;
+hwin.SizeData = 24;
+hbw.MarkerEdgeAlpha = 0.5;
+hbw.SizeData = 24;
+
+subplot(2,4,2)
+prs = ranksum(xPVall(grps_PVall == 1), xPVall(grps_PVall == 2));
+pPVsame_v_95CI = signrank(xPVall(grps_PVall == 1), CIwin_all(1));
+pPVdiff_v_95CI = signrank(xPVall(grps_PVall == 2), CIbw_all(1));
+pPVsame_v_meanCI = signrank(xPVall(grps_PVall == 1), CIwin_all(2));
+pPVdiff_v_meanCI = signrank(xPVall(grps_PVall == 2), CIbw_all(2));
+text(0.1,0.5,['prksum = ' num2str(prs,'%0.2g')])
+axis off
+
+subplot(2,4,5)
+hbar = bar([nanmean(PV_win1_bef(:)) nanmean(PV_bw1_ba(:))]);
+hold on
+xvaloff = ones(size(PV_win1_bef(:))) + 0.02*randn(size(PV_win1_bef(:)));
+hwin = scatter(xvaloff,PV_win1_bef(:),'ko');
+xvaloff = 2*ones(size(PV_bw1_ba(:))) + 0.02*randn(size(PV_bw1_ba(:)));
+hbw = scatter(xvaloff,PV_bw1_ba(:),'ko');
+ylim([-0.2 0.5]); xlim([0 3])
+title(['Day Lag 1 PVs PCfilt=' filt_use])
+
+% Plot CIs
+hCI = plot([1 2], [CI_win1_bef(2), CI_bw1_ba(2)], 'k-', ...
+    [1 2], [CI_win1_bef([1 3]); CI_bw1_ba([1 3])], 'k--');
+
+set(gca,'XTickLabels',{'Same','Diff'})
+legend(hCI(1:2),{'mean CI','95% CI'})
+ylabel('\rho_{PV,mean}')
+make_plot_pretty(gca)
+set(gca,'Ylim',[-0.2 0.6])
+hwin.MarkerEdgeAlpha = 0.5;
+hwin.SizeData = 24;
+hbw.MarkerEdgeAlpha = 0.5;
+hbw.SizeData = 24;
+
+subplot(2,4,6)
+prs1 = ranksum(PV_win1_bef(:), PV_bw1_ba(:));
+pPVsame1_v_95CI = signrank(PV_win1_bef(:), CI_win1_bef(1));
+pPVdiff1_v_95CI = signrank(PV_bw1_ba(:), CI_bw1_ba(1));
+pPVsame1_v_meanCI = signrank(PV_win1_bef(:), CI_win1_bef(2));
+pPVdiff1_v_meanCI = signrank(PV_bw1_ba(:), CI_bw1_ba(2));
+text(0.1,0.5,['prksum = ' num2str(prs1,'%0.2g')])
+axis off
+
+subplot(2,4,3)
+[~, hs, prks_PVconn_v_not] = barscatter(cat(1,PVbw1_bef,PVbw1_aft),PVbw_dur);
+set(gca,'XTick',1:2,'XTickLabel',{'Not Conn.','Connected'});
+xlim([0 3])
+ylabel('\rho_{PV,mean}')
+title(['Diff. Arenas lag = ' day_lag])
+hold on
+CIdur1 = mean(reshape(squeeze(CIall_mean(3,5:6,5:6,:)),[],3));
+hCI = plot([1 2], [CI_bw1_ba(2), CIdur1(2)], 'k-',...
+    [1 2], [CI_bw1_ba([1 3]);  CIdur1([1 3])], 'k--');
+
+make_plot_pretty(gca)
+set(gca,'Ylim',[-0.2 0.5])
+hs(1).MarkerEdgeAlpha = 0.5;
+hs(1).SizeData = 24;
+hs(2).MarkerEdgeAlpha = 0.5;
+hs(2).SizeData = 24;
+
+subplot(2,4,4)
+text(0.1,0.9,['prks\_PV\_conn\_v\_not = ' num2str(prks_PVconn_v_not,'%0.2g')])
+text(0.1,0.7, ['prks\_PV\_bef\_v\_aft = ' ...
+    num2str(ranksum(PVbw1_bef,PVbw1_aft), '%0.2f')]);
+text(0.1,0.5, ['psgnrk\_PV\_conn\_v\_95CI = ' num2str(signrank(...
+    PVbw_dur(:), CIdur1(1)),'%0.2g')])
+text(0.1,0.3, ['psgnrk\_PV\_notconn\_v\_95CI = ' num2str(signrank(...
+    cat(1,PVbw1_bef, PVbw1_aft), CI_bw1_ba(1)),'%0.2g')])
+axis off
+
+printNK(['PV Same v Diff and Conn vs not Plot PCfilt=' filt_use],'2env')
+
 

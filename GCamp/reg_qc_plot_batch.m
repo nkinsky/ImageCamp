@@ -1,4 +1,4 @@
-function [reg_stats, hfig] = reg_qc_plot_batch(base, reg, varargin)
+function [reg_stats, reg_stats_chance, hfig] = reg_qc_plot_batch(base, reg, varargin)
 % [reg_stats, hfig] = reg_qc_plot_batch(base, reg, num_shuffles (opt), ...
 %   num_shifts(opt), shift_dist(opt), ...)
 %
@@ -67,6 +67,7 @@ if ischar(name_append)
     [name_append{:}] = deal(temp);
 end
 
+
 %% Plot
 
 if isempty(hfig)
@@ -76,19 +77,25 @@ end
 reg_stats = cell(length(reg),1);
 legend_text = cell(1, length(reg));
 
+%%% NRK adjust here - do shift and shuffle separately. Shift ONLY happens
+%%% for registering base to itself!
 reg_stats{1} = neuron_reg_qc(base, reg(1), 'batch_mode', batch_mode, ...
+    'name_append', name_append{1}); 
+reg_stats_chance = neuron_reg_qc(base, base, 'batch_mode', batch_mode, ...
     'shuffle', num_shuffles, 'shift', num_shifts, 'shift_dist', shift_dist, ...'
     'name_append', name_append{1}); % If the last registration is bad you can get a bad shuffled distribution here...
+
 legend_text{1} = [mouse_name_title(reg(1).Date) ' - #' num2str(reg(1).Session)];
-reg_qc_plot(reg_stats{1}.cent_d, reg_stats{1}.orient_diff, ...
+he_cd = gobjects(length(reg),1); he_od = gobjects(length(reg),1);
+hhist_cd = gobjects(length(reg),1); hhist_od = gobjects(length(reg),1);
+[he_cd(1), hhist_cd(1), he_od(1), hhist_od(1)] = reg_qc_plot(reg_stats{1}.cent_d, reg_stats{1}.orient_diff, ...
         reg_stats{1}.avg_corr, hfig, 'multi_sesh', multi_sesh);
 
-for j = 2:length(reg)
-    
+for j = 2:length(reg)   
     reg_stats{j} = neuron_reg_qc(base, reg(j), 'batch_mode', batch_mode,...
         'name_append', name_append{j});
-    reg_qc_plot(reg_stats{j}.cent_d, reg_stats{j}.orient_diff, ...
-        reg_stats{j}.avg_corr, hfig, 'multi_sesh', 1);
+    [he_cd(j), hhist_cd(j), he_od(j), hhist_od(j)] = reg_qc_plot(reg_stats{j}.cent_d, ...
+        reg_stats{j}.orient_diff, reg_stats{j}.avg_corr, hfig, 'multi_sesh', 1);
     legend_text{j} = [mouse_name_title(reg(j).Date) ' - #' num2str(reg(j).Session)];
     reg_stats{j}.session = reg(j);
 end
@@ -100,25 +107,67 @@ end
 % reg_qc_plot(reg_stats{end}.cent_d, reg_stats{end}.orient_diff, ...
 %         reg_stats{end}.avg_corr, h, 'multi_sesh', multi_sesh);
     
-reg_qc_plot(reg_stats{1}.shift.cent_d, reg_stats{1}.shift.orient_diff, ...
-    reg_stats{1}.shift.avg_corr, hfig, 'plot_shuf', 1);
-reg_qc_plot([], reg_stats{1}.shuffle.orient_diff, [], hfig, 'plot_shuf', 1);
+% [hCIe_shift, hCIhist_shift] = reg_qc_plot(reg_stats{1}.shift.cent_d, ...
+%     reg_stats{1}.shift.orient_diff, ...
+%     reg_stats{1}.shift.avg_corr, hfig, 'plot_shuf', 1);
+% [hCIe_shuf, hCIhist_shuf] = reg_qc_plot([], reg_stats{1}.shuffle.orient_diff, ...
+%     [], hfig, 'plot_shuf', 1);
 
-for j=1:4
-    subplot(2,2,j)
-    if num_shifts > 0
-        legend(legend_text{:}, [num2str(round(shift_dist)) '-pixel shift'])
-    else
-        legend(legend_text{:})
-    end
-end
+[hCIe_shift_cd, hCIhist_shift_cd, hCIe_shift_od, hCIhist_shift_od] = ...
+    reg_qc_plot(reg_stats_chance.shift.cent_d, ...
+    reg_stats_chance.shift.orient_diff, ...
+    reg_stats_chance.shift.avg_corr, hfig, 'plot_shuf', 1);
+[~, ~, hCIe_shuf_od, hCIhist_shuf_od] = ...
+    reg_qc_plot([], reg_stats_chance.shuffle.orient_diff, ...
+    [], hfig, 'plot_shuf', 1);
 
-if num_shuffles > 0
-    subplot(2,2,2)
-    legend(updatelegend(gca,[num2str(num_shuffles) ' Shuffles']));
-    subplot(2,2,4)
-    legend(updatelegend(gca,[num2str(num_shuffles) ' Shuffles']));
+
+% Make legends work
+if num_shifts > 0 && num_shuffles == 0
+    legend_cd = cat(2,legend_text,[num2str(round(shift_dist)) '-pixel shift']);
+    legend_od = cat(2,legend_text,[num2str(round(shift_dist)) '-pixel shift']);
+    legend(cat(1,hhist_cd,hCIhist_shift_cd(1)),legend_cd)
+    legend(cat(1,he_cd,hCIe_shift_cd(1)),legend_cd)
+    legend(cat(1,hhist_od,hCIhist_shift_od(1)),legend_od)
+    legend(cat(1,he_od,hCIe_shift_od(1)),legend_od)
+elseif num_shifts == 0 && num_shuffles > 0
+    legend_cd = legend_text;
+    legend_od = cat(2,legend_text,[num2str(num_shuffles) ' Shuffles']);
+    legend(hhist_cd,legend_cd)
+    legend(he_cd,legend_cd)
+    legend(cat(1,hhist_od, hCIhist_shuf_od(1)),legend_od)
+    legend(cat(1,he_od, hCIe_shuf_od(1)),legend_od)
+elseif num_shifts > 0 && num_shuffles > 0
+    legend_cd = cat(2,legend_text,[num2str(round(shift_dist)) '-pixel shift']);
+    legend_od = cat(2,legend_text,[num2str(round(shift_dist)) '-pixel shift'],...
+        [num2str(num_shuffles) ' Shuffles']);
+    legend(cat(1,hhist_cd,hCIhist_shift_cd(1)),legend_cd)
+    legend(cat(1,he_cd,hCIe_shift_cd(1)),legend_cd)
+    legend(cat(1,hhist_od,hCIhist_shift_od(1), hCIhist_shuf_od(1)),legend_od)
+    legend(cat(1,he_od,hCIe_shift_od(1), hCIe_shuf_od(1)),legend_od)
+elseif num_shifts == 0 && num_shuffles == 0
+    legend(hhist_cd, legend_text)
+    legend(hhist_od, legend_text)
+    legend(he_cd, legend_text)
+    legend(he_od, legend_text)
 end
+    
+        
+% for j=1:4
+%     subplot(2,2,j)
+%     if num_shifts > 0
+%         legend(legend_text{:}, [num2str(round(shift_dist)) '-pixel shift'])
+%     else
+%         legend(legend_text{:})
+%     end
+% end
+% 
+% if num_shuffles > 0
+%     subplot(2,2,2)
+%     legend(updatelegend(gca,[num2str(num_shuffles) ' Shuffles']));
+%     subplot(2,2,4)
+%     legend(updatelegend(gca,[num2str(num_shuffles) ' Shuffles']));
+% end
 
 subplot(2,2,4)
 title(['Base Session: ' mouse_name_title(base.Animal) ' - ' ...
@@ -128,14 +177,22 @@ title(['Base Session: ' mouse_name_title(base.Animal) ' - ' ...
 % NRK - this does NOT work for pair-wise registration, so added try/catch for now 
 ff = get(gcf);
 num_lines = length(ff.Children(8).Children); % Get number of lines drawn
+if num_shifts > 0
+    num_lines = num_lines -3;
+end
 cm = flipud(colormap(jet(num_lines)));
 try
-if num_shuffles > 0
+if num_shuffles > 0 || num_shifts > 0
     for j = 2:2:4
-        cm_use = [0 0 0; cm];
+        % put blank spots in cm_matrix.
+        if num_shuffles > 0 && num_shifts > 0
+            cm_use= [0 0 1; 0 0 1; 0 0 1; 0 0 0; 0 0 0; 0 0 0; cm];
+        else
+            cm_use = [0 0 0; 0 0 0; 0 0 0; cm];
+        end
         for k = 1: size(cm_use,1)
             ff.Children(j).Children(k).Color = cm_use(k,:);
-        end % Set Shuffled to black
+        end
     end
 else
     for j = 2:2:4
@@ -150,14 +207,18 @@ end
 
 try
 for j = 6:2:8
-    for k = 1: size(cm,1)
-        ff.Children(j).Children(k).Color = cm(k,:);
+    if num_shifts > 0
+         cm_use = [0 0 0; 0 0 0; 0 0 0; cm];
+    else
+        cm_use = cm;
+    end
+    for k = 1: size(cm_use,1)
+        ff.Children(j).Children(k).Color = cm_use(k,:);
     end
 end
 catch
     disp('bypassing colors for lines in reg_qc_plot_batch for now')
 end
-
 
 
 end

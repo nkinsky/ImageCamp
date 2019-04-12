@@ -24,10 +24,6 @@ function [ ] = combine_tracking( varargin )
 %   frames between sessions (introduced due to slight drift between
 %   tracking and imaging systems) send the mouse to (x,y) = (1,1).
 
-
-%%% Need to add in MoMtime and start_time from 1st file to the saved
-%%% Pos_comb.mat file
-
 fill_pos = [0 0]; % Sends all filled in values to this...should be something you can easily exclude or ignore later on.
 
 num_sessions = nargin/2;

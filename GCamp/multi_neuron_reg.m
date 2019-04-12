@@ -164,6 +164,8 @@ Reg_NeuronIDs(num_sessions).num_bad_cells = [];
 Reg_NeuronIDs(num_sessions).update_masks = [];
 Reg_NeuronIDs(num_sessions).use_neuron_masks = [];
 
+hw = waitbar(0, ['Performing multiple neuron reg. w/update\_masks = ' ...
+    num2str(update_masks)]);
 for this_session = 1:num_sessions
     %Display.
     disp(['Registering ', mouse ' ' reg_struct(this_session).Date, ' session ' ...
@@ -281,8 +283,10 @@ for this_session = 1:num_sessions
     %Save.
     reg_filename = fullfile(base_path,['Reg_NeuronIDs_updatemasks' num2str(update_masks) name_append '.mat']);
     save (reg_filename, 'Reg_NeuronIDs','-v7.3');
+    waitbar(this_session/num_sessions,hw);
 end
 
+close(hw)
 %% Build cell_map from Reg_NeuronIDs and save it
 all_session_map = build_multisesh_mapping(Reg_NeuronIDs);
 Reg_NeuronIDs(1).all_session_map = all_session_map;

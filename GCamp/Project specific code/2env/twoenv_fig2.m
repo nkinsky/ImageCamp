@@ -268,6 +268,47 @@ axis off
 
 printNK('Circle Coherency Example - G45 No rotation','2env')
 
+%% Circle Remapping Plot - G30
+animal_use = 1;
+rot_type = 'circle'; % see sesh_type above
+k = find(cellfun(@(a) strcmpi(rot_type,a),sesh_type));
+sesh1 = 2; % must be square if circ2square
+sesh2 = 5; % must be circle if circ2square
+if strcmpi(rot_type, 'circ2square')
+    sesh_use = cat(2, Mouse(animal_use).sesh.square(sesh1),...
+        Mouse(animal_use).sesh.circle(sesh2));
+    base_sesh = Mouse(animal_use).sesh.square(1);
+else
+    sesh_use = Mouse(animal_use).sesh.(rot_type)([sesh1 sesh2]);
+    base_sesh = Mouse(animal_use).sesh.(rot_type)(1);
+end
+sig_values_comb = cat(3, Mouse(animal_use).coherency.(rot_type).pmat,...
+    Mouse(animal_use).global_remap_stats.(rot_type).shuf_test.p_remap);
+sig_value_use = max(sig_values_comb,[],3);
+sig_value_use = sig_value_use([sesh1 sesh2], [sesh1 sesh2]);
+sig_star = sig_value_use < alpha/num_comps(k); % Determine significance
+
+[~, ~, ~, ~, ~, ~, hh] = twoenv_rot_analysis_full(sesh_use, rot_type,...
+    'num_shuffles', 1000, 'local_ref', false, 'sig_star', sig_star,...
+    'sig_value', sig_value_use, 'map_session', base_sesh);
+arrayfun(@(a) set(a, 'Position', paper_pos), hh);
+arrayfun(@make_figure_pretty, hh,'UniformOutput',false);
+set(hh(1).Children,'YLim',tuning_ylim)
+
+figure(hh(2))
+subplot(2,2,4)
+text(0.1,0.7, ['Shuffle test pval = ' num2str(Mouse(animal_use)...
+    .global_remap_stats.(rot_type).shuf_test.p_remap(sesh1,sesh2))])
+text(0.1,0.5, ['chi2stat = ' num2str(Mouse(animal_use).coherency...
+    .(rot_type).chi2stat(sesh1,sesh2))])
+text(0.1,0.3, ['chi2 pval = ' num2str(Mouse(animal_use).coherency...
+    .(rot_type).pmat(sesh1,sesh2))])
+text(0.1,0.1, ['chi2 df = ' num2str(Mouse(animal_use).coherency...
+    .(rot_type).df)])
+axis off
+
+printNK('Circle Coherency Example - G45 No rotation','2env')
+
 %% Circ2square remapping plot
 animal_use = 1;
 rot_type = 'circ2square'; % see sesh_type above
@@ -662,19 +703,37 @@ delta_angles34b = delta_angle(inds_use34b)-360
 
 [~, delta_mean_s, ~, ps, ~, coh_ratio_s] = plot_delta_angle_hist(...
     G45_square(1), G45_square(2), G45_square(1), 'TMap_type', 'TMap_gauss',...
-    'bin_size', 1, 'nshuf', 1000);
+    'bin_size', 1, 'nshuf', 1000, 'coh_ang_thresh', 30);
 ylims = get(gca,'YLim');
 make_plot_pretty(gca,'linewidth',1,'fontsize',14)
 set(gca,'YLim',ylims,'YTick',0:60:120)
 printNK('Square to square center out histo','2env')
 
+[~, delta_mean_s_half, ~, ps_half, ~, coh_ratio_s_half] = plot_delta_angle_hist(...
+    G45_square(1), G45_square(1), G45_square(1), 'TMap_type', 'TMap_gauss',...
+    'bin_size', '_half', 'nshuf', 1000, 'coh_ang_thresh',30, 'half_use', [1 2]);
+ylims = get(gca,'YLim');
+make_plot_pretty(gca,'linewidth',1,'fontsize',14)
+set(gca,'YLim',ylims,'YTick',0:60:120)
+printNK('Square to square center out histo within session','2env')
+
+
 [~, delta_mean_o, ~, po, ~, coh_ratio_o] = plot_delta_angle_hist(...
     G30_oct(3), G30_oct(4), G30_oct(1), 'TMap_type', 'TMap_gauss',...
-    'bin_size', 1, 'nshuf', 1000);
+    'bin_size', 1, 'nshuf', 1000, 'coh_ang_thresh',30);
 ylims = get(gca,'YLim');
 make_plot_pretty(gca,'linewidth',1,'fontsize',14)
 set(gca,'YLim',ylims,'YTick',0:50:100)
 printNK('Octagon to octagon center out histo','2env')
+
+%% Plot circle center-out remapping histogram
+[~, delta_mean_o_gr, ~, po_gr, ~, coh_ratio_o_gr, ~, ~, ~, ~, ~, delta_rad_o_gr] = plot_delta_angle_hist(...
+    G30_oct(2), G30_oct(5), G30_oct(1), 'TMap_type', 'TMap_gauss',...
+    'bin_size', 1, 'nshuf', 1000, 'coh_ang_thresh',30);
+ylims = get(gca,'YLim');
+make_plot_pretty(gca,'linewidth',1,'fontsize',14)
+set(gca,'YLim',ylims,'YTick',0:25:50)
+printNK('Octagon to octagon center out global remapping histogram','2env')
 
 %% Coh v Glob remapping breakdown: See twoenv_mismatch_hist
 

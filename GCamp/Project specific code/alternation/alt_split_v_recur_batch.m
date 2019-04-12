@@ -32,10 +32,14 @@ end
 tdiff_cell = cell(num_mice,1);
 good_seshs = cell(num_mice,1);
 for j = 1:num_mice
-   tdiff_cell{j} = make_timediff_mat(mice_sesh{j});
-   % ID sessions that are day_lag apart 
-   tdiff_bool = feval(compfun, tdiff_cell{j}, day_lag);
-   [a,b] = find(tdiff_bool);
+    tdiff_cell{j} = make_timediff_mat(mice_sesh{j});
+    % ID sessions that are day_lag apart
+    tdiff_bool = feval(compfun, tdiff_cell{j}, day_lag);
+    % Get hand_check_mat to grab only good sessions
+    [~, good_reg_mat_hand] = alt_hand_reg_order_check(mice_sesh{j});
+    % reject any sessions not meeting the hand check
+    tdiff_bool(good_reg_mat_hand == 0) = false;
+    [a,b] = find(tdiff_bool);
    good_seshs{j} = [a,b];
 end
 num_sesh = max(cellfun(@(a) size(a,1),good_seshs));

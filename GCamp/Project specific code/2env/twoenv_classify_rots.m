@@ -1,5 +1,5 @@
 function [ mismatch_bool, local_bool, distal_bool, breakdown ] = ...
-    twoenv_classify_rots(delta_angle_med, arena_rot, mismatch_cutoff, gr_bool)
+    twoenv_classify_rots(delta_angle_mean, arena_rot, mismatch_cutoff, gr_bool)
 %[ mismatch_bool, local_bool, distal_bool ] = ...
 %     twoenv_classify_rots(delta_angle_med, arena_rot, mismatch_cutoff)
 %
@@ -16,6 +16,8 @@ function [ mismatch_bool, local_bool, distal_bool, breakdown ] = ...
 %   Need to get global remapping sessions and exclude them. I bet I won't
 %   see ANY sessions with rot ~= 0:90:270 for the square...
 
+%   NOTE that the input delta_angle_mean must contain values  between 0 and 360.
+
 if nargin < 3
     mismatch_cutoff = 22.5;
 end
@@ -24,17 +26,27 @@ if nargin < 4
     gr_bool = false(size(arena_rot));
 end
 
-% Mis-match session-pairs are all those whose rotation do not match
-% that of the arena
-mismatch_bool = abs(delta_angle_med - arena_rot) > mismatch_cutoff & ~gr_bool;
+% % Mis-match session-pairs are all those whose rotation do not match
+% % that of the arena
+% mismatch_bool = (abs(delta_angle_mean - arena_rot) > mismatch_cutoff | ...
+%     abs(delta_angle_mean - arena_rot) > (360 - mismatch_cutoff)) & ~gr_bool;
+% 
+% % Distal session-pairs are those whose rotation is zero when the arena is
+% % rotated - a special case of mismatch cells
+% distal_bool = (abs(delta_angle_mean) <= mismatch_cutoff ...
+%     | abs(delta_angle_mean-360) <= mismatch_cutoff) & mismatch_bool;
+% 
+% % Local session-pairs are those whose rotation matches that of the
+% % arena
+% local_bool = abs(delta_angle_mean - arena_rot) <= mismatch_cutoff & ~gr_bool;
 
-% Distal session-pairs are those whose rotation is zero when the arena is
-% rotated - they are a subset of the mismatch session-pairs
-distal_bool = abs(delta_angle_med) <= mismatch_cutoff & mismatch_bool;
+local_bool = (abs(delta_angle_mean - arena_rot) <= mismatch_cutoff | ...
+    abs(delta_angle_mean - arena_rot) >= (360 - mismatch_cutoff)) & ~gr_bool;
 
-% Local session-pairs are those whose rotation matches that of the
-% arena
-local_bool = abs(delta_angle_med - arena_rot) <= mismatch_cutoff & ~gr_bool;
+mismatch_bool = ~local_bool & ~gr_bool & ~isnan(delta_angle_mean);
+
+distal_bool = (abs(delta_angle_mean) <= mismatch_cutoff ...
+    | abs(delta_angle_mean) >= (360 - mismatch_cutoff)) & mismatch_bool;
 
 % Make breakdown matrix
 nmis_rot = sum(mismatch_bool(:) & arena_rot(:) ~= 0);
@@ -44,7 +56,7 @@ ngr_rot = sum(gr_bool(:) & arena_rot(:) ~= 0);
 
 nmis_no_rot = sum(mismatch_bool(:) & arena_rot(:) == 0);
 nloc_no_rot = sum(local_bool(:) & arena_rot(:) == 0);
-ndist_no_rot = sum(distal_bool(:) & arena_rot(:) ==0);
+ndist_no_rot = sum(distal_bool(:) & arena_rot(:) == 0);
 ngr_no_rot = sum(gr_bool(:) & arena_rot(:) == 0);
 
 breakdown = [nmis_rot-ndist_rot, nloc_rot, ndist_rot, ngr_rot; ...

@@ -9,8 +9,8 @@ for j = 1:4
     num_sessions = length(sesh_use);
     for k = 1:num_sessions - 1
         for ll = k+1:num_sessions
-            [~, ~, ~, rho_mean, rho_med] = alt_plot_corrs_v_cat(sesh_use(k),sesh_use(ll),...
-                'plot_flag',false);
+            [~, ~, ~, rho_mean, rho_med] = alt_plot_corrs_v_cat(...
+                sesh_use(k),sesh_use(ll), 'plot_flag',false);
             rhos_mean_all = [rhos_mean_all; rho_mean];
             rhos_median_all = [rhos_median_all; rho_med];
             

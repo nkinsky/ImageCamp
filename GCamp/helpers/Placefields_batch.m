@@ -1,11 +1,14 @@
 function [ success_bool ] = Placefields_batch(MD, stats_bool, varargin )
-% Placefields_batch(MD, stats_bool, varargin )
+% success_bool = Placefields_batch(MD, stats_bool, varargin )
 %   Run Placefields function on multiple sessions at once with the same
 %   parameters. Outputs boolean indicating if run of each session was
 %   successful or not. stats_bool = 2 (default) indicates to run
 %   placefieldstats and placefields, 1 = run only stats, 0 = run only
 %   placefields
 
+if nargin < 2
+    stats_bool = 2;
+end
 name_append = '';
 for j=1:length(varargin)
     if strcmpi(varargin{j},'name_append')
@@ -14,7 +17,7 @@ for j=1:length(varargin)
 end
 
 success_bool = false(1,length(MD));
-for j= 1:length(MD)
+for j = 1:length(MD)
     try
         if stats_bool == 2 || stats_bool == 0
             Placefields(MD(j),varargin{:});

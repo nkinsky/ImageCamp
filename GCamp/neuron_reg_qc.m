@@ -37,11 +37,12 @@ p.addRequired('base_struct', @(a) isstruct(a) && length(a) == 1);
 p.addRequired('reg_struct', @(a) isstruct(a) && length(a) == 1);
 p.addParameter('name_append', '', @ischar); % default = ''
 p.addParameter('shuffle', 0, @(a) isnumeric(a) && round(a) == a && a >= 0);
-p.addParameter('shift', false, @(a) isnumeric(a) || islogical(a) && ~a);
+p.addParameter('shift', false, @(a) isnumeric(a) || islogical(a));
 p.addParameter('plot', false, @(a) islogical(a) || (isnumeric(a) && ...
     a == 0 || a == 1) || ishandle(a));
-p.addParameter('shift_dist',4, @(a) isnumeric(a) && a > 0 );
-p.addParameter('batch_mode',0, @(a) a == 0 || a == 1 || a == 2);
+p.addParameter('shift_dist', 4, @(a) isnumeric(a) && a > 0 );
+p.addParameter('batch_mode', 0, @(a) a == 0 || a == 1 || a == 2);
+p.addParameter('orient_only', false, @islogical); % only calculate orient_diff if true
 p.parse(base_struct, reg_struct, varargin{:});
 
 name_append = p.Results.name_append;
@@ -49,6 +50,7 @@ num_shuffles = p.Results.shuffle;
 num_shifts = p.Results.shift;
 shift_dist = p.Results.shift_dist;
 batch_mode = p.Results.batch_mode;
+orient_only = p.Results.orient_only;
 % Parse out where to plot if specified
 if ~ishandle(p.Results.plot)
     plot_flag = p.Results.plot;
@@ -106,38 +108,55 @@ load(fullfile(reg_path,'FinalOutput.mat'),'NeuronImage','NeuronAvg');
     base_struct.Date, base_struct.Session, reg_struct.Date, ...
     reg_struct.Session, 'suppress_output', true, 'name_append', name_append); % Get transform between sessions
 ROI_reg = cellfun(@(a) imwarp_quick(a,reginfo),NeuronImage,'UniformOutput',0);
-ROIavg = MakeAvgROI(NeuronImage,NeuronAvg);
-ROIavg_reg = cellfun(@(a) imwarp_quick(a,reginfo),ROIavg,'UniformOutput',0);
+if ~orient_only
+    ROIavg = MakeAvgROI(NeuronImage,NeuronAvg);
+    ROIavg_reg = cellfun(@(a) imwarp_quick(a,reginfo),ROIavg,'UniformOutput',0);
+end
 
 % Calculate metrics in dist_bw_reg_sessions
 [ mapped_ROIs, valid_neurons ] = map_ROIs( map_use, ROI_reg );
-[ mapped_ROIavg, ~] = map_ROIs( map_use, ROIavg_reg );
+ROI_reg = {ROI_base(valid_neurons), mapped_ROIs(valid_neurons)};
 disp(['Calculating Neuron Registration Metrics for ' base_struct.Animal ' ' ...
     base_struct.Date ' session ' num2str(base_struct.Session) ' to ' ...
     reg_struct.Date ' session ' num2str(reg_struct.Session)])
-[~, reg_stats.cent_d, ~, ~, ~, reg_stats.orient_diff, reg_stats.avg_corr, reg_stats.cent_angle] = ...
-    dist_bw_reg_sessions ({ROI_base(valid_neurons), mapped_ROIs(valid_neurons)},...
-    'avg_corr', {ROIavg_base(valid_neurons), mapped_ROIavg(valid_neurons)});
+if ~orient_only
+    [ mapped_ROIavg, ~] = map_ROIs( map_use, ROIavg_reg );
+    [~, reg_stats.cent_d, ~, ~, ~, reg_stats.orient_diff, reg_stats.avg_corr, reg_stats.cent_angle] = ...
+        dist_bw_reg_sessions(ROI_reg, 'avg_corr', ...
+        {ROIavg_base(valid_neurons), mapped_ROIavg(valid_neurons)},...
+        'orient_only', orient_only);
+elseif orient_only
+    [~, reg_stats.cent_d, ~, ~, ~, reg_stats.orient_diff, reg_stats.avg_corr, ...
+        reg_stats.cent_angle] = ...
+        dist_bw_reg_sessions(ROI_reg,'orient_only', orient_only);
+end
+    
 
 
 %% Do shuffling if specified
-cent_d_shuf = []; orient_diff_shuf = []; avg_corr_shuf = [];
+% cent_d_shuf = []; orient_diff_shuf = []; avg_corr_shuf = [];
+num_neurons = length(valid_neurons);
+cent_d_shuf = nan(num_neurons, num_shuffles);
+orient_diff_shuf = nan(num_neurons, num_shuffles);
+avg_corr_shuf = nan(num_neurons, num_shuffles);
 if num_shuffles > 0
     disp(['Shuffling ' num2str(num_shuffles) ' time(s)...'])
     pp = ProgressBar(num_shuffles);
-    for j = 1:num_shuffles
+    ROI_reg = {ROI_base(valid_neurons), mapped_ROIs(valid_neurons)};
+    parfor j = 1:num_shuffles
         [~, cent_d_temp, ~, ~, ~, orient_diff_temp, ~] = ...
-            dist_bw_reg_sessions ({ROI_base(valid_neurons), mapped_ROIs(valid_neurons)},...
-            'shuffle', true, 'suppress_bar', true);
-        cent_d_shuf = [cent_d_shuf; cent_d_temp];
-        orient_diff_shuf = [orient_diff_shuf; orient_diff_temp];
+            dist_bw_reg_sessions (ROI_reg,...
+            'shuffle', true, 'suppress_bar', true, 'orient_only', orient_only);
+%         cent_d_shuf = [cent_d_shuf; cent_d_temp];
+%         orient_diff_shuf = [orient_diff_shuf; orient_diff_temp];
+        cent_d_shuf(:,j) = cent_d_temp;
+        orient_diff_shuf(:,j) = orient_diff_temp;
         
-        pp.progress;
+        pp.progress; %#ok<*PFBNS>
         
     end
     pp.stop;
 end
-
 
 reg_stats.shuffle.cent_d = cent_d_shuf;
 reg_stats.shuffle.orient_diff = orient_diff_shuf;
@@ -146,10 +165,14 @@ reg_stats.shuffle.avg_corr = avg_corr_shuf;
 
 rot_angle_range = 0; % Rotation angle - suggest keeping at zero
 
-reg_stats.shift.cent_d = [];
-reg_stats.shift.orient_diff = [];
+reg_stats.shift.cent_d = cell(1,num_shifts);
+reg_stats.shift.cent_d_cat = [];
+reg_stats.shift.orient_diff = cell(1,num_shifts);
+reg_stats.shift.orient_diff_cat = [];
 reg_stats.shift.avg_corr = [];
 reg_stats.shift.cent_angle = [];
+reg_stats.shift.shift_dist = shift_dist;
+reg_stats.shift.num_shifts = num_shifts;
 if num_shifts > 0
     disp('Calculating intentionally shifted registration metrics (4-pixel offset)')
     pp = ProgressBar(num_shifts);
@@ -183,8 +206,10 @@ if num_shifts > 0
             'avg_corr', {ROIavg_base(valid_neurons), mapped_ROIavg(valid_neurons)},...
             'suppress_bar', true);
         reg_stats.shift.avg_corr = [reg_stats.shift.avg_corr; temp];
-        reg_stats.shift.orient_diff = [reg_stats.shift.orient_diff; temp2];
-        reg_stats.shift.cent_d = [reg_stats.shift.cent_d; temp3];
+        reg_stats.shift.orient_diff_cat = [reg_stats.shift.orient_diff_cat; temp2];
+        reg_stats.shift.orient_diff{j} = temp2;
+        reg_stats.shift.cent_d{j} = temp3;
+        reg_stats.shift.cent_d_cat = [reg_stats.shift.cent_d_cat; temp3];
         reg_stats.shift.cent_angle = [reg_stats.shift.cent_angle; temp4];
         pp.progress;
         
