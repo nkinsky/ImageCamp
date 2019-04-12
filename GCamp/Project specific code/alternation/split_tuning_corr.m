@@ -4,7 +4,7 @@ function [deltacurve_corr, PFcorr, deltacurve_corr_shuf, PFcorr_shuf, ...
 %     sigsplit_ind] = split_tuning_corr(session1, session2, varargin)
 %   Gets correlations between splitter tuning curves (specifically, the
 %   difference between their L and R tuning curves), as well as the
-%   correlations between ALL placefields between the same neurons in
+%   correlations between ALL placefields for the same neurons in
 %   session1 and session2.
 %
 %   INPUTS: session1/session2: session structure for each session

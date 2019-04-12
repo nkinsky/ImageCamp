@@ -326,23 +326,3 @@ make_plot_pretty(gca);
 % hold on; histogram(num_trans(pval < 0.01),0:5:185,'Normalization','probability')
 
 printNK('Example Event Rate Comparison Between Splitters and Arm PCs','alt')
-%% PF versus splitter tuning fidelity across days
-[PFcorr_by_day, PFcorr_by_day_split, unique_lags] = ...
-    splitcorr_v_time(G48_alt, 'free_only');
-
-%%
-figure;
-psign = nan(1,8);
-for j = 2:8 % day + 1
-    ha = subplot(2,4,j);
-    x_use = [PFcorr_by_day_split{j}, PFcorr_by_day{j}];
-    match_bool = all(~isnan(x_use),2); % Get only valid data points.
-    x_use = x_use(match_bool,:);
-    groups = ones(size(x_use)).*[1 2];
-    paired_ind = repmat((1:sum(match_bool))',1,2);
-    scatterBox(x_use(:), groups(:), 'xLabels', {'Splitters Only', 'All Stem Neurons'},...
-        'yLabel', '\rho_{PF,mean}','paired_ind', paired_ind, 'h', ha);
-    title([num2str(j-1) ' Day Lag'])
-    psign(j) = signtest(x_use(:,1), x_use(:,2), 'tail', 'right');
-    
-end

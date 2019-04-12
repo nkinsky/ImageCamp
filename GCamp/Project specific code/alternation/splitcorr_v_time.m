@@ -1,25 +1,45 @@
-function [PFcorr_by_day, PFcorr_by_day_split, unique_lags] = ...
-    splitcorr_v_time(sessions, comp_type, pval_thresh, ntrans_thresh)
-% splitcorr_v_time(sessions, forced_only)
+function [PFcorr_by_day_split, PFcorr_by_day_spc, PFcorr_by_day_apc, ...
+    PFcorr_by_day_snpc, PFcorr_by_day_stem_nonsplit, unique_lags] = ...
+    splitcorr_v_time(sessions, varargin)
+% [PFcorr_by_day_split, PFcorr_by_day_spc, PFcorr_by_day_apc, ...
+%     PFcorr_by_day_snpc, PFcorr_by_day_stem_nonsplit, unique_lags] = ...
+%     splitcorr_v_time(sessions, varargin)
 %  Plots correlations between sessions for spliter tuning curves and place
 %  field TMaps. Must include ALL sessions for a given animal as an input
-%  (e.g. G30_alt).
+%  (e.g. G30_alt). Use comp_type parameter to designate what types of
+%  sessions you want to include. Clunky but necessary to make sure we only
+%  include session-pairs with good registrations by eye).
 %
+%   INPUTS:
+%   sessions: session structures
+%
+%   PARAMETERS
 %   comp_type:  types of session-pairs to consider: 
 %       'forced_only', 'free_only', 'all'
+%
+%   pval_thresh, ntrans_thresh, sigthresh: max pvalue to be considered a place
+%   cell (0.05 default), min #trans to be considered in analysis at all 
+%   (5 default), min #bins that must have significant splitting to be 
+%   considered a splitter (3 default).
+%
+%   debug: enter debugging mode (false)
+%   
 
-sigthresh = 3; % #bins deltacurve must be above shuffle to be a splitter
-if nargin < 4
-    ntrans_thresh = 5;
-    if nargin < 3
-        pval_thresh = 0.05;
-        if nargin < 2
-            comp_type = 'all';
-        end
-    end
-end
+ip = inputParser;
+ip.addRequired('sessions', @isstruct);
+ip.addParameter('comp_type', 'all', @ischar);
+ip.addParameter('pval_thresh', 0.05, @(a) a > 0 && a <= 1);
+ip.addParameter('ntrans_thresh', 5, @(a) a >= 0 && round(a) == a);
+ip.addParameter('sigthresh', 3, @(a) a >= 0 && round(a) == a);
+ip.addParameter('debug', false, @islogical);
+ip.parse(sessions, varargin{:});
+comp_type = ip.Results.comp_type;
+pval_thresh = ip.Results.pval_thresh;
+ntrans_thresh = ip.Results.ntrans_thresh;
+sigthresh = ip.Results.sigthresh;
+debug = ip.Results.debug; 
 
-%%% NRK last thing to do is match event-rate between sessions.
+
 %% Get day lag between all sessions
 tdiff_mat = make_timediff_mat(sessions);
 % ID sessions that are exactly day_lag apart (or <= if 'le' specified)
@@ -38,6 +58,9 @@ num_sessions = length(sessions);
 PFcorrmat = nan(num_sessions);
 PFcorrmat_split = nan(num_sessions);
 PFcorrmat_apc = nan(num_sessions);
+PFcorrmat_spc = nan(num_sessions);
+PFcorrmat_snpc = nan(num_sessions);
+PFcorrmat_stem_nonsplit = nan(num_sessions);
 curvecorrmat = nan(num_sessions);
 curvecorrmat_split = nan(num_sessions);
 PF_CI = nan(num_sessions, num_sessions, 3);
@@ -51,18 +74,29 @@ for j = 1:(num_sessions-1)
         [deltacurve_corr, PFcorr, deltacurve_corr_shuf, PFcorr_shuf, split_ind] = ...
             split_tuning_corr(session1, session2, 'suppress_output', true);
         
-        % reconstruct boolean of significant splitters
-        split_bool = false(size(PFcorr));
-        split_bool(split_ind) = true;
         
-        % Get Arm PCs
-        cats = alt_parse_cell_category(session1, pval_thresh, ntrans_thresh,...
-            sigthresh, 'Placefields_cm1.mat');
-        armpc_bool = cats == 2;
+        % Enter debugging for free sessions only here
+        [~, ~, free_bool_check] = alt_id_sesh_type(session1);
+        if debug && free_bool_check
+            disp('debugging in splitcorr_v_time')
+            keyboard
+        end    
+        
+        % Identify different cell categories in booleans
+        [cats, cat_nums, cat_names] = alt_parse_cell_category(session1, ...
+            pval_thresh, ntrans_thresh, sigthresh, 'Placefields_cm1.mat');
+        armpc_bool = cats == cat_nums(strcmpi(cat_names, 'arm pcs'));
+        stempc_bool = cats == cat_nums(strcmpi(cat_names, 'stem pcs'));
+        stemnpc_bool = cats == cat_nums(strcmpi(cat_names, 'stem npcs'));
+        split_bool = cats == cat_nums(strcmpi(cat_names, 'splitters'));
         [PFcorrmat(j,k), PF_CI(j,k,:)] = get_mean_and_CI(PFcorr, PFcorr_shuf);
-        % Code here to grab armPFcorrs vs splitPFcorrs
+        
+        % grab PFcorrs for different cell categories
         PFcorrmat_split(j,k) = nanmean(PFcorr(split_bool));
+        PFcorrmat_stem_nonsplit(j,k) = nanmean(PFcorr(stempc_bool | stemnpc_bool));
         PFcorrmat_apc(j,k) = nanmean(PFcorr(armpc_bool));
+        PFcorrmat_spc(j,k) = nanmean(PFcorr(stempc_bool));
+        PFcorrmat_snpc(j,k) = nanmean(PFcorr(stemnpc_bool));
         [curvecorrmat(j,k), dcurve_CI(j,k,:)] = get_mean_and_CI(deltacurve_corr,...
             deltacurve_corr_shuf);
         if ~isempty(deltacurve_corr)
@@ -103,6 +137,10 @@ if ismember(comp_type, {'all', 'forced_only', 'free_only', 'no_loop', ...
     % grab only appropriate session comparisons
     PFcorrmat = PFcorrmat(good_bool, good_bool);
     PFcorrmat_split = PFcorrmat_split(good_bool, good_bool);
+    PFcorrmat_apc = PFcorrmat_apc(good_bool, good_bool);
+    PFcorrmat_spc = PFcorrmat_spc(good_bool, good_bool);
+    PFcorrmat_snpc = PFcorrmat_snpc(good_bool, good_bool);
+    PFcorrmat_stem_nonsplit = PFcorrmat_stem_nonsplit(good_bool, good_bool);
     PF_CI = PF_CI(good_bool, good_bool, :);
     curvecorrmat = curvecorrmat(good_bool, good_bool);
     curvecorrmat_split = curvecorrmat_split(good_bool, good_bool);
@@ -137,6 +175,10 @@ elseif ismember(comp_type, {'forced_v_free', 'forced_v_loop', 'free_v_not', ...
     % grab only appropriate session comparisons
     PFcorrmat = PFcorrmat(good_bool);
     PFcorrmat_split = PFcorrmat_split(good_bool);
+    PFcorrmat_apc = PFcorrmat_apc(good_bool);
+    PFcorrmat_spc = PFcorrmat_spc(good_bool);
+    PFcorrmat_snpc = PFcorrmat_snpc(good_bool);
+    PFcorrmat_stem_nonsplit = PFcorrmat_stem_nonsplit(good_bool);
     PF_CI = reshape(PF_CI(good_bool3),[],3);
     curvecorrmat = curvecorrmat(good_bool);
     curvecorrmat_split = curvecorrmat_split(good_bool);
@@ -164,6 +206,10 @@ dcurve_CIrs = reshape(dcurve_CI,[],3);
 nlags = length(unique_lags);
 PFcorr_by_day = cell(nlags,1);
 PFcorr_by_day_split = cell(nlags,1);
+PFcorr_by_day_apc = cell(nlags,1);
+PFcorr_by_day_spc = cell(nlags,1);
+PFcorr_by_day_snpc = cell(nlags,1);
+PFcorr_by_day_stem_nonsplit = cell(nlags,1); 
 PFCI_by_day = nan(nlags,3);
 dcorr_by_day = cell(nlags,1);
 dcorr_by_day_split = cell(nlags,1);
@@ -175,6 +221,10 @@ for j = 1:nlags
     lag_bool = tdiff_mat(:) == unique_lags(j);
     PFcorr_by_day{j} = PFcorrmat(lag_bool);
     PFcorr_by_day_split{j} = PFcorrmat_split(lag_bool);
+    PFcorr_by_day_apc{j} = PFcorrmat_apc(lag_bool);
+    PFcorr_by_day_spc{j} = PFcorrmat_spc(lag_bool);
+    PFcorr_by_day_snpc{j} = PFcorrmat_snpc(lag_bool);
+    PFcorr_by_day_stem_nonsplit{j} = PFcorrmat_stem_nonsplit(lag_bool);
     dcorr_by_day{j} = curvecorrmat(lag_bool);
     dcorr_by_day_split{j} = curvecorrmat_split(lag_bool);
     PFCI_by_day(j,:) = nanmean(PF_CIrs(lag_bool,:),1);
