@@ -6,6 +6,9 @@ function [] = replace_bad_frames(infile,outfile,bad_frames,replace_frames)
 % indices that matches the length of bad_frames.  If it is just one frame,
 % that frame will replace all the bad frames.
 %
+% For the future: automatically interpolate if fewer than a few frames and
+% automatically replace with the previous good frame if super long.
+%
 % Example to fix bad frames in a tiff file
 %
 % % Load file with bad frames
@@ -62,6 +65,7 @@ if length(bad_frames) ~= length(replace_frames)
     replace_frames(1:length(bad_frames)) = replace_frames;
 end
 
+tic
 % Loop through and replace frames!
 switch filetype
     case 'h5'
@@ -88,7 +92,7 @@ switch filetype
         %%% NRK - need to loop through and find chunks of bad frames
         %%% together. Write chunk of good frames, then write chunk of bad
         %%% frames, then write good, etc. 
-        bad_bool = false(1,100);
+        bad_bool = false(1,NumFrames);
         bad_bool(bad_frames) = true;
         good_epochs = NP_FindSupraThresholdEpochs(~bad_bool,eps,false);
         bad_epochs = NP_FindSupraThresholdEpochs(bad_bool,eps, false);
@@ -102,7 +106,8 @@ switch filetype
         rowg = 1;
         rowb = 1;
         bf_curr_ind = 1;
-        
+        n = 1;
+        hw = waitbar(0, 'Fixing movie...');
         while rowg <= ngood || rowb <= nbad
             
             % Need to error check all of the code below
@@ -112,6 +117,8 @@ switch filetype
                 write_tstack(outfile, frames_write);
                 curr_epoch = 'bad';
                 rowg = rowg + 1;
+                waitbar(n/(ngood + nbad), hw);
+                n = n + 1;
             elseif strcmpi(curr_epoch, 'bad')
                 len_epoch = diff(bad_epochs(rowb,:))+1;
                 rep_frame_nums = replace_frames(bf_curr_ind:...
@@ -120,10 +127,14 @@ switch filetype
                 write_tstack(outfile, frames_write);
                 curr_epoch = 'good';
                 rowb = rowb + 1;
-                bf_curr_ind = bf_curr_ind + len_epoch ;
-            end
-               
+                bf_curr_ind = bf_curr_ind + len_epoch;
+                waitbar(n/(ngood + nbad), hw);
+                n = n + 1;
+            end  
         end
+        % Now write the last good epoch!
+        
+        close(hw)
 end
 
 toc
