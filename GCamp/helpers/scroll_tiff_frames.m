@@ -3,6 +3,11 @@ function [] = scroll_tiff_frames(tstack_in, start_frame)
 %
 % Lets you scroll through frames in a tiffstack (read in by TIFFstack)
 % start frame indicates where to start. Must pre-load tstack_in
+
+if nargin < 2
+    start_frame = 1;
+end
+
 hf = figure;
 set(hf,'Position', [440 280 610 500]);
 nrange = [1, size(tstack_in,3)];
