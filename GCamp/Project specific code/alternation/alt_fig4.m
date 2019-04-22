@@ -326,3 +326,10 @@ make_plot_pretty(gca);
 % hold on; histogram(num_trans(pval < 0.01),0:5:185,'Normalization','probability')
 
 printNK('Example Event Rate Comparison Between Splitters and Arm PCs','alt')
+
+%% Last sub-figure: Re-activation versus dmax
+day_lag = 7;
+comp_type = 'le';
+
+alt_split_v_recur_batch(day_lag, comp_type, alt_all_cell);
+set(gcf,'name', 'All Mice')

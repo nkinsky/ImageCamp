@@ -1,5 +1,7 @@
-function [pco_v_rely, pstaybec_v_rely, pco_v_delta, pstaybec_v_delta, ...
-    rely_centers, delta_centers, rely_bin_bool, delta_bin_bool] = ...
+function [pco_v_rely, pstaybec_v_rely, pco_v_dmax, pstaybec_v_dmax, ...
+    pco_v_dnorm, pstaybec_v_dnorm, pco_v_dint, pstaybec_v_dint, ...
+    rely_centers, dmax_centers, rely_bin_bool, dmax_bin_bool,...
+    dnorm_bin_bool, dint_bin_bool] = ...
     plot_split_v_recur( sesh1, sesh2, varargin)
 % [pco_v_rely, pstay_v_rely, pco_v_delta, pstay_v_delta, ...
 %     rely_centers, delta_centers, h, rely_bin_bool, delta_bin_bool ] = ...
@@ -27,6 +29,7 @@ ip.addParameter('delta_edges', 0:0.05:1, @isnumeric);
 ip.addParameter('sigthresh', 3, @(a) a > 0 && (round(a) == a));
 % only include bins with more than this # of neurons
 ip.addParameter('bin_num_thresh', 5, @(a) a > 0 && (round(a) == a));
+ip.addParameter('PF_filename', 'Placefields_cm1.mat', @ischar);
 ip.parse(sesh1, sesh2, varargin{:});
 h = ip.Results.h;
 plot_flag = ip.Results.plot_flag;
@@ -34,6 +37,7 @@ rely_edges = ip.Results.rely_edges;
 delta_edges = ip.Results.delta_edges;
 sigthresh = ip.Results.sigthresh;
 bin_num_thresh = ip.Results.bin_num_thresh; 
+PF_filename = ip.Results.PF_filename;
 
 if isempty(h) && plot_flag
     h = figure;
@@ -41,17 +45,18 @@ if isempty(h) && plot_flag
 end
 
 rely_centers = rely_edges(1:end-1) + mean(diff(rely_edges))/2;
-delta_centers = delta_edges(1:end-1) + mean(diff(delta_edges))/2;
+dmax_centers = delta_edges(1:end-1) + mean(diff(delta_edges))/2;
 
 sesh1 = complete_MD(sesh1); sesh2 = complete_MD(sesh2);
 
 neuron_map = neuron_map_simple(sesh1, sesh2, 'suppress_output', true);
 %% 1) Load in deltamax and (1-p) for each splitter in session 1
-[ rely_val, delta_max] = parse_splitters(sesh1.Location);
+[ rely_val, delta_max, ~, ~, dmax_norm, ~, dint_norm, curve_corr] = ...
+    parse_splitters(sesh1.Location);
 
 %% 2) Get "stability" of splitters from session 1 to session 2
 [categories, cat_nums, ~] = arrayfun(@(a) alt_parse_cell_category(a, ...
-    0.05, 5, sigthresh,'Placefields.mat'), cat(1,sesh1,sesh2), ...
+    0.05, 5, sigthresh, PF_filename), cat(1,sesh1,sesh2), ...
     'UniformOutput', false);
 [~, ~, ~, coactive_bool, category2] = ...
     get_cat_stability(categories, neuron_map, cat_nums{1});
@@ -72,15 +77,29 @@ rely_bin_bool = n_rely >= bin_num_thresh; % only include bins with min # neurons
 
 % Bin by delta_max value, get coactivation and stay probabilities for
 % each bin.
-[n_delta, ~, bin] = histcounts(delta_max,delta_edges); 
-pco_v_delta = arrayfun(@(a) sum(coactive_bool(bin == a)),1:length(n_delta))...
-    ./arrayfun(@(a) sum(bin == a),1:length(n_delta));
+[n_dmax, ~, bin] = histcounts(delta_max,delta_edges); 
+pco_v_dmax = arrayfun(@(a) sum(coactive_bool(bin == a)),1:length(n_dmax))...
+    ./arrayfun(@(a) sum(bin == a),1:length(n_dmax));
 % pstay_v_delta = arrayfun(@(a) sum(stay_bool(bin == a)),1:length(n_delta))...
 %     ./arrayfun(@(a) sum(bin == a),1:length(n_delta));
-pstaybec_v_delta = arrayfun(@(a) sum(become_split_bool(bin == a)),1:length(n_delta))...
-    ./arrayfun(@(a) sum(bin == a),1:length(n_delta));
-delta_bin_bool = n_delta >= bin_num_thresh; % only include bins with min # neurons
+pstaybec_v_dmax = arrayfun(@(a) sum(become_split_bool(bin == a)),1:length(n_dmax))...
+    ./arrayfun(@(a) sum(bin == a),1:length(n_dmax));
+dmax_bin_bool = n_dmax >= bin_num_thresh; % only include bins with min # neurons
 
+% Now do for dmax_norm
+[n_dnorm, ~, bin] = histcounts(dnorm,delta_edges); 
+pco_v_dnorm = arrayfun(@(a) sum(coactive_bool(bin == a)),1:length(n_dnorm))...
+    ./arrayfun(@(a) sum(bin == a),1:length(n_dnorm));
+% pstay_v_delta = arrayfun(@(a) sum(stay_bool(bin == a)),1:length(n_delta))...
+%     ./arrayfun(@(a) sum(bin == a),1:length(n_delta));
+pstaybec_v_dnorm = arrayfun(@(a) sum(become_split_bool(bin == a)),1:length(n_dnorm))...
+    ./arrayfun(@(a) sum(bin == a),1:length(n_dnorm));
+dnorm_bin_bool = n_dnorm >= bin_num_thresh; % only include bins with min # neurons
+
+% Now do for dmax_int...trickier - what are my values?
+pco_v_dint = [];
+pstaybec_v_dint = [];
+dint_bin_bool = [];
 
 %% 4) Plot everything
 
@@ -96,12 +115,12 @@ if plot_flag
     ylabel('Stay/Become splitter prob.');
     
     subplot(2,2,3)
-    scatter(delta_centers(delta_bin_bool), pco_v_delta(delta_bin_bool))
+    scatter(dmax_centers(dmax_bin_bool), pco_v_dmax(dmax_bin_bool))
     xlabel('Stem splitter \Delta_{max}');
     ylabel('Reactivation prob');
     
     subplot(2,2,4)
-    scatter(delta_centers(delta_bin_bool), pstaybec_v_delta(delta_bin_bool))
+    scatter(dmax_centers(dmax_bin_bool), pstaybec_v_dmax(dmax_bin_bool))
     xlabel('Stem splitter \Delta_{max}');
     ylabel('Stay/Become splitter prob.');
 end
