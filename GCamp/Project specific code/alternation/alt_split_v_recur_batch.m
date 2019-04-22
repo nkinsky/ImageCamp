@@ -138,16 +138,16 @@ end
 
 %% Plotting sub-function
 function [] = plot_fun(bin_centers, split_metric_by_bin, xtext, ytext)
+jitter = 0.025;
+jitter_mat = randn(size(bin_centers))*jitter;
 circleSize = 20;
-scatter(rely_centers_all(rely_bin_bool_all), pco_v_rely_all(rely_bin_bool_all),...
-    circleSize);
-xlabel('Stem splitter reliability (1-p)');
-ylabel('Reactivation prob');
-[r_co_rely, pval_co_rely] = corr(rely_centers_all(rely_bin_bool_all),...
-    pco_v_rely_all(rely_bin_bool_all),'type','Spearman');
+scatter(bin_centers, split_metric_by_bin, circleSize);
+xlabel(xtext);
+ylabel(ytext);
+[r, p] = corr(bin_centers, split_metric_by_bin, 'type','Spearman');
 xlims = get(gca,'XLim'); ylims = get(gca,'YLim');
-text(xlims(1)+0.025, ylims(2)-0.1, ['r = ' num2str(r_co_rely,'%0.2f')])
-text(xlims(1)+0.025, ylims(2)-0.15, ['p = ' num2str(pval_co_rely,'%0.2d')])
+text(xlims(1)+0.025, ylims(2)-0.1, ['r_{sp} = ' num2str(r,'%0.2f')])
+text(xlims(1)+0.025, ylims(2)-0.15, ['p_{sp} = ' num2str(p,'%0.2d')])
 
 
 
