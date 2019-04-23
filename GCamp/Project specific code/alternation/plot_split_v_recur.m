@@ -30,6 +30,8 @@ ip.addParameter('sigthresh', 3, @(a) a > 0 && (round(a) == a));
 % only include bins with more than this # of neurons
 ip.addParameter('bin_num_thresh', 5, @(a) a > 0 && (round(a) == a));
 ip.addParameter('PF_filename', 'Placefields_cm1.mat', @ischar);
+% Neuron must be active on this many trials to be considered
+ip.addParameter('nthresh', 5, @(a) isnumeric(a) && a > 0 && (round(a) == a));
 ip.parse(sesh1, sesh2, varargin{:});
 h = ip.Results.h;
 plot_flag = ip.Results.plot_flag;
@@ -38,6 +40,7 @@ delta_edges = ip.Results.delta_edges;
 sigthresh = ip.Results.sigthresh;
 bin_num_thresh = ip.Results.bin_num_thresh; 
 PF_filename = ip.Results.PF_filename;
+nthresh = ip.Results.nthresh;
 
 if isempty(h) && plot_flag
     h = figure;
@@ -51,8 +54,12 @@ sesh1 = complete_MD(sesh1); sesh2 = complete_MD(sesh2);
 
 neuron_map = neuron_map_simple(sesh1, sesh2, 'suppress_output', true);
 %% 1) Load in deltamax and (1-p) for each splitter in session 1
-[ rely_val, delta_max, ~, ~, dmax_norm, ~, dint_norm, curve_corr] = ...
+[ rely_val, delta_max, ~, ~, dmax_norm, nactive_stem, ~, ~] = ...
     parse_splitters(sesh1.Location);
+active_bool = nactive_stem > nthresh;
+rely_val = rely_val(active_bool);
+delta_max = delta_max(active_bool);
+dmax_norm = dmax_norm(active_bool);
 
 %% 2) Get "stability" of splitters from session 1 to session 2
 [categories, cat_nums, ~] = arrayfun(@(a) alt_parse_cell_category(a, ...
@@ -62,6 +69,7 @@ neuron_map = neuron_map_simple(sesh1, sesh2, 'suppress_output', true);
     get_cat_stability(categories, neuron_map, cat_nums{1});
 % Get all cells that either stay or become splitters
 become_split_bool = category2 == 1;
+
 %% 3) Bin splittiness and get recurrence probability for each bin
 
 % Bin by reliability value, get coactivation and stay probabilities for
@@ -87,7 +95,7 @@ pstaybec_v_dmax = arrayfun(@(a) sum(become_split_bool(bin == a)),1:length(n_dmax
 dmax_bin_bool = n_dmax >= bin_num_thresh; % only include bins with min # neurons
 
 % Now do for dmax_norm
-[n_dnorm, ~, bin] = histcounts(dnorm,delta_edges); 
+[n_dnorm, ~, bin] = histcounts(dmax_norm,delta_edges); 
 pco_v_dnorm = arrayfun(@(a) sum(coactive_bool(bin == a)),1:length(n_dnorm))...
     ./arrayfun(@(a) sum(bin == a),1:length(n_dnorm));
 % pstay_v_delta = arrayfun(@(a) sum(stay_bool(bin == a)),1:length(n_delta))...
