@@ -3,8 +3,19 @@ function [h] = alt_split_v_recur_batch(day_lag, comp_type, mice_sesh )
 %   Plot various metrics of cell stability vs various metrics of
 %   "splittiness" for all cells 
 
-rely_edges = 0:0.025:1; 
-delta_edges = 0:0.05:1;
+ntrial_thresh = 1; % # trials a neuron must be active to be included
+sigthresh = 3; % # sig. bins to be considered a splitter
+
+% exclude histogram bins with fewer than this many neurons in them,
+% designed to not calculate probabilities for bins with only a few neurons
+% in them which could give us very inaccurate numbers (e.g. if there are 20
+% neurons with a delta_max value between 0.5 and 0.55, but only 1 between
+% 0.55 and 0.6, don't calculate probabilites for the latter - it is either
+% 0 or 1! Other alternative is to use larger bins!
+bin_num_thresh = 5; % Ensures min. resolution of 0.2 on calculated probabilities
+
+rely_edges = 0.6:0.05:1; % 0:0.025:1;  
+delta_edges = 0:0.2:1; % 0:0.05:1; 
 
 nbins_rely = length(rely_edges) - 1;
 nbins_delta = length(delta_edges) - 1;
@@ -70,7 +81,8 @@ for j = 1:num_mice
             dmax_bin_bool_all(j,k,:), dnorm_bin_bool_all(j,k,:)] = ...
             plot_split_v_recur(sesh_temp(seshs_use(k,1)), ...
             sesh_temp(seshs_use(k,2)),'plot_flag', false, ...
-            'rely_edges', rely_edges, 'delta_edges', delta_edges);
+            'rely_edges', rely_edges, 'delta_edges', delta_edges,...
+            'sigthresh', 3, 'bin_num_thresh', 5, 'nthresh', ntrial_thresh);
         waitbar(n/nsesh, hw);
         n = n + 1;
     end
@@ -104,14 +116,17 @@ title(['Sessions ' comp_str ' ' num2str(day_lag) ' day(s) apart'])
 subplot(2,3,4)
 plot_fun(rely_centers_all(rely_bin_bool_all), pstaybec_v_rely_all(rely_bin_bool_all),...
     'Stem splitter reliability (1-p)', 'Stay/Become splitter prob.', jit_r)
+title(['ntrial\_thresh = ' num2str(ntrial_thresh)])
 
 subplot(2,3,2)
 plot_fun(delta_centers_all(dmax_bin_bool_all), pco_v_dmax_all(dmax_bin_bool_all),...
     'Stem splitter \Deltamax', 'Reactivation prob', jit_d)
+title(['bin\_num\_thresh = ' num2str(bin_num_thresh)])
 
 subplot(2,3,5)
 plot_fun(delta_centers_all(dmax_bin_bool_all), pstaybec_v_dmax_all(dmax_bin_bool_all),...
     'Stem splitter \Deltamax', 'Stay/Become splitter prob.', jit_d)
+title(['sigthresh = ' num2str(sigthresh)])
 
 subplot(2,3,3)
 plot_fun(delta_centers_all(dnorm_bin_bool_all), pco_v_dnorm_all(dnorm_bin_bool_all),...
