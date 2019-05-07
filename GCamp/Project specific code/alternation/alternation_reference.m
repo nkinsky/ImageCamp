@@ -224,8 +224,14 @@ alt_all_free_boolc{4} = G48_free_bool;
 % sp cell splits out G45 and G48 sessions into halves corresponding to when
 % I get good registration between sessions
 alt_all_cell_sp{1} = G30_alt; alt_all_cell_sp{2} = G31_alt; %Parsed out by mouse
-alt_all_cell_sp{3} = G45_alt(1:15); alt_all_cell_sp{4} = G45_alt(16:end); 
-alt_all_cell_sp{5} = G48_alt(1:16); alt_all_cell_sp{6} = G48_alt(17:end);
+alt_all_cell_sp{3} = G45_alt(1:14); 
+% Exclude session 15 - tons of new cells seem to pop up for there...
+% alt_all_cell_sp{3} = G45_alt(1:15); 
+alt_all_cell_sp{4} = G45_alt(16:end); 
+% Exclude session 16 - tons of new cells seem to pop up for there...
+alt_all_cell_sp{5} = G48_alt(1:15); 
+% alt_all_cell_sp{5} = G48_alt(1:16); 
+alt_all_cell_sp{6} = G48_alt(17:end);
 
 %% Set up learning stage data - sessions are when each stage ends! Based on
 % normalizing each mouse's smoothed learning curve (4 session window) and

@@ -269,7 +269,7 @@ end
 
 % Combined mice - keep all sessions for difference in phenotype onsets
 plot_phenotype_onset(cat(1,pc_onset_bymouse{:}), cat(1,split_onset_bymouse{:}),...
-    'All Mice/Sessions - Offset Diff Only!')
+    'All Mice/Sessions - Onset Diff Only!')
 printNK('Split v Onset Diffs for All Mice','alt');
 % Combined mice - exclude 2nd half of G45 and G48 since you don't have a
 % legit reference point!
@@ -277,9 +277,6 @@ plot_phenotype_onset(cat(1,pc_onset_bymouse{[1 2 3 5]}), ...
     cat(1,split_onset_bymouse{[1 2 3 5]}),...
     'All Mice/Sessions - Good for absolute onset day plots!')
 printNK('Split and PC absolute onset days All Mice', 'alt');
-
-
-
 
 %% Do above but by learning stage
 plot_phenotype_onset(cat(1,pc_onsetstage_bymouse{:}), ...

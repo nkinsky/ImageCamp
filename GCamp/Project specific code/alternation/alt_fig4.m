@@ -72,7 +72,7 @@ printNK(['G45 Split v PC Prob present at 7 day lag matchER=' ...
 % sessions that were longer than a certain amount of time...yes!!!
 max_day_lag = 21;
 sessions = alt_all_cell; % Change this to make plots for each mouse...
-matchER = true; % March event-rate in non-splitters to splitters
+matchER = false; % March event-rate in non-splitters to splitters
 trial_type = 'free_only'; % 'no_loop';
 
 nmice = length(sessions);
@@ -136,6 +136,7 @@ for j = 1:max_day_lag
 end
 
 %% Plot it!
+other_type = 'Arm NPCs'; % specify neuron phenotype to plot versus splitters
 
 % Get zero and 1 points due to low # cells starting out as splitter/armPC 
 % phenotype in G30 lag 5 and G48 lag 8,9,10,and 13 analyses. Recommend
@@ -143,18 +144,21 @@ end
 % one phenotype at a time!
 alpha = 0.05; % significance level
 elim_outliers = false; 
-ntrial_thresh = 20; % exclude any session comparisons with less than this many trials in 1st session
+ntrial_stem_thresh = 20; % exclude any session comparisons with less than this many trials in 1st session
 figure; set(gcf,'Position',[2030 240 890 740])
 h = subplot(3,1,1:2);
 
+split_ind = find(strcmpi('splitters', cat_names));
+other_ind = find(strcmpi(other_type, cat_names));
+
 if ~elim_outliers
-    outlier_bool = false(size(coactive_prop_all(:,1)));
+    outlier_bool = false(size(coactive_prop_all(:,split_ind)));
 elseif elim_outliers
-    outlier_bool = coactive_prop_all(:,1) == 0 | coactive_prop_all(:,1) == 1 ...
-        | coactive_prop_all(:,3) == 0 | coactive_prop_all(:,3) == 1;
+    outlier_bool = coactive_prop_all(:,split_ind) == 0 | coactive_prop_all(:,split_ind) == 1 ...
+        | coactive_prop_all(:,other_ind) == 0 | coactive_prop_all(:,other_ind) == 1;
 end
 
-ntrial_bool = ntrials1_all >= ntrial_thresh;
+ntrial_bool = ntrials1_all >= ntrial_stem_thresh;
 good_bool = ~outlier_bool & ntrial_bool;
     
 %%% NRK - below is plotting pairs of points where one does not have at
@@ -162,35 +166,35 @@ good_bool = ~outlier_bool & ntrial_bool;
 %%% while they are plotted they are NOT used for stats!
 
 % Plot spliiters
-[~,~, hs_sp] = scatterBox(coactive_prop_all(good_bool,1), ...
+[~,~, hs_sp] = scatterBox(coactive_prop_all(good_bool, split_ind), ...
     grps_all(good_bool,1), 'xLabels', ...
     arrayfun(@num2str, 0:max_day_lag, 'UniformOutput', false), ...
     'yLabel', 'Prob. Co-active', 'h', h, 'plotBox', false, 'transparency', 0.3,...
     'circleColors', [0, 0.7, 0]);
 
 % Plot arm PCs
-[~, ~, hs_apc] = scatterBox(coactive_prop_all(good_bool,3), ...
+[~, ~, hs_other] = scatterBox(coactive_prop_all(good_bool, other_ind), ...
     grps_all(good_bool,1), 'xLabels', ...
     arrayfun(@num2str, 0:max_day_lag, 'UniformOutput', false), ...
     'yLabel', 'Prob. Co-active', 'h', h, 'plotBox', false, ...
     'circleColors', [0.7, 0, 0], 'transparency', 0.3);
 
 % Label stuff
-legend(cat(1,hs_sp,hs_apc), {'Splitters', 'Arm PCs'})
-plot((0:max_day_lag)', stay_mean(:,1),'g-')
-plot((0:max_day_lag)', stay_mean(:,3),'r-')
+legend(cat(1,hs_sp,hs_other), {'Splitters', other_type})
+plot((0:max_day_lag)', stay_mean(:,split_ind),'g-')
+plot((0:max_day_lag)', stay_mean(:,other_ind),'r-')
 xlabel('Lag (days)')
 title(['All Mice, matchER=' num2str(matchER) ' trial\_type=' ...
     mouse_name_title(trial_type)])
 make_plot_pretty(gca)
 
 % Get ranksum and signed-test stats
-prks = arrayfun(@(a) ranksum(coactive_prop_all(a == grps_all(:,1) & good_bool,1), ...
-    coactive_prop_all(a == grps_all(:,1) & good_bool,3)),1:max_day_lag);
-psign = arrayfun(@(a) signtest(coactive_prop_all(a == grps_all(:,1) & good_bool,1), ...
-    coactive_prop_all(a == grps_all(:,1) & good_bool,3),'tail','right'),1:max_day_lag);
-prsign = arrayfun(@(a) signrank(coactive_prop_all(a == grps_all(:,1) & good_bool,1), ...
-    coactive_prop_all(a == grps_all(:,1) & good_bool,3),'tail','right'),1:max_day_lag);
+prks = arrayfun(@(a) ranksum(coactive_prop_all(a == grps_all(:, split_ind) & good_bool, split_ind), ...
+    coactive_prop_all(a == grps_all(:, other_ind) & good_bool, other_ind)),1:max_day_lag);
+psign = arrayfun(@(a) signtest(coactive_prop_all(a == grps_all(:, split_ind) & good_bool, split_ind), ...
+    coactive_prop_all(a == grps_all(:, other_ind) & good_bool, other_ind),'tail','right'),1:max_day_lag);
+prsign = arrayfun(@(a) signrank(coactive_prop_all(a == grps_all(:, split_ind) & good_bool, split_ind), ...
+    coactive_prop_all(a == grps_all(:, other_ind) & good_bool, other_ind),'tail','right'),1:max_day_lag);
 
 % Set-up holm-bonferroni correction
 ngrps = length(unique(grps_all));
@@ -214,11 +218,11 @@ text(0.1, -0.2, num2str(find(prsign < alpha/ngrps)))
 axis off
 
 % Adjust groups of data to offset and see pattern a bit better.
-hs_apc.XData = hs_apc.XData - 0.1;
+hs_other.XData = hs_other.XData - 0.1;
 hs_sp.XData = hs_sp.XData + 0.1;
 
 
-printNK(['Coactivity vs time - All Mice matchER=' num2str(matchER)...
+printNK(['Coactivity vs time split v ' other_type ' - All Mice matchER=' num2str(matchER)...
     ' trial_type=' trial_type 'max_lag=' num2str(max_day_lag)], 'alt')
 
 %% Same as above but for difference between curves
@@ -328,8 +332,118 @@ make_plot_pretty(gca);
 printNK('Example Event Rate Comparison Between Splitters and Arm PCs','alt')
 
 %% Last sub-figure: Re-activation versus dmax
-day_lag = 7;
-comp_type = 'le';
+% day_lag = 7;
+comp_type = 'exact';
+rely_res = 0.05;
+rely_range = [0.6 1];
+delta_res = 0.1;
+delta_range = [0 1];
 
-alt_split_v_recur_batch(day_lag, comp_type, alt_all_cell);
-set(gcf,'name', 'All Mice')
+ntrial_stem_thresh_use = 1:25;
+
+p_res_use = 'superfine';
+switch p_res_use
+    case 'gross'
+        p_range = [0 1];
+        p_res = 0.1;
+    case 'fine'
+        p_range = [0 0.5];
+        p_res = 0.05;
+    case 'superfine'
+        p_range = [0 0.5];
+        p_res = 0.025;
+    case 'superfine2'
+        p_range = [0 0.25];
+        p_res = 0.025;
+end
+
+% splitters_only = true;
+[rdnorm, pdnorm, rdintn, pdintn, rdmax, pdmax] = ...
+    deal(nan(1,length(ntrial_stem_thresh_use)));
+for splitters_only = false
+    if ~splitters_only
+        split_text = '';
+    elseif splitters_only
+        split_text = 'splitters only';
+        rely_range = [0.95 1];
+        rely_res = 0.005;
+    end
+    for day_lag = 7 %[1 7] % [7 11 15]
+        disp(['Running day lag ' num2str(day_lag) ' analysis...'])
+        for j = 1:length(ntrial_stem_thresh_use) %[1 5 10 15] % 1:20
+            ntrial_stem_thresh = ntrial_stem_thresh_use(j);
+            try
+                [h, rdnorm(j), pdnorm(j), rdintn(j), pdintn(j), rdmax(j), pdmax(j)] = ...
+                    alt_split_v_recur_batch(day_lag, comp_type, alt_all_cell, ...
+                    'ntrial_stem_thresh', ntrial_stem_thresh, 'splitters_only', ...
+                    splitters_only, 'rely_res', rely_res, 'rely_range', rely_range,...
+                    'p_range', p_range, 'p_res', p_res, 'delta_res', ...
+                    delta_res, 'delta_range', delta_range);
+                arrayfun(@(a) set(a ,'name', 'All Mice'), h);
+                printNK(['Recur v split fine - All Mice ' split_text ' - ntrial_thresh='...
+                    num2str(ntrial_stem_thresh) ' - daylag=' num2str(day_lag) comp_type], ...
+                    'alt', 'hfig', h(1));
+                printNK(['Recur v split gross - All Mice ' split_text ' - ntrial_thresh='...
+                    num2str(ntrial_stem_thresh) ' - daylag=' num2str(day_lag) comp_type], ...
+                    'alt', 'hfig', h(2));
+                printNK(['Recur v psplit p_res=' p_res_use ' - All Mice ' split_text ' - ntrial_thresh='...
+                    num2str(ntrial_stem_thresh) ' - daylag=' num2str(day_lag) comp_type], ...
+                    'alt', 'hfig', h(3));
+                close(h);
+            catch
+                disp(['error processing day_lag = ' num2str(day_lag) ...
+                    ' & ntrial_thresh = ' num2str(ntrial_stem_thresh)])
+                try close(h); end
+            end
+        end
+    end
+end
+
+% figure; 
+% plot(ntrial_thresh_use, rdnorm, ntrial_thresh_use, rdintn);
+% xlabel('# trial threshold'); ylabel( '\rho_{Pearson}')
+save(fullfile(G30_alt(1).Location,['recur_v_rho_stats_daylag' num2str(day_lag)...
+    '_' comp_type '.mat']), 'rdnorm', 'pdnorm', 'rdintn', 'pdintn',...
+    'ntrial_thresh_use')
+
+% better plots...
+figure; set(gcf,'Position', [2476 40 559 800])
+subplot(2,1,1);
+h1 = plot(ntrial_stem_thresh_use, rdnorm); hold on;
+h2 = plot(ntrial_stem_thresh_use, rdintn);
+legend(cat(1,h1,h2),{'\Deltamax_{norm}', '\Sigma\Deltamax_{norm}'});
+ylabel('\rho_{Spearman}'); xlabel('# trials threshold');
+make_plot_pretty(gca);
+subplot(2,1,2);
+text(0.1, 0.9, ['ntrial\_thresh = ' num2str(ntrial_stem_thresh_use, '%0.2g \t')])
+text(0.1, 0.8, ['\rho_{sp} for \Delta_{norm} = ' num2str(rdnorm, '%0.2g \t')])
+text(0.1, 0.7, ['pval for \Delta_{norm} = ' num2str(pdnorm, '%0.2g \t')])
+text(0.1, 0.6, ['\rho_{sp} for \Sigma\Delta_{norm} = ' num2str(rdintn, '%0.2g \t')])
+text(0.1, 0.5, ['pval for \Sigma\Delta_{norm} = ' num2str(pdintn, '%0.2g \t')])
+axis off
+printNK(['recur_v_rho_plot_daylag' num2str(day_lag) '_' comp_type], 'alt')
+
+% plotyy(ntrial_thresh_use, rdnorm, ntrial_thresh, pdnorm);
+
+%% Same as above but for splitters only
+day_lag = 7;
+comp_type = 'exact';
+rely_res = 0.005;
+rely_range = [0.95 1];
+delta_res = 0.05;
+delta_range = [0 1];
+
+for ntrial_stem_thresh = 1
+    h = alt_split_v_recur_batch(day_lag, comp_type, alt_all_cell, ...
+        'ntrial_thresh', ntrial_stem_thresh, 'splitters_only', true, 'rely_range',...
+        rely_range, 'rely_res', rely_res);
+    arrayfun(@(a) set(a ,'name', 'All Mice'), h);
+    printNK(['Recur v split fine - All Mice splitters only - ntrial_thresh='...
+        num2str(ntrial_stem_thresh)], 'alt', 'hfig', h(1));
+    printNK(['Recur v split gross - All Mice splitters only - ntrial_thresh='...
+        num2str(ntrial_stem_thresh)], 'alt', 'hfig', h(2));
+end
+
+%% Last do the same as above but considering only super-fine levels of reliability
+% value to see if there is a trend in the most splitty neurons - should be
+% pretty similar to the above but doesn't require excluding non-splitters!

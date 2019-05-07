@@ -31,24 +31,24 @@ append = ip.Results.append;
 %%
 switch location
     case 'russek'
-        location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Presentations\Russek Day 2017\Poster';
+        location = 'C:\Users\kinsky\Dropbox\Imaging Project\Presentations\Russek Day 2017\Poster';
     case '2env'
         location = 'J:\2env Figures - do not delete';
 %         location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\2env\Figures';
     case '2env_rot' % 2env rotation analysis figures
-        location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\2env\Figures\Rotation Analysis';
+        location = 'C:\Users\kinsky\Dropbox\Imaging Project\Manuscripts\2env\Figures\Rotation Analysis';
     case 'NO'
-        location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
+        location = 'C:\Users\kinsky\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
     case 'NOlaptop'
         location = 'C:\Users\Nat\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
     case '2env_laptop'
         location = 'C:\Users\Nat\Dropbox\Imaging Project\Manuscripts\2env\Figures';
     case 'alt'
-        location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\Alternation\Figures';
+        location = 'C:\Users\kinsky\Dropbox\Imaging Project\Manuscripts\Alternation\Figures';
     case 'cnmf'
-        location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\MATLAB\CNMF vs T4';
+        location = 'C:\Users\kinsky\Dropbox\Imaging Project\MATLAB\CNMF vs T4';
     case 'eraser'
-        location = 'C:\Users\kinsky.AD\Dropbox\Imaging Project\Manuscripts\Eraser';
+        location = 'C:\Users\kinsky\Dropbox\Imaging Project\Manuscripts\Eraser';
     otherwise
 %         disp('using location as save location')
 end

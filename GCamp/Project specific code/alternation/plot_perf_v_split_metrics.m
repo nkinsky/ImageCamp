@@ -1,24 +1,27 @@
 function [split_metrics, hmain, rhos, pvals] = plot_perf_v_split_metrics(sessions,...
-    plot_flag, cnoise, trial_thresh)
+    plot_flag, cnoise, trial_thresh, nstem_thresh)
 % [split_metrics, hmain]  = plot_perf_v_split_metrics(sessions, plot_flag, ...
 %   cnoise, ntrial_thresh)
 %  Plots animal performance versus "splittiness" metrics.
 
-if nargin < 4
-    % Must have at LEAST this many trials in a session to be considered
-    trial_thresh = 20;
-    % no noise by default
-    if nargin < 3
-        cnoise = false;
-        % Plot by default
-        if nargin < 2
-            plot_flag = true;
+if nargin < 5
+    % Must be active on at least this many trials on the stem to be considered
+    nstem_thresh = 5;
+    if nargin < 4
+        % Must have at LEAST this many trials in a session to be considered
+        trial_thresh = 20;
+        % no noise by default
+        if nargin < 3
+            cnoise = false;
+            % Plot by default
+            if nargin < 2
+                plot_flag = true;
+            end
         end
     end
 end
 
-% Must be active on at least this many trials on the stem to be considered
-nstem_thresh = 5; 
+
 
 
 %% NRK first step = parse into free versus forced sessions

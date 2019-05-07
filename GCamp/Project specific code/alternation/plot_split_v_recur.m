@@ -1,7 +1,8 @@
 function [pco_v_rely, pstaybec_v_rely, pco_v_dmax, pstaybec_v_dmax, ...
     pco_v_dnorm, pstaybec_v_dnorm, pco_v_dint, pstaybec_v_dint, ...
     rely_centers, dmax_centers, rely_bin_bool, dmax_bin_bool,...
-    dnorm_bin_bool, dint_bin_bool] = ...
+    dnorm_bin_bool, dint_bin_bool, pco_v_relym, pstaybec_v_relym, ...
+    relym_bin_bool, rely_mean_centers] = ...
     plot_split_v_recur( sesh1, sesh2, varargin)
 % [pco_v_rely, pstay_v_rely, pco_v_delta, pstay_v_delta, ...
 %     rely_centers, delta_centers, h, rely_bin_bool, delta_bin_bool ] = ...
@@ -23,6 +24,7 @@ ip.addRequired('sesh2',@isstruct);
 ip.addParameter('h', gobjects(0), @ishandle);
 ip.addParameter('plot_flag', true, @islogical);
 ip.addParameter('rely_edges', 0:0.025:1, @isnumeric);
+ip.addParameter('rely_mean_edges', 0:0.025:1, @isnumeric);
 ip.addParameter('delta_edges', 0:0.05:1, @isnumeric);
 % # bins that must be above chance in delta tuning curve to be considered 
 % a splitter
@@ -32,15 +34,21 @@ ip.addParameter('bin_num_thresh', 5, @(a) a > 0 && (round(a) == a));
 ip.addParameter('PF_filename', 'Placefields_cm1.mat', @ischar);
 % Neuron must be active on this many trials to be considered
 ip.addParameter('nthresh', 5, @(a) isnumeric(a) && a > 0 && (round(a) == a));
+% true = consider only splitters! true will give you funky results for
+% staying/becoming a splitter.
+ip.addParameter('splitters_only', false, @islogical); 
+
 ip.parse(sesh1, sesh2, varargin{:});
 h = ip.Results.h;
 plot_flag = ip.Results.plot_flag;
 rely_edges = ip.Results.rely_edges;
+rely_mean_edges = ip.Results.rely_mean_edges;
 delta_edges = ip.Results.delta_edges;
 sigthresh = ip.Results.sigthresh;
 bin_num_thresh = ip.Results.bin_num_thresh; 
 PF_filename = ip.Results.PF_filename;
 nthresh = ip.Results.nthresh;
+splitters_only = ip.Results.splitters_only;
 
 if isempty(h) && plot_flag
     h = figure;
@@ -48,18 +56,16 @@ if isempty(h) && plot_flag
 end
 
 rely_centers = rely_edges(1:end-1) + mean(diff(rely_edges))/2;
+rely_mean_centers = rely_mean_edges(1:end-1) + mean(diff(rely_mean_edges))/2;
 dmax_centers = delta_edges(1:end-1) + mean(diff(delta_edges))/2;
 
 sesh1 = complete_MD(sesh1); sesh2 = complete_MD(sesh2);
 
 neuron_map = neuron_map_simple(sesh1, sesh2, 'suppress_output', true);
 %% 1) Load in deltamax and (1-p) for each splitter in session 1
-[ rely_val, delta_max, ~, ~, dmax_norm, nactive_stem, ~, ~] = ...
-    parse_splitters(sesh1.Location);
-active_bool = nactive_stem > nthresh;
-rely_val = rely_val(active_bool);
-delta_max = delta_max(active_bool);
-dmax_norm = dmax_norm(active_bool);
+[ rely_val, delta_max, sigsplit_bool, ~, dmax_norm, nactive_stem, dint_norm, ...
+    ~, rely_mean] = parse_splitters(sesh1.Location);
+
 
 %% 2) Get "stability" of splitters from session 1 to session 2
 [categories, cat_nums, ~] = arrayfun(@(a) alt_parse_cell_category(a, ...
@@ -69,6 +75,24 @@ dmax_norm = dmax_norm(active_bool);
     get_cat_stability(categories, neuron_map, cat_nums{1});
 % Get all cells that either stay or become splitters
 become_split_bool = category2 == 1;
+
+%% Threshold to only include neurons that are sufficiently active. Also 
+% remove non-splitters if specified
+
+if splitters_only
+   keep_bool = sigsplit_bool;
+elseif ~splitters_only
+    keep_bool = true(size(sigsplit_bool));
+end
+
+active_bool = nactive_stem >= nthresh;
+rely_val = rely_val(active_bool & keep_bool);
+delta_max = delta_max(active_bool & keep_bool);
+dmax_norm = dmax_norm(active_bool & keep_bool);
+dint_norm = dint_norm(active_bool & keep_bool);
+coactive_bool = coactive_bool(active_bool & keep_bool);
+become_split_bool = become_split_bool(active_bool & keep_bool);
+rely_mean = rely_mean(active_bool & keep_bool);
 
 %% 3) Bin splittiness and get recurrence probability for each bin
 
@@ -80,8 +104,18 @@ pco_v_rely = arrayfun(@(a) sum(coactive_bool(bin == a)),1:length(n_rely))...
 % pstay_v_rely = arrayfun(@(a) sum(stay_bool(bin == a)),1:length(n_rely))...
 %     ./arrayfun(@(a) sum(bin == a),1:length(n_rely));
 pstaybec_v_rely = arrayfun(@(a) sum(become_split_bool(bin == a)),1:length(n_rely))...
-    ./arrayfun(@(a) sum(bin == a),1:length(n_rely));
+    ./arrayfun(@(a) sum(bin == a), 1:length(n_rely));
 rely_bin_bool = n_rely >= bin_num_thresh; % only include bins with min # neurons
+
+% Ditto for rely_mean
+[n_relym, ~, bin] = histcounts(rely_mean,rely_mean_edges); 
+pco_v_relym = arrayfun(@(a) sum(coactive_bool(bin == a)),1:length(n_relym))...
+    ./arrayfun(@(a) sum(bin == a),1:length(n_relym));
+% pstay_v_rely = arrayfun(@(a) sum(stay_bool(bin == a)),1:length(n_rely))...
+%     ./arrayfun(@(a) sum(bin == a),1:length(n_rely));
+pstaybec_v_relym = arrayfun(@(a) sum(become_split_bool(bin == a)),1:length(n_relym))...
+    ./arrayfun(@(a) sum(bin == a),1:length(n_relym));
+relym_bin_bool = n_relym >= bin_num_thresh; % only include bins with min # neurons
 
 % Bin by delta_max value, get coactivation and stay probabilities for
 % each bin.
@@ -104,32 +138,35 @@ pstaybec_v_dnorm = arrayfun(@(a) sum(become_split_bool(bin == a)),1:length(n_dno
     ./arrayfun(@(a) sum(bin == a),1:length(n_dnorm));
 dnorm_bin_bool = n_dnorm >= bin_num_thresh; % only include bins with min # neurons
 
-% Now do for dmax_int...trickier - what are my values?
-pco_v_dint = [];
-pstaybec_v_dint = [];
-dint_bin_bool = [];
-
+% Now do for dmax_int_mean
+[n_dint, ~, bin] = histcounts(dint_norm, delta_edges);
+pco_v_dint = arrayfun(@(a) sum(coactive_bool(bin == a)), 1:length(n_dint))...   
+    ./arrayfun(@(a) sum(bin == a), 1:length(n_dint));
+pstaybec_v_dint = arrayfun(@(a) sum(become_split_bool(bin == a)), 1:length(n_dint))...   
+    ./arrayfun(@(a) sum(bin == a), 1:length(n_dint));
+dint_bin_bool = n_dint >= bin_num_thresh; % only include bins with min # neurons
+ 
 %% 4) Plot everything
 
 if plot_flag
     subplot(2,2,1)
-    scatter(rely_centers(rely_bin_bool), pco_v_rely(rely_bin_bool))
-    xlabel('Stem splitter reliability (1-p)');
+    scatter(rely_centers(relym_bin_bool), pco_v_relym(relym_bin_bool))
+    xlabel('Stem splitter reliability mean(1-p)');
     ylabel('Reactivation prob');
     
     subplot(2,2,2)
-    scatter(rely_centers(rely_bin_bool), pstaybec_v_rely(rely_bin_bool))
-    xlabel('Stem splitter reliability (1-p)');
+    scatter(rely_centers(relym_bin_bool), pstaybec_v_relym(relym_bin_bool))
+    xlabel('Stem splitter reliability mean(1-p)');
     ylabel('Stay/Become splitter prob.');
     
     subplot(2,2,3)
-    scatter(dmax_centers(dmax_bin_bool), pco_v_dmax(dmax_bin_bool))
-    xlabel('Stem splitter \Delta_{max}');
+    scatter(dmax_centers(dint_bin_bool), pco_v_dint(dint_bin_bool))
+    xlabel('Stem splitter \Sigma\Delta_{max}');
     ylabel('Reactivation prob');
     
     subplot(2,2,4)
-    scatter(dmax_centers(dmax_bin_bool), pstaybec_v_dmax(dmax_bin_bool))
-    xlabel('Stem splitter \Delta_{max}');
+    scatter(dmax_centers(dint_bin_bool), pstaybec_v_dint(dint_bin_bool))
+    xlabel('Stem splitter \Sigma\Delta_{max}');
     ylabel('Stay/Become splitter prob.');
 end
 

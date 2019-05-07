@@ -1,5 +1,5 @@
 function [ rely_val, delta_max, sigbool, stem_bool, dmax_norm, nactive_stem ,...
-    dint_norm, curve_corr] = parse_splitters( dir_use, sigthresh, cnoise )
+    dint_norm, curve_corr, rely_mean] = parse_splitters( dir_use, sigthresh, cnoise )
 % [ rely_val, delta_max, sigbool, stem_bool, dmax_norm, nactive_stem ] = ...
 %       parse_splitters( dir_use, sigthresh )
 %
@@ -14,7 +14,7 @@ function [ rely_val, delta_max, sigbool, stem_bool, dmax_norm, nactive_stem ,...
 %
 %   OUTPUTS:
 %   "Splittiness" metrics: 
-%       rely_val: (1-p)
+%       rely_val: max(1-p) for entire curve
 %
 %   delta_max: (maximum diff b/w L/R tuning curves) for all splitters
 %
@@ -25,12 +25,12 @@ function [ rely_val, delta_max, sigbool, stem_bool, dmax_norm, nactive_stem ,...
 %   dmax_norm: delta_max divided by the sum of the maximum of L and R
 %   tuning curves. 1 = fires only on one trial type, 0 = no diff.
 %
-%   dint_norm: the integral of abs(delta_max) divided by the sum of the L
+%   dint_norm_mean: the integral of abs(delta_max) divided by the sum of the L
 %   and R tuning curves. 1 = fires only on one trial type, 0 = no diff.
 %
 %   curve_corr: correlation between L and R tuning curves.
 %
-%   nactive_stem: # trials a cell is active on the stem 
+%   rely_mean: mean(1-p) for entire curve
 
 if nargin < 3
     cnoise = false;
@@ -57,15 +57,17 @@ stem_bool = ~cellfun(@isempty, pvalue); % in sesh(j) numbering
 
 % Assigns splitter metric vlaues to the appropriate neurons
 rely_val = nan(nneurons_sesh, 1); 
+rely_mean = nan(nneurons_sesh, 1); 
 delta_max = nan(nneurons_sesh, 1);
 dmax_norm = nan(nneurons_sesh, 1);
 dint_norm = nan(nneurons_sesh, 1);
 curve_corr = nan(nneurons_sesh, 1);
 rely_val(stem_bool) = cellfun(@(a) 1 - min(a), pvalue(stem_bool));
+rely_mean(stem_bool) = cellfun(@(a) mean(1 - a), pvalue(stem_bool));
 delta_max(stem_bool) = cellfun(@(a) max(abs(a)),deltacurve(stem_bool));
 dmax_norm(stem_bool) = delta_max(stem_bool)./cellfun(@(a) sum(max(a,[],2)),...
     tuningcurves(stem_bool));
-dint_norm(stem_bool) = cellfun(@(a,b) sum(abs(a))/sum(b(:)), ...
+dint_norm(stem_bool) = cellfun(@(a,b) sum(abs(a))./sum(b(:)), ...
     deltacurve(stem_bool), tuningcurves(stem_bool));
 curve_corr(stem_bool) = cellfun(@(a) corr(a(1,:)', a(2,:)'), ...
     tuningcurves(stem_bool));

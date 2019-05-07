@@ -1,6 +1,6 @@
 % Alternation figure 7
 
-%% Run alt_fig5 bottom sections first - gets you splitter and PF onsets!
+%% Run alt_fig6 bottom sections first - gets you splitter and PF onsets!
 
 %% Get stats for G45_1st half and group data for Figure
 [h45, p45] = kstest2(pc_onset_bymouse{3}, split_onset_bymouse{3},...

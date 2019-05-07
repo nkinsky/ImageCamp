@@ -401,3 +401,25 @@ for j = 1:4
        nsplit{j}(k) = numSplitters;
     end
 end
+
+%% Do Emma Wood analysis and get % of our splitters that pass her criteria
+sig_thresh = 3;
+alpha = 0.05;
+
+pct_pass = cell(1,4);
+for j = 1:4
+    disp(['Doing Emma Wood analysis for mouse ' num2str(j)])
+    [~, ~, free_bool] = alt_id_sesh_type(alt_all_cell{j});
+    seshs_use = alt_all_cell{j}(free_bool);
+    pct_pass{j} = nan(1,length(seshs_use));
+    for k = 1:length(seshs_use)
+       [p, tbl, ps, ts] = alt_wood_analysis(seshs_use(k));
+       sigwood = p(:,1) < alpha | p(:,3) < alpha;
+       sigbool = alt_id_sigsplitters(seshs_use(k), sig_thresh);
+       pct_pass{j}(k) = sum(sigbool & sigwood)/sum(sigbool);
+    end
+    
+end
+    
+pass_mean = cellfun(@nanmean, pct_pass)
+pass_std = cellfun(@nanstd, pct_pass)
