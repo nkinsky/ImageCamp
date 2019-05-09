@@ -373,6 +373,12 @@ for splitters_only = false
         for j = 1:length(ntrial_stem_thresh_use) %[1 5 10 15] % 1:20
             ntrial_stem_thresh = ntrial_stem_thresh_use(j);
             try
+%                 if ntrial_thresh > 15 && ntrial_thresh <= 18
+%                     
+%                     delta_res = 0.08;
+%                     delta_range = [0 0.8];
+%                 elseif ntrial_thresh > 18 && ntrial_thresh <= 18
+                    
                 [h, rdnorm(j), pdnorm(j), rdintn(j), pdintn(j), rdmax(j), pdmax(j)] = ...
                     alt_split_v_recur_batch(day_lag, comp_type, alt_all_cell, ...
                     'ntrial_stem_thresh', ntrial_stem_thresh, 'splitters_only', ...

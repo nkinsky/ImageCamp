@@ -2,10 +2,99 @@
 % performance
 
 %% A - plot splitters across days
-plotSigSplitters_bw_sesh(G45_alt(4), G45_alt(11));
-plotSigSplitters_bw_sesh(G45_alt(4), G45_alt(20));
-plotSigSplitters_bw_sesh(G45_alt(20),G45_alt(21));
+plotSigSplitters_bw_sesh(G45_alt(5), G45_alt(12));
+% plotSigSplitters_bw_sesh(G45_alt(4), G45_alt(20));
+% plotSigSplitters_bw_sesh(G45_alt(20),G45_alt(21));
 plotSigSplitters_bw_sesh(G30_alt(13),G30_alt(14));
+
+%% Get dmaxnorm and rely values for sessions above
+% Neuron #327 in session 1 here
+nstem_thresh = 5;
+neuron_id = [327 101];
+sessions{1,1} = G45_alt(5); sessions{1,2} = G45_alt(12);
+sessions{2,1} = G30_alt(13); sessions{2,2} = G30_alt(14);
+for j = 1:2
+    neuron_map = neuron_map_simple(sessions{j,1},sessions{j,2});
+    
+    figure; set(gcf, 'Position', [ 2126        10       1189         800])
+    for k = 1:2
+        if k == 1; nuse = neuron_id(j); elseif k == 2; 
+            nuse = neuron_map(neuron_id(j)); end
+        [~, dmax_l, ~, ~, dnorm_1, nactive_1, dinorm_l, ~, relym_1] = ...
+            parse_splitters(sessions{j,k}.Location);
+        subplot(2,2,2*(k-1)+1);
+%         histogram(dnorm_1(nactive_1 >= nstem_thresh));
+%         xlabel('|\Delta|_{norm}'); ylabel('Count');
+%          duse = dnorm_1(nuse);
+%         hold on; plot([duse duse], get(gca,'YLim'),'r-')
+%         text(duse,30,num2str(duse,'%0.2g'))
+        histogram(dinorm_l(nactive_1 >= nstem_thresh));
+        xlabel('\Epsilon|\Delta|_{norm}'); ylabel('Count');
+        duse = dinorm_l(nuse);
+        hold on; plot([duse duse], get(gca,'YLim'),'r-')
+        text(duse,30,num2str(duse,'%0.2g'))
+%         histogram(dmax_l(nactive_1 >= nstem_thresh));
+%         xlabel('|\Delta|_{max}'); ylabel('Count');
+%         duse = dmax_l(nuse);
+%         hold on; plot([duse duse], get(gca,'YLim'),'r-')
+%         text(duse,30,num2str(duse,'%0.2g'))
+        title([mouse_name_title(sessions{j,k}.Animal) ' - ' ...
+            mouse_name_title(sessions{j,k}.Date) 's' num2str(...
+            sessions{j,k}.Session)])
+        subplot(2,2,2*(k-1)+2);
+        histogram(relym_1(nactive_1 >= nstem_thresh));
+        xlabel('Rely_{mean}'); ylabel('Count')
+        ruse = relym_1(nuse);
+        hold on; plot([ruse ruse], get(gca,'YLim'),'r-')
+        text(duse,30,num2str(ruse,'%0.2g'))
+    end
+end
+
+%% Get mean dmax and dmax_norm for all animals
+[dmax_means, dn_means] = deal(cell(1,4));
+metrics_plot = {'|\Delta_{max}|', '|\Delta_{max}|_{norm}', ...
+    '\Sigma|\Delta|', 'Rely_{mean}'};
+for j = 1:4
+    [~, ~, free_bool] = alt_id_sesh_type(alt_all_cell{j});
+    good_seshs = alt_all_cell{j}(free_bool);
+    [~, dmax, ~, ~, dnorm, nactive_stem, dinorm, ~, rmean] = arrayfun(@(a) ...
+        parse_splitters(a.Location), good_seshs, 'UniformOutput', false);
+    sigbool_all = arrayfun(@(a) alt_id_sigsplitters(a, 3), good_seshs, ...
+        'UniformOutput', false);
+    dmax_means{j} = cellfun(@(a,b) nanmean(a(b > nstem_thresh)), dmax, ...
+        nactive_stem);
+    dmax_means_sp{j} = cellfun(@(a,b,c) nanmean(a(b > nstem_thresh & c)), dmax, ...
+        nactive_stem, sigbool_all);
+    dn_means{j} = cellfun(@(a,b) nanmean(a(b > nstem_thresh)), dnorm, ...
+        nactive_stem);
+    dn_means_sp{j} = cellfun(@(a,b,c) nanmean(a(b > nstem_thresh & c)), dnorm, ...
+        nactive_stem, sigbool_all);
+    di_means{j} = cellfun(@(a,b) nanmean(a(b > nstem_thresh)), dinorm, ...
+        nactive_stem);
+    di_means_sp{j} = cellfun(@(a,b,c) nanmean(a(b > nstem_thresh & c)), dinorm, ...
+        nactive_stem, sigbool_all);
+    rm_means{j} = cellfun(@(a,b) nanmean(a(b > nstem_thresh)), rmean, ...
+        nactive_stem);
+    rm_means_sp{j} = cellfun(@(a,b,c) nanmean(a(b > nstem_thresh & c)), rmean, ...
+        nactive_stem, sigbool_all);
+    figure; set(gcf, 'Position', [2263, 20 1400 900]);
+    metrics_all = cat(1, dmax, dnorm, dinorm, rmean);
+    for k = 1:4
+        ha = subplot(2,2,k);
+        alt_plot_splitmetric_histos(metrics_all(k,:), nactive_stem,...
+            sigbool_all, 5, ha, 'Probability', true);
+        xlabel(metrics_plot{k});
+    end
+    title(subplot(2,2,1), ['Mouse ' num2str(j)])
+    make_figure_pretty(gcf);
+    printNK(['Split metric distributions - split v nonsplit - Mouse ' num2str(j) '.pdf'],...
+        'alt');
+end
+
+% Plot to see if there is a systematic difference - there isn't in dmax...
+grps = cat(2, ones(1,10), 2*ones(1,7), 3*ones(1,23), 4*ones(1,28));
+scatterBox(cat(2,dmax_means{:}),grps)
+scatterBox(cat(2,dn_means{:}),grps)
 
 %% B - PF and splitter correlations versus time
 
@@ -245,13 +334,14 @@ sesh_cell_use = alt_all_cell;
 
 % Pre-allocate mean performance and dnorm arrays
 perf_mean = []; dnorm_mean = []; dint_mean = []; curve_corr_mean = [];
-rely_mean = []; discr_perf_mean = [];
+rely_mean = []; discr_perf_mean = []; dmax_mean = [];
 
 % Calculate values for each mouse
 for j = 1:length(sesh_cell_use)
     split_metrics = plot_perf_v_split_metrics(sesh_cell_use{j}, ...
         false, inject_noise, trial_thresh);
     perf_mean = [perf_mean, nanmean(split_metrics.perf)];
+    dmax_mean = [dmax_mean, nanmean(split_metrics.dmax_mean)];
     dnorm_mean = [dnorm_mean, nanmean(split_metrics.dmax_norm_mean)];
     dint_mean = [dint_mean, nanmean(split_metrics.dint_norm_mean)];
     curve_corr_mean = [curve_corr_mean, nanmean(split_metrics.curve_corr_mean)];
@@ -265,20 +355,31 @@ h1 = subplot(2,3,1); h2 = subplot(2,3,2); h3 = subplot(2,3,3);
 h4 = subplot(2,3,4); h5 = subplot(2,3,5);
 
 alt_group_plot_perf_v_split(h1, dnorm_mean, perf_mean, ...
-    '|\Delta_{max}|_{norm}');
+    '|\Delta_{max}|_{norm}'); xlim(h1, [0.4 0.7]); ylim(h1, [66 80])
 alt_group_plot_perf_v_split(h2, dint_mean, perf_mean, ...
-    '\Sigma|\Delta|_{norm}');
-alt_group_plot_perf_v_split(h3, curve_corr_mean, perf_mean, ...
-    '\rho_{mean}');
+    '\Sigma|\Delta|_{norm}'); xlim(h2, [0.4 0.625]); ylim(h2, [66 80])
+alt_group_plot_perf_v_split(h3, 1 - curve_corr_mean, perf_mean, ...
+    '1 - \rho_{mean}'); xlim(h3, [0.45 0.85]); ylim(h3, [66 80])
 alt_group_plot_perf_v_split(h4, rely_mean, perf_mean, ...
-    'Reliability (1-p)');
+    'Reliability (1-p)'); xlim(h4, [0.81 0.855]); ylim(h4, [66 80])
 alt_group_plot_perf_v_split(h5, discr_perf_mean, perf_mean, ...
-    'Decoder (LDA) Accuracy (%)');
+    'Decoder (LDA) Accuracy (%)'); xlim(h5, [45 75]); ylim(h5, [66 80])
 subplot(2,3,6);
 text(0.1, 0.4, ['inject\_noise = ' num2str(inject_noise)])
 text(0.1, 0.6, ['ntrial_thresh = ' num2str(split_metrics.trial_thresh)])
 text(0.1, 0.8, ['nstem_thresh = ' num2str(split_metrics.nstem_thresh)])
 axis off
+
+figure; set(gcf, 'Position', [210 350 890 430]);
+hd1 = subplot(1,2,1);
+alt_group_plot_perf_v_split(hd1, dmax_mean, perf_mean, ...
+    '|\Delta_{max}|_{mean}'); xlim(hd1, [0.11 0.21]); ylim(hd1, [66 80])
+subplot(1,2,2);
+text(0.1, 0.4, ['inject\_noise = ' num2str(inject_noise)])
+text(0.1, 0.6, ['ntrial_thresh = ' num2str(split_metrics.trial_thresh)])
+text(0.1, 0.8, ['nstem_thresh = ' num2str(split_metrics.nstem_thresh)])
+axis off
+
 
 % printNK('Perf v splittiness by mice','alt')
 

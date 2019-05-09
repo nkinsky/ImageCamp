@@ -48,18 +48,22 @@ nactive_thresh = 5; % Neurons must be active at least this many trials to be con
 daydiff_all = [];
 dmean_all = [];
 dnormmean_all = [];
+dimean_all = [];
 rmean_all = [];
+rm_mean_all = [];
 dnorm_mean_noalign_all = [];
 lc_stage_split_all = [];
 split_onset_bymouse = cell(1,6);
 split_onsetstage_bymouse = cell(1,6);
 % alt_inds = [1 2 3 4 5 6]; % Use these groups of sessions in alt_all_cell_sp - need
-clear rmean_half1 rmean_half2 dmean_half1 dmean_half2
+clear rmean_half1 rmean_half2 dmean_half1 dmean_half2 dimean_half1 ...
+    dimean_half2 rm_mean_half1 rm_mean_half2
 for j = 1:6 %k = 1:length(alt_inds)
 %     j = alt_inds(k);
 
     [ relymat, deltamaxmat, sigmat, onsetsesh, days_aligned, ~, ~, ...
-        deltamax_normmat, sesh_final] = track_splitters(alt_all_cell_sp{j}(1), ...
+        deltamax_normmat, sesh_final, dintnmat, relymeanmat] = ...
+        track_splitters(alt_all_cell_sp{j}(1), ...
         alt_all_cell_sp{j}(2:end), sigthresh, 'days_ba', days_ba, ...
         'free_only', free_only, 'ignore_sameday', ignore_sameday, ...
         'norm_max', norm_max, 'nactive_thresh', nactive_thresh);
@@ -75,7 +79,11 @@ for j = 1:6 %k = 1:length(alt_inds)
         unique_daydiff);
     dnorm_mean = arrayfun(@(a) nanmean(deltamax_normmat(days_aligned == a)), ...
         unique_daydiff);
+    dintn_mean = arrayfun(@(a) nanmean(dintnmat(days_aligned == a)), ...
+        unique_daydiff);
     rmean = arrayfun(@(a) nanmean(relymat(days_aligned == a)), ...
+        unique_daydiff);
+    rm_mean = arrayfun(@(a) nanmean(relymeanmat(days_aligned == a)), ...
         unique_daydiff);
     
     split_onset_bymouse{j} = onsetsesh;
@@ -97,20 +105,26 @@ for j = 1:6 %k = 1:length(alt_inds)
     % metrics
     if j == 3 || j == 5
         rmean_half1 = rmean;
+        rm_mean_half1 = rm_mean;
         dmean_half1 = dmean;
         dnmean_half1 = dnorm_mean;
+        dimean_half1 = dintn_mean;
         daydiff1 = unique_daydiff;
 
     elseif j == 4 || j == 6
         rmean_half2 = rmean;
+        rm_mean_half2 = rm_mean;
         dmean_half2 = dmean;
         dnmean_half2 = dnorm_mean;
+        dimean_half2 = dintn_mean;
         daydiff2 = unique_daydiff;
         
         % Get averages of both halves
         dmean_comb = [dmean_half1; dmean_half2];
         dnmean_comb = [dnmean_half1; dnmean_half2];
+        dimean_comb = [dimean_half1; dimean_half2];
         rmean_comb = [rmean_half1; rmean_half2];
+        rm_mean_comb = [rm_mean_half1; rm_mean_half2];
         daydiff_comb = [daydiff1; daydiff2];
         
         unique_daydiff = unique([daydiff1; daydiff2]);
@@ -118,10 +132,16 @@ for j = 1:6 %k = 1:length(alt_inds)
             unique_daydiff);
         dnorm_mean = arrayfun(@(a) nanmean(dnmean_comb(a == daydiff_comb)),...
             unique_daydiff);
+        dintn_mean = arrayfun(@(a) nanmean(dimean_comb(a == daydiff_comb)),...
+            unique_daydiff);
         rmean = arrayfun(@(a) nanmean(rmean_comb(a == daydiff_comb)),...
             unique_daydiff);
+        rm_mean = arrayfun(@(a) nanmean(rm_mean_comb(a == daydiff_comb)),...
+            unique_daydiff);
         
-        clear rmean_half1 rmean_half2 dmean_half1 dmean_half2
+        clear rmean_half1 rmean_half2 dmean_half1 dmean_half2 ...
+            dnmean_half1 dnmean_half2 dimean_half1 dimean_half2 ...
+            rm_mean_half1 rm_mean_half2
     end
     
 %     disp(['size ddiff = ' num2str(length(unique_daydiff)), 'size dmean = ' ...
@@ -129,20 +149,36 @@ for j = 1:6 %k = 1:length(alt_inds)
     daydiff_all = [daydiff_all; unique_daydiff];
     dmean_all = [dmean_all; dmean];
     dnormmean_all = [dnormmean_all; dnorm_mean];
+    dimean_all = [dimean_all; dintn_mean];
     rmean_all = [rmean_all; rmean];
+    rm_mean_all = [rm_mean_all; rm_mean];
 end
 
 %% Splitter Ontogeny Population plots with smoothed windows before/after
-day_groups = 5;
+day_groups = 3;
+max_day = 9;
 split_ontogeny_plot(rmean_all, daydiff_all, day_groups, 'ylabel', ...
-    'reliability(1-p)_{mean}', 'max_day', 9)
-printNK('Splitter Ontogeny - Reliability All mice means 3 day groups 9 day max', 'alt')
+    'max reliability(1-p)_{mean}', 'max_day', max_day, 'group_size', day_groups);
+printNK(['Splitter Ontogeny - Max Reliability All mice means ' ...
+    num2str(day_groups) ' day groups ' num2str(max_day) ' day max'], 'alt')
+split_ontogeny_plot(rm_mean_all, daydiff_all, day_groups, 'ylabel', ...
+    'mean reliability(1-p)_{mean}', 'max_day', max_day, 'group_size', day_groups);
+printNK(['Splitter Ontogeny - Mean Reliability All mice means ' ...
+    num2str(day_groups) ' day groups ' num2str(max_day) ' day max'], 'alt')
 split_ontogeny_plot(dmean_all, daydiff_all, day_groups, 'ylabel', ...
-    '\Deltamax_{mean}', 'max_day', 9)
-printNK('Splitter Ontogeny - Deltamax All mice means 3 day groups 9 day max', 'alt')
+    '\Deltamax_{mean}', 'max_day', max_day, 'group_size', day_groups);
+printNK(['Splitter Ontogeny - Deltamax All mice means ' ...
+    num2str(day_groups) ' day groups ' num2str(max_day) ' day max'], 'alt')
 split_ontogeny_plot(dnormmean_all, daydiff_all, day_groups, 'ylabel', ...
-    '\Deltamax_{mean}_{norm}', 'max_day', 9)
-printNK('Splitter Ontogeny - Deltamax_norm All mice means 3 day groups 9 day max', 'alt')
+    '\Deltamax_{mean}_{norm}', 'max_day', max_day, 'group_size', day_groups);
+printNK(['Splitter Ontogeny - Deltamax_norm All mice means ' ...
+    num2str(day_groups) ' day groups ' num2str(max_day) ' day max'], 'alt')
+split_ontogeny_plot(dimean_all, daydiff_all, day_groups, 'ylabel', ...
+    '\Sigma\Deltamax_{mean}_{norm}', 'max_day', max_day, 'group_size', ...
+    day_groups);
+printNK(['Splitter Ontogeny - sum Deltamax_norm All mice means ' ...
+    num2str(day_groups) ' day groups ' num2str(max_day) ' day max'], 'alt')
+
 
 %% Now do all the above but for placefields!
 
