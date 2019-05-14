@@ -1,5 +1,5 @@
-function [] = replace_bad_frames(infile,outfile,bad_frames,replace_frames)
-% replace_bad_frames(infile,outfile,bad_frames,replace_frames)
+function [] = replace_bad_frames(infile, outfile, bad_frames, replace_frames)
+% replace_bad_frames(infile, outfile, bad_frames, replace_frames)
 %
 % Replaces bad_frames in infile with the frame index/indices specified in
 % replace_frames. replace_frames is either one frame index or an array of frame
@@ -11,10 +11,10 @@ function [] = replace_bad_frames(infile,outfile,bad_frames,replace_frames)
 %
 % Example to fix bad frames in a tiff file
 %
-% % Load file with bad frames
+% % 1) Load file with bad frames
 % tstack_bad = TIFFStack('badfile.tiff');
 %
-% % Scroll through and ID bad frames (you know they start around frame
+% % 2) Scroll through and ID bad frames (you know they start around frame
 % % 100 from Inscopix). Note them down.
 % scroll_tiff_frames(tstack_bad, 100);
 %
@@ -24,11 +24,11 @@ function [] = replace_bad_frames(infile,outfile,bad_frames,replace_frames)
 % bad_frames = [125 135:140];
 % replace_frames = [124 134 134 134 134 134 134];
 % 
-% % Now run replace_bad_frames
+% % 3) Now run replace_bad_frames
 % replace_bad_frames('badfile.tiff','badfile_fixed.tiff', bad_frames...,
 %   replace_frames);
 % 
-% % Check your work! Make a minimum projection...
+% % 4) Check your work! Make a minimum projection...
 % tstack_fixed = TIFFStack('badfile_fixed.tiff');
 % figure; imagesc(min(tstack_fixed(:,:,:),[],3)); colormap(gray);
 
