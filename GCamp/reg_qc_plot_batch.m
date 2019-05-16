@@ -210,31 +210,31 @@ title(['Base Session: ' mouse_name_title(base.Animal) ' - ' ...
 %% Set colors from cool (nearest in time) to warm (furthest in time)
 % NRK - this does NOT work for pair-wise registration, so added try/catch for now 
 ff = get(gcf);
-num_lines = length(ff.Children(8).Children); % Get number of lines drawn
+num_lines = length(ff.Children(end).Children); % Get number of lines drawn
 if num_shifts > 0
     num_lines = num_lines -3;
 end
 cm = flipud(colormap(jet(num_lines)));
 try
-if num_shuffles > 0 || num_shifts > 0
-    for j = 2:2:4
-        % put blank spots in cm_matrix.
-        if num_shuffles > 0 && num_shifts > 0
-            cm_use= [0 0 1; 0 0 1; 0 0 1; 0 0 0; 0 0 0; 0 0 0; cm];
-        else
-            cm_use = [0 0 0; 0 0 0; 0 0 0; cm];
+    if num_shuffles > 0 || num_shifts > 0
+        for j = 2:2:4
+            % put blank spots in cm_matrix.
+            if num_shuffles > 0 && num_shifts > 0
+                cm_use= [0 0 1; 0 0 1; 0 0 1; 0 0 0; 0 0 0; 0 0 0; cm];
+            else
+                cm_use = [0 0 0; 0 0 0; 0 0 0; cm];
+            end
+            for k = 1: size(cm_use,1)
+                ff.Children(j).Children(k).Color = cm_use(k,:);
+            end
         end
-        for k = 1: size(cm_use,1)
-            ff.Children(j).Children(k).Color = cm_use(k,:);
+    else
+        for j = 2:2:4
+            for k = 1: size(cm,1)
+                ff.Children(j).Children.Color = cm(k,:); % Set Shuffled to black
+            end
         end
     end
-else
-    for j = 2:2:4
-        for k = 1: size(cm,1)
-            ff.Children(j).Children.Color = cm(k,:); % Set Shuffled to black
-        end
-    end
-end
 catch
     disp('bypassing colors for lines in reg_qc_plot_batch for now')
 end
