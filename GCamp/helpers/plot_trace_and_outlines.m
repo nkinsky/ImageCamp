@@ -22,6 +22,7 @@ h1 = subplot(1,2,1);
 h2 = subplot(1,2,2);
 NeuronImage = NeuronImage(neurons_to_plot);
 traces = NeuronTraces(neurons_to_plot,1:nframes_plot);
+PSAbool = PSAbool(neurons_to_plot,1:nframes_plot);
 [~, colors] = plot_neuron_outlines(base_image, NeuronImage, h1);
 plot_neuron_traces(traces, colors, h2, 'SR', SR, 'PSAbool', PSAbool);
 

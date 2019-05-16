@@ -42,7 +42,7 @@ end
 
 figure(h)
 hhist_cd = gobjects(1); he_cd = gobjects(1);
-if ~isempty(centroid_dist)
+if ~isempty(centroid_dist) && ~all(isnan(centroid_dist))
     
     % Histogram plot
     subplot(2,2,1)

@@ -50,6 +50,7 @@ switch location
     case 'eraser'
         location = 'C:\Users\kinsky\Dropbox\Imaging Project\Manuscripts\Eraser';
     otherwise
+        location = pwd;
 %         disp('using location as save location')
 end
 

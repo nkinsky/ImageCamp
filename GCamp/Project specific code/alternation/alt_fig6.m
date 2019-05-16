@@ -38,12 +38,12 @@ for j = 1:5
 end
 
 %% Plot for each mouse
-save_pdf = false;
+save_pdf = true;
 sigthresh = 3;
-days_ba = 9;
+days_ba = 2;
 free_only = true;
 ignore_sameday = true;
-norm_max = false;
+dplot = 'norm_max_int'; % metric to plot for deltacurve
 nactive_thresh = 5; % Neurons must be active at least this many trials to be considered
 daydiff_all = [];
 dmean_all = [];
@@ -57,7 +57,7 @@ split_onset_bymouse = cell(1,6);
 split_onsetstage_bymouse = cell(1,6);
 % alt_inds = [1 2 3 4 5 6]; % Use these groups of sessions in alt_all_cell_sp - need
 clear rmean_half1 rmean_half2 dmean_half1 dmean_half2 dimean_half1 ...
-    dimean_half2 rm_mean_half1 rm_mean_half2
+    dimean_half2 rm_mean_half1 rm_mean_half2 daydiff1 daydiff2
 for j = 1:6 %k = 1:length(alt_inds)
 %     j = alt_inds(k);
 
@@ -66,7 +66,7 @@ for j = 1:6 %k = 1:length(alt_inds)
         track_splitters(alt_all_cell_sp{j}(1), ...
         alt_all_cell_sp{j}(2:end), sigthresh, 'days_ba', days_ba, ...
         'free_only', free_only, 'ignore_sameday', ignore_sameday, ...
-        'norm_max', norm_max, 'nactive_thresh', nactive_thresh);
+        'dplot', dplot, 'nactive_thresh', nactive_thresh);
     
     if save_pdf
         printNK(['Splitter Ontogeny ba=' num2str(days_ba) ' days'],'alt', ...
@@ -141,7 +141,7 @@ for j = 1:6 %k = 1:length(alt_inds)
         
         clear rmean_half1 rmean_half2 dmean_half1 dmean_half2 ...
             dnmean_half1 dnmean_half2 dimean_half1 dimean_half2 ...
-            rm_mean_half1 rm_mean_half2
+            rm_mean_half1 rm_mean_half2 daydiff1 daydiff2
     end
     
 %     disp(['size ddiff = ' num2str(length(unique_daydiff)), 'size dmean = ' ...
@@ -200,7 +200,8 @@ pc_onsetstage_bymouse = cell(1,6);
 % alt_inds = [1 2 3 4 5 6]; % Use these groups of sessions in alt_all_cell_sp - need
 % to figure out how to combine G45 1st and 2nd half and G48 1st and 2nd
 % half
-clear rmean_half1 rmean_half2 dmean_half1 dmean_half2
+clear MIstem_half1 MIstem_half2 MIarms_half1 MIarms_half2 ...
+    daydiff1_arms daydiff2_arms daydiff1_stem daydiff2_stem
 for j=1:6 %k = 1:length(alt_inds)
 %     j = alt_inds(k);
 

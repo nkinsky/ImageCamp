@@ -41,9 +41,13 @@ p.addRequired('reg', @isstruct);
 p.addOptional('num_shuffles', 100, @(a) isnumeric(a) && round(a) == a && a >= 0);
 p.addOptional('num_shifts', 0, @(a) isnumeric(a) && round(a) == a && a >= 0);
 p.addOptional('shift_dist', 4, @(a) isnumeric(a) && a > 0);
-p.addParameter('batch_mode',0, @(a) a == 0 || a == 1 || a == 2);
-p.addParameter('name_append','',@(a) ischar(a) || iscell(a) && (length(a) == 1 ...
+p.addParameter('batch_mode', 0, @(a) a == 0 || a == 1 || a == 2);
+p.addParameter('name_append', '', @(a) ischar(a) || iscell(a) && (length(a) == 1 ...
     || length(a) == length(reg)));
+p.addParameter('orient_only', false, @islogical); % only calculate orient_diff if true
+% Saves reg. stats to base_dir. Note that chance stats are ONLY for base
+% session 1 to itself!
+p.addParameter('save_stats', false, @islogical); 
 p.addParameter('hfig', [], @ishandle);
 p.parse(base, reg, varargin{:});
 
@@ -53,6 +57,8 @@ shift_dist = p.Results.shift_dist;
 batch_mode = p.Results.batch_mode;
 name_append = p.Results.name_append;
 hfig = p.Results.hfig;
+save_stats = p.Results.save_stats;
+orient_only = p.Results.orient_only;
 
 if length(reg) > 1
     multi_sesh = 1;
@@ -67,7 +73,16 @@ if ischar(name_append)
     [name_append{:}] = deal(temp);
 end
 
-
+% Check to make sure you don't accidentally overwrite previous results
+if save_stats
+    proceed = input('save_stats=true. You will overwrite ANY existing reg_stats files. Is this ok? (y/n): ', 's');
+    if strcmpi(proceed,'n')
+        disp('Exiting Function...')
+    elseif strcmpi(proceed,'y')
+        disp('Proceeding...')
+    end
+end
+        
 %% Plot
 
 if isempty(hfig)
@@ -80,10 +95,14 @@ legend_text = cell(1, length(reg));
 %%% NRK adjust here - do shift and shuffle separately. Shift ONLY happens
 %%% for registering base to itself!
 reg_stats{1} = neuron_reg_qc(base, reg(1), 'batch_mode', batch_mode, ...
-    'name_append', name_append{1}); 
+    'name_append', name_append{1}, 'orient_only', orient_only, ...
+    'save_stats', save_stats); 
 reg_stats_chance = neuron_reg_qc(base, base, 'batch_mode', batch_mode, ...
     'shuffle', num_shuffles, 'shift', num_shifts, 'shift_dist', shift_dist, ...'
-    'name_append', name_append{1}); % If the last registration is bad you can get a bad shuffled distribution here...
+    'name_append', name_append{1}, 'save_stats', save_stats, ...
+    'orient_only', orient_only); % If the last registration is bad you can get a bad shuffled distribution here...
+
+% Save stats if specified.
 
 legend_text{1} = [mouse_name_title(reg(1).Date) ' - #' num2str(reg(1).Session)];
 he_cd = gobjects(length(reg),1); he_od = gobjects(length(reg),1);
@@ -93,7 +112,8 @@ hhist_cd = gobjects(length(reg),1); hhist_od = gobjects(length(reg),1);
 
 for j = 2:length(reg)   
     reg_stats{j} = neuron_reg_qc(base, reg(j), 'batch_mode', batch_mode,...
-        'name_append', name_append{j});
+        'name_append', name_append{j}, 'save_stats', save_stats,...
+        'orient_only', orient_only);
     [he_cd(j), hhist_cd(j), he_od(j), hhist_od(j)] = reg_qc_plot(reg_stats{j}.cent_d, ...
         reg_stats{j}.orient_diff, reg_stats{j}.avg_corr, hfig, 'multi_sesh', 1);
     legend_text{j} = [mouse_name_title(reg(j).Date) ' - #' num2str(reg(j).Session)];
@@ -133,10 +153,24 @@ if num_shifts > 0 && num_shuffles == 0
 elseif num_shifts == 0 && num_shuffles > 0
     legend_cd = legend_text;
     legend_od = cat(2,legend_text,[num2str(num_shuffles) ' Shuffles']);
-    legend(hhist_cd,legend_cd)
-    legend(he_cd,legend_cd)
-    legend(cat(1,hhist_od, hCIhist_shuf_od(1)),legend_od)
-    legend(cat(1,he_od, hCIe_shuf_od(1)),legend_od)
+    try
+        legend(hhist_cd,legend_cd)
+        legend(he_cd,legend_cd)
+    catch ME
+        % Continue on if legend is empty
+        if ~strcmp(ME.identifier,'MATLAB:undefinedVarOrClass')
+            keyboard
+        end
+    end
+    try
+        legend(cat(1,hhist_od, hCIhist_shuf_od(1)),legend_od)
+        legend(cat(1,he_od, hCIe_shuf_od(1)),legend_od)
+    catch ME
+        % Continue on if legend is empty
+        if ~strcmp(ME.identifier,'MATLAB:undefinedVarOrClass')
+            keyboard
+        end
+    end
 elseif num_shifts > 0 && num_shuffles > 0
     legend_cd = cat(2,legend_text,[num2str(round(shift_dist)) '-pixel shift']);
     legend_od = cat(2,legend_text,[num2str(round(shift_dist)) '-pixel shift'],...

@@ -43,6 +43,7 @@ p.addParameter('plot', false, @(a) islogical(a) || (isnumeric(a) && ...
 p.addParameter('shift_dist', 4, @(a) isnumeric(a) && a > 0 );
 p.addParameter('batch_mode', 0, @(a) a == 0 || a == 1 || a == 2);
 p.addParameter('orient_only', false, @islogical); % only calculate orient_diff if true
+p.addParameter('save_stats', false, @islogical);
 p.parse(base_struct, reg_struct, varargin{:});
 
 name_append = p.Results.name_append;
@@ -51,6 +52,8 @@ num_shifts = p.Results.shift;
 shift_dist = p.Results.shift_dist;
 batch_mode = p.Results.batch_mode;
 orient_only = p.Results.orient_only;
+save_stats = p.Results.save_stats;
+
 % Parse out where to plot if specified
 if ~ishandle(p.Results.plot)
     plot_flag = p.Results.plot;
@@ -219,6 +222,11 @@ if num_shifts > 0
 %         plot_mapped_neurons2(ROI_base, ROI_reg, neuron_map.neuron_id);
     end
     pp.stop;
+end
+
+if save_stats
+    save(fullfile(base_struct.Location, ['reg_stats_' reg_struct.Date ...
+        '-s', num2str(reg_struct.Session)]), 'reg_stats')
 end
 
 %% Make plot if specified (probably should just make this mandatory, or lump in with shuffling

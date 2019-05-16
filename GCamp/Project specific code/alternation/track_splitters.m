@@ -33,14 +33,14 @@ ip.addOptional('sigthresh', 3,  @(a) a > 0 && round(a) == a);
 ip.addParameter('days_ba', 2, @(a) a > 0 && round(a) == a);
 ip.addParameter('free_only', true, @islogical);
 ip.addParameter('ignore_sameday', true, @islogical);
-ip.addParameter('norm_max', false, @islogical);
+ip.addParameter('dplot', 'norm_max_int', @ischar);
 ip.addParameter('nactive_thresh', 0,@(a) a >= 0 && round(a) == a);
 ip.parse(MDbase, MDreg, varargin{:});
 sigthresh = ip.Results.sigthresh;
 days_ba = ip.Results.days_ba;
 free_only = ip.Results.free_only;
 ignore_sameday = ip.Results.ignore_sameday;
-norm_max = ip.Results.norm_max;
+dplot = ip.Results.dplot;
 nactive_thresh = ip.Results.nactive_thresh;
 
 xlims = [-days_ba - 0.5, days_ba + 0.5];
@@ -177,12 +177,16 @@ day_labels = arrayfun(@(a) num2str(a,'%0.2g'), unique_daydiff, ...
 
 figure('Position',[1940, 64, 1833, 890]);
 ha = subplot(2,3,1:2);
-if ~norm_max
-    scatterBox(deltamaxmat(valid_bool),days_aligned(valid_bool), 'xLabels', day_labels, ...
-        'yLabel', '\Deltacurve', 'h', ha);
-elseif norm_max
-    scatterBox(deltamax_normmat(valid_bool), days_aligned(valid_bool), 'xLabels', day_labels, ...
-        'yLabel', '\Delta_{curve}/\Sigmamax_{curve}', 'h', ha);
+switch dplot
+    case 'max'
+        scatterBox(deltamaxmat(valid_bool),days_aligned(valid_bool), 'xLabels', day_labels, ...
+            'yLabel', '\Deltacurve', 'h', ha);
+    case 'norm_max'
+        scatterBox(deltamax_normmat(valid_bool), days_aligned(valid_bool), 'xLabels', day_labels, ...
+            'yLabel', '\Delta_{curve}/max_{curve}', 'h', ha)
+    case 'norm_max_int'
+        scatterBox(dint_normmat(valid_bool), days_aligned(valid_bool), 'xLabels', day_labels, ...
+            'yLabel', '\Sigma\Delta_{curve}/\Sigmamax_{curve}', 'h', ha)
 end
 xlim(xlims)
 xlabel('Days From Splitter Onset')
