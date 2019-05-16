@@ -158,7 +158,7 @@ elseif num_shifts == 0 && num_shuffles > 0
         legend(he_cd,legend_cd)
     catch ME
         % Continue on if legend is empty
-        if ~strcmp(ME.identifier,'MATLAB:undefinedVarOrClass')
+        if ~ismember(ME.identifier,{'MATLAB:undefinedVarOrClass','MATLAB:legend:UnknownParameter'})
             keyboard
         end
     end
@@ -167,7 +167,7 @@ elseif num_shifts == 0 && num_shuffles > 0
         legend(cat(1,he_od, hCIe_shuf_od(1)),legend_od)
     catch ME
         % Continue on if legend is empty
-        if ~strcmp(ME.identifier,'MATLAB:undefinedVarOrClass')
+        if ~ismember(ME.identifier,{'MATLAB:undefinedVarOrClass','MATLAB:legend:UnknownParameter'})
             keyboard
         end
     end
