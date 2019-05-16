@@ -27,6 +27,7 @@ function [ n_out, stay_in, x, y, button] = LR_cycle( n_in, n_range)
 % ASCII definitions here
 right = 29; left = 28; spacebar = 32; k = 107; rightmouse = 3;
 right9 = 57; left7 = 55; % left4 = 52; right6 = 54;
+b = 98;
 
 %% Set up and display output
 persistent disp_flag; % Set persistent variable so that you only display 
@@ -40,6 +41,7 @@ end
 %% Run it
 try
     [x,y,button] = ginput(1);
+
     switch button
         case {left, left7}
             if button == left
@@ -75,6 +77,9 @@ try
             
 
             keyboard
+            n_out = n_in;
+            stay_in = true;
+        case b
             n_out = n_in;
             stay_in = true;
         otherwise
