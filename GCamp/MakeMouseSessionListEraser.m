@@ -6189,6 +6189,21 @@ MD(i).Notes = '';
 % 
 % Marble7(2) = i;
 
+%% Kelton Data
+
+i = i+1;
+MD(i).Animal = 'Kelton';
+MD(i).Date = '05_16_2019';
+MD(i).Session = 1;
+MD(i).Env = 'Square Open Field ';
+MD(i).Room = '';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Kelton\20190516';
+end
+MD(i).Notes = [];
+MD(i).Pix2CM = 0.27;
+
+
 %% Compile session_ref
 
 session_ref.G30 = G30;
