@@ -77,6 +77,13 @@ batch_align_pos(base_sesh,todo_sesh,'base_adjust',false,...
 % exclude_time_interp!!! Note this only works for sets of 2 sessions - if
 % there are more than 2 sessions combined you will need to revisit this!
 % todo_sesh = run_pf;
+todo_sesh = MD(ref.G30_scalefix);
+rescale = 0.67;
+if rescale ~= 1
+   disp('You are going to rescale all placefields being run - make sure you want this!')
+   disp('type dbcont to proceed or Ctrl-C or dbquit to exit')
+   keyboard
+end
 
 exc_times = []; suc_bool = false(1,length(todo_sesh));
 for j = 1:length(todo_sesh)
@@ -107,7 +114,7 @@ for j = 1:length(todo_sesh)
         exc_times = [exc_times; exc_time_min exc_time_max];
         
         Placefields(sesh_use,'minspeed',1,'cmperbin',1,'name_append',...
-            '_cm1','exclude_frames',exclude_frames)
+            '_cm1','exclude_frames',exclude_frames, 'rescale', rescale)
         suc_bool(j) = true;
     catch
         disp(['error running session ' num2str(j)])
@@ -140,7 +147,7 @@ end
 % sigtuning into not needing user input'; save Pos_align.mat trick_var.
 % Also put ICmovie_min_proj.tif there.
 
-%% 2.95) Run through get_center_manually for each mouse to designated the 
+%% 2.95) Run through get_center_manually for each mouse to designate the 
 % appropriate center stem location AND to align it between all sessions for
 % each mouse.
 

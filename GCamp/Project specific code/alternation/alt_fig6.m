@@ -1,5 +1,7 @@
 % Alternation Figure 6: Splitter Ontogeny
 
+%% Example cells between sessions
+
 %% Example Ontogeny Scenarios Plot
 figure; set(gcf,'Position',[34 200 1020 425]);
 curve = 0.02*randn(2,50);
@@ -40,10 +42,11 @@ end
 %% Plot for each mouse
 save_pdf = true;
 sigthresh = 3;
-days_ba = 2;
+days_ba = 1;
 free_only = true;
 ignore_sameday = true;
-dplot = 'norm_max_int'; % metric to plot for deltacurve
+dplot = 'norm_max_int'; % metric to plot for discriminability
+rplot = 'rmean'; % metric to plot for reliability (max or mean of 1-p) or proportion of stem bins with sig splitting (sigprop)...
 nactive_thresh = 5; % Neurons must be active at least this many trials to be considered
 daydiff_all = [];
 dmean_all = [];
@@ -51,27 +54,29 @@ dnormmean_all = [];
 dimean_all = [];
 rmean_all = [];
 rm_mean_all = [];
+spmean_all = [];
 dnorm_mean_noalign_all = [];
 lc_stage_split_all = [];
 split_onset_bymouse = cell(1,6);
 split_onsetstage_bymouse = cell(1,6);
 % alt_inds = [1 2 3 4 5 6]; % Use these groups of sessions in alt_all_cell_sp - need
 clear rmean_half1 rmean_half2 dmean_half1 dmean_half2 dimean_half1 ...
-    dimean_half2 rm_mean_half1 rm_mean_half2 daydiff1 daydiff2
+    dimean_half2 rm_mean_half1 rm_mean_half2 daydiff1 daydiff2 spmean_half1 ...
+    spmean_half2
 for j = 1:6 %k = 1:length(alt_inds)
 %     j = alt_inds(k);
 
     [ relymat, deltamaxmat, sigmat, onsetsesh, days_aligned, ~, ~, ...
-        deltamax_normmat, sesh_final, dintnmat, relymeanmat] = ...
+        deltamax_normmat, sesh_final, dintnmat, relymeanmat, sigpropmat] = ...
         track_splitters(alt_all_cell_sp{j}(1), ...
         alt_all_cell_sp{j}(2:end), sigthresh, 'days_ba', days_ba, ...
         'free_only', free_only, 'ignore_sameday', ignore_sameday, ...
-        'dplot', dplot, 'nactive_thresh', nactive_thresh);
+        'dplot', dplot, 'rplot', rplot, 'nactive_thresh', nactive_thresh);
     
     if save_pdf
         printNK(['Splitter Ontogeny ba=' num2str(days_ba) ' days'],'alt', ...
             'append', true)
-        close(gcf)
+%         close(gcf)
     end
     
     unique_daydiff = unique(days_aligned(~isnan(days_aligned)));
@@ -84,6 +89,8 @@ for j = 1:6 %k = 1:length(alt_inds)
     rmean = arrayfun(@(a) nanmean(relymat(days_aligned == a)), ...
         unique_daydiff);
     rm_mean = arrayfun(@(a) nanmean(relymeanmat(days_aligned == a)), ...
+        unique_daydiff);
+    spmean = arrayfun(@(a) nanmean(sigpropmat(days_aligned == a)), ...
         unique_daydiff);
     
     split_onset_bymouse{j} = onsetsesh;
@@ -110,6 +117,7 @@ for j = 1:6 %k = 1:length(alt_inds)
         dnmean_half1 = dnorm_mean;
         dimean_half1 = dintn_mean;
         daydiff1 = unique_daydiff;
+        spmean_half1 = spmean;
 
     elseif j == 4 || j == 6
         rmean_half2 = rmean;
@@ -118,6 +126,7 @@ for j = 1:6 %k = 1:length(alt_inds)
         dnmean_half2 = dnorm_mean;
         dimean_half2 = dintn_mean;
         daydiff2 = unique_daydiff;
+        spmean_half2 = spmean;
         
         % Get averages of both halves
         dmean_comb = [dmean_half1; dmean_half2];
@@ -125,6 +134,7 @@ for j = 1:6 %k = 1:length(alt_inds)
         dimean_comb = [dimean_half1; dimean_half2];
         rmean_comb = [rmean_half1; rmean_half2];
         rm_mean_comb = [rm_mean_half1; rm_mean_half2];
+        spmean_comb = [spmean_half1; spmean_half2];
         daydiff_comb = [daydiff1; daydiff2];
         
         unique_daydiff = unique([daydiff1; daydiff2]);
@@ -138,10 +148,12 @@ for j = 1:6 %k = 1:length(alt_inds)
             unique_daydiff);
         rm_mean = arrayfun(@(a) nanmean(rm_mean_comb(a == daydiff_comb)),...
             unique_daydiff);
+        spmean = arrayfun(@(a) nanmean(spmean_comb(a == daydiff_comb)),...
+            unique_daydiff);
         
         clear rmean_half1 rmean_half2 dmean_half1 dmean_half2 ...
             dnmean_half1 dnmean_half2 dimean_half1 dimean_half2 ...
-            rm_mean_half1 rm_mean_half2 daydiff1 daydiff2
+            rm_mean_half1 rm_mean_half2 daydiff1 daydiff2 sp_mean1 sp_mean2
     end
     
 %     disp(['size ddiff = ' num2str(length(unique_daydiff)), 'size dmean = ' ...
@@ -152,6 +164,7 @@ for j = 1:6 %k = 1:length(alt_inds)
     dimean_all = [dimean_all; dintn_mean];
     rmean_all = [rmean_all; rmean];
     rm_mean_all = [rm_mean_all; rm_mean];
+    spmean_all = [spmean_all; spmean];
 end
 
 %% Splitter Ontogeny Population plots with smoothed windows before/after
@@ -164,6 +177,10 @@ printNK(['Splitter Ontogeny - Max Reliability All mice means ' ...
 split_ontogeny_plot(rm_mean_all, daydiff_all, day_groups, 'ylabel', ...
     'mean reliability(1-p)_{mean}', 'max_day', max_day, 'group_size', day_groups);
 printNK(['Splitter Ontogeny - Mean Reliability All mice means ' ...
+    num2str(day_groups) ' day groups ' num2str(max_day) ' day max'], 'alt')
+split_ontogeny_plot(spmean_all, daydiff_all, day_groups, 'ylabel', ...
+    'Sig bin prop._{mean}', 'max_day', max_day, 'group_size', day_groups);
+printNK(['Splitter Ontogeny - Sig Bin Proportion All mice means ' ...
     num2str(day_groups) ' day groups ' num2str(max_day) ' day max'], 'alt')
 split_ontogeny_plot(dmean_all, daydiff_all, day_groups, 'ylabel', ...
     '\Deltamax_{mean}', 'max_day', max_day, 'group_size', day_groups);
@@ -181,8 +198,7 @@ printNK(['Splitter Ontogeny - sum Deltamax_norm All mice means ' ...
 
 
 %% Now do all the above but for placefields!
-
-save_pdf = true;
+save_pdf = false;
 pthresh = 0.05;
 days_ba = 9;
 free_only = true;
@@ -197,6 +213,8 @@ MImean_stem_noalign_all = [];
 lc_stage_pcs_all = [];
 pc_onset_bymouse = cell(1,6);
 pc_onsetstage_bymouse = cell(1,6);
+stem_only_inds = cell(1,6);
+stemactive_inds = cell(1,6);
 % alt_inds = [1 2 3 4 5 6]; % Use these groups of sessions in alt_all_cell_sp - need
 % to figure out how to combine G45 1st and 2nd half and G48 1st and 2nd
 % half
@@ -206,14 +224,15 @@ for j=1:6 %k = 1:length(alt_inds)
 %     j = alt_inds(k);
 
     [ sigmat, MImat, onsetsesh, days_aligned, ~, ~,...
-        MImat_arms, days_aligned_arms, MImat_stem, days_aligned_stem] = ...
+        MImat_arms, days_aligned_arms, MImat_stem, days_aligned_stem, ~, ...
+        stem_only_inds_temp, stem_inds_temp] = ...
         track_PFontogeny(alt_all_cell_sp{j}(1), ...
         alt_all_cell_sp{j}(2:end), pthresh, 'days_ba', days_ba, ...
         'free_only', free_only, 'ignore_sameday', ignore_sameday, ...
         'nactive_thresh', nactive_thresh);
     
     if save_pdf
-        printNK(['PFSplitter Ontogeny ba=' num2str(days_ba) ' days'],'alt', ...
+        printNK(['PF Ontogeny ba=' num2str(days_ba) ' days'],'alt', ...
             'append', true)
         close(gcf)
     end
@@ -226,6 +245,8 @@ for j=1:6 %k = 1:length(alt_inds)
         unique_daydiff_arms);
     
     pc_onset_bymouse{j} = onsetsesh;
+    stem_only_inds{j} = stem_only_inds_temp;
+    stemactive_inds{j} = stem_inds_temp;
     
     % Find what stage of learning pc onset occurs in
     pc_onsetstage_bymouse{j} = assign_onset_stage(alt_all_cell_sp{j}, ...
@@ -280,24 +301,27 @@ end
 
 
 %% Place Cell Ontogeny Population plots with smoothed windows before/after
-day_groups = 3;
+day_groups = 5;
+max_day = 10;
 [~, ~, ~, hplot] = split_ontogeny_plot(MImat_arms_all, daydiff_arms_all, ...
-    day_groups, 'ylabel', 'Mutual Information', 'max_day', 9);
+    day_groups, 'ylabel', 'Mutual Information', 'max_day', max_day);
 title(hplot,'Return Arm Place Cells'); 
 xlabel(hplot, 'Days from Place Cell Birth');
-printNK('Return Arm Place Cell Ontogeny - All mice means 3 day groups 9 day max', 'alt')
+printNK(['Return Arm Place Cell Ontogeny - All mice means ' num2str(day_groups)...
+    ' groups ' num2str(max_day) ' day max'], 'alt')
 [~, ~, ~, hplot] = split_ontogeny_plot(MImat_stem_all, daydiff_stem_all, ...
-    day_groups, 'ylabel', 'Mutual Information', 'max_day', 9);
+    day_groups, 'ylabel', 'Mutual Information', 'max_day', max_day);
 title(hplot,'Stem Place Cells'); 
 xlabel(hplot, 'Days from Place Cell Birth');
-printNK('Stem Place Cell Ontogeny - All mice means 3 day groups 9 day max', 'alt')
+printNK(['Stem Place Cell Ontogeny - All mice means ' num2str(day_groups)...
+    ' groups ' num2str(max_day) ' day max'], 'alt')
 
 %% Compare PF onset to splitter onset
 mouse_names = {'G30', 'G31', 'G45\_1sthalf', 'G45\_2ndhalf', ...
     'G48\_1sthalf', 'G48\_2ndhalf'};
 mouse_names_print = {'G30', 'G31', 'G45_1', 'G45_2', 'G48_1',  'G48_2'};
 
-% Individual Mice
+% Individual Mice - could be PC on either stem OR arm OR both
 for j = 1:6
     plot_phenotype_onset(pc_onset_bymouse{j}, split_onset_bymouse{j},...
         mouse_names{j})  
@@ -311,6 +335,32 @@ printNK('Split v Onset Diffs for All Mice','alt');
 % Combined mice - exclude 2nd half of G45 and G48 since you don't have a
 % legit reference point!
 plot_phenotype_onset(cat(1,pc_onset_bymouse{[1 2 3 5]}), ...
+    cat(1,split_onset_bymouse{[1 2 3 5]}),...
+    'All Mice/Sessions - Good for absolute onset day plots!')
+printNK('Split and PC absolute onset days All Mice', 'alt');
+
+%% Repeat above but only for cells that have fields on the stem ONLY at PC onset
+% They look basically the same as when I consider ALL place cell locations.
+stemonlypc_onset_bymouse = cellfun (@(a) nan(length(a),1), pc_onset_bymouse,...
+    'UniformOutput', false);
+for j = 1:6 
+    stemonlypc_onset_bymouse{j}(stem_only_inds{j}) = ...
+        pc_onset_bymouse{j}(stem_only_inds{j}); 
+end
+
+for j = 1:6
+    [~, ha] = plot_phenotype_onset(stemonlypc_onset_bymouse{j}, split_onset_bymouse{j},...
+        mouse_names{j});
+    title(ha(6),'PCs have fields on stem ONLY at onset');
+    printNK(['Split v PC Onset with stem fields ONLY plots ' mouse_names_print{j}], 'alt');
+    
+end
+
+plot_phenotype_onset(cat(1,stemonlypc_onset_bymouse{:}), cat(1,split_onset_bymouse{:}),...
+    'All Mice/Sessions Stem PCs at Birth Only - Onset Diff Only!')
+printNK('Split v Onset Diffs for All Mice','alt');
+
+plot_phenotype_onset(cat(1,stemonlypc_onset_bymouse{[1 2 3 5]}), ...
     cat(1,split_onset_bymouse{[1 2 3 5]}),...
     'All Mice/Sessions - Good for absolute onset day plots!')
 printNK('Split and PC absolute onset days All Mice', 'alt');

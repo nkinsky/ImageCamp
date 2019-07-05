@@ -1,7 +1,12 @@
-function [ ] = cropVideo( vid_file )
-% cropVideo( vid_file )
+function [ ] = cropVideo( vid_file, ds_factor )
+% cropVideo( vid_file, ds_factor )
 %   Takes an existing video and crops it down to eliminate any extraneous
-%   pixels.
+%   pixels. ds_factor = amount to spatially downsample high-res videos.
+%   default = 1;
+
+if nargin < 2
+    ds_factor = 1;
+end
 
 [p,f,ext] = fileparts(vid_file);
 file_out = fullfile(p,[f '_crop' ext]);
@@ -33,13 +38,24 @@ crop_ind = [crop_rect(1) crop_rect(1)+crop_rect(3); ...
 numFrames = round(obj.Duration*obj.FrameRate);
 open(obj_out);
 
-hwb = waitbar(0,'Writing Cropped Video');
-for j = 1:numFrames
-   frame_in = readFrame(obj);
-   frame_crop = frame_in(crop_ind(2,1):crop_ind(2,2),...
-       crop_ind(1,1):crop_ind(1,2));
-   writeVideo(obj_out,frame_crop);
-   waitbar(j/numFrames,hwb);
+if ds_factor == 1 || isnan(ds_factor) % Don't resize/downsample
+    hwb = waitbar(0,'Writing Cropped Video');
+    for j = 1:numFrames
+        frame_in = readFrame(obj);
+        frame_crop = frame_in(crop_ind(2,1):crop_ind(2,2),...
+            crop_ind(1,1):crop_ind(1,2));
+        writeVideo(obj_out,frame_crop);
+        waitbar(j/numFrames,hwb);
+    end
+elseif ~isnan(ds_factor) && ds_factor > 1 %spatially downsample by specified factor
+    hwb = waitbar(0,'Writing Cropped & Downsampled Video');
+    for j = 1:numFrames
+        frame_in = readFrame(obj);
+        frame_crop = imresize(frame_in(crop_ind(2,1):crop_ind(2,2),...
+            crop_ind(1,1):crop_ind(1,2)), 1/ds_factor);
+        writeVideo(obj_out,frame_crop);
+        waitbar(j/numFrames,hwb);
+    end
 end
 
 close(obj_out);

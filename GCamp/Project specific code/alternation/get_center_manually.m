@@ -1,6 +1,6 @@
 % Script to get aligned data center arm location
 
-sesh_use = G48_alt;
+sesh_use = MD(ref.G30_scalefix);
 figure; 
 xall = [];
 yall = [];
@@ -36,11 +36,11 @@ xlabel('y position')
 %% Adjust
 center_prop = 0.70; % proportion of the maze length that is considered center stem
 LRoffset = 5; % half of effective arm width
-bot_arm = 10; % Located on left of x pos graph
-top_arm = 70; % Right of x pos graph
-left_arm = 20.5; % Bottom of y pos graph
-right_arm = 44.5; % Top of y pos graph
-center_loc = 33.0;
+bot_arm = 9; % Located on left of x pos graph
+top_arm = 61; % Right of x pos graph
+left_arm = 17; % Bottom of y pos graph
+right_arm = 34; % Top of y pos graph
+center_loc = 25.5;
 
 w = ceil(rect(4));
 l = (top_arm - bot_arm)*center_prop;

@@ -1,6 +1,6 @@
 % Eraser reference file
 
-[MD, ref, ref2] = MakeMouseSessionListNK('Nat');
+[MD, ref2] = MakeMouseSessionListNK('Nat');
 
 open = 0:2:12; shock = 1:2:13;
 

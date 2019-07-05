@@ -1985,6 +1985,599 @@ MD(i).Shockdur = NaN;
 MD(i).Shocklevel = NaN;
 
 
+%% Marble 27
+i = i+1;
+MD(i).Animal = 'Marble27';
+MD(i).Date = '01_28_2019';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble27\20190128_1';
+end
+MD(i).Notes = 'Day -2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble27';
+MD(i).Date = '01_28_2019';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble27\20190128_2';
+end
+MD(i).Notes = 'Day -2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble27';
+MD(i).Date = '01_29_2019';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble27\20190129_1';
+end
+MD(i).Notes = 'Day -1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble27';
+MD(i).Date = '01_29_2019';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble27\20190129_2';
+end
+MD(i).Notes = 'Day -1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble27';
+MD(i).Date = '01_30_2019';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble27\20190130_1';
+end
+MD(i).Notes = 'Day 0';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble27';
+MD(i).Date = '01_30_2019';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble27\20190130_2';
+end
+MD(i).Notes = 'Day 0';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble27';
+MD(i).Date = '01_30_2019';
+MD(i).Session = 3;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble27\20190130_3';
+end
+MD(i).Notes = '4 hr';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble27';
+MD(i).Date = '01_30_2019';
+MD(i).Session = 4;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble27\20190130_4';
+end
+MD(i).Notes = '4 hr';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble27';
+MD(i).Date = '01_31_2019';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble27\20190131_1';
+end
+MD(i).Notes = 'Day 1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble27';
+MD(i).Date = '01_31_2019';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble27\20190131_2';
+end
+MD(i).Notes = 'Day 1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble27';
+MD(i).Date = '02_01_2019';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble27\20190201_1';
+end
+MD(i).Notes = 'Day 2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble27';
+MD(i).Date = '02_01_2019';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble27\20190201_2';
+end
+MD(i).Notes = 'Day 2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble27';
+MD(i).Date = '02_06_2019';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble27\20190206_1';
+end
+MD(i).Notes = 'Day 7';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble27';
+MD(i).Date = '02_06_2019';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble27\20190206_2';
+end
+MD(i).Notes = 'Day 7';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+%% Marble 29
+i = i+1;
+MD(i).Animal = 'Marble29';
+MD(i).Date = '01_14_2019';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190114_1';
+end
+MD(i).Notes = 'Day -2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble29';
+MD(i).Date = '01_14_2019';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190114_2';
+end
+MD(i).Notes = 'Day -2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble29';
+MD(i).Date = '01_15_2019';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190115_1';
+end
+MD(i).Notes = 'Day -1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble29';
+MD(i).Date = '01_15_2019';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190115_2';
+end
+MD(i).Notes = 'Day -1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble29';
+MD(i).Date = '01_16_2019';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190116_1';
+end
+MD(i).Notes = 'Day 0';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble29';
+MD(i).Date = '01_16_2019';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190116_2';
+end
+MD(i).Notes = 'Day 0';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble29';
+MD(i).Date = '01_16_2019';
+MD(i).Session = 3;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190116_3';
+end
+MD(i).Notes = '4 hr';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble29';
+MD(i).Date = '01_16_2019';
+MD(i).Session = 4;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190116_4';
+end
+MD(i).Notes = '4 hr';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble29';
+MD(i).Date = '01_17_2019';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190117_1';
+end
+MD(i).Notes = 'Day 1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble29';
+MD(i).Date = '01_17_2019';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190117_2';
+end
+MD(i).Notes = 'Day 1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble29';
+MD(i).Date = '01_18_2019';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190118_1';
+end
+MD(i).Notes = 'Day 2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble29';
+MD(i).Date = '01_18_2019';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190118_2';
+end
+MD(i).Notes = 'Day 2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble29';
+MD(i).Date = '01_23_2019';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190123_1';
+end
+MD(i).Notes = 'Day 7';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble29';
+MD(i).Date = '01_23_2019';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190123_2';
+end
+MD(i).Notes = 'Day 7';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+%% Marble 18
+%% Marble 29
+i = i+1;
+MD(i).Animal = 'Marble18';
+MD(i).Date = '09_17_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble18\20180917_1_openfield';
+end
+MD(i).Notes = 'Day -2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble18';
+MD(i).Date = '09_17_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble18\20180917_2_fcbox';
+end
+MD(i).Notes = 'Day -2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble18';
+MD(i).Date = '09_18_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble18\20180918_1_openfield';
+end
+MD(i).Notes = 'Day -1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble18';
+MD(i).Date = '09_18_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble18\20180918_2_fcbox';
+end
+MD(i).Notes = 'Day -1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble18';
+MD(i).Date = '09_19_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble18\20180919_1_openfield';
+end
+MD(i).Notes = 'Day 0';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble18';
+MD(i).Date = '09_19_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble18\20180919_2_fcbox';
+end
+MD(i).Notes = 'Day 0';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble18';
+MD(i).Date = '09_19_2018';
+MD(i).Session = 3;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble18\20180919_3_openfield';
+end
+MD(i).Notes = '4 hr';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble18';
+MD(i).Date = '09_19_2018';
+MD(i).Session = 4;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble18\20180919_4_fcbox';
+end
+MD(i).Notes = '4 hr';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble18';
+MD(i).Date = '09_20_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble18\20180920_1_openfield';
+end
+MD(i).Notes = 'Day 1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble18';
+MD(i).Date = '09_20_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble18\20180920_2_fcbox';
+end
+MD(i).Notes = 'Day 1';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble18';
+MD(i).Date = '09_21_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble18\20180921_1_openfield';
+end
+MD(i).Notes = 'Day 2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble18';
+MD(i).Date = '09_21_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble18\20180921_2_fcbox';
+end
+MD(i).Notes = 'Day 2';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble18';
+MD(i).Date = '09_26_2018';
+MD(i).Session = 1;
+MD(i).Env = 'Open';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble18\20180926_1_openfield';
+end
+MD(i).Notes = 'Day 7';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+i = i+1;
+MD(i).Animal = 'Marble18';
+MD(i).Date = '09_26_2018';
+MD(i).Session = 2;
+MD(i).Env = 'Shock';
+MD(i).Room = 'CILSE 721 F';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'E:\Eraser\Anisomycin Group\Marble18\20180926_2_fcbox';
+end
+MD(i).Notes = 'Day 7';
+MD(i).Freezing = NaN;
+MD(i).Shockdur = NaN; 
+MD(i).Shocklevel = NaN;
+
+
 
 %% Other stuff copied over from NK file so I don't overwrite MasterDirectory.mat
 % accidentally and cause an issue!
@@ -2518,7 +3111,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_31\Alternation\11_24_2014';
 end
 MD(i).Notes = 'Acclimation Session';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 i = i+1;
@@ -2533,7 +3126,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_31\Alternation\11_25_2014';
 end
 MD(i).Notes = 'Will Method';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 i = i+1;
@@ -2548,7 +3141,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_31\Alternation\11_26_2014';
 end
 MD(i).Notes = 'Will Method';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 i = i+1;
@@ -2563,7 +3156,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_31\Alternation\12_02_2014';
 end
 MD(i).Notes = 'Will Method';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 77.5;
 
 i = i+1;
@@ -2578,7 +3171,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_31\Alternation\12_03_2014';
 end
 MD(i).Notes = 'Will Method';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 67.5;
 
 i = i+1;
@@ -2591,7 +3184,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp mice\G31\alternation\12_04_2014\Working';
 end
 MD(i).Notes = 'Will Method';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 70;
 
 i = i+1;
@@ -2604,7 +3197,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp mice\G31\alternation\12_05_2014\Working';
 end
 MD(i).Notes = 'Will Method';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 70;
 
 % i = i+1;
@@ -2617,7 +3210,7 @@ MD(i).perf = 70;
 %     MD(i).Location = 'J:\GCamp Mice\Working\G31\alternation\12_05_2014\Working\left trials';
 % end
 % MD(i).Notes = 'Correct Left Trials Only';
-% MD(i).Pix2CM = 0.15;
+% MD(i).Pix2CM = 0.10;
 % 
 % 
 % i = i+1;
@@ -2630,7 +3223,7 @@ MD(i).perf = 70;
 %     MD(i).Location = 'J:\GCamp Mice\Working\G31\alternation\12_05_2014\Working\right trials';
 % end
 % MD(i).Notes = 'Correct Right Trials Only';
-% MD(i).Pix2CM = 0.15;
+% MD(i).Pix2CM = 0.10;
 
 % Bad Motion Correction for this session. only used for behavior
 i = i+1;
@@ -2643,7 +3236,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp mice\G31\alternation\12_08_2014\Working';
 end
 MD(i).Notes = '';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 85;
 
 
@@ -2660,7 +3253,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_31\Alternation\12_09_2014';
 end
 MD(i).Notes = 'Will Method';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 77.5;
 
 % Bad imaging plane - only used for behavior
@@ -2676,7 +3269,7 @@ elseif (strcmp(userstr,'Will'))
    
 end
 MD(i).Notes = 'Will Method';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 75.0;
 
 i = i+1;
@@ -2689,7 +3282,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp mice\G31\alternation\12_11_2014\Working';
 end
 MD(i).Notes = 'Will Method';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 70;
 
 %%% Bad imaging plane (Will lifted by tether halfway through by accident) 
@@ -2704,7 +3297,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = '';
 end
 MD(i).Notes = 'Will Method';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 85;
 
 G31.alternation(2) = i;
@@ -2741,7 +3334,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\10_16_2014\Working';
 end
 MD(i).Notes = 'Looping';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 i = i+1;
@@ -2754,7 +3347,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\10_17_2014\Working';
 end
 MD(i).Notes = 'Looping + Forced Alternation';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 i = i+1;
@@ -2767,7 +3360,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\10_17_2014\Working\Looping';
 end
 MD(i).Notes = 'Looping';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 i = i+1;
@@ -2780,7 +3373,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\10_17_2014\Working\Forced';
 end
 MD(i).Notes = 'Forced Only';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 
@@ -2794,7 +3387,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\10_21_2014\Working';
 end
 MD(i).Notes = 'Looping + Forced Alternation';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 i = i+1;
@@ -2807,7 +3400,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\10_21_2014\Working\Looping';
 end
 MD(i).Notes = 'Looping';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 i = i+1;
@@ -2820,7 +3413,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\10_21_2014\Working\Forced';
 end
 MD(i).Notes = 'Forced ONly';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 i = i+1;
@@ -2833,7 +3426,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\10_23_2014\Working';
 end
 MD(i).Notes = 'Looping + Forced Alternation';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 i = i+1;
@@ -2846,7 +3439,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\10_23_2014\Working\Looping';
 end
 MD(i).Notes = 'Looping';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 i = i+1;
@@ -2859,7 +3452,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\10_23_2014\Working\Forced';
 end
 MD(i).Notes = 'Forced Only';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 i = i+1;
@@ -2872,7 +3465,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\10_28_2014\Working';
 end
 MD(i).Notes = 'Will Method';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 i = i+1;
@@ -2887,7 +3480,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_30\Alternation\10_28_2014';
 end
 MD(i).Notes = 'Free Alternation';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 i = i+1;
@@ -2902,7 +3495,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_30\Alternation\10_31_2014';
 end
 MD(i).Notes = 'Free alternation';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 85;
 
 i = i+1;
@@ -2917,7 +3510,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_30\Alternation\10_31_2014';
 end
 MD(i).Notes = 'Forced part of session 1 (first part)';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = nan;
 
 i = i+1;
@@ -2932,7 +3525,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_30\Alternation\11_04_2014';
 end
 MD(i).Notes = 'Regular Alternation';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 71.4;
 
 i = i+1;
@@ -2947,7 +3540,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_30\Alternation\11_06_2014';
 end
 MD(i).Notes = 'Regular Alternation';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 84.6;
 
 i = i+1;
@@ -2962,7 +3555,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_30\Alternation\11_07_2014';
 end
 MD(i).Notes = 'Regular Alternation';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 82.5;
 
 i = i+1;
@@ -2977,7 +3570,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_30\Alternation\11_10_2014';
 end
 MD(i).Notes = 'Regular Alternation';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 82.5;
 
 i = i+1;
@@ -2994,7 +3587,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_30\Alternation\11_11_2014';
 end
 MD(i).Notes = 'Regular Alternation';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 84;
 
 i = i+1;
@@ -3011,7 +3604,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_30\Alternation\11_12_2014';
 end
 MD(i).Notes = 'Regular Alternation';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 86;
 % 
 % i = i+1;
@@ -3056,7 +3649,7 @@ elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_30\Alternation\11_13_2014';
 end
 MD(i).Notes = 'Regular Alternation';
-MD(i).Pix2CM = 0.15;
+MD(i).Pix2CM = 0.10;
 MD(i).perf = 88.3;
 
 % i = i+1;
@@ -3088,6 +3681,46 @@ MD(i).perf = 88.3;
 % MD(i).Pix2CM = 0.15;
 
 G30.alternation(2) = i;
+
+%% G30_alternation with scaled fixed
+G30_scalefix(1) = i+1;
+i = i+1;
+MD(i).Animal = 'GCamp6f_30_sf';
+MD(i).Date = '11_12_2014';
+MD(i).Session = 1;
+MD(i).Env = 'Alternation';
+MD(i).Room = '2 Cu 201B';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\11_12_2014\Working\scale_fixed';
+elseif (strcmp(userstr,'Nat_laptop'))
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_12_2014\Working';
+elseif (strcmp(userstr,'Will'))
+    MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_30\Alternation\11_12_2014';
+end
+MD(i).Notes = 'Regular Alternation';
+MD(i).Pix2CM = 0.10;
+MD(i).perf = 86;
+
+
+i = i+1;
+MD(i).Animal = 'GCamp6f_30_sf';
+MD(i).Date = '11_13_2014';
+MD(i).Session = 1;
+MD(i).Env = 'Alternation';
+MD(i).Room = '2 Cu 201B';
+if (strcmp(userstr,'Nat'))
+    MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\11_13_2014\Working\scale_fixed';
+elseif (strcmp(userstr,'Nat_laptop'))
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working';
+elseif (strcmp(userstr,'Will'))
+    MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_30\Alternation\11_13_2014';
+end
+MD(i).Notes = 'Regular Alternation';
+MD(i).Pix2CM = 0.10;
+MD(i).perf = 88.3;
+
+G30_scalefix(2) = i;
+
 
 %% G30 2env experiment
 
@@ -6207,6 +6840,7 @@ MD(i).Pix2CM = 0.27;
 %% Compile session_ref
 
 session_ref.G30 = G30;
+session_ref.G30_scalefix = G30_scalefix;
 session_ref.G31 = G31;
 session_ref.G41 = G41;
 session_ref.G44 = G44;

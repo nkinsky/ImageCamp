@@ -1,7 +1,7 @@
 function [] = alt_group_plot_perf_v_split(ax, metric_mean, perf_mean, metric_label)
 % Plots mean performance v splittiness metrics for each mouse
 
-plot(ax, metric_mean, perf_mean, 'o'); 
+plot(ax, metric_mean, perf_mean, '^'); 
 ylabel(ax, 'Performance (%)');
 xlabel(ax, metric_label);
 

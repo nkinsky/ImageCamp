@@ -16,12 +16,12 @@ function [firstturn_corr, otherturn_corr, PVcorr_firstturn, PVcorr_otherturn] ..
 %
 %   OUTPUTS
 %       firstturn_corr, otherturn_corr: ncells x ntrials array of
-%       correlations between calcium activity on each trial going that
-%       direction and entire session tuning curve
+%       correlations between calcium activity on each trial with the 
+%       entire session tuning curve for each direction
 %
 %       PVcorr_firstturn, PVcorr_otherturn: ntrials array of correlations
 %       between tuning curve of all cells on each trial with the whole
-%       session curve
+%       session curve for each direction
 
 if nargin < 3
     plot_flag = true;
@@ -101,6 +101,13 @@ for k = 1:ntrials(other_turn_dir)
     otherturn_corr(:,k) = cellfun(@(a,b) corr(a(k,:)', b(other_turn_dir,:)',...
     'type','Spearman'), splitters_sig(:,other_turn_dir), tuningstem_sig);
 end
+
+% Now get LvR trial corrs
+% LR_corr = nan(nsplit, ntrials(other_turn_dir));
+% for m = 1:min(ntrials)
+%     LRcorr(:,m) = cellfun(@(a) corr(a(1,:)', a(2,:)', 'type', 'Spearman'), ...
+%         splitters_sig);
+% end
 
 % keyboard
 %% Now do the same but for the whole population at once - basically get PV 

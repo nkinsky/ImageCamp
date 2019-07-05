@@ -1,6 +1,6 @@
 function [ ] = make_fakeDVT( vidfilename )
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+% make_fakeDVT( vidfilename )
+%   Makes a fake DVT file for using with ff_video_fixer in python
 
 [~, base_name] = fileparts(vidfilename);
 vidobj = VideoReader(vidfilename);

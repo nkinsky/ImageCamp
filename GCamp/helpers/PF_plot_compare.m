@@ -18,15 +18,18 @@ function [ ] = PF_plot_compare( session1, session2, neuron_map, varargin)
 %           use only cells that pass pval thresh for BOTH sessions, 4 = use
 %           only cells that pval thresh for EITHER session
 
-PF_filenames = {'PlaceMaps.mat','PlaceMaps.mat'}; % default
-pval_thresh = [1 1];  % default
+PF_filenames = {'Placefields_cm1.mat','Placefields_cm1.mat'}; % default
+pval_thresh = 1;  % default
+calc_corrs = false; % default
 for j = 1:length(varargin)
     if strcmpi('PF_filenames',varargin{j})
         PF_filenames = varargin{j+1};
     end
-    if strcmpi('pval_filter',varargin{j})
-        filter_spec = varargin{j+1};
-        pval_thresh = varargin{j+2};
+    if strcmpi('pval_thresh',varargin{j})
+        pval_thresh = varargin{j+1};
+    end
+    if strcmpi('calc_corrs', varargin{j})
+        calc_corrs = varargin{j+1};
     end
 
 end
@@ -54,23 +57,37 @@ end
 % neurons_use = find(sesh1_filter & sesh2_filter);
 
 neurons_use = pval_filter_bw_sesh( session(1).pval, session(2).pval, neuron_map, ...
-    'filter_spec', filter_spec, 'thresh', 0.05);
+    'filter_spec', nan, 'thresh', pval_thresh);
+
+%% Calculate correlations if desired
+if calc_corrs
+    corrs_use = cellfun(@(a,b) corr(a(:),b(:),'rows','complete'), ...
+        session(1).TMap(neurons_use), session(2).TMap(neuron_map(neurons_use)));
+end
 
 %%
-figure
+figure; set(gcf,'Position', [ 353         197        1398         714]);
 n_out = 1;
 stay_in = true;
 while stay_in
     neuron1_plot = neurons_use(n_out);
-    subplot(1,2,1)
-    imagesc(session(1).TMap{neuron1_plot})
+    subplot(1,2,1);
+    imagesc_nan(session(1).TMap{neuron1_plot}); colormap('parula');
     title(['Session 1 Neuron ' num2str(neuron1_plot)])
+    axis off
     
-    subplot(1,2,2)
-    imagesc(session(2).TMap{neuron_map(neuron1_plot)})
-    title(['Session 2 Neuron ' num2str(neuron_map(neuron1_plot))])
+    subplot(1,2,2);
+    imagesc_nan(session(2).TMap{neuron_map(neuron1_plot)});
+    colormap('parula');
+    if ~calc_corrs
+        title(['Session 2 Neuron ' num2str(neuron_map(neuron1_plot))])
+    elseif calc_corrs
+        title({['Session 2 Neuron ' num2str(neuron_map(neuron1_plot))],...
+            ['\rho_{Spearman} = ' num2str(corrs_use(n_out),'%0.2g')]})
+    end
+    axis off
     
-    [n_out, stay_in] = LR_cycle(n_out,[1 length(neuron_map)]);
+    [n_out, stay_in] = LR_cycle(n_out,[1 length(neurons_use)]);
     
 end
 

@@ -3,26 +3,32 @@
 %% Register sessions!
 [MD, ~, ref] = MakeMouseSessionListEraser('Nat');
 
-mouse_use = 'Marble20';
-MDuse = MD(ref{find(strcmpi(mouse_use,ref(:,1))),2}: ...
-    ref{find(strcmpi(mouse_use,ref(:,1))),3}); %#ok<FNDSB>
-nsesh = length(MDuse);
-hw = waitbar(0,['Registering Sessions for ' mouse_use '...']);
-n = 0;
-fail_bool2 = false(nsesh);
-for j = 1:(nsesh-1)
-    for k = (j+1):nsesh
-        try
-            neuron_registerMD(MDuse(j), MDuse(k));
-        catch
-            fail_bool2(j,k) = true;
+mice_use = {'Marble18'};
+for m = 1:length(mice_use)
+    mouse_use = mice_use{m};% mouse_use = 'Marble27';
+    MDuse = MD(ref{find(strcmpi(mouse_use,ref(:,1))),2}: ...
+        ref{find(strcmpi(mouse_use,ref(:,1))),3}); %#ok<FNDSB>
+    nsesh = length(MDuse);
+    hw = waitbar(0,['Registering Sessions for ' mouse_use '...']);
+    n = 0;
+    fail_bool2 = false(nsesh);
+    for j = 1:(nsesh-1)
+        for k = (j+1):nsesh
+            try
+                neuron_registerMD(MDuse(j), MDuse(k));
+                close gcf
+                close gcf
+                close gcf
+            catch
+                fail_bool2(j,k) = true;
+            end
+            waitbar(n/(nsesh*(nsesh-1)/2),hw);
+            n = n+1;
         end
-        waitbar(n/(nsesh*(nsesh-1)/2),hw);
-        n = n+1;
+        
     end
-    
+    close(hw)
 end
-close(hw)
 
 %% When done with above, run to qc registrations - use plot_registration
 mice_use = {'Marble20'};

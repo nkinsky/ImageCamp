@@ -92,11 +92,13 @@ stay_prop_all = cell(num_mice,1);
 coactive_prop_all = cell(num_mice,1);
 ncoactive_all = cell(num_mice, 1);
 ntrials1_all = cell(num_mice, 1);
+cat_names = [];
 for j = 1:num_mice
     seshs_use = good_seshs{j};
     sesh_temp = mice_sesh{j};
     for k = 1:size(seshs_use,1)
-        [~, stay_prop, coactive_prop, cat_names, coactive_bool] = alt_stability_v_cat(...
+        [~, stay_prop, coactive_prop, cat_names, coactive_bool] = ...
+            alt_stability_v_cat(...
             sesh_temp(seshs_use(k,1)), sesh_temp(seshs_use(k,2)), ...
             'plot_flag', false, 'PFname', PFname, 'matchER', matchER);
         stay_prop_all{j} = cat(1,stay_prop_all{j},stay_prop);

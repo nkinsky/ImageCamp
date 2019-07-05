@@ -1,9 +1,10 @@
 function [ relymat, deltamaxmat, sigmat, onsetsesh, days_aligned,...
-    pkw, cmat, deltamax_normmat, sesh_final, dint_normmat, relymeanmat] = ...
+    pkw, cmat, deltamax_normmat, sesh_final, dint_normmat, relymeanmat, ...
+    sigpropmat] = ...
     track_splitters( MDbase, MDreg, varargin)
 % [ relymat, deltamaxmat, deltamat, sigmat, onsetsesh, dayarray,...
-%   p_anova, cmat, deltamax_normmat, sesh_final, dint_normmat] = ...
-%       track_splitters( MDbase, MDreg, sigthresh, xlims)
+%   p_anova, cmat, deltamax_normmat, sesh_final, dint_normmat, relymeanmat,...
+%   sigpropmat] = track_splitters( MDbase, MDreg, sigthresh, xlims)
 %
 %   track splitters across days by spitting out relymat and deltamat that
 %   tracks 1-pval and deltacurve from sigsplitters.mat for each neuron, and
@@ -34,6 +35,7 @@ ip.addParameter('days_ba', 2, @(a) a > 0 && round(a) == a);
 ip.addParameter('free_only', true, @islogical);
 ip.addParameter('ignore_sameday', true, @islogical);
 ip.addParameter('dplot', 'norm_max_int', @ischar);
+ip.addParameter('rplot', 'rely_mean', @ischar);
 ip.addParameter('nactive_thresh', 0,@(a) a >= 0 && round(a) == a);
 ip.parse(MDbase, MDreg, varargin{:});
 sigthresh = ip.Results.sigthresh;
@@ -42,6 +44,7 @@ free_only = ip.Results.free_only;
 ignore_sameday = ip.Results.ignore_sameday;
 dplot = ip.Results.dplot;
 nactive_thresh = ip.Results.nactive_thresh;
+rplot = ip.Results.rplot;
 
 xlims = [-days_ba - 0.5, days_ba + 0.5];
 
@@ -94,8 +97,8 @@ num_neurons = size(batch_map,1);
 %%% is a NaN anywhere along the way?
 
 % Pre-allocate
-[relymat , deltamaxmat, sigmat, deltamax_normmat, dint_normmat, relymeanmat] = ... 
-    deal(nan(num_neurons, num_sessions));
+[relymat , deltamaxmat, sigmat, deltamax_normmat, dint_normmat, relymeanmat,...
+    sigpropmat] = deal(nan(num_neurons, num_sessions));
 for j = 1:num_sessions
     
     % Get session and map indices to use
@@ -105,7 +108,7 @@ for j = 1:num_sessions
     
     % Get "splittiness" metrics and validly mapped cells for that session
     [ rely_val, delta_max, sigsplitter_bool , stem_bool, dmax_norm, nactive_stem,...
-        dint_norm, ~, rely_mean] = ...
+        dint_norm, ~, rely_mean, sigbin_prop] = ...
         parse_splitters( sesh_use.Location, sigthresh );
     valid_bool = ~isnan(map_use) & map_use ~= 0; % Get boolean for validly mapped cells
     active_bool = nactive_stem >= nactive_thresh; % Boolean for cells above activity threshold
@@ -122,6 +125,7 @@ for j = 1:num_sessions
     deltamaxmat(valid_stem_bool,j) = delta_max(map_use(valid_stem_bool)); % Map delta_max
     deltamax_normmat(valid_stem_bool,j) = dmax_norm(map_use(valid_stem_bool)); % Map delta_max
     dint_normmat(valid_stem_bool,j) = dint_norm(map_use(valid_stem_bool)); % Map delta_max
+    sigpropmat(valid_stem_bool,j) = sigbin_prop(map_use(valid_stem_bool));
     
 end
 
@@ -170,6 +174,7 @@ relymeanmat = relymeanmat(splitters,:);
 deltamaxmat = deltamaxmat(splitters,:);
 deltamax_normmat = deltamax_normmat(splitters,:);
 dint_normmat = dint_normmat(splitters,:);
+sigpropmat = sigpropmat(splitters,:);
 valid_bool = ~isnan(relymat) & ~isnan(days_aligned);
 unique_daydiff = unique(days_aligned(valid_bool));
 day_labels = arrayfun(@(a) num2str(a,'%0.2g'), unique_daydiff, ...
@@ -181,20 +186,35 @@ switch dplot
     case 'max'
         scatterBox(deltamaxmat(valid_bool),days_aligned(valid_bool), 'xLabels', day_labels, ...
             'yLabel', '\Deltacurve', 'h', ha);
+        delta_use = deltamaxmat(valid_bool);
     case 'norm_max'
         scatterBox(deltamax_normmat(valid_bool), days_aligned(valid_bool), 'xLabels', day_labels, ...
-            'yLabel', '\Delta_{curve}/max_{curve}', 'h', ha)
+            'yLabel', '\Delta_{curve}/max_{curve}', 'h', ha);
+        delta_use = deltamax_normmat(valid_bool);
     case 'norm_max_int'
         scatterBox(dint_normmat(valid_bool), days_aligned(valid_bool), 'xLabels', day_labels, ...
-            'yLabel', '\Sigma\Delta_{curve}/\Sigmamax_{curve}', 'h', ha)
+            'yLabel', '\Sigma\Delta_{curve}/\Sigmamax_{curve}', 'h', ha);
+        delta_use = dint_normmat(valid_bool);
 end
 xlim(xlims)
 xlabel('Days From Splitter Onset')
 title(['Splitter Ontogeny - ' mouse_name_title(sesh(1).Animal)])
 
 ha = subplot(2,3,4:5);
-scatterBox(relymat(valid_bool(:)),days_aligned(valid_bool(:)), 'xLabels', day_labels, ...
-    'yLabel', 'reliability (1-p)', 'h', ha);
+switch rplot
+    case 'rmax'
+        scatterBox(relymat(valid_bool(:)),days_aligned(valid_bool(:)), ...
+            'xLabels', day_labels, 'yLabel', 'max reliability (1-p)', 'h', ha);
+        r_use = relymat(valid_bool);
+    case 'rmean'
+        scatterBox(relymeanmat(valid_bool(:)),days_aligned(valid_bool(:)), ...
+            'xLabels', day_labels, 'yLabel', 'mean reliability (1-p)', 'h', ha);
+        r_use = relymeanmat(valid_bool);
+    case 'sigprop'
+        scatterBox(sigpropmat(valid_bool(:)), days_aligned(valid_bool(:)), ...
+            'xLabels', day_labels, 'yLabel', 'Prop. significant bins', 'h', ha);
+        r_use = sigpropmat(valid_bool);
+end
 xlim(xlims)
 xlabel('Days From Splitter Onset')
 make_figure_pretty(gcf);
@@ -212,8 +232,8 @@ daysvalid = days_aligned(valid_bool);
 ba_bool = arrayfun(@(a) ismember(a, days_use),daysvalid);
 
 % Run for deltamax
-deltavalid = deltamaxmat(valid_bool);
-[pkw, ~, stats] = kruskalwallis(deltavalid(ba_bool), daysvalid(ba_bool),'off');
+% deltavalid = deltamaxmat(valid_bool);
+[pkw, ~, stats] = kruskalwallis(delta_use(ba_bool), daysvalid(ba_bool),'off');
 [cmat, ~] = multcompare(stats,'Display','off');
 unique_days = unique(daysvalid(ba_bool));
 cmat(:,1) = unique_days(cmat(:,1));
@@ -227,9 +247,9 @@ text(0.1, 0.95, ['pkw = ' num2str(pkw, '%0.2g')])
 axis off
 
 % run for relymat
-relyvalid = relymat(valid_bool);
+% relyvalid = relymat(valid_bool);
 
-[pkw, ~, stats] = kruskalwallis(relyvalid(ba_bool), daysvalid(ba_bool),'off');
+[pkw, ~, stats] = kruskalwallis(r_use(ba_bool), daysvalid(ba_bool),'off');
 [cmat, ~] = multcompare(stats,'Display','off');
 unique_days = unique(daysvalid(ba_bool));
 cmat(:,1) = unique_days(cmat(:,1));

@@ -9,7 +9,7 @@ function [ good_map, become_silent, new_cells, ambig_silent, ambig_new] = ...
 %   the same cells miscategorized as new or silent. overlap_thresh sets the
 %   level for ambiguous mappings (i.e. 0.25 means cells must have <= 25%
 %   overlapping pixels with their nearest neighbor to be considered silent,
-%   nan means no good silent/new cells - all get thrown into ambig_silent
+%   0 means no good silent/new cells - all get thrown into ambig_silent
 %   and ambig_new).
 
 if nargin < 4

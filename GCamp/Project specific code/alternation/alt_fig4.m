@@ -8,15 +8,15 @@ trial_types = {'all', 'free_only', 'forced_only', 'no_loop'};
 hw = waitbar(0,'Running reactivation prob vs phenotype...');
 n = 1;
 for j = 1:4
-    sesh_use = alt_all_cell{j};
-    mouse_name = sesh_use(1).Animal;
+    alt_sesh_use = alt_all_cell{j};
+    mouse_name = alt_sesh_use(1).Animal;
     for m = 0:1
         matchER = logical(m);
         for ttype = 1:4
             trial_type = trial_types{ttype};
             for days = 0:7
                 try
-                    alt_plot_stab_v_cat(days, 'exact', sesh_use, false, ...
+                    alt_plot_stab_v_cat(days, 'exact', alt_sesh_use, false, ...
                         'PFname', 'Placefields_cm1.mat', ...
                         'matchER', matchER, 'trial_type', trial_type);
                     printNK(['Coactivity by phenotype - ' mouse_name ' ' ...
@@ -38,18 +38,18 @@ end
 close(hw)
 
 %% Reactivation Probability at different time lags
-sesh_use = alt_all_cell; %alt_all_cell = all mice, alt_all_cell[1} = mouse 1
+alt_sesh_use = alt_all_cell; %alt_all_cell = all mice, alt_all_cell[1} = mouse 1
 matchER = true;
 trial_type = 'free_only';
 
 % One day looks great - all mice
-alt_plot_stab_v_cat(1, 'exact', sesh_use, false, 'PFname', 'Placefields_cm1.mat', ...
+alt_plot_stab_v_cat(1, 'exact', alt_sesh_use, false, 'PFname', 'Placefields_cm1.mat', ...
     'matchER', matchER, 'trial_type', trial_type);
 printNK(['All Mice Split v PC Prob present at 1 day lag matchER=' ...
     num2str(matchER)],'alt')
 
 % 7 day - all mice
-alt_plot_stab_v_cat(7, 'exact', sesh_use, false, 'PFname', 'Placefields_cm1.mat', ...
+alt_plot_stab_v_cat(7, 'exact', alt_sesh_use, false, 'PFname', 'Placefields_cm1.mat', ...
     'matchER', matchER, 'trial_type', trial_type);
 printNK(['All Mice Split v PC Prob present at 7 day lag matchER=' ...
     num2str(matchER)],'alt')
@@ -72,7 +72,7 @@ printNK(['G45 Split v PC Prob present at 7 day lag matchER=' ...
 % sessions that were longer than a certain amount of time...yes!!!
 max_day_lag = 21;
 sessions = alt_all_cell; % Change this to make plots for each mouse...
-matchER = false; % March event-rate in non-splitters to splitters
+matchER = true; % March event-rate in non-splitters to splitters
 trial_type = 'free_only'; % 'no_loop';
 
 nmice = length(sessions);
@@ -84,7 +84,7 @@ ntrials1_v_days = cell(1, max_day_lag + 1);
 % Get probabilities for each mouse and day lag
 hw = waitbar(0,'Get proportions across days');
 for j = 1:max_day_lag
-    [ stay_prop, coactive_prop, cat_names, ncoactive_all, ntrials1] = ...
+    [ stay_prop, coactive_prop, temp_names, ncoactive_all, ntrials1] = ...
         alt_stab_v_cat_batch(j, 'exact', sessions, 'Placefields_cm1.mat', ...
         matchER, trial_type);
     stay_prop_v_days{j+1} = stay_prop;
@@ -104,6 +104,10 @@ for j = 1:max_day_lag
        catch
            
        end
+    end
+    
+    if ~isempty(temp_names) % bugfix hack
+        cat_names = temp_names;
     end
 end
 close(hw)
@@ -128,15 +132,16 @@ for j = 1:max_day_lag
     stay_mean(j+1,:) = nanmean(coactive_for_day);
     stay_std(j+1,:) = nanstd(coactive_for_day);
     
-    stay_diff_mean(j+1,:) = nanmean(coactive_for_day(:,1) - ...
-        coactive_for_day(:,3)); 
-    stay_diff_std(j+1,:) = nanstd(coactive_for_day(:,1) - ...
-        coactive_for_day(:,3)); 
-    
+    if ~isempty(coactive_for_day)
+        stay_diff_mean(j+1,:) = nanmean(coactive_for_day(:,1) - ...
+            coactive_for_day(:,3));
+        stay_diff_std(j+1,:) = nanstd(coactive_for_day(:,1) - ...
+            coactive_for_day(:,3));
+    end
 end
 
 %% Plot it!
-other_type = 'Arm NPCs'; % specify neuron phenotype to plot versus splitters
+other_type = 'Stem PCs'; % specify neuron phenotype to plot versus splitters
 
 % Get zero and 1 points due to low # cells starting out as splitter/armPC 
 % phenotype in G30 lag 5 and G48 lag 8,9,10,and 13 analyses. Recommend
@@ -181,20 +186,28 @@ good_bool = ~outlier_bool & ntrial_bool;
 
 % Label stuff
 legend(cat(1,hs_sp,hs_other), {'Splitters', other_type})
-plot((0:max_day_lag)', stay_mean(:,split_ind),'g-')
-plot((0:max_day_lag)', stay_mean(:,other_ind),'r-')
+plot((0:max_day_lag)', stay_mean(1:(max_day_lag+1),split_ind),'g-')
+plot((0:max_day_lag)', stay_mean(1:(max_day_lag+1),other_ind),'r-')
 xlabel('Lag (days)')
 title(['All Mice, matchER=' num2str(matchER) ' trial\_type=' ...
     mouse_name_title(trial_type)])
 make_plot_pretty(gca)
 
 % Get ranksum and signed-test stats
-prks = arrayfun(@(a) ranksum(coactive_prop_all(a == grps_all(:, split_ind) & good_bool, split_ind), ...
-    coactive_prop_all(a == grps_all(:, other_ind) & good_bool, other_ind)),1:max_day_lag);
-psign = arrayfun(@(a) signtest(coactive_prop_all(a == grps_all(:, split_ind) & good_bool, split_ind), ...
-    coactive_prop_all(a == grps_all(:, other_ind) & good_bool, other_ind),'tail','right'),1:max_day_lag);
-prsign = arrayfun(@(a) signrank(coactive_prop_all(a == grps_all(:, split_ind) & good_bool, split_ind), ...
-    coactive_prop_all(a == grps_all(:, other_ind) & good_bool, other_ind),'tail','right'),1:max_day_lag);
+run_ok = false;
+while ~run_ok
+    try
+        prks = arrayfun(@(a) ranksum(coactive_prop_all(a == grps_all(:, split_ind) & good_bool, split_ind), ...
+            coactive_prop_all(a == grps_all(:, other_ind) & good_bool, other_ind)),1:max_day_lag);
+        psign = arrayfun(@(a) signtest(coactive_prop_all(a == grps_all(:, split_ind) & good_bool, split_ind), ...
+            coactive_prop_all(a == grps_all(:, other_ind) & good_bool, other_ind),'tail','right'),1:max_day_lag);
+        prsign = arrayfun(@(a) signrank(coactive_prop_all(a == grps_all(:, split_ind) & good_bool, split_ind), ...
+            coactive_prop_all(a == grps_all(:, other_ind) & good_bool, other_ind),'tail','right'),1:max_day_lag);
+    run_ok = true;
+    catch
+        max_day_lag = max_day_lag - 1;
+    end
+end
 
 % Set-up holm-bonferroni correction
 ngrps = length(unique(grps_all));
@@ -221,15 +234,22 @@ axis off
 hs_other.XData = hs_other.XData - 0.1;
 hs_sp.XData = hs_sp.XData + 0.1;
 
-
-printNK(['Coactivity vs time split v ' other_type ' - All Mice matchER=' num2str(matchER)...
-    ' trial_type=' trial_type 'max_lag=' num2str(max_day_lag)], 'alt')
+if iscell(sessions) && length(sessions) == 4
+    printNK(['Coactivity vs time split v ' other_type ' - All Mice matchER=' num2str(matchER)...
+        ' trial_type=' trial_type 'max_lag=' num2str(max_day_lag)], 'alt')
+elseif iscell(sessions) && length(sessions) == 1
+    printNK(['Coactivity vs time split v ' other_type ' - ' sessions{1}(1).Animal ' matchER=' num2str(matchER)...
+        ' trial_type=' trial_type 'max_lag=' num2str(max_day_lag)], 'alt')
+end
 
 %% Same as above but for difference between curves
 figure; set(gcf,'Position',[2030 240 890 740])
 hd = subplot(3,1,1:2);
 
-diff_all = coactive_prop_all(good_bool,1) - coactive_prop_all(good_bool,3);
+diff_all = coactive_prop_all(good_bool,1) - ...
+    coactive_prop_all(good_bool, other_ind);
+    
+    
 [~,~, hs_diff] = scatterBox(diff_all, grps_all(good_bool,1), 'xLabels', ...
     arrayfun(@num2str, 0:max_day_lag, 'UniformOutput', false), ...
     'yLabel', 'Delta Prob. Co-active', 'h', hd, 'plotBox', false, 'transparency', 0.3,...
@@ -250,7 +270,7 @@ set(h0,'Color',[0.5 0.5 0.5])
 hdq = plot(1:max_day_lag, [q75; q25],'k--');
 legend(cat(1,hdm,hdq(1)), {'Mean','25%/75% Quantiles'})
 xlabel('Lag (days)')
-title(['Split - Arm PCs, All Mice, matchER=' num2str(matchER) ' trial\_type=' trial_type])
+title(['Split - ' other_type ', All Mice, matchER=' num2str(matchER) ' trial\_type=' trial_type])
 make_plot_pretty(gca)
 
 % prks = arrayfun(@(a) ranksum(coactive_prop_all(a == grps_all(:,1) & good_bool,1), ...
@@ -269,7 +289,7 @@ make_plot_pretty(gca)
 % hs_apc.XData = hs_apc.XData - 0.1;
 % hs_sp.XData = hs_sp.XData + 0.1;
 
-printNK(['Coactivity Diff vs time - All Mice matchER=' num2str(matchER)...
+printNK(['Coactivity Diff with ' other_type ' vs time - All Mice matchER=' num2str(matchER)...
     ' trial_type=' trial_type 'max_lag=' num2str(max_day_lag)], 'alt')
 
 %% ScatterBox with lines for all day lags
@@ -453,3 +473,106 @@ end
 %% Last do the same as above but considering only super-fine levels of reliability
 % value to see if there is a trend in the most splitty neurons - should be
 % pretty similar to the above but doesn't require excluding non-splitters!
+
+%% Per Nick comment get turnover rate of neurons for each mouse by day lag 
+% for alternation versus two env task - only consider first eight days?
+twoenv_reference; 
+overlap_thresh = 1; % 1 = allow all cells through
+
+lag_overlap = cell(4,4); % 1st row = alt, 2nd = square, 3rd = oct, 4th = alt (forced)
+for j = 1:4
+    alt_sesh_use = alt_all_cell{j};
+    [loop_bool, ~, free_bool] = alt_id_sesh_type(alt_sesh_use);
+    alt_sesh_use = alt_sesh_use(free_bool);
+    nsesh = length(alt_sesh_use);
+    ncomps = nsesh*(nsesh+1)/2;
+    disp(['Running Free Alternation Overlaps for Mouse ' num2str(j)])
+    p = ProgressBar(ncomps);
+    for k = 1:length(alt_sesh_use)-1
+        for ll = (k+1):length(alt_sesh_use)
+            days_bw = get_time_bw_sessions(alt_sesh_use(k), alt_sesh_use(ll));
+            overlap_ratio = get_neuron_overlaps(alt_sesh_use(k), ...
+                alt_sesh_use(ll), overlap_thresh);
+            lag_overlap{j,1} = cat(1, lag_overlap{j,1}, [days_bw, overlap_ratio]);
+            p.progress;
+        end
+    end
+    p.stop;
+    
+    % Get sessions with no memory load.
+    loop_sesh_use = alt_all_cell{j}(loop_bool);
+    nsesh = length(loop_sesh_use);
+    ncomps = nsesh*(nsesh+1)/2;
+    disp(['Running Looping Overlaps for Mouse ' num2str(j)])
+    p = ProgressBar(ncomps);
+    for k = 1:nsesh-1
+        for ll = (k+1):nsesh
+            days_bw = get_time_bw_sessions(loop_sesh_use(k), loop_sesh_use(ll));
+            overlap_ratio = get_neuron_overlaps(loop_sesh_use(k), ...
+                loop_sesh_use(ll), overlap_thresh);
+            lag_overlap{j,4} = cat(1, lag_overlap{j,4}, [days_bw, overlap_ratio]);
+            p.progress;
+        end
+    end
+    p.stop;
+    
+    cmaps_sesh_use_sq = all_square2(j,:);
+    cmaps_sesh_use_oct = all_oct2(j,:);
+    nsesh = length(cmaps_sesh_use_sq);
+    ncomps = nsesh*(nsesh+1)/2;
+    disp(['Running 2env Overlaps for Mouse ' num2str(j)])
+    p = ProgressBar(ncomps);
+    for k = 1:7
+        for ll = (k+1):8
+            days_bw = get_time_bw_sessions(cmaps_sesh_use_sq(k), cmaps_sesh_use_sq(ll));
+            overlap_ratio = get_neuron_overlaps(cmaps_sesh_use_sq(k), ...
+                cmaps_sesh_use_sq(ll), overlap_thresh);
+            lag_overlap{j,2} = cat(1, lag_overlap{j,2}, [days_bw, overlap_ratio]);
+            days_bw = get_time_bw_sessions(cmaps_sesh_use_oct(k), cmaps_sesh_use_oct(ll));
+            overlap_ratio = get_neuron_overlaps(cmaps_sesh_use_oct(k), ...
+                cmaps_sesh_use_oct(ll), overlap_thresh);
+            lag_overlap{j,3} = cat(1, lag_overlap{j,3}, [days_bw, overlap_ratio]);
+            p.progress;
+        end
+    end
+    p.stop;
+    
+end
+
+save(fullfile(G30_alt(1).Location,'lag_overlap.mat'),'lag_overlap')
+
+%% Now plot above
+
+%  First combine octagon and square into one...check later to make sure different?
+lag_overlapc = lag_overlap(:,1:2);
+lag_overlapc(:,2) = cellfun(@(a,b) cat(1,a,b), lag_overlapc(:,2), lag_overlap(:,3),...
+    'UniformOutput', false);
+lag_overlapc(:,3) = lag_overlap(:,4);
+lag_overlapc{2,3} = [nan, nan];
+mean_overlaps = cellfun(@(c) arrayfun(@(a) nanmean(c(a == c(:,1),2)), 0:6),...
+    lag_overlapc, 'UniformOutput', false);
+
+% Get means for each day lag
+
+
+figure; set(gcf,'Position', [2264 264 1041 616]);
+for j = 1:4 
+    subplot(2,2,j); 
+    hold on; 
+    cellfun(@(a,b,c) plot(a(:,1) + c,a(:,2), [b 'o']), ...
+        lag_overlapc(j,:), {'r','b','g'}, {-0.1, 0, 0.1}); 
+    xlim([-0.5 6.5]); 
+    hp = plot(0:6, mean_overlaps{j,1}, 'r-', 0:6, mean_overlaps{j,2}, 'b-',...
+        0:6, mean_overlaps{j,3}, 'g-');
+    title(['Mouse ' num2str(j)]);
+    ylabel('Cell Overlap Ratio');
+    xlabel('Lag (days)');
+    if j == 4; legend(hp, {'Alternation', 'Open-field', 'Looping'}); end
+    
+end
+
+printNK('Cell Turnover between alternatio and open field - Ind Mice','alt')
+
+
+
+% Run ANCOVA to see if they have different slopes?

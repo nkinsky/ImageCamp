@@ -290,3 +290,45 @@ reg_qc_plot_batch(G48_alt(17), G48_alt(18:end), 'batch_mode', 1);
 % session 15 clump together.
 batch_session_map45a = neuron_reg_batch(G45_alt(1), G45_alt(2:15));
 batch_session_map45b = neuron_reg_batch(G45_alt(16), G45_alt(17:end));
+
+%% Save all G30 and G31 files with slightly too large scaling (pix2cm = 0.15)
+% so that you can later run with pix2cm = 0.10.
+% Done for session 13 and 14 for G30...
+
+sesh_fix = cat(2,G30_alt, G31_alt);
+pf_files = {'Placefields_cm1', 'PlacefieldStats_cm1', ...
+    'SpatialInfo_cm1'}; 
+pf_make_files = {'Pos_align.mat', 'Pos.mat'};
+split_files = {'sigSplitters', 'splitters', 'splittersByTrialType', ...
+    'Alternation', 'centerarm_manual'};
+for j = 13:14% :length(sesh_fix)
+    mkdir(ChangeDirectory_NK(sesh_fix(j)), 'scale_fixed');
+    cellfun(@(a) copyfile(fullfile(sesh_fix(j).Location, a), ...
+        fullfile(sesh_fix(j).Location, 'scale_fixed', a)), pf_make_files);
+%     cellfun(@(a) copyfile(fullfile(sesh_fix(j).Location,[a '.mat']), ...
+%         fullfile(sesh_fix(j).Location, 'scale_fixed', [a(1:(end-1)) '0_67.mat']), pf_files);
+%     cellfun(@(a) copyfile([a '.mat'], [a '0_67.mat']), split_files);
+%     cellfun(@(a) movefile([a '.mat'], [a '_smallscale_archive.mat']), pf_files);
+%     cellfun(@(a) movefile([a '.mat'], [a '_smallscale_archive.mat']), split_files);
+end
+
+%% Re-run everything for G30 and G31
+ % Run 2, 2.5, 2.95, and 3 in alternation_workflow - DONE
+ 
+ %% Check results - does slightly larger scaling factor change results?
+ todo_sesh = MD(ref.G30_scalefix);
+ 
+ % Recurrence v splittiness results.. highly correlated!!!
+ [~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, pco_v_relym, ~, rely_bin_bool] = ...
+     plot_split_v_recur(G30_alt(13), G30_alt(14), 'rely_mean_edges', 0:0.1:1);
+[~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, pco_v_relym_sf, ~, rely_bin_bool_sf] = ...
+    plot_split_v_recur(todo_sesh(1), todo_sesh(2), 'rely_mean_edges', 0:0.1:1);
+figure; plot(pco_v_relym_sf(rely_bin_bool_sf), pco_v_relym(rely_bin_bool), 'o');
+[r,p] = corr(pco_v_relym_sf(rely_bin_bool_sf)', pco_v_relym(rely_bin_bool)');
+
+% stability_v_category. Look basically the same. Highly correlated answers!
+[ ha, stay_prop, coactive_prop, cat_names, coactive_bool] = ...
+    alt_stability_v_cat(G30_alt(13), G30_alt(14), 'PFname', 'Placefields_cm1.mat');
+[ ha, stay_prop_sf, coactive_prop_sf, cat_names, coactive_bool_sf] = ...
+    alt_stability_v_cat(todo_sesh(1), todo_sesh(2), 'PFname', 'Placefields_cm1.mat');
+[rc, pc] = corr(coactive_prop', coactive_prop_sf');

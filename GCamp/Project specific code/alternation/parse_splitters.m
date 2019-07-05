@@ -1,7 +1,7 @@
 function [ rely_val, delta_max, sigbool, stem_bool, dmax_norm, nactive_stem ,...
-    dint_norm, curve_corr, rely_mean] = parse_splitters( dir_use, sigthresh, cnoise )
+    dint_norm, curve_corr, rely_mean, sigbin_prop] = parse_splitters( dir_use, sigthresh, cnoise )
 % [ rely_val, delta_max, sigbool, stem_bool, dmax_norm, nactive_stem ] = ...
-%       parse_splitters( dir_use, sigthresh )
+%       parse_splitters( dir_use, sigthresh, cnoise )
 %
 %   INPUTS: 
 %       dir_use: working directory with sigSplitters file
@@ -25,12 +25,16 @@ function [ rely_val, delta_max, sigbool, stem_bool, dmax_norm, nactive_stem ,...
 %   dmax_norm: delta_max divided by the sum of the maximum of L and R
 %   tuning curves. 1 = fires only on one trial type, 0 = no diff.
 %
-%   dint_norm_mean: the integral of abs(delta_max) divided by the sum of the L
+%   dint_norm: the integral of abs(delta_max) divided by the sum of the L
 %   and R tuning curves. 1 = fires only on one trial type, 0 = no diff.
 %
 %   curve_corr: correlation between L and R tuning curves.
 %
 %   rely_mean: mean(1-p) for entire curve
+%
+%   nactive_stem: # trials with activity on the stem
+%
+%   sigbin_prop: proportion of stem bins with significant splitting...
 
 if nargin < 3
     cnoise = false;
@@ -62,6 +66,7 @@ delta_max = nan(nneurons_sesh, 1);
 dmax_norm = nan(nneurons_sesh, 1);
 dint_norm = nan(nneurons_sesh, 1);
 curve_corr = nan(nneurons_sesh, 1);
+sigbin_prop = nan(nneurons_sesh, 1);
 rely_val(stem_bool) = cellfun(@(a) 1 - min(a), pvalue(stem_bool));
 rely_mean(stem_bool) = cellfun(@(a) mean(1 - a), pvalue(stem_bool));
 delta_max(stem_bool) = cellfun(@(a) max(abs(a)),deltacurve(stem_bool));
@@ -71,6 +76,8 @@ dint_norm(stem_bool) = cellfun(@(a,b) sum(abs(a))./sum(b(:)), ...
     deltacurve(stem_bool), tuningcurves(stem_bool));
 curve_corr(stem_bool) = cellfun(@(a) corr(a(1,:)', a(2,:)'), ...
     tuningcurves(stem_bool));
+sigbin_prop(stem_bool) = cellfun(@sum, sigcurve(stem_bool))...
+    /max(cellfun(@length, sigcurve(stem_bool)));
     
 % Legacy code using std to normalize the dmax curves (maybe it should have
 % been named dmax_z?

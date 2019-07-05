@@ -1,6 +1,6 @@
 % Alternation - track 1st trial splitting across all sessions
 
-sesh_use = G48_alt(G48_free_bool);
+sesh_use = G48_alt(G48_forced_bool);
 % sesh_use = alt_all(alt_all_free_bool);
 binthresh = 3;
 
