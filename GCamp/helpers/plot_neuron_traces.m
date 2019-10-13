@@ -100,7 +100,7 @@ text(FLbar_time - time_bar - 5,double(y_loc),[num2str(time_bar) ' s'],...
 FLht = round(100*offset,-1); % % double(round(max(trace_adj(1,:))*100,-1)); % Get approx. height of max trace fluorescence
 plot([FLbar_time FLbar_time], double([y_loc y_loc + FLht/100]),'LineWidth',2,'Color','k');
 text(FLbar_time + 5, double((y_loc + FLht/100)-0.05), ...
-    [num2str(FLht) '% DF/F'])
+    [num2str(FLht) '% DF/F Broken'])  % Note that this is broken since I commented out the normalization code above!!! Need to fix to be able to normalize or not!
 hold off
 axis tight
 axis off
