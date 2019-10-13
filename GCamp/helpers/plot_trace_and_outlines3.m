@@ -1,5 +1,5 @@
 function [hfig, neurons_use] = plot_trace_and_outlines3(sesh, n, ...
-    nframes_plot, PSA_plot)
+    nframes_plot, PSA_plot, trace_type)
 % [hfig, neurons_use] = plot_trace_and_outlines3(sesh, n, nframes_plot, ...
 %       plot_PSA)
 %   Quick plot of n randomly selected neurons and their corresponding
@@ -22,13 +22,15 @@ load(fullfile(dir_use,'FinalOutput.mat'),'NeuronImage','NeuronTraces',...
 [nneurons, nframes] = size(PSAbool);
 SR = 20;
 
-
-if nargin < 4
-    PSA_plot = false; % default don't ID PS epochs.
-    if nargin < 3
-        nframes_plot = nframes;
-        if nargin < 2
-            n = 10;
+if nargin < 5
+    trace_type = 'lowpass';
+    if nargin < 4
+        PSA_plot = false; % default don't ID PS epochs.
+        if nargin < 3
+            nframes_plot = nframes;
+            if nargin < 2
+                n = 10;
+            end
         end
     end
 end
@@ -50,7 +52,13 @@ else
     neurons_use = n;
 end
 NeuronImage_use = NeuronImage(neurons_use);
-traces_use = NeuronTraces.LPtrace(neurons_use,1:nframes_plot);
+switch trace_type
+    case'lowpass'
+        traces_use = NeuronTraces.LPtrace(neurons_use,1:nframes_plot);
+    case 'raw'
+        traces_use = NeuronTraces.RawTrace(neurons_use,1:nframes_plot);
+end
+
 PSAbool_use = PSAbool(neurons_use,1:nframes_plot);
 if ~PSA_plot
     PSAbool_use = false(size(PSAbool_use));
