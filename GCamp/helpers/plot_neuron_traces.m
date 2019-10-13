@@ -57,6 +57,7 @@ time_plot = (1:num_frames)/SR;
 % NK attempt to make everything more or less equally spaced
 trace_max = max(trace_adj,[],2);
 offset = median(trace_max);
+trace_adj = trace_adj/2;
 % trace_adj = trace_adj./trace_max;
 % trace_adj = trace_adj/trace_max(1); % Normalize everything to max height of the 1st trace.
 

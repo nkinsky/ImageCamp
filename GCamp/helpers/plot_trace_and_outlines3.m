@@ -55,7 +55,7 @@ PSAbool_use = PSAbool(neurons_use,1:nframes_plot);
 if ~PSA_plot
     PSAbool_use = false(size(PSAbool_use));
 end
-hfig = figure; set(gcf,'Position',[120 220 1550 600]);
+hfig = figure; set(gcf,'Position',[120 50 1550 600]);
 h1 = subplot(1,2,1); h2 = subplot(1,2,2);
 
 [~, colors] = plot_neuron_outlines(base_image, NeuronImage_use, h1);
