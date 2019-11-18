@@ -425,6 +425,8 @@ MD(i).Env = 'Shock';
 MD(i).Room = 'CILSE 721 F';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'E:\Eraser\Control Group\Marble11\20180528_2_fcbox';
+elseif strcmpi(userstr,'natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\Eraser\Control Group\Marble11\20180528_2_fcbox';
 end
 MD(i).Notes = 'Day -2';
 MD(i).Freezing = NaN;
@@ -599,6 +601,8 @@ MD(i).Env = 'Shock';
 MD(i).Room = 'CILSE 721 F';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'E:\Eraser\Control Group\Marble11\20180606_2_fcbox';
+elseif strcmpi(userstr,'natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\Eraser\Control Group\Marble11\20180606_2_fcbox';
 end
 MD(i).Notes = 'Day 7';
 MD(i).Freezing = NaN;
