@@ -1,7 +1,7 @@
 % Alternation Reviewer 3 response figures
 
 %% Get transient 1/2 lengths from beginning and end of experiment
-sessions = MD([32, 42]); % session at beginning and end of recording
+sessions = MD([238, 258]); % session at beginning and end of recording
 for m = 1:2
     session = sessions(m);
     load(fullfile(session.Location,'FinalOutput.mat'), 'PSAbool', 'NeuronTraces',...
@@ -23,7 +23,8 @@ for m = 1:2
     half_all_mean = nan(nneurons,1);
     half_mean = nan(nneurons,1);
     for j = 1:nneurons
-        [half_all, half_mean(j), LPerror, bad_trans_error] = plot_aligned_trace(PSAbool(j,:), NeuronTraces.RawTrace(j,:), ...
+        [half_all, half_mean(j), LPerror, bad_trans_error, poor_merge] = ...
+            plot_aligned_trace(PSAbool(j,:), NeuronTraces.RawTrace(j,:), ...
             NeuronTraces.LPtrace(j,:),'SR', SampleRate, 'plot_flag', false);
         if LPerror
             disp(['Low-pass artifact discovered in neuron ' num2str(j)])
@@ -31,6 +32,10 @@ for m = 1:2
         if bad_trans_error
             disp(['All transients are sketchy in neuron ' num2str(j)])
         end
+        if poor_merge
+            disp(['Poor merge discovered in neuron ' num2str(j)])
+        end
+        
         half_all_mean(j) = nanmean(half_all);
     end
 
