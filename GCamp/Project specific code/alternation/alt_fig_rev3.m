@@ -1,10 +1,14 @@
 % Alternation Reviewer 3 response figures
 
 %% Get transient 1/2 lengths from beginning and end of experiment
-sessions = MD([238, 258]); % session at beginning and end of recording
+% sessions = MD([238, 258]); % G30 session at beginning and end of recording
+% sessions = MD([226, 235]); % G31 beginning/end session 
+% sessions = MD([335, 363]); % G45 beginning/end session 
+sessions = MD([401, 452]); % G48 beginning/end session
 for m = 1:2
     session = sessions(m);
-    load(fullfile(session.Location,'FinalOutput.mat'), 'PSAbool', 'NeuronTraces',...
+    dir_use = ChangeDirectory_NK(session);
+    load(fullfile(dir_use,'FinalOutput.mat'), 'PSAbool', 'NeuronTraces',...
         'SampleRate');
     
     nneurons = size(PSAbool,1);
@@ -42,7 +46,7 @@ for m = 1:2
 
     % Now plot all in a histogram
     if m == 1
-        hcomb = figure; set(gcf,'Position', [200, 50, 1100, 700]);
+        hcomb = figure; set(gcf,'Position', [50, 50, 950, 600])
     else
         figure(hcomb);
     end

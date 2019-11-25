@@ -145,7 +145,7 @@ for j = 1:nepochs
             1, 'first'))
         LPerror = true;
     else
-        if legit_trans
+        if legit_trans(j)
             half_all(j,1) = (find(LP_zero(j,:) <= LPmax_zero(j)/2 & decay_aligned(j,:), ...
                 1, 'first') - onset_frame)/SR; % half-life in seconds
         end
