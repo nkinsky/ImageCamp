@@ -1,6 +1,7 @@
 % Alternation Reviewer 3 response figures
 
-%% Generate
+%% Get transient 1/2 lengths for beginning and end session
+tic
 sessions = MD([32, 42]); % session at beginning and end of recording
 for m = 1:2
     session = sessions(m);
@@ -54,3 +55,6 @@ for m = 1:2
     plot([1 1]*nanmean(half_all_mean), get(gca,'YLim'),'k-')
     xlabel('tau_{1/2,all,mean} (sec)')
 end
+toc
+
+%% Get min fluorescence
