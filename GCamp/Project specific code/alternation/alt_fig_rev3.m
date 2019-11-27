@@ -1,5 +1,5 @@
 % Alternation Reviewer 3 response figures
-
+[MD, ~, ref] = MakeMouseSessionListEraser('natlaptop');
 %% Get transient 1/2 lengths for beginning and end session
 tic
 sessions = MD([32, 42]); % session at beginning and end of recording
@@ -24,13 +24,17 @@ for m = 1:2
     half_all_mean = nan(nneurons,1);
     half_mean = nan(nneurons,1);
     for j = 1:nneurons
-        [half_all, half_mean(j), LPerror, bad_trans_error] = plot_aligned_trace(PSAbool(j,:), NeuronTraces.RawTrace(j,:), ...
+        [half_all, half_mean(j), LPerror, legit_trans] = plot_aligned_trace(PSAbool(j,:), NeuronTraces.RawTrace(j,:), ...
             NeuronTraces.LPtrace(j,:),'SR', SampleRate, 'plot_flag', false);
-        if LPerror
-            disp(['Low-pass artifact discovered in neuron ' num2str(j)])
+        if any(LPerror)
+            disp(['Low-pass artifact discovered in neuron ' num2str(j) ...
+                ': transient #s: ' num2str(find(LPerror))])
         end
-        if bad_trans_error
+        if all(~legit_trans)
             disp(['All transients are sketchy in neuron ' num2str(j)])
+        elseif any(~legit_trans)
+            disp(['Sketchy traces in neuron ' num2str(j) ': transient #s: ' ...
+                num2str(find(~legit_trans))])
         end
         half_all_mean(j) = nanmean(half_all);
     end
@@ -56,5 +60,8 @@ for m = 1:2
     xlabel('tau_{1/2,all,mean} (sec)')
 end
 toc
+
+%% Next step - toss out all neurons with values over threshold - 
+% look at good PFs and good splitters - do they have high half-lives?
 
 %% Get min fluorescence
