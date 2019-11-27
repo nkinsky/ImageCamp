@@ -29,12 +29,15 @@ function [half_all, half_mean, LPerror, legit_trans] = plot_aligned_trace(psa, r
 %           
 %           half_mean: half-life of mean transient (seconds)
 %
-%           LPerror: true if a low-pass artifact is discovered in a trace -
-%           that transient (but not all it's transients) will not be
-%           considered
+%           LPerror: true if a low-pass artifact is discovered and a neuron
+%           is tossed out. ~1% of neurons
 %
 %           bad_trans_error: true if bad transients (not all rising phases
-%           are actually rising) detected for ALL transients.
+%           are actually rising) detected for ALL transients. (Rare, ~1/500)
+%
+%           poor_merge: true if you can't get a mean trace, likely due to a
+%           larger transient from a neighboring neuron making it into the
+%           traces variable. (Rare, only 1 seen in 4 sessions so far).
 
 ip = inputParser;
 ip.addRequired('psa', @islogical); % boolean of rising times
@@ -174,13 +177,20 @@ mean_trace = nanmean(LPtraces_aligned(~LPerror, onset_frame:end), 1); % include 
 mean_zero = mean_trace(1);
 decay_bool = false(size(mean_trace));
 decay_bool(imax+1:end) = true; 
+poor_merge = false;
 if nepochs > 0
-    half_mean = find(mean_trace - mean_zero < ...
+    half_mean = find((mean_trace - mean_zero) < ...
         (mean_max - mean_zero)/2 & decay_bool, 1, 'first')/SR;
+    
+    % You can get an empty array if a larger transient from a neighboring
+    % neuron somehow made it through and swamped your signal, likely
+    % because of rare neighbor spiking perfectly timed after the original
+    % neuron spike.
     if isempty(half_mean)
+        poor_merge = true;
         half_mean = nan;
     end
-else 
+else
     half_mean = nan;
 end
 

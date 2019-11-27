@@ -1,11 +1,15 @@
 % Alternation Reviewer 3 response figures
 [MD, ~, ref] = MakeMouseSessionListEraser('natlaptop');
 %% Get transient 1/2 lengths for beginning and end session
-tic
-sessions = MD([32, 42]); % session at beginning and end of recording
+sessions = MD([32, 42]); % Eraser session for reference ! session at beginning and end of recording
+% sessions = MD([238, 258]); % G30 session at beginning and end of recording
+% sessions = MD([226, 235]); % G31 beginning/end session 
+% sessions = MD([335, 363]); % G45 beginning/end session 
+sessions = MD([401, 452]); % G48 beginning/end session
 for m = 1:2
     session = sessions(m);
-    load(fullfile(session.Location,'FinalOutput.mat'), 'PSAbool', 'NeuronTraces',...
+    dir_use = ChangeDirectory_NK(session);
+    load(fullfile(dir_use,'FinalOutput.mat'), 'PSAbool', 'NeuronTraces',...
         'SampleRate');
     
     nneurons = size(PSAbool,1);
@@ -24,7 +28,8 @@ for m = 1:2
     half_all_mean = nan(nneurons,1);
     half_mean = nan(nneurons,1);
     for j = 1:nneurons
-        [half_all, half_mean(j), LPerror, legit_trans] = plot_aligned_trace(PSAbool(j,:), NeuronTraces.RawTrace(j,:), ...
+        [half_all, half_mean(j), LPerror, bad_trans_error, poor_merge] = ...
+            plot_aligned_trace(PSAbool(j,:), NeuronTraces.RawTrace(j,:), ...
             NeuronTraces.LPtrace(j,:),'SR', SampleRate, 'plot_flag', false);
         if any(LPerror)
             disp(['Low-pass artifact discovered in neuron ' num2str(j) ...
@@ -36,13 +41,17 @@ for m = 1:2
             disp(['Sketchy traces in neuron ' num2str(j) ': transient #s: ' ...
                 num2str(find(~legit_trans))])
         end
+        if poor_merge
+            disp(['Poor merge discovered in neuron ' num2str(j)])
+        end
+        
         half_all_mean(j) = nanmean(half_all);
     end
 
 
     % Now plot all in a histogram
     if m == 1
-        hcomb = figure; set(gcf,'Position', [200, 50, 1100, 700]);
+        hcomb = figure; set(gcf,'Position', [50, 50, 950, 600])
     else
         figure(hcomb);
     end
@@ -65,3 +74,4 @@ toc
 % look at good PFs and good splitters - do they have high half-lives?
 
 %% Get min fluorescence
+
