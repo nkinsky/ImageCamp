@@ -1,4 +1,4 @@
-function [half_all, half_mean, LPerror, bad_trans_error] = plot_aligned_trace(psa, rawtrace, LPtrace, varargin)
+function [half_all, half_mean, LPerror, legit_trans] = plot_aligned_trace(psa, rawtrace, LPtrace, varargin)
 % plot_aligned_trace(psa, trace, varargin)
 %
 % Plots all calcium events for a given neuron aligned to onset. Also can
@@ -29,8 +29,9 @@ function [half_all, half_mean, LPerror, bad_trans_error] = plot_aligned_trace(ps
 %           
 %           half_mean: half-life of mean transient (seconds)
 %
-%           LPerror: true if a low-pass artifact is discovered and a neuron
-%           is tossed out.
+%           LPerror: true if a low-pass artifact is discovered in a trace -
+%           that transient (but not all it's transients) will not be
+%           considered
 %
 %           bad_trans_error: true if bad transients (not all rising phases
 %           are actually rising) detected for ALL transients.
@@ -44,6 +45,7 @@ ip.addParameter('ax', nan, @(a) ishandle(a) || isnan(a)); % Axes for plotting
 ip.addParameter('offset', 10, @(a) a > 0 && round(a) == a); % time before/after start to plot
 ip.addParameter('plot_flag', true, @islogical); % plot results?
 ip.addParameter('min_epoch_time', 0.2, @(a) a > 0); % exclude transients with rise times less than this long
+ip.addParameter('debug_badtrans', false, @islogical); % Debug how you id sketchy traces by plotting them all
 ip.parse(psa, rawtrace, LPtrace, varargin{:});
 
 SR = ip.Results.SR;
@@ -51,6 +53,7 @@ ax = ip.Results.ax;
 offset = ip.Results.offset;
 plot_flag = ip.Results.plot_flag;
 min_epoch_time = ip.Results.min_epoch_time;
+debug_badtrans = ip.Results.debug_badtrans;
 
 if ~ishandle(ax) && plot_flag
     figure; ax = gca;
@@ -65,11 +68,30 @@ epochs = NP_FindSupraThresholdEpochs(psa, eps);
 nepochs = size(epochs,1);
 
 % Edge-case: toss any very small epochs where there seem to be a lot of decaying
-% values during psa (found in only two neurons so far)
+% values during psa (found in only two neurons so far). Must have more than
+% 25% of transient decaying... (this still allows transients that have a
+% brief 1-2 frame dip - these are most likely due to two successive bursts
+% in a row))
+thresh = 0.25;
 legit_trans = false(nepochs, 1);
 for j = 1:nepochs
-   legit_trans(j,1) = all(diff(LPtrace(epochs(j,1):epochs(j,2))) >= 0);
+    legit_trans(j,1) = sum(diff(LPtrace(epochs(j,1):epochs(j,2))) >= 0) >= ...
+        (1-thresh)*diff(epochs(j,:));
+%    legit_trans(j,1) = all(diff(LPtrace(epochs(j,1):epochs(j,2))) >= 0);
 end
+
+if debug_badtrans
+    figure;
+    plot_style = {'r*', 'g*'};
+    plot(LPtrace,'k-'); hold on;
+    for j = 1:nepochs
+        plot(epochs(j,1):epochs(j,2), LPtrace(epochs(j,1):epochs(j,2)), ...
+            plot_style{legit_trans(j)+1});
+    end
+    disp('DEBUGGING BAD TRANSIENTS in plot_aligned_trace')
+    keyboard
+end
+
 good_epochs = epochs(legit_trans, :);
 nepochs = size(good_epochs,1);
 nframes = length(psa); 
@@ -134,22 +156,20 @@ end
 LP_zero = LPtraces_aligned - LPtraces_aligned(:, onset_frame); % make all traces start at DF/F=0
 LPmax_zero = LPmax - LPtraces_aligned(:, onset_frame); % Find LPmax relative to starting DF/F for that trace
 half_all = nan(max([nepochs,1]),1);
-LPerror = false;
+LPerror = false(nepochs,1);
 for j = 1:nepochs
     if isempty(find(LP_zero(j,:) <= LPmax_zero(j)/2 & decay_aligned(j,:), ...
             1, 'first'))
-        LPerror = true;
+        LPerror(j) = true;
     else
-        if legit_trans
-            half_all(j,1) = (find(LP_zero(j,:) <= LPmax_zero(j)/2 & decay_aligned(j,:), ...
-                1, 'first') - onset_frame)/SR; % half-life in seconds
-        end
+        half_all(j,1) = (find(LP_zero(j,:) <= LPmax_zero(j)/2 & decay_aligned(j,:), ...
+            1, 'first') - onset_frame)/SR; % half-life in seconds
     end
 end
 
 %% Now get stat from mean trace - is this different?
 max_epoch_length = max(diff(epochs,1,2)); % max you are looking for should be limited to this + one frame
-mean_trace = nanmean(LPtraces_aligned(:,onset_frame:end),1); % include only from start of rising phase
+mean_trace = nanmean(LPtraces_aligned(~LPerror, onset_frame:end), 1); % include only from start of rising phase of legitimate transients w/o LP artifact
 [mean_max, imax] = max(mean_trace(1:(max_epoch_length+1)));
 mean_zero = mean_trace(1);
 decay_bool = false(size(mean_trace));
@@ -157,6 +177,9 @@ decay_bool(imax+1:end) = true;
 if nepochs > 0
     half_mean = find(mean_trace - mean_zero < ...
         (mean_max - mean_zero)/2 & decay_bool, 1, 'first')/SR;
+    if isempty(half_mean)
+        half_mean = nan;
+    end
 else 
     half_mean = nan;
 end
