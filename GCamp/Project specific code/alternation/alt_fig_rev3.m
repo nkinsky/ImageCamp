@@ -100,6 +100,47 @@ for nn = 1:length(sessions)
     end
 end
 
+%% Next step is to do this for ALL sessions and plot mean value across time...
+ylabels = {'Mean','All Mean'};
+for nn = 1:length(sessions) 
+    figure; set(gcf,'Position', [75, 150, 900, 300]);
+    mean_plot = []; mean_all_plot = []; std_plot = []; std_all_plot;
+    sessions_use = sessions{nn};
+    hw = waitbar(0,['Getting trace stats for animal ' num2str(nn)]);
+    for m = 1:length(sessions_use)
+        session = sessions_use(m);
+        [half_all_mean, half_mean, LPerror, legit_trans] = ...
+            get_session_trace_stats(session);
+        mean_plot = [mean_plot, nanmean(half_mean)];
+        std_plot = [std_plot, nanstd(half_mean)];
+        mean_all_plot = [mean_all_plot, nanmean(half_all_mean)];
+        std_all_plot = [std_all_plot, nanstd(half_all_mean)];
+        waitbar(m/length(sessions_use),hw);
+    end
+    
+    % Plot with stats
+    mean_comb = [mean_plot; mean_all_plot];
+    std_comb = [std_plot; std_all_plot];
+    close(hw)
+    for j = 1:2
+        subplot(1,2,j)
+        plot(1:length(sessions_use), mean_comb(j,:), 'k.')
+        hold on;
+        errorbar(1:length(sessions_use), mean_comb(j,:), std_comb(j,:))
+        
+        [r, p] = corr((1:length(sessions_use))', mean_comb(j,:)');
+        text(0.5*max(get(gca,'xlim')), 0.7*max(get(gca,'ylim')),...
+            ['r_pearson=' num2str(r,'%0.3g') ' p=' num2str(p, '%0.3g')])
+        title([mouse_name_title(session.Animal)])
+        xlabel('Session')
+        ylabel(['\tau_{' ylabels{j} '} (sec)')
+        
+        make_plot_pretty(gca,'fontsize',10,'linewidth',1.5)
+    end
+    printNK([ session.Animal ' trace stats over time'],'alt')
+    
+end
+    
 %% Next step - toss out all neurons with values over threshold - 
 % look at good PFs and good splitters - do they have high half-lives?
 
