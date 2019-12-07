@@ -13,7 +13,7 @@ else
 % sessions{2} = MD([226, 235]); % G31 beginning/end session 
 % sessions{3} = MD([335, 363]); % G45 beginning/end session 
 % sessions{4} = MD([401, 452]); % G48 beginning/end session
-    sessions = cellfun(@(a,b) a(b), alt_all_cell, alt_all_free_boolc, ...
+    sessions = cellfun(@(a,b) a(b), alt_all_cell_sp, alt_all_free_boolc, ...
         'UniformOutput', false);
 end
 %% Get transient 1/2 lengths for beginning and end session
