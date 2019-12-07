@@ -25,6 +25,10 @@ PSAbool = []; NeuronTraces = []; SampleRate = [];
 if ~isempty(session.Location)
     load(fullfile(session.Location,'FinalOutput.mat'), 'PSAbool', 'NeuronTraces',...
         'SampleRate');
+    if isempty(SampleRate)
+        SampleRate = 20;
+        disp('SampleRate not found in FinalOutput.mat - must be older, using 20')
+    end
 else
     error('session.Location is empty - re-run MakeMouseSessionList and try again!')
 end
