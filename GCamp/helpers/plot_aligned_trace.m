@@ -1,4 +1,5 @@
-function [half_all, half_mean, LPerror, legit_trans] = plot_aligned_trace(psa, rawtrace, LPtrace, varargin)
+function [half_all, half_mean, LPerror, legit_trans] = plot_aligned_trace(...
+    psa, rawtrace, LPtrace, varargin)
 % plot_aligned_trace(psa, trace, varargin)
 %
 % Plots all calcium events for a given neuron aligned to onset. Also can
