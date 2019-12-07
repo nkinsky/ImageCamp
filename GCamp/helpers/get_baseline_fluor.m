@@ -19,19 +19,14 @@ if ~isempty(session.Location)
     try
         % Whole image mean
         minproj = imread(fullfile(session.Location,'ICmovie_min_proj.tif'));
-<<<<<<< HEAD
-%         [ydim, xdim] = size(minproj);
-%         fmin_crop = fmin((ydim*crop_ratio):(ydim*(1-crop_ratio))
         fmin_mean = double(mean(minproj(:)));
-=======
-        fmin_mean = mean(minproj(:));
+
         
         % Cropped mean
         [ydim, xdim] = size(minproj);
         minproj_crop = minproj(round(ydim*crop_ratio):round(ydim*(1-crop_ratio)), ...
             round(xdim*crop_ratio):round(xdim*(1-crop_ratio)));
         fmincrop_mean = mean(minproj_crop(:));
->>>>>>> e8b7fed1fe57a578c6047c4fb094f91b9d36828d
     catch
         disp(['ICmovie_min_proj missing for ' session.Animal ': ' session.Date ...
             '-s' num2str(session.Session)])
@@ -40,17 +35,14 @@ if ~isempty(session.Location)
     try
         % Whole image mean
         meanproj = imread(fullfile(session.Location,'ICmovie_mean_proj.tif'));
-<<<<<<< HEAD
         fmean_mean = double(mean(meanproj(:)));
-=======
-        fmean_mean = mean(meanproj(:));
         
         % Cropped mean
         [ydim, xdim] = size(meanproj);
         meanproj_crop = meanproj(round(ydim*crop_ratio):round(ydim*(1-crop_ratio)), ...
             round(xdim*crop_ratio):round(xdim*(1-crop_ratio)));
         fmeancrop_mean = mean(meanproj_crop(:));
->>>>>>> e8b7fed1fe57a578c6047c4fb094f91b9d36828d
+        
     catch % don't display anything since you know the majority of sessions don't have this file yet
 %         disp(['ICmovie_mean_proj missing for ' session.Animal ': ' session.Date ...
 %             '-s' num2str(session.Session)])
