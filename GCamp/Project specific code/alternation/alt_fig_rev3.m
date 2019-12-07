@@ -68,21 +68,30 @@ end
 % look at good PFs and good splitters - do they have high half-lives?
 
 %% Get min fluorescence and plot with stats
-figure;
+hall = figure; set(gcf,'Position', [18, 42, 1001, 642]);
+hcrop = figure; set(gcf,'Position', [18, 42, 1001, 642]);
+hcomb = cat(1,hall,hcrop);
+titles = {'Whole', 'Cropped'};
 for nn = 1:length(sessions)
     sessions_use = sessions{nn};
-    fmin_mean = arrayfun(@(a) get_baseline_flour(a), sessions_use, ...
-        'UniformOutput', false); % get mean min fluor across all sessions
-    subplot(2,2,k)
-    plot(fmin_mean)
-    xlabel('Session #')
-    ylabel('Mean Min. F')
+    [fmin_mean, ~, fmincrop_mean] = arrayfun(@get_baseline_fluor, sessions_use); % get mean min fluor across all sessions
+    fmin_comb = [fmin_mean; fmincrop_mean];
     
-    % run stats (correlation?)
-    [r, p] = corr((1:length(fmin_mean))', fmin_mean');
-    text(0.7*length(fmin_mean), 0.7*fmin_mean, 'Pearson Correlation')
-    text(0.7*length(fmin_mean), 0.6*fmin_mean, ['r=' num2str(r,'%0.2g')])
-    text(0.7*length(fmin_mean), 0.5*fmin_mean, ['p=' num2str(p, '%0.2g')])
+    for j = 1:2
+        f_use = fmin_comb(j,:);
+        figure(hcomb(j));
+        subplot(2,2,nn)
+        plot(f_use)
+        xlabel('Session #')
+        ylabel('Mean Min. F')
+        title([mouse_name_title(sessions_use(1).Animal) ': ' titles{j}])
+        
+        % run stats (correlation?)
+        [r, p] = corr((1:length(f_use))', f_use');
+        text(0.7*length(f_use), max(f_use)-0.1*range(f_use), 'Pearson Correlation')
+        text(0.7*length(f_use), max(f_use)-0.2*range(f_use), ['r=' num2str(r,'%0.2g')])
+        text(0.7*length(f_use), max(f_use)-0.3*range(f_use), ['p=' num2str(p, '%0.2g')])
+    end
 end
 
 
