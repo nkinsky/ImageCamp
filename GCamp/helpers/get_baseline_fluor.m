@@ -17,7 +17,7 @@ if ~isempty(session.Location)
         minproj = imread(fullfile(session.Location,'ICmovie_min_proj.tif'));
 %         [ydim, xdim] = size(minproj);
 %         fmin_crop = fmin((ydim*crop_ratio):(ydim*(1-crop_ratio))
-        fmin_mean = mean(minproj(:));
+        fmin_mean = double(mean(minproj(:)));
     catch
         disp(['ICmovie_min_proj missing for ' session.Animal ': ' session.Date ...
             '-s' num2str(session.Session)])
@@ -25,7 +25,7 @@ if ~isempty(session.Location)
     
     try
         meanproj = imread(fullfile(session.Location,'ICmovie_mean_proj.tif'));
-        fmean_mean = mean(meanproj(:));
+        fmean_mean = double(mean(meanproj(:)));
     catch % don't display anything since you know the majority of sessions don't have this file yet
 %         disp(['ICmovie_mean_proj missing for ' session.Animal ': ' session.Date ...
 %             '-s' num2str(session.Session)])
