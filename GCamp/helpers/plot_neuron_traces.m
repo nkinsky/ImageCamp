@@ -29,6 +29,7 @@ ip.addOptional('color_table',nan, @(a) (isnumeric(a) && size(a,2) == 3) || ...
 ip.addOptional('h', nan, @ishandle);
 ip.addParameter('SR',20,@(a) a == round(a)); % Frames/sec
 ip.addParameter('PSAbool',false(size(traces)),@islogical); % Putative spiking activity to match size of traces
+ip.addParameter('green_trans', [], @(a) isempty(a) || isnumeric(a)); % Plot these transients in green (e.g. [1,3] plots 1st and 3rd in green, the rest in red)
 ip.parse(traces, varargin{:});
 
 color_table = ip.Results.color_table;
@@ -39,6 +40,7 @@ end
 h = ip.Results.h;
 SR = ip.Results.SR;
 PSAbool = ip.Results.PSAbool;
+green_trans = ip.Results.green_trans;
 
 if ~ishandle(h)
     figure; h = gca;
@@ -79,8 +81,14 @@ for j = 1:num_neurons
     % Plot putative spiking epochs if specified 
     epochs = NP_FindSupraThresholdEpochs(PSA_use,eps);
     if ~isempty(epochs)
-        hpsa = arrayfun(@(a,b) plot(time_plot(a:b), trace_use(a:b),'r'), epochs(:,1), epochs(:,2),...
-            'UniformOutput', false);
+        hpsa = arrayfun(@(a,b) plot(time_plot(a:b), trace_use(a:b),'r'), ...
+            epochs(:,1), epochs(:,2), 'UniformOutput', false);
+        cellfun(@(a) set(a,'LineWidth',2), hpsa);
+    end
+    green_epochs = epochs(green_trans,:);
+    if ~isempty(epochs)
+        hpsa = arrayfun(@(a,b) plot(time_plot(a:b), trace_use(a:b),'g'), ...
+            green_epochs(:,1), green_epochs(:,2), 'UniformOutput', false);
         cellfun(@(a) set(a,'LineWidth',2), hpsa);
     end
 end

@@ -1,5 +1,7 @@
-function [half_all_mean, half_mean, LPerror, legit_trans] = get_session_trace_stats(session)
-% [half_all_mean, half_mean, LPerror, bad_trans_error] = get_session_trace_stats(session)
+function [half_all_mean, half_mean, LPerror_all, legit_trans_all] = ...
+    get_session_trace_stats(session)
+% [half_all_mean, half_mean, LPerror, legit_trans] = ...
+%   get_session_trace_stats(session)
 %   Get trace statistics and detect any neurons with sketchy transients
 %   and/or low-pass filter artifacts. Default behavior is to NOT plot
 %   everything currently.
@@ -12,10 +14,10 @@ function [half_all_mean, half_mean, LPerror, legit_trans] = get_session_trace_st
 %
 %          half_mean: half-life of mean trace (sec)
 %
-%          LPerror: cell array with boolean, size = # good epochs, true = low-pass 
+%          LPerror_all: cell array with boolean, size = # good epochs, true = low-pass 
 %          artifact detected
 %
-%          legit_trans: cell array with boolean, size = # total epochs,
+%          legit_trans_all: cell array with boolean, size = # total epochs,
 %          true = good epochs used in calculation
 
 %% Get session data
