@@ -233,6 +233,13 @@ alt_all_cell_sp{5} = G48_alt(1:15);
 % alt_all_cell_sp{5} = G48_alt(1:16); 
 alt_all_cell_sp{6} = G48_alt(17:end);
 
+alt_all_free_boolc_sp{1} = G30_free_bool;
+alt_all_free_boolc_sp{2} = G31_free_bool;
+alt_all_free_boolc_sp{3} = G45_free_bool(1:14);
+alt_all_free_boolc_sp{4} = G45_free_bool(16:end);
+alt_all_free_boolc_sp{5} = G48_free_bool(1:15);
+alt_all_free_boolc_sp{6} = G48_free_bool(17:end);
+
 %% Set up learning stage data - sessions are when each stage ends! Based on
 % normalizing each mouse's smoothed learning curve (4 session window) and
 % looking for sections in bottom 3rd(early), middle 3rd(middle), and top
