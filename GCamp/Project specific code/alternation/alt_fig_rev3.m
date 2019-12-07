@@ -1,9 +1,11 @@
 % Alternation Reviewer 3 response figures
+
+%% Gete everything setup
 alternation_reference;
 if strcmpi('natlaptop', getenv('COMPUTERNAME'))
     [MD, ~, ref] = MakeMouseSessionListEraser('natlaptop');
 end
-%% Get transient 1/2 lengths for beginning and end session
+
 if strcmpi('natlaptop', getenv('COMPUTERNAME'))
     sessions{1} = MD(32:42); % Eraser session for reference ! session at beginning and end of recording
 else
@@ -14,9 +16,11 @@ else
     sessions = cellfun(@(a,b) a(b), alt_all_cell, alt_all_free_boolc, ...
         'UniformOutput', false);
 end
+%% Get transient 1/2 lengths for beginning and end session
 
-for k = 1:length(sessions)
-    sessions_use = session{k}([1 end]);
+
+for nn = 1:length(sessions)
+    sessions_use = sessions{nn}([1, end]);
     for m = 1:2
         session = sessions_use(m);
         dir_use = ChangeDirectory_NK(session);
@@ -64,10 +68,9 @@ end
 % look at good PFs and good splitters - do they have high half-lives?
 
 %% Get min fluorescence and plot with stats
-
 figure;
-for k = 1:length(sessions)
-    sessions_use = session{k}([1 end]);
+for nn = 1:length(sessions)
+    sessions_use = sessions{nn};
     fmin_mean = arrayfun(@(a) get_baseline_flour(a), sessions_use, ...
         'UniformOutput', false); % get mean min fluor across all sessions
     subplot(2,2,k)
