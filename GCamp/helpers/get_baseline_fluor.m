@@ -26,7 +26,7 @@ if ~isempty(session.Location)
         [ydim, xdim] = size(minproj);
         minproj_crop = minproj(round(ydim*crop_ratio):round(ydim*(1-crop_ratio)), ...
             round(xdim*crop_ratio):round(xdim*(1-crop_ratio)));
-        fmincrop_mean = mean(minproj_crop(:));
+        fmincrop_mean = double(mean(minproj_crop(:)));
     catch
         disp(['ICmovie_min_proj missing for ' session.Animal ': ' session.Date ...
             '-s' num2str(session.Session)])
@@ -41,7 +41,7 @@ if ~isempty(session.Location)
         [ydim, xdim] = size(meanproj);
         meanproj_crop = meanproj(round(ydim*crop_ratio):round(ydim*(1-crop_ratio)), ...
             round(xdim*crop_ratio):round(xdim*(1-crop_ratio)));
-        fmeancrop_mean = mean(meanproj_crop(:));
+        fmeancrop_mean = double(mean(meanproj_crop(:)));
         
     catch % don't display anything since you know the majority of sessions don't have this file yet
 %         disp(['ICmovie_mean_proj missing for ' session.Animal ': ' session.Date ...
