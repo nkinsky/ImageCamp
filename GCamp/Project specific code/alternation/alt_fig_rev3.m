@@ -68,6 +68,7 @@ end
 % look at good PFs and good splitters - do they have high half-lives?
 
 %% Get min fluorescence and plot with stats
+plot_days = true; % False = plot by session #, true = plot by absolute day
 hall = figure; set(gcf,'Position', [18, 42, 1001, 642]);
 hcrop = figure; set(gcf,'Position', [18, 42, 1001, 642]);
 hcomb = cat(1,hall,hcrop);
@@ -77,20 +78,32 @@ for nn = 1:length(sessions)
     [fmin_mean, ~, fmincrop_mean] = arrayfun(@get_baseline_fluor, sessions_use); % get mean min fluor across all sessions
     fmin_comb = [fmin_mean; fmincrop_mean];
     
+    if plot_days
+        days_from_start = arrayfun(@(a) get_time_bw_sessions(sessions_use(1),a),...
+            sessions_use); % Get days from start
+        
+        % Add 0.5 to any sessions that occur in the PM if a session has
+        % already occurred in the AM
+        days_from_start(find(diff(days_from_start) == 0) + 1) = ...
+            days_from_start(find(diff(days_from_start) == 0) + 1) + 0.5;
+    else
+        days_from_start = 1:length(sessions_use);
+    end
+    
     for j = 1:2
         f_use = fmin_comb(j,:);
         figure(hcomb(j));
         subplot(2,2,nn)
-        plot(f_use)
-        xlabel('Session #')
+        plot(days_from_start, f_use)
+        if plot_days; xlabel('Days from Start'); else; xlabel('Session #'); end
         ylabel('Mean Min. F')
         title([mouse_name_title(sessions_use(1).Animal) ': ' titles{j}])
         
         % run stats (correlation?)
-        [r, p] = corr((1:length(f_use))', f_use');
-        text(0.7*length(f_use), max(f_use)-0.1*range(f_use), 'Pearson Correlation')
-        text(0.7*length(f_use), max(f_use)-0.2*range(f_use), ['r=' num2str(r,'%0.2g')])
-        text(0.7*length(f_use), max(f_use)-0.3*range(f_use), ['p=' num2str(p, '%0.2g')])
+        [r, p] = corr(days_from_start', f_use');
+        text(0.7*max(days_from_start), max(f_use)-0.1*range(f_use), 'Pearson Correlation')
+        text(0.7*max(days_from_start), max(f_use)-0.2*range(f_use), ['r=' num2str(r,'%0.2g')])
+        text(0.7*max(days_from_start), max(f_use)-0.3*range(f_use), ['p=' num2str(p, '%0.2g')])
     end
 end
 
