@@ -101,10 +101,11 @@ for nn = 1:length(sessions)
 end
 
 %% Next step is to do this for ALL sessions and plot mean value across time...
+plot_days = true; % False = plot by session #, true = plot by absolute day
 ylabels = {'Mean','All Mean'};
 for nn = 1:length(sessions) 
     figure; set(gcf,'Position', [75, 150, 900, 300]);
-    mean_plot = []; mean_all_plot = []; std_plot = []; std_all_plot;
+    mean_plot = []; mean_all_plot = []; std_plot = []; std_all_plot = [];
     sessions_use = sessions{nn};
     hw = waitbar(0,['Getting trace stats for animal ' num2str(nn)]);
     for m = 1:length(sessions_use)
@@ -118,22 +119,35 @@ for nn = 1:length(sessions)
         waitbar(m/length(sessions_use),hw);
     end
     
+    % Get time between sessions or session #
+    if plot_days
+        days_from_start = arrayfun(@(a) get_time_bw_sessions(sessions_use(1),a),...
+            sessions_use); % Get days from start
+        
+        % Add 0.5 to any sessions that occur in the PM if a session has
+        % already occurred in the AM
+        days_from_start(find(diff(days_from_start) == 0) + 1) = ...
+            days_from_start(find(diff(days_from_start) == 0) + 1) + 0.5;
+    else
+        days_from_start = 1:length(sessions_use);
+    end
+    
     % Plot with stats
     mean_comb = [mean_plot; mean_all_plot];
     std_comb = [std_plot; std_all_plot];
     close(hw)
     for j = 1:2
         subplot(1,2,j)
-        plot(1:length(sessions_use), mean_comb(j,:), 'k.')
+        plot(days_from_start, mean_comb(j,:), 'k.')
         hold on;
-        errorbar(1:length(sessions_use), mean_comb(j,:), std_comb(j,:))
+        errorbar(days_from_start, mean_comb(j,:), std_comb(j,:))
         
-        [r, p] = corr((1:length(sessions_use))', mean_comb(j,:)');
+        [r, p] = corr(days_from_start', mean_comb(j,:)');
         text(0.5*max(get(gca,'xlim')), 0.7*max(get(gca,'ylim')),...
-            ['r_pearson=' num2str(r,'%0.3g') ' p=' num2str(p, '%0.3g')])
-        title([mouse_name_title(session.Animal)])
-        xlabel('Session')
-        ylabel(['\tau_{' ylabels{j} '} (sec)')
+            ['r_{pearson}=' num2str(r,'%0.3g') ' p=' num2str(p, '%0.3g')])
+        title(mouse_name_title(session.Animal))
+        if plot_days; xlabel('Days from Start'); else; xlabel('Session #'); end
+        ylabel(['\tau_{1/2,' ylabels{j} '} (sec)'])
         
         make_plot_pretty(gca,'fontsize',10,'linewidth',1.5)
     end
