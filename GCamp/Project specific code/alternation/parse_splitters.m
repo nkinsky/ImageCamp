@@ -1,7 +1,10 @@
 function [ rely_val, delta_max, sigbool, stem_bool, dmax_norm, nactive_stem ,...
-    dint_norm, curve_corr, rely_mean, sigbin_prop] = parse_splitters( dir_use, sigthresh, cnoise )
+    dint_norm, curve_corr, rely_mean, sigbin_prop] = parse_splitters( dir_use, ...
+    sigthresh, cnoise )
 % [ rely_val, delta_max, sigbool, stem_bool, dmax_norm, nactive_stem ] = ...
 %       parse_splitters( dir_use, sigthresh, cnoise )
+%
+%   Gets splittiness metrics for all cells active on the stem
 %
 %   INPUTS: 
 %       dir_use: working directory with sigSplitters file
@@ -43,12 +46,42 @@ if nargin < 3
     end
 end
 
+%% Load in global variables for cell filtering
+global WOOD_FILT
+global HALF_LIFE_THRESH
+
+if ~isempty(WOOD_FILT) && WOOD_FILT
+    lateral_alpha = 0.05;
+else
+    lateral_alpha = 1;
+end
+
+if ~isempty(HALF_LIFE_THRESH) && HALF_LIFE_THRESH
+    half_thresh = HALF_LIFE_THRESH;
+else
+    half_thresh = 100;
+end
+
+% Exclude those with abnormally long transients
+[half_all_mean, ~, ~, ~] = get_session_trace_stats(session, ...
+    'use_saved_data', true);
+exclude_trace = half_all_mean > half_thresh; 
+
+% Now exclude any neurons modulated by lateral position...
+[p, ~, ~, ~] = alt_wood_analysis(session, 'use_saved_data', true);
+exclude_lateral = p(:,5) > lateral_alpha;
+
+
+%% Now run the actual function
 load(fullfile(dir_use,'sigSplitters'),'pvalue','sigcurve','deltacurve', ...
     'tuningcurves');
 load(fullfile(dir_use,'splitters.mat'), 'cellResps')
 nactive_stem = cellfun(@(a) sum(sum(a,2) > 0), cellResps);
 nneurons_sesh = length(pvalue); % get number of neurons in sesh_use
-sigbool = cellfun(@(a) sum(a) >= sigthresh, sigcurve); % Get splitters
+sigbooltemp = cellfun(@(a) sum(a) >= sigthresh, sigcurve); % Get splitters
+% exclude any neurons that don't meet Wood criteria or have abnormally long
+% transients
+sigbool = sigbooltemp & ~exclude_lateral & ~exclude_trace;
 
 % Add noise to tuning curves if specified
 if cnoise
@@ -58,6 +91,11 @@ end
 
 % Identify cells active on the stem
 stem_bool = ~cellfun(@isempty, pvalue); % in sesh(j) numbering
+% Exclude any cells with abnormally long transients after including
+% splitters that don't meet the emma wood criteria (should I do this or
+% just exclude them since they are wishy-washy splitters and don't really
+% fit the splitter or the place cell criteria...?)
+stem_bool = stem_bool & (sigbooltemp & exclude_lateral) & ~exclude_trace;
 
 % Assigns splitter metric vlaues to the appropriate neurons
 rely_val = nan(nneurons_sesh, 1); 

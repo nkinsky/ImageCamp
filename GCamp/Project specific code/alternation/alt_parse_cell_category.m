@@ -1,6 +1,7 @@
 function [ categories, cat_nums, cat_names ] = alt_parse_cell_category( ...
-    sesh, pval_thresh, ntrans_thresh, sigthresh, PFname )
-% [categories, names] = alt_parse_cell_category( sesh, pval_thresh, ntrans_thresh, sigthresh... )
+    sesh, pval_thresh, ntrans_thresh, sigthresh, PFname)
+% [categories, names] = alt_parse_cell_category( sesh, pval_thresh, ntrans_thresh,...
+%                       sigthresh, PFname, exclude_bool )
 %
 %   Breaks out cells in sesh into 6 categories identified by number in
 %   categories (num_neurons x 1 vector): splitters, stem place
@@ -22,29 +23,68 @@ function [ categories, cat_nums, cat_names ] = alt_parse_cell_category( ...
 %
 %       PFname (optional): Placefields filename (default =
 %       Placefields.mat')
+%
+%       exclude_bool: nneurons x 1 boolean - true = exclude, false =
+%       include in categorization. 
+
+global WOOD_FILT
+global HALF_LIFE_THRESH
+
+if ~isempty(WOOD_FILT) && WOOD_FILT
+    lateral_alpha = 0.05;
+else
+    lateral_alpha = 1;
+end
+
+if ~isempty(HALF_LIFE_THRESH) && HALF_LIFE_THRESH
+    half_thresh = HALF_LIFE_THRESH;
+else
+    half_thresh = 100;
+end
+
+% First ID any cells to exlucd with extra long transients
+[half_all_mean, ~, ~, ~] = get_session_trace_stats(session, ...
+    'use_saved_data', true);
+exclude_trace = half_all_mean > half_thresh; 
+
+% ID stem cells that are modulated by lateral position. These are ones that
+% have significant trajectory modulation after accounting for speed/lateral
+% position.
+p = alt_wood_analysis(sesh,'use_saved_data',true);
+exclude_lateral = p(:,1) & p(:,3) >= lateral_alpha; 
+
+% ID good splitters based on sig diff b/w tuning curves and no lateral
+% position modulation.
+load(fullfile(sesh.Location,'sigSplitters.mat'),'neuronID','sigcurve');
+stem_cells = false(length(sigcurve),1);
+categories = zeros(length(sigcurve),1);
+stem_cells(neuronID) = true;
+splitters = cellfun(@(a) sum(a) >= sigthresh, sigcurve);
+good_splitters = splitters & ~exclude_lateral;
+not_splitters = splitters & exclude_lateral | ~splitters;
 
 if nargin < 5
     PFname = 'Placefields.mat';
 end
 
 cat_nums = 0:5;
-cat_names = { ['ntrans < ' num2str(ntrans_thresh)], 'Splitters', ...
+cat_names = { ['ntrans < ' num2str(ntrans_thresh) 'or bad transients'], 'Splitters', ...
     'Stem PCs', 'Arm PCs', 'Stem NPCs', 'Arm NPCs'};
 
-load(fullfile(sesh.Location,'sigSplitters.mat'),'neuronID','sigcurve');
-stem_cells = false(length(sigcurve),1);
-categories = zeros(length(sigcurve),1);
-stem_cells(neuronID) = true;
+
 [pctemp, ntrans_pass] = pf_filter(sesh, pval_thresh, ntrans_thresh, ...
     PFname);
-categories(stem_cells & cellfun(@(a) sum(a) >= sigthresh, sigcurve) & ...
-    ntrans_pass) = 1; % Splitters
-categories(stem_cells & pctemp & ~cellfun(@any,sigcurve) & ...
-    ntrans_pass) = 4; % Stem PCs
-categories(~stem_cells & pctemp & ntrans_pass) = 2; % Arm PCs
-categories(stem_cells & ~pctemp & ~cellfun(@any,sigcurve) & ...
-    ntrans_pass) = 5; % Stem NPCs
-categories(~stem_cells & ~pctemp & ntrans_pass) = 3; % Arm NPCs
+categories(stem_cells & good_splitters & ntrans_pass & ~exclude_trace) = 1; % Splitters
+% categories(stem_cells & pctemp & ~cellfun(@any,sigcurve) & ...
+%     ntrans_pass) = 4; % Stem PCs
+categories(stem_cells & pc_temp & not_splitters & ntrans_pass & ...
+    ~exclude_trace) = 4; % Stem PCs
+categories(~stem_cells & pctemp & ntrans_pass & ~exclude_trace) = 2; % Arm PCs
+% categories(stem_cells & ~pctemp & ~cellfun(@any,sigcurve) & ...
+%     ntrans_pass) = 5; % Stem NPCs
+categories(stem_cells & ~pctemp & not_splitters & ntrans_pass & ...
+    ~exclude_trace) = 5; % Stem NPCs
+categories(~stem_cells & ~pctemp & ntrans_pass & ~exclude_trace) = 3; % Arm NPCs
 
 end
 

@@ -1,10 +1,12 @@
-function [p, tbl, p_simple, tbl_simple] = alt_wood_analysis(session)
+function [p, tbl, p_simple, tbl_simple] = alt_wood_analysis(session, varargin)
 % [p, tbl] = alt_wood_analysis(session)
 %   Does the Emma Wood et al. (2000) splitter analysis to a) double check
 %   our splitter results, and b) address systematic differences in speed or
 %   lateral stem position in producing splitting...
 %
 %   INPUT = session: MD to session of interest
+%       optional (save_data, use_saved_data) booleans to save data or load
+%       previously saved data for easier later access.
 %
 %   OUTPUT = p: nstem_neurons x 5 array with pvalue for each of the
 %   following covariates, obtained by running anovan: 1) L/R trial, 2) stem
@@ -23,8 +25,34 @@ nbinsx = 4; % #stem bins
 % continuous variable
 nbinsy = 5; % #lateral stem bins
 
+%% Parse Inputs
+ip = inputParser;
+ip.addRequired('session', @isstruct);
+ip.addParameter('save_data', false, @islogical); % save data for fast loading later on
+ip.addParameter('use_saved_data', false, @islogical); % load previously saved data!
+ip.parse(session, varargin{:})
+
+save_data = ip.Results.save_data;
+use_saved_data = ip.Results.use_saved_data;
+
+%% Step 0: load previously run data if specified
+
+load_success = false;
+if use_saved_data
+    try
+        load(fullfile(session.Location,'wood_analysis.mat'), 'p', 'tbl', ...
+            'p_simple', 'tbl_simple')
+        load_success = true;
+    catch
+        disp('Error loading wood_analysis.mat - running alt_wood_analysis from scratch and SAVING!')
+        save_data = true;
+    end
+end
+
 %% Step 1: Load in data
 % Alt = []; PSAbool = []; isrunning = []; speed = [];
+
+if ~load_success
 load(fullfile(session.Location, 'Alternation.mat'),'Alt')
 load(fullfile(session.Location, 'Placefields_cm1.mat'), 'PSAbool', 'isrunning')
 load(fullfile(session.Location, 'Pos_align.mat'), 'speed')
@@ -130,9 +158,6 @@ for k = 1:nneurons_stem
 end
 % toc
 
-% Per discussion with Andy, only run the above on splitters and don't
-% include speed for now unless someone asks
-
 p = nan(nneurons, 5);
 p(stembool,:) = pstem;
 tbl = cell(nneurons,1);
@@ -142,6 +167,13 @@ p_simple = nan(nneurons, 3);
 p_simple(stembool,:) = pstem_simple;
 tbl_simple = cell(nneurons,1);
 tbl_simple(stembool) = tstem_simple;
+
+if save_data
+    save(fullfile(session.Location,'wood_analysis.mat'), 'p', 'tbl', ...
+        'p_simple', 'tbl_simple')
+end
+
+end
 
 end
 

@@ -44,25 +44,7 @@ for mouse = 1:4
     % Aggregate nsesh at each lag for each mouse
     nsesh_at_lag{mouse}(:,1) = unique_lags{mouse}; % First col is unique lags
     nsesh_at_lag{mouse}(:,2) = cellfun(@length, PFcorr_by_day_split{mouse}); % 2nd col is #sesh-pairs at that lag
-    
-    % %% Old code that plots splitters versus ALL OTHER CELLS...
-    % figure;
-    % psign = nan(1,8);
-    % for j = 2:8 % day + 1
-    %     ha = subplot(2,4,j);
-    %     x_use = [PFcorr_by_day_split{j}, PFcorr_by_day{j}];
-    %     match_bool = all(~isnan(x_use),2); % Get only valid data points.
-    %     x_use = x_use(match_bool,:);
-    %     groups = ones(size(x_use)).*[1 2];
-    %     paired_ind = repmat((1:sum(match_bool))',1,2);
-    %     scatterBox(x_use(:), groups(:), 'xLabels', {'Splitters Only', 'All Stem Neurons'},...
-    %         'yLabel', '\rho_{PF,mean}','paired_ind', paired_ind, 'h', ha);
-    %     title([num2str(j-1) ' Day Lag'])
-    %     psign(j) = signtest(x_use(:,1), x_use(:,2), 'tail', 'right');
-    %
-    % end
-    
-    % Better code that looks at everything...
+
     nlags = length(unique_lags{mouse});
     figure;
     psignrank = nan(nlags,5);
