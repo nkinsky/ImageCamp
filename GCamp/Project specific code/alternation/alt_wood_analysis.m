@@ -178,8 +178,7 @@ if save_data
     wood_analysis.tbl = tbl;
     wood_analysis.p_simple = p_simple;
     wood_analysis.tbl_simple = tbl_simple; %#ok<STRNU>
-    save(fullfile(session.Location,'wood_analysis.mat'), 'p', 'tbl', ...
-        'p_simple', 'tbl_simple')
+    save(fullfile(session.Location,'wood_analysis.mat'), 'wood_analysis')
 end
 
 end
