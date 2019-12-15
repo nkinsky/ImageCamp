@@ -38,6 +38,16 @@ if ignore_sameday == false && free_only == false
     error('I won''t let you look at forced vs free trial from the same day')
 end
 
+%% Step 0 load in stuff for filtering out cells with long transients
+global HALF_LIFE_THRESH
+
+if ~isempty(HALF_LIFE_THRESH) && HALF_LIFE_THRESH
+    half_thresh = HALF_LIFE_THRESH;
+else
+    half_thresh = 100;
+end
+
+
 %% Step 1: Load batch neuron map and identify session indices for each
 % NK - do this for pair-wise sessions too? With try-catch clause?
 sesh = cat(2,MDbase,MDreg); % combine all into one structure
@@ -93,6 +103,11 @@ for j = 1:num_sessions
     load(fullfile(sesh_use.Location,'Placefields_cm1.mat'),'PSAbool', ...
         'pval', 'MI');
     
+    %ID cells with abnormally long transients
+    [half_all_mean, ~, ~, ~] = get_session_trace_stats(session, ...
+        'use_saved_data', true);
+    exclude_trace = half_all_mean > half_thresh;
+    
     % Identify legit place cells by the significance of their mutual
     % information scores
     sigPF_bool = pval < pthresh; % Threshold to get significant PFs
@@ -105,7 +120,11 @@ for j = 1:num_sessions
 
     % Get validly mapped cells for that session and if active at all/on the
     % return arm
+    %
+   
     valid_bool = ~isnan(map_use) & map_use ~= 0; % Get boolean for validly mapped cells
+    valid_bool = valid_bool & ~exclude_trace; % Exclude any neurons with abnormally long transients
+    
     active_arm_pass = nactive_arm >= nactive_thresh; % Boolean for cells above activity threshold
     active_all_pass = nactive_all >= nactive_thresh; % Ditto for all trials
     

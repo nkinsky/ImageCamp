@@ -5,7 +5,7 @@ function [PFcorr_by_day_split, PFcorr_by_day_spc, PFcorr_by_day_apc, ...
 % [PFcorr_by_day_split, PFcorr_by_day_spc, PFcorr_by_day_apc, ...
 %     PFcorr_by_day_snpc, PFcorr_by_day_stem_nonsplit, unique_lags] = ...
 %     splitcorr_v_time(sessions, varargin)
-%  Plots correlations between sessions for spliter tuning curves and place
+%  Plots correlations between sessions for splitter tuning curves and place
 %  field TMaps. Must include ALL sessions for a given animal as an input
 %  (e.g. G30_alt). Use comp_type parameter to designate what types of
 %  sessions you want to include. Clunky but necessary to make sure we only
@@ -74,7 +74,6 @@ for j = 1:(num_sessions-1)
         session2 = sessions(k);
         [deltacurve_corr, PFcorr, deltacurve_corr_shuf, PFcorr_shuf, split_ind] = ...
             split_tuning_corr(session1, session2, 'suppress_output', true);
-        
         
         % Enter debugging for free sessions only here
         [~, ~, free_bool_check] = alt_id_sesh_type(session1);
