@@ -6,6 +6,13 @@ function [ rely_val, delta_max, sigbool, stem_bool, dmax_norm, nactive_stem ,...
 %    sigthresh, cnoise )
 %
 %   Gets splittiness metrics for all cells active on the stem
+%.
+%   Set global variables WOOD_FILT to true and HALF_LIFE_THRESH to desired
+%   cutoff to filter out any cells not meeting the Emma Wood et al. (2000)
+%   splitter criteria (i.e. cells modulated by lateral position NOT
+%   trajectory) or with trace half-life decay times greater than the
+%   threshold you specify...
+%
 %
 %   INPUTS: 
 %       dir_use: working directory with sigSplitters file. Could also input
@@ -75,7 +82,7 @@ exclude_trace = half_all_mean > half_thresh;
 
 % Now exclude any neurons modulated by lateral position...
 [p, ~, ~, ~] = alt_wood_analysis(session, 'use_saved_data', true);
-exclude_lateral = p(:,5) > lateral_alpha;
+exclude_lateral = (p(:,1) >= lateral_alpha) & (p(:,3) >= lateral_alpha); 
 
 
 %% Now run the actual function
@@ -97,11 +104,10 @@ end
 
 % Identify cells active on the stem
 stem_bool = ~cellfun(@isempty, pvalue); % in sesh(j) numbering
-% Exclude any cells with abnormally long transients after including
-% splitters that don't meet the emma wood criteria (should I do this or
-% just exclude them since they are wishy-washy splitters and don't really
-% fit the splitter or the place cell criteria...?)
-stem_bool = stem_bool & (sigbooltemp & exclude_lateral) & ~exclude_trace;
+% Exclude any cells with abnormally long transients and cells that are
+% modulated by lateral position (these are weird cells that look like
+% splitters but aren't really)
+stem_bool = stem_bool & ~(sigbooltemp & exclude_lateral) & ~exclude_trace;
 
 % Assigns splitter metric vlaues to the appropriate neurons
 rely_val = nan(nneurons_sesh, 1); 
