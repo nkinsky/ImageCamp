@@ -1,7 +1,16 @@
 %% Alternation reference
 % File listing alternation sessions by mouse.
-% [MD, ref] = MakeMouseSessionListNK('Nat');
-[MD, ref] = MakeMouseSessionListEraser('Nat');
+
+% Load database - assume BU desktop or Nat's laptop only
+if strcmpi('natlaptop', getenv('COMPUTERNAME'))
+    [MD, ref, ref2] = MakeMouseSessionListEraser('natlaptop');
+else
+    [MD, ref] = MakeMouseSessionListEraser('Nat');
+end
+alt_test_session(1) = G30_alt(end);
+alt_test_session(2) = G31_alt(4);
+alt_test_session(3) = G45_alt(20);
+alt_test_session(4) = G48_alt(11);
 clear G30_alt G30loop_alt G31_alt G45_alt G48_alt alt_all alt_all_cell
 
 j = 1; 

@@ -3192,7 +3192,7 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp mice\G31\alternation\12_03_2014\Working';
 elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_31\Alternation\12_03_2014';
-elseif strcmpi(userstr,'Nat')
+elseif strcmpi(userstr,'natlaptop')
     MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\Alternation\G31\12_03_2014s1';
 end
 MD(i).Notes = 'Will Method';
@@ -5012,7 +5012,7 @@ MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp mice\G45\alternation\09_30_2015\1 - alternation\Working';
 elseif strcmpi(userstr, 'natlaptop')
-    MD(i) = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\Alternation\G45\09_30_2015s1';
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\Alternation\G45\09_30_2015s1';
 end
 MD(i).Notes = 'Will Method';
 MD(i).Pix2CM = 0.0874;

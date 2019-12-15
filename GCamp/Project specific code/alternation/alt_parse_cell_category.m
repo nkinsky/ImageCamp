@@ -1,12 +1,18 @@
 function [ categories, cat_nums, cat_names ] = alt_parse_cell_category( ...
     sesh, pval_thresh, ntrans_thresh, sigthresh, PFname)
-% [categories, names] = alt_parse_cell_category( sesh, pval_thresh, ntrans_thresh,...
-%                       sigthresh, PFname, exclude_bool )
+% [ categories, cat_nums, cat_names ] = alt_parse_cell_category( ...
+%    sesh, pval_thresh, ntrans_thresh, sigthresh, PFname)
 %
 %   Breaks out cells in sesh into 6 categories identified by number in
 %   categories (num_neurons x 1 vector): splitters, stem place
 %   cells (sPCs), stem non-place cells (sNPCS), arm PCs, arm
 %   NPCs, does not pass number transients threshold.
+%
+%   Set global variables WOOD_FILT to true and HALF_LIFE_THRESH to desired
+%   cutoff to filter out any cells not meeting the Emma Wood et al. (2000)
+%   splitter criteria (i.e. cells modulated by lateral position NOT
+%   trajectory) or with trace half-life decay times greater than the
+%   threshold you specify...
 %
 %   INPUTS
 %
