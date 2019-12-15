@@ -64,7 +64,7 @@ good_splitters = splitters & ~exclude_lateral;
 not_splitters = splitters & exclude_lateral | ~splitters;
 
 if nargin < 5
-    PFname = 'Placefields.mat';
+    PFname = 'Placefields_cm1.mat';
 end
 
 cat_nums = 0:5;

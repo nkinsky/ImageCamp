@@ -55,8 +55,17 @@ end
 if ~load_success
 PSAbool = []; NeuronTraces = []; SampleRate = [];
 if ~isempty(session.Location)
-    load(fullfile(session.Location,'FinalOutput.mat'), 'PSAbool', 'NeuronTraces',...
-        'SampleRate');
+    try
+        load(fullfile(session.Location,'FinalOutput.mat'), 'PSAbool', 'NeuronTraces',...
+            'SampleRate');
+    catch
+        disp('No FinalOutput.mat file found - loading Pos_align.mat')
+        load(fullfile(session.Location,'Pos_align.mat'), 'PSAbool', 'RawTrace',...
+            'LPtrace', 'SampleRate');
+        NeuronTraces.RawTrace = RawTrace;
+        NeuronTraces.LPtrace = LPtrace;
+        clear RawTrace LPtrace
+    end
     if isempty(SampleRate)
         SampleRate = 20;
         disp('SampleRate not found in FinalOutput.mat - must be older, using 20')
