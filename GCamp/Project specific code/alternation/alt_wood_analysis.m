@@ -40,12 +40,16 @@ use_saved_data = ip.Results.use_saved_data;
 load_success = false;
 if use_saved_data
     try
-        load(fullfile(session.Location,'wood_analysis.mat'), 'p', 'tbl', ...
-            'p_simple', 'tbl_simple')
-        load_success = true;
+        load(fullfile(session.Location,'wood_analysis.mat'), 'wood_analysis');
+        if compare_sessions(wood_analysis.session, session) %#ok<NODEF>
+            p = wood_analysis.p;
+            tbl = wood_analysis.tbl;
+            p_simple = wood_analysis.p_simple;
+            tbl_simple = wood_analysis.tbl_simple;
+            load_success = true;
+        end
     catch
-        disp('Error loading wood_analysis.mat - running alt_wood_analysis from scratch and SAVING!')
-        save_data = true;
+        disp('Error loading wood_analysis.mat - running alt_wood_analysis - rerun with save_data flag if desired!')
     end
 end
 
@@ -169,6 +173,11 @@ tbl_simple = cell(nneurons,1);
 tbl_simple(stembool) = tstem_simple;
 
 if save_data
+    wood_analysis.session = session;
+    wood_analysis.p = p;
+    wood_analysis.tbl = tbl;
+    wood_analysis.p_simple = p_simple;
+    wood_analysis.tbl_simple = tbl_simple; %#ok<STRNU>
     save(fullfile(session.Location,'wood_analysis.mat'), 'p', 'tbl', ...
         'p_simple', 'tbl_simple')
 end

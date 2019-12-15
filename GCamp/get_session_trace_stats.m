@@ -38,12 +38,16 @@ use_saved_data = ip.Results.use_saved_data;
 load_success = false;
 if use_saved_data
     try
-        load(fullfile(session.Location,'trace_stats.mat'), 'half_all_mean',...
-            'half_mean', 'LPerror_all', 'legit_trans_all');
-        load_success = true;
+        load(fullfile(session.Location,'trace_stats.mat'), 'trace_stats');
+        if compare_sessions(trace_stats.session, session) %#ok<NODEF>
+            half_all_mean = trace_stats.half_all_mean;
+            half_mean = trace_stats.half_mean;
+            LPerror_all = trace_stats.LPerror_all;
+            legit_trans_all = trace_stats.legit_trans_all;
+            load_success = true;
+        end
     catch
-        disp('Error loading trace_stats.mat - calculating directly and SAVING data')
-        save_data = true;
+        disp('Error loading trace_stats.mat - calculating directly rerun with flag to save_data if desired')
     end
 end
 
@@ -93,9 +97,14 @@ for j = 1:nneurons
     legit_trans_all{j} = legit_trans;
 end
 
+
 if save_data
-    save(fullfile(session.Location,'trace_stats.mat'), 'half_all_mean',...
-        'half_mean', 'LPerror_all', 'legit_trans_all')
+    trace_stats.session = session;
+    trace_stats.half_all_mean = half_all_mean;
+    trace_stats.half_mean = half_mean;
+    trace_stats.LPerror_all = LPerror_all;
+    trace_stats.legit_trans_all = legit_trans_all; %#ok<STRNU>
+    save(fullfile(session.Location,'trace_stats.mat'), 'trace_stats')
 end
 
 end
