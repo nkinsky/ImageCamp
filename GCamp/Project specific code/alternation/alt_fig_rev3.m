@@ -8,6 +8,7 @@ end
 
 if strcmpi('natlaptop', getenv('COMPUTERNAME'))
     sessions{1} = MD(32:42); % Eraser session for reference ! session at beginning and end of recording
+    sessions{1} = MD([15, 28]); % Eraser reference for Marble07 - 9 week virus in system!
 else
 % sessions{1} = MD([238, 258]); % G30 session at beginning and end of recording
 % sessions{2} = MD([226, 235]); % G31 beginning/end session 
@@ -47,7 +48,9 @@ for nn = 1:length(sessions)
             plot_aligned_trace(PSAbool(k,:), NeuronTraces.RawTrace(k,:), ...
                 NeuronTraces.LPtrace(k,:),'SR', SampleRate, 'ax', subplot(2,nplot/2,j));
         end
-        printNK([session.Animal sesh_txt{m} ' session traces'],'alt');
+        if ~strcmpi('natlaptop', getenv('COMPUTERNAME'))
+            printNK([session.Animal sesh_txt{m} ' session traces'],'alt');
+        end
         
         % Now calculate stats for all neurons
         [half_all_mean, half_mean, LPerror, legit_trans] = ...
@@ -94,8 +97,10 @@ for nn = 1:length(sessions)
         end
         make_plot_pretty(gca,'fontsize',10,'linewidth',1.5)
         if m == 2
-            printNK([session.Animal ' first to last sesh trace stats'],...
-                'alt', 'hfig', hcomb)
+            if ~strcmpi('natlaptop', getenv('COMPUTERNAME'))
+                printNK([session.Animal ' first to last sesh trace stats'],...
+                    'alt', 'hfig', hcomb)
+            end
         end
     end
 end
