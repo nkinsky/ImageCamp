@@ -7,12 +7,15 @@ hw = waitbar(0,'Running Wood analysis and trace stats analysis...');
 for j = 1:length(alt_all)
     sesh_use = alt_all(j);
     try
-        alt_wood_analysis(sesh_use, 'save_data', true);
+%        alt_wood_analysis(sesh_use, 'save_data', true);
+        alt_wood_analysis(sesh_use, 'use_saved_data', true);
         success_boolw(j) = true;
     end
     
     try
-        get_session_trace_stats(sesh_use, 'save_data', true);
+%         get_session_trace_stats(sesh_use, 'save_data', true);
+        get_session_trace_stats(sesh_use, 'use_saved_data', true);
+        success_boolt(j) = true;
     end
     waitbar(j/length(alt_all), hw);
 end
