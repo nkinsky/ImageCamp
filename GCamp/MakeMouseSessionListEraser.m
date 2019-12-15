@@ -2213,6 +2213,8 @@ MD(i).Env = 'Open';
 MD(i).Room = 'CILSE 721 F';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190114_1';
+elseif strcmpi(userstr,'natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\Eraser\Control Group\Marble29\20190114_1';
 end
 MD(i).Notes = 'Day -2';
 MD(i).Freezing = NaN;
@@ -2395,6 +2397,8 @@ MD(i).Env = 'Shock';
 MD(i).Room = 'CILSE 721 F';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'E:\Eraser\Control Group\Marble29\20190123_2';
+elseif strcmpi(userstr,'natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\Eraser\Control Group\Marble29\20190123_2';
 end
 MD(i).Notes = 'Day 7';
 MD(i).Freezing = NaN;
@@ -2402,7 +2406,6 @@ MD(i).Shockdur = NaN;
 MD(i).Shocklevel = NaN;
 
 %% Marble 18
-%% Marble 29
 i = i+1;
 MD(i).Animal = 'Marble18';
 MD(i).Date = '09_17_2018';
@@ -2598,8 +2601,6 @@ MD(i).Notes = 'Day 7';
 MD(i).Freezing = NaN;
 MD(i).Shockdur = NaN; 
 MD(i).Shocklevel = NaN;
-
-
 
 %% Other stuff copied over from NK file so I don't overwrite MasterDirectory.mat
 % accidentally and cause an issue!
@@ -3191,6 +3192,8 @@ if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp mice\G31\alternation\12_03_2014\Working';
 elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_31\Alternation\12_03_2014';
+elseif strcmpi(userstr,'Nat')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\Alternation\G31\12_03_2014s1';
 end
 MD(i).Notes = 'Will Method';
 MD(i).Pix2CM = 0.10;
@@ -3665,10 +3668,12 @@ MD(i).Env = 'Alternation';
 MD(i).Room = '2 Cu 201B';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'J:\GCamp Mice\Working\G30\alternation\11_13_2014\Working';
-elseif (strcmp(userstr,'Nat_laptop'))
-    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working';
+% elseif (strcmp(userstr,'Nat_laptop'))
+%     MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\G30\alternation\11_13_2014\Working';
 elseif (strcmp(userstr,'Will'))
     MD(i).Location = 'E:\Imaging Data\Endoscope\GCaMP6f_30\Alternation\11_13_2014';
+elseif strcmpi(userstr,'natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\Alternation\G30\11_13_2014s1';
 end
 MD(i).Notes = 'Regular Alternation';
 MD(i).Pix2CM = 0.10;
@@ -5006,6 +5011,8 @@ MD(i).Env = 'alternation';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp mice\G45\alternation\09_30_2015\1 - alternation\Working';
+elseif strcmpi(userstr, 'natlaptop')
+    MD(i) = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\Alternation\G45\09_30_2015s1';
 end
 MD(i).Notes = 'Will Method';
 MD(i).Pix2CM = 0.0874;
@@ -5825,6 +5832,8 @@ MD(i).Env = 'alternation';
 MD(i).Room = '201a - 2015';
 if (strcmp(userstr,'Nat'))
     MD(i).Location = 'D:\GCamp mice\G48\alternation\09_22_2015\1 - alternation\Processed Data';
+elseif strcmpi(userstr, 'natlaptop')
+    MD(i).Location = 'C:\Users\Nat\Documents\BU\Imaging\Working\GCamp Mice\Alternation\G48\09_22_201_s1';
 end
 MD(i).Notes = 'Will Method';
 MD(i).Pix2CM = 0.0874;

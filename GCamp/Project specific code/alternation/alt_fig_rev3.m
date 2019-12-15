@@ -9,6 +9,7 @@ end
 if strcmpi('natlaptop', getenv('COMPUTERNAME'))
     sessions{1} = MD(32:42); % Eraser session for reference ! session at beginning and end of recording
     sessions{1} = MD([15, 28]); % Eraser reference for Marble07 - 9 week virus in system!
+    sessions{1} = MD([155, 168]); % Eraser reference for Marble29 - 10 week virus in system!
 else
 % sessions{1} = MD([238, 258]); % G30 session at beginning and end of recording
 % sessions{2} = MD([226, 235]); % G31 beginning/end session 
