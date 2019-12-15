@@ -49,7 +49,7 @@ else
 end
 
 % First ID any cells to exlucd with extra long transients
-[half_all_mean, ~, ~, ~] = get_session_trace_stats(session, ...
+[half_all_mean, ~, ~, ~] = get_session_trace_stats(sesh, ...
     'use_saved_data', true);
 exclude_trace = half_all_mean > half_thresh; 
 
@@ -57,7 +57,7 @@ exclude_trace = half_all_mean > half_thresh;
 % have significant trajectory modulation after accounting for speed/lateral
 % position.
 p = alt_wood_analysis(sesh,'use_saved_data',true);
-exclude_lateral = p(:,1) & p(:,3) >= lateral_alpha; 
+exclude_lateral = (p(:,1) >= lateral_alpha) & (p(:,3) >= lateral_alpha); 
 
 % ID good splitters based on sig diff b/w tuning curves and no lateral
 % position modulation.
@@ -83,7 +83,7 @@ cat_names = { ['ntrans < ' num2str(ntrans_thresh) 'or bad transients'], 'Splitte
 categories(stem_cells & good_splitters & ntrans_pass & ~exclude_trace) = 1; % Splitters
 % categories(stem_cells & pctemp & ~cellfun(@any,sigcurve) & ...
 %     ntrans_pass) = 4; % Stem PCs
-categories(stem_cells & pc_temp & not_splitters & ntrans_pass & ...
+categories(stem_cells & pctemp & not_splitters & ntrans_pass & ...
     ~exclude_trace) = 4; % Stem PCs
 categories(~stem_cells & pctemp & ntrans_pass & ~exclude_trace) = 2; % Arm PCs
 % categories(stem_cells & ~pctemp & ~cellfun(@any,sigcurve) & ...

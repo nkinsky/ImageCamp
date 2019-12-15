@@ -195,6 +195,8 @@ else
     half_mean = nan;
 end
 
+%% What about rise times? What if these are unaffected?
+
 %% Put stats in plot
 if plot_flag
     text(ax, 0.25*offset, 0.8*max(get(gca,'YLim')), ['\tau_{1/2,mean} = ' ...

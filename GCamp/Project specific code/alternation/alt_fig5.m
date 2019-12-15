@@ -2,7 +2,7 @@
 % Arm PCs (and non-splitter stem PCs).
 
 %% Scroll through for example cells
-pval_thresh = 1; % Use 1 because the pval_thresh function in PF_plot_compare is overly conservative
+pval_thresh = 1; % Use 1 because the pval_thresh function in PF_plot_compare is overly conservative for scrolling through cells
 % Sessions to compare
 sesh1 = G30_alt(13);
 sesh2 = G30_alt(14);
