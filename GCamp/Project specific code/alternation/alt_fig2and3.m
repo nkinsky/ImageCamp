@@ -1,6 +1,10 @@
 % Alt figure 2: tracking splitters across days & relationship to
 % performance
 
+wood_filt = false;
+half_thresh = 2;
+text_append = alt_set_filters(wood_filt, half_thresh);
+
 %% A - plot splitters across days
 plotSigSplitters_bw_sesh(G45_alt(5), G45_alt(12));
 % plotSigSplitters_bw_sesh(G45_alt(4), G45_alt(20));
@@ -296,16 +300,16 @@ axis off
 
 %% Save all the above.
 [~, ~, ~, G30glmall] = plot_split_v_perf_batch(G30_alt);
-printNK('G30 perf time ntrials v splitter proportion', 'alt')
+printNK(['G30 perf time ntrials v splitter proportion' text_append], 'alt')
 [~, ~, ~, G31glmall] = plot_split_v_perf_batch(G31_alt);
-printNK('G31 perf time ntrials v splitter proportion', 'alt')
+printNK(['G31 perf time ntrials v splitter proportion' text_append], 'alt')
 [~, ~, ~, G45glmall] = plot_split_v_perf_batch(G45_alt);
-printNK('G45 perf time ntrials v splitter proportion', 'alt')
+printNK(['G45 perf time ntrials v splitter proportion' text_append], 'alt')
 [~, ~, ~, G48glmall] = plot_split_v_perf_batch(G48_alt);
-printNK('G48 perf time ntrials v splitter proportion', 'alt')
+printNK(['G48 perf time ntrials v splitter proportion' text_append], 'alt')
 
 [~, ~, ~, allmice_glmall] = plot_split_v_perf_batch(alt_all);
-printNK('All Mice perf time ntrials v splitter proportion', 'alt')
+printNK(['All Mice perf time ntrials v splitter proportion' text_append], 'alt')
 
 %% Performance v splittiness
 % add noise to corr curves to give L/R only neurons a value (otherwise they go to NaN).

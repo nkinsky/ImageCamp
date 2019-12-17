@@ -74,7 +74,7 @@ for j = 1:6 %k = 1:length(alt_inds)
         'dplot', dplot, 'rplot', rplot, 'nactive_thresh', nactive_thresh);
     
     if save_pdf
-        printNK(['Splitter Ontogeny ba=' num2str(days_ba) ' days'],'alt', ...
+        printNK(['Splitter Ontogeny ba=' num2str(days_ba) ' days' text_append],'alt', ...
             'append', true)
 %         close(gcf)
     end
@@ -173,28 +173,28 @@ max_day = 9;
 split_ontogeny_plot(rmean_all, daydiff_all, day_groups, 'ylabel', ...
     'max reliability(1-p)_{mean}', 'max_day', max_day, 'group_size', day_groups);
 printNK(['Splitter Ontogeny - Max Reliability All mice means ' ...
-    num2str(day_groups) ' day groups ' num2str(max_day) ' day max'], 'alt')
+    num2str(day_groups) ' day groups ' num2str(max_day) ' day max' text_append], 'alt')
 split_ontogeny_plot(rm_mean_all, daydiff_all, day_groups, 'ylabel', ...
     'mean reliability(1-p)_{mean}', 'max_day', max_day, 'group_size', day_groups);
 printNK(['Splitter Ontogeny - Mean Reliability All mice means ' ...
-    num2str(day_groups) ' day groups ' num2str(max_day) ' day max'], 'alt')
+    num2str(day_groups) ' day groups ' num2str(max_day) ' day max' text_append], 'alt')
 split_ontogeny_plot(spmean_all, daydiff_all, day_groups, 'ylabel', ...
     'Sig bin prop._{mean}', 'max_day', max_day, 'group_size', day_groups);
 printNK(['Splitter Ontogeny - Sig Bin Proportion All mice means ' ...
-    num2str(day_groups) ' day groups ' num2str(max_day) ' day max'], 'alt')
+    num2str(day_groups) ' day groups ' num2str(max_day) ' day max' text_append], 'alt')
 split_ontogeny_plot(dmean_all, daydiff_all, day_groups, 'ylabel', ...
     '\Deltamax_{mean}', 'max_day', max_day, 'group_size', day_groups);
 printNK(['Splitter Ontogeny - Deltamax All mice means ' ...
-    num2str(day_groups) ' day groups ' num2str(max_day) ' day max'], 'alt')
+    num2str(day_groups) ' day groups ' num2str(max_day) ' day max' text_append], 'alt')
 split_ontogeny_plot(dnormmean_all, daydiff_all, day_groups, 'ylabel', ...
     '\Deltamax_{mean}_{norm}', 'max_day', max_day, 'group_size', day_groups);
 printNK(['Splitter Ontogeny - Deltamax_norm All mice means ' ...
-    num2str(day_groups) ' day groups ' num2str(max_day) ' day max'], 'alt')
+    num2str(day_groups) ' day groups ' num2str(max_day) ' day max' text_append], 'alt')
 split_ontogeny_plot(dimean_all, daydiff_all, day_groups, 'ylabel', ...
     '\Sigma\Deltamax_{mean}_{norm}', 'max_day', max_day, 'group_size', ...
     day_groups);
 printNK(['Splitter Ontogeny - sum Deltamax_norm All mice means ' ...
-    num2str(day_groups) ' day groups ' num2str(max_day) ' day max'], 'alt')
+    num2str(day_groups) ' day groups ' num2str(max_day) ' day max' text_append], 'alt')
 
 
 %% Now do all the above but for placefields!
@@ -232,7 +232,7 @@ for j=1:6 %k = 1:length(alt_inds)
         'nactive_thresh', nactive_thresh);
     
     if save_pdf
-        printNK(['PF Ontogeny ba=' num2str(days_ba) ' days'],'alt', ...
+        printNK(['PF Ontogeny ba=' num2str(days_ba) ' days' text_append],'alt', ...
             'append', true)
         close(gcf)
     end
@@ -308,13 +308,13 @@ max_day = 10;
 title(hplot,'Return Arm Place Cells'); 
 xlabel(hplot, 'Days from Place Cell Birth');
 printNK(['Return Arm Place Cell Ontogeny - All mice means ' num2str(day_groups)...
-    ' groups ' num2str(max_day) ' day max'], 'alt')
+    ' groups ' num2str(max_day) ' day max' text_append], 'alt')
 [~, ~, ~, hplot] = split_ontogeny_plot(MImat_stem_all, daydiff_stem_all, ...
     day_groups, 'ylabel', 'Mutual Information', 'max_day', max_day);
 title(hplot,'Stem Place Cells'); 
 xlabel(hplot, 'Days from Place Cell Birth');
 printNK(['Stem Place Cell Ontogeny - All mice means ' num2str(day_groups)...
-    ' groups ' num2str(max_day) ' day max'], 'alt')
+    ' groups ' num2str(max_day) ' day max' text_append], 'alt')
 
 %% Compare PF onset to splitter onset
 mouse_names = {'G30', 'G31', 'G45\_1sthalf', 'G45\_2ndhalf', ...
@@ -325,19 +325,19 @@ mouse_names_print = {'G30', 'G31', 'G45_1', 'G45_2', 'G48_1',  'G48_2'};
 for j = 1:6
     plot_phenotype_onset(pc_onset_bymouse{j}, split_onset_bymouse{j},...
         mouse_names{j})  
-    printNK(['Split v PC Onset plots ' mouse_names_print{j}], 'alt');
+    printNK(['Split v PC Onset plots ' mouse_names_print{j} text_append], 'alt');
 end
 
 % Combined mice - keep all sessions for difference in phenotype onsets
 plot_phenotype_onset(cat(1,pc_onset_bymouse{:}), cat(1,split_onset_bymouse{:}),...
     'All Mice/Sessions - Onset Diff Only!')
-printNK('Split v Onset Diffs for All Mice','alt');
+printNK(['Split v Onset Diffs for All Mice' text_append],'alt');
 % Combined mice - exclude 2nd half of G45 and G48 since you don't have a
 % legit reference point!
 plot_phenotype_onset(cat(1,pc_onset_bymouse{[1 2 3 5]}), ...
     cat(1,split_onset_bymouse{[1 2 3 5]}),...
     'All Mice/Sessions - Good for absolute onset day plots!')
-printNK('Split and PC absolute onset days All Mice', 'alt');
+printNK(['Split and PC absolute onset days All Mice' text_append], 'alt');
 
 %% Repeat above but only for cells that have fields on the stem ONLY at PC onset
 % They look basically the same as when I consider ALL place cell locations.
@@ -352,13 +352,13 @@ for j = 1:6
     [~, ha] = plot_phenotype_onset(stemonlypc_onset_bymouse{j}, split_onset_bymouse{j},...
         mouse_names{j});
     title(ha(6),'PCs have fields on stem ONLY at onset');
-    printNK(['Split v PC Onset with stem fields ONLY plots ' mouse_names_print{j}], 'alt');
+    printNK(['Split v PC Onset with stem fields ONLY plots ' mouse_names_print{j} text_append], 'alt');
     
 end
 
 plot_phenotype_onset(cat(1,stemonlypc_onset_bymouse{:}), cat(1,split_onset_bymouse{:}),...
     'All Mice/Sessions Stem PCs at Birth Only - Onset Diff Only!')
-printNK('Split v Onset Diffs for All Mice','alt');
+printNK(['Split v Onset Diffs for All Mice' text_append],'alt');
 
 plot_phenotype_onset(cat(1,stemonlypc_onset_bymouse{[1 2 3 5]}), ...
     cat(1,split_onset_bymouse{[1 2 3 5]}),...
@@ -374,14 +374,14 @@ scatterBox(MImat_stem_noalign_all, lc_stage_pcs_all,'xLabels',...
     {'Early','Middle','Late'},'ylabel','MI_{mean}'); 
 xlabel('Learning Stage')
 make_plot_pretty(gca)
-printNK('Mutual Information vs. Learning Stage All Mice','alt')
+printNK(['Mutual Information vs. Learning Stage All Mice' text_append],'alt')
 pkw_pc = kruskalwallis(MImat_stem_noalign_all, lc_stage_pcs_all,'off');
 
 scatterBox(dnorm_mean_noalign_all, lc_stage_split_all,'xLabels',...
     {'Early','Middle','Late'},'ylabel','\Deltamax_{mean}'); 
 xlabel('Learning Stage')
 make_plot_pretty(gca)
-printNK('Dnorm_mean vs. Learning Stage All Mice','alt')
+printNK(['Dnorm_mean vs. Learning Stage All Mice' text_append],'alt')
 pkw_sp = kruskalwallis(dnorm_mean_noalign_all, lc_stage_split_all,'off');
 
 

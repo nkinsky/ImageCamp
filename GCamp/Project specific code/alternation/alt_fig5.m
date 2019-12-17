@@ -1,6 +1,10 @@
 % Alternation Figure 5: More Consistent Spatial Coding in Splitters than
 % Arm PCs (and non-splitter stem PCs).
 
+wood_filt = false;
+half_thresh = 2;
+text_append = alt_set_filters(wood_filt, half_thresh);
+
 %% Scroll through for example cells
 pval_thresh = 1; % Use 1 because the pval_thresh function in PF_plot_compare is overly conservative for scrolling through cells
 % Sessions to compare
@@ -111,7 +115,7 @@ for mouse = 1:4
     text(0.1, 0.1, num2str(psignrank, '%0.2g \t'))
     axis off
     printNK(['Spatial Consistency close-up plots - ' plot_type ' - ' ...
-        alt_all_cell{mouse}(1).Animal], 'alt');
+        alt_all_cell{mouse}(1).Animal text_append], 'alt');
     
 end
 
@@ -175,7 +179,8 @@ text(0.1, 0.8, 'signed-rank test values (day lag, npts, split v spc, split v apc
 text(0.1, 0.1, num2str(psignrank, '%0.2g \t'))
 axis off
 
-printNK(['Spatial Consistency close-up plots - ' plot_type ' - All Mice'], 'alt');
+printNK(['Spatial Consistency close-up plots - ' plot_type ' - All Mice' ...
+    text_append], 'alt');
 
 %% Now re-arrange stuff and plot again as a group
 max_lag = 21; min_lag = 1;
@@ -203,11 +208,11 @@ PFstem_combined_unique = arrayfun(@(a) cat(1, ...
     lags_combined_unique, 'grp_labels', {'Arm PCs', 'Splitters'});
 xlim(ha1(1),[min_lag - 0.5, max_lag + 0.5])
 make_plot_pretty(gca);
-printNK('Spatial Consistency - Split v APCs - All Mice', 'alt')
+printNK(['Spatial Consistency - Split v APCs - All Mice' text_append], 'alt')
 [~, ha2] = plot_corrs_v_time(PFstem_combined_unique, PFspc_combined_unique, ...
     lags_combined_unique, 'grp_labels', {'Stem PCs', 'Splitters'});
 xlim(ha2(1),[min_lag - 0.5, max_lag + 0.5])
-printNK('Spatial Consistency - Split v stem PCs - All Mice', 'alt')
+printNK(['Spatial Consistency - Split v stem PCs - All Mice' text_append], 'alt')
 make_plot_pretty(gca);
 
 %% Now plot for individual mice...could do in splitcorr_v_time but now 
@@ -222,13 +227,13 @@ for j = 1:4
     title(ha1(1), mouse_name_title(alt_all_cell{j}(1).Animal))
     make_plot_pretty(gca);
     printNK(['Spatial Consistency - Split v APCs - ' ...
-        alt_all_cell{j}(1).Animal], 'alt')
+        alt_all_cell{j}(1).Animal text_append], 'alt')
     [~, ha2] = plot_corrs_v_time(PFcorr_by_day_apc{j}, PFcorr_by_day_stem_nonsplit{j}, ...
         unique_lags{j}, 'grp_labels', {'Stem PCs', 'Splitters'});
     xlim(ha2(1),[min_lag - 0.5, max_lag + 0.5])
     title(ha2(1), mouse_name_title(alt_all_cell{j}(1).Animal))
     printNK(['Spatial Consistency - Split v stem PCs - ' ...
-        alt_all_cell{j}(1).Animal], 'alt')
+        alt_all_cell{j}(1).Animal text_append], 'alt')
     make_plot_pretty(gca);
 end
 
