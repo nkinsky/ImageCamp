@@ -304,7 +304,7 @@ printNK('G45 perf time ntrials v splitter proportion', 'alt')
 [~, ~, ~, G48glmall] = plot_split_v_perf_batch(G48_alt);
 printNK('G48 perf time ntrials v splitter proportion', 'alt')
 
-[~, ~, ~, allmice_glmall] = plot_split_v_perf_batch(alt_all);
+[~, ~, ~, allmice_glmall] = plot_split_v_perf_batch(alt_all_);
 printNK('All Mice perf time ntrials v splitter proportion', 'alt')
 
 %% Performance v splittiness

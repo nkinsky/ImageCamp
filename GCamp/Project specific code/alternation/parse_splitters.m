@@ -81,8 +81,24 @@ end
 exclude_trace = half_all_mean > half_thresh; 
 
 % Now exclude any neurons modulated by lateral position...
-[p, ~, ~, ~] = alt_wood_analysis(session, 'use_saved_data', true);
-exclude_lateral = (p(:,1) >= lateral_alpha) & (p(:,3) >= lateral_alpha); 
+try
+    [p, ~, ~, ~] = alt_wood_analysis(session, 'use_saved_data', true);
+    exclude_lateral = (p(:,1) >= lateral_alpha) & (p(:,3) >= lateral_alpha);
+catch ME
+    switch ME.identifier
+        case 'MATLAB:load:couldNotReadFile'
+            exclude_lateral = false(size(exclude_trace));
+            disp('COULD NOT LOAD wood_analysis.mat - no lateral filtering performed!!')
+        case 'MATLAB:dimagree' % exclude the one learning session where the mouse isn't above the speed threshold on a number of trials 
+            exclude_lateral = false(size(exclude_trace));
+            disp('COULD NOT LOAD wood_analysis.mat - no lateral filtering performed!!')
+        case 'MATLAB:UndefinedFunction'
+            exclude_lateral = false(size(exclude_trace));
+            disp('COULD NOT LOAD wood_analysis.mat - no lateral filtering performed!!')
+        otherwise
+            rethrow(ME)
+    end
+end
 
 
 %% Now run the actual function
