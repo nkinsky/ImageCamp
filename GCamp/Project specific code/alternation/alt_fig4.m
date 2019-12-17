@@ -1,12 +1,14 @@
 % Alternation Figure 4: Reactivation dynamics over time
-
+wood_filt = false;
+half_thresh = 2;
+text_append = alt_set_filters(wood_filt, half_thresh);
 %% Reactivation Probability versus time - single mouse examples - will need to
 % redo with only stem and arm place cells to make pkw accurate... 
 
 % Remove upper loop and use alt_all_cell as sesh_use for ALL mice.
 trial_types = {'all', 'free_only', 'forced_only', 'no_loop'};
 hw = waitbar(0,'Running reactivation prob vs phenotype...');
-n = 1;
+n = 1; % set waitbar counter
 for j = 1:4
     alt_sesh_use = alt_all_cell{j};
     mouse_name = alt_sesh_use(1).Animal;
@@ -21,7 +23,7 @@ for j = 1:4
                         'matchER', matchER, 'trial_type', trial_type);
                     printNK(['Coactivity by phenotype - ' mouse_name ' ' ...
                         ' matchER=' num2str(matchER) ' trial_type=' ...
-                        trial_type], 'alt', 'append', true)
+                        trial_type text_append], 'alt', 'append', true)
                     close(gcf)
                 catch
                     disp(['Error with ' mouse_name ' ' ...
@@ -46,19 +48,19 @@ trial_type = 'free_only';
 alt_plot_stab_v_cat(1, 'exact', alt_sesh_use, false, 'PFname', 'Placefields_cm1.mat', ...
     'matchER', matchER, 'trial_type', trial_type);
 printNK(['All Mice Split v PC Prob present at 1 day lag matchER=' ...
-    num2str(matchER)],'alt')
+    num2str(matchER) text_append],'alt')
 
 % 7 day - all mice
 alt_plot_stab_v_cat(7, 'exact', alt_sesh_use, false, 'PFname', 'Placefields_cm1.mat', ...
     'matchER', matchER, 'trial_type', trial_type);
 printNK(['All Mice Split v PC Prob present at 7 day lag matchER=' ...
-    num2str(matchER)],'alt')
+    num2str(matchER) text_append],'alt')
 
 % One day for G48
 alt_plot_stab_v_cat(1, 'exact', alt_all_cell{4}, false, 'PFname', ...
     'Placefields_cm1.mat', 'matchER', matchER, 'trial_type', trial_type);
 printNK(['G48 Split v PC Prob present at 1 day lag matchER=' ...
-    num2str(matchER)],'alt')
+    num2str(matchER) text_append],'alt')
 
 % 7 day - G45
 alt_plot_stab_v_cat(7, 'exact', alt_all_cell{3}, false, 'PFname', 'Placefields_cm1.mat', ...
@@ -70,7 +72,7 @@ printNK(['G45 Split v PC Prob present at 7 day lag matchER=' ...
 % but falls apart a bit when I don't include forced sessions. Could be due
 % to a lot of shorter sessions with G48. Might need to only include
 % sessions that were longer than a certain amount of time...yes!!!
-max_day_lag = 21;
+max_day_lag = 15;
 sessions = alt_all_cell; % Change this to make plots for each mouse...
 matchER = true; % March event-rate in non-splitters to splitters
 trial_type = 'free_only'; % 'no_loop';
@@ -236,10 +238,10 @@ hs_sp.XData = hs_sp.XData + 0.1;
 
 if iscell(sessions) && length(sessions) == 4
     printNK(['Coactivity vs time split v ' other_type ' - All Mice matchER=' num2str(matchER)...
-        ' trial_type=' trial_type 'max_lag=' num2str(max_day_lag)], 'alt')
+        ' trial_type=' trial_type 'max_lag=' num2str(max_day_lag) text_append], 'alt')
 elseif iscell(sessions) && length(sessions) == 1
     printNK(['Coactivity vs time split v ' other_type ' - ' sessions{1}(1).Animal ' matchER=' num2str(matchER)...
-        ' trial_type=' trial_type 'max_lag=' num2str(max_day_lag)], 'alt')
+        ' trial_type=' trial_type 'max_lag=' num2str(max_day_lag) text_append], 'alt')
 end
 
 %% Same as above but for difference between curves
@@ -270,7 +272,8 @@ set(h0,'Color',[0.5 0.5 0.5])
 hdq = plot(1:max_day_lag, [q75; q25],'k--');
 legend(cat(1,hdm,hdq(1)), {'Mean','25%/75% Quantiles'})
 xlabel('Lag (days)')
-title(['Split - ' other_type ', All Mice, matchER=' num2str(matchER) ' trial\_type=' trial_type])
+title(['Split - ' other_type ', All Mice, matchER=' num2str(matchER) ' trial\_type=' trial_type...
+    text_append])
 make_plot_pretty(gca)
 
 % prks = arrayfun(@(a) ranksum(coactive_prop_all(a == grps_all(:,1) & good_bool,1), ...
@@ -290,7 +293,7 @@ make_plot_pretty(gca)
 % hs_sp.XData = hs_sp.XData + 0.1;
 
 printNK(['Coactivity Diff with ' other_type ' vs time - All Mice matchER=' num2str(matchER)...
-    ' trial_type=' trial_type 'max_lag=' num2str(max_day_lag)], 'alt')
+    ' trial_type=' trial_type 'max_lag=' num2str(max_day_lag) text_append], 'alt')
 
 %% ScatterBox with lines for all day lags
 figure
@@ -571,7 +574,7 @@ for j = 1:4
     
 end
 
-printNK('Cell Turnover between alternatio and open field - Ind Mice','alt')
+printNK('Cell Turnover between alternation and open field - Ind Mice','alt')
 
 
 
