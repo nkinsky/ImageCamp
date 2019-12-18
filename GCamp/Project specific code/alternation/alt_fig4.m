@@ -1,5 +1,5 @@
 % Alternation Figure 4: Reactivation dynamics over time
-wood_filt = false;
+wood_filt = true;
 half_thresh = 2;
 text_append = alt_set_filters(wood_filt, half_thresh);
 %% Reactivation Probability versus time - single mouse examples - will need to
@@ -72,6 +72,7 @@ printNK(['G45 Split v PC Prob present at 7 day lag matchER=' ...
 % but falls apart a bit when I don't include forced sessions. Could be due
 % to a lot of shorter sessions with G48. Might need to only include
 % sessions that were longer than a certain amount of time...yes!!!
+
 max_day_lag = 15;
 sessions = alt_all_cell; % Change this to make plots for each mouse...
 matchER = true; % March event-rate in non-splitters to splitters
@@ -144,7 +145,8 @@ end
 
 %% Plot it!
 other_type = 'Stem PCs'; % specify neuron phenotype to plot versus splitters
-
+[~, ~, temp] = alt_parse_cell_category(G30_alt(end), 0.05, 5, 3, ...
+    'Placefields_cm1.mat');
 % Get zero and 1 points due to low # cells starting out as splitter/armPC 
 % phenotype in G30 lag 5 and G48 lag 8,9,10,and 13 analyses. Recommend
 % including since they are still real, especially since it only occurs for
