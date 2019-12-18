@@ -92,7 +92,9 @@ split_metrics.sigprop_mean = sigprop_mean;
 %% Plot stuff & do stats on each for correlations...
 if plot_flag
     
-    hmain = figure;  set(gcf,'Position', [1964 157 1398 761]);
+    hmain = figure;  set(gcf, 'Position', [0 160 1040 700])
+    
+%     set(gcf,'Position', [1964 157 1398 761]);
     
     % Get names of all mice being plotted automatically
     unique_names = unique(arrayfun(@(a) ...

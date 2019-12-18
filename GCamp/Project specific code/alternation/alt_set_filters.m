@@ -8,8 +8,8 @@ function [text_append] = alt_set_filters(wood_filt, half_thresh)
 global WOOD_FILT
 global HALF_LIFE_THRESH
 
-WOOD_FILT = false;
-HALF_LIFE_THRESH = 2;
+WOOD_FILT = wood_filt;
+HALF_LIFE_THRESH = half_thresh;
 
 text_append = '';
 if ~isempty(WOOD_FILT) && WOOD_FILT
