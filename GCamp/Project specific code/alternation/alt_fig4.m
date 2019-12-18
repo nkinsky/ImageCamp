@@ -144,7 +144,7 @@ for j = 1:max_day_lag
 end
 
 %% Plot it!
-other_type = 'Arm PCs'; % specify neuron phenotype to plot versus splitters
+other_type = 'Stem PCs'; % specify neuron phenotype to plot versus splitters
 [~, ~, temp] = alt_parse_cell_category(G30_alt(end), 0.05, 5, 3, ...
     'Placefields_cm1.mat');
 % Get zero and 1 points due to low # cells starting out as splitter/armPC 
