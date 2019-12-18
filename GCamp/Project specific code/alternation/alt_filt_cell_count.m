@@ -1,4 +1,4 @@
-function [exclude_lateral, exclude_trace, exclude_both] = alt_filt_cell_count(session)
+function [exclude_ratio, exclude_number, exclude_lateral, exclude_trace, exclude_both] = alt_filt_cell_count(session)
 %[exclude_lateral, exclude_trace, exclude_both] = alt_filt_cell_count(session)
 %   Gets booleans of cells to exclude based on lateral position modulation,
 %   excessively long decay times, or both
@@ -30,6 +30,8 @@ p = alt_wood_analysis(session,'use_saved_data',true);
 exclude_lateral = (p(:,1) >= lateral_alpha) & (p(:,3) >= lateral_alpha);
 
 exclude_both = exclude_later | exclude_trace;
+exclude_ratio = sum(exclude_both)/length(exclude_both);
+exclude_number = sum(exclude_both);
 
 end
 
