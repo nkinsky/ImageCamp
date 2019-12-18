@@ -36,10 +36,11 @@ end
 
 % Load LDA data to get decoder_perf
 discr_perf = nan(1, length(sessions));
+text_append = alt_get_filter_text(); % find text to ID LDA file to load.
 for j = 1:length(sessions)
     LDAperf = [];
     try % Load previously run LDA data
-        load(fullfile(sessions(j).Location,'LDAperf.mat'), 'LDAperf');
+        load(fullfile(sessions(j).Location,['LDAperf' text_append '.mat']), 'LDAperf');
     catch
         LDAperf = nan;
     end

@@ -37,7 +37,7 @@ ip.addRequired('correct', @islogical);
 ip.addRequired('onstem', @islogical);
 ip.addParameter('leave_out_prop', 0.5, @(a) isnumeric(a) && a > 0 && a < 1);
 ip.addParameter('model_retro', false, @islogical);
-ip.addParameter('nshuf', 0, @(a) isnumeric(a) && a > 0 && round(a) == a);
+ip.addParameter('nshuf', 0, @(a) isnumeric(a) && a >= 0 && round(a) == a);
 ip.parse(PSAbool, trial_num, trial_type, correct, onstem, varargin{:});
 
 leave_out_prop = ip.Results.leave_out_prop;

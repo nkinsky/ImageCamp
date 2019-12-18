@@ -75,7 +75,7 @@ printNK(['G45 Split v PC Prob present at 7 day lag matchER=' ...
 
 max_day_lag = 15;
 sessions = alt_all_cell; % Change this to make plots for each mouse...
-matchER = true; % March event-rate in non-splitters to splitters
+matchER = false; % March event-rate in non-splitters to splitters
 trial_type = 'free_only'; % 'no_loop';
 
 nmice = length(sessions);
@@ -144,7 +144,7 @@ for j = 1:max_day_lag
 end
 
 %% Plot it!
-other_type = 'Stem PCs'; % specify neuron phenotype to plot versus splitters
+other_type = 'Arm PCs'; % specify neuron phenotype to plot versus splitters
 [~, ~, temp] = alt_parse_cell_category(G30_alt(end), 0.05, 5, 3, ...
     'Placefields_cm1.mat');
 % Get zero and 1 points due to low # cells starting out as splitter/armPC 

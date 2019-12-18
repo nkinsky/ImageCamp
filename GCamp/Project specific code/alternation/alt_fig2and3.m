@@ -323,13 +323,13 @@ for j = 1:4
 end
 %%
 plot_perf_v_split_metrics(alt_all, true, inject_noise, trial_thresh);
-printNK('Perf v split metrics - All Mice', 'alt')
+printNK(['Perf v split metrics - All Mice' text_append], 'alt')
 
 % Do the above but eliminate G48 who might be carrying the team for the
 % delta_max_norm metric
 plot_perf_v_split_metrics(alt_all(~arrayfun(@(a) ...
     strcmpi(a.Animal,'GCaMP6f_48'),alt_all)), true, inject_noise, trial_thresh);
-printNK('Perf v split metrics - No G48 with LDA', 'alt')
+printNK(['Perf v split metrics - No G48 with LDA' text append], 'alt')
 
 %% Breakdown above by individual mice - should probably do for different trial thresholds too
 
