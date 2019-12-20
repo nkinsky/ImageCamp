@@ -210,5 +210,36 @@ printNK('Mean Min Cropped F over time','alt','hfig',hcrop)
 
 
 %% Make plot of PSAbool for splitter versus place cells. 
+wood_filt = true;
+half_life_thresh = 2;
+sigthresh = 3; 
+pval_thresh = 0.05;
+ntrans_thresh = 5;
+alt_set_filters(wood_filt, half_life_thresh);
+
+sesh_use = alt_test_session(1);
+load(fullfile(sesh_use.Location,'Placefields_cm1.mat'),'PSAbool');
+categories = alt_parse_cell_category(sesh_use, pval_thresh, ntrans_thresh, ...
+    sigthresh, 'Placefields_cm1.mat');
+sig_split = categories == 1; % splitters
+sig_place = categories == 2 | categories == 4; % stem and arm place cells
+sig_other = categories == 3 | categories == 5; % stem and arm non-place cells
+[~, ~, ~, ~, exclude_both] = alt_filt_cell_count(sesh_use);
+PSAsplit = PSAbool(~exclude_both & sig_split,:);
+PSAplace = PSAbool(~exclude_both & sig_place,:);
+PSAother = PSAbool(~exclude_both & sig_other,:);
+
+figure; 
+subplot(2,2,1);
+imagesc(sortPSA(PSAsplit)); title('Splitters')
+subplot(2,2,2);
+imagesc(sortPSA(PSAplace)); title('Place Cells')
+subplot(2,2,3);
+imagesc(sortPSA(PSAother)); title('Other Cells')
+subplot(2,2,4);
+ecdf(get_first_transient(PSAsplit)); hold on;
+ecdf(get_first_transient(PSAplace));
+ecdf(get_first_transient(PSAother));
+legend('Splitters','PCs','Others')
 
 
