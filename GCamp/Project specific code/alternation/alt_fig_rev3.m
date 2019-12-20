@@ -242,4 +242,7 @@ ecdf(get_first_transient(PSAplace));
 ecdf(get_first_transient(PSAother));
 legend('Splitters','PCs','Others')
 
+%% Next do the above by trial!!! dump first transient frame into Alt.trial!!
+
+
 
