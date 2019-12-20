@@ -209,3 +209,6 @@ printNK('Mean Min F over time','alt','hfig',hall)
 printNK('Mean Min Cropped F over time','alt','hfig',hcrop)
 
 
+%% Make plot of PSAbool for splitter versus place cells. 
+
+
