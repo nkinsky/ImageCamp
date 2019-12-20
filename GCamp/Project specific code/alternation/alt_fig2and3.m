@@ -1,7 +1,7 @@
 % Alt figure 2: tracking splitters across days & relationship to
 % performance
 
-wood_filt = false;
+wood_filt = true;
 half_thresh = 2;
 text_append = alt_set_filters(wood_filt, half_thresh);
 
@@ -323,13 +323,13 @@ for j = 1:4
 end
 %%
 plot_perf_v_split_metrics(alt_all, true, inject_noise, trial_thresh);
-printNK('Perf v split metrics - All Mice', 'alt')
+printNK(['Perf v split metrics - All Mice' text_append], 'alt')
 
 % Do the above but eliminate G48 who might be carrying the team for the
 % delta_max_norm metric
 plot_perf_v_split_metrics(alt_all(~arrayfun(@(a) ...
     strcmpi(a.Animal,'GCaMP6f_48'),alt_all)), true, inject_noise, trial_thresh);
-printNK('Perf v split metrics - No G48 with LDA', 'alt')
+printNK(['Perf v split metrics - No G48 with LDA' text append], 'alt')
 
 %% Breakdown above by individual mice - should probably do for different trial thresholds too
 
@@ -355,14 +355,13 @@ for j = 1:length(sesh_cell_use)
 end
 
 %% Plot points
-figure; set(gcf,'Position', [1964 157 1400 761]);
+figure; set(gcf,'Position', [30 157 1400 761]);
 h1 = subplot(2,3,1); h2 = subplot(2,3,2); h3 = subplot(2,3,3);
 h4 = subplot(2,3,4); h5 = subplot(2,3,5);
 
-% alt_group_plot_perf_v_split(h1, dnorm_mean, perf_mean, ...
-%     '|\Delta_{max}|_{norm}'); xlim(h1, [0.4 0.7]); ylim(h1, [66 80])
-alt_group_plot_perf_v_split(h1, sigprop_mean, perf_mean, 'Sig. Prop');
-ylim(h1, [66, 80]);
+ alt_group_plot_perf_v_split(h1, dnorm_mean, perf_mean, ...
+     '|\Delta_{max}|_{norm}'); xlim(h1, [0.4 0.7]); ylim(h1, [66 80])
+
 alt_group_plot_perf_v_split(h2, dint_mean, perf_mean, ...
     '\Sigma|\Delta|_{norm}'); xlim(h2, [0.4 0.625]); ylim(h2, [66 80])
 alt_group_plot_perf_v_split(h3, 1 - curve_corr_mean, perf_mean, ...
@@ -377,18 +376,21 @@ text(0.1, 0.6, ['ntrial_thresh = ' num2str(split_metrics.trial_thresh)])
 text(0.1, 0.8, ['nstem_thresh = ' num2str(split_metrics.nstem_thresh)])
 axis off
 
-figure; set(gcf, 'Position', [210 350 890 430]);
+printNK(['Perf v splittiness by mice' text_append],'alt')
+%%
+figure; set(gcf, 'Position', [20 30 890 430]);
 hd1 = subplot(1,2,1);
-alt_group_plot_perf_v_split(hd1, dmax_mean, perf_mean, ...
-    '|\Delta_{max}|_{mean}'); xlim(hd1, [0.11 0.21]); ylim(hd1, [66 80])
+% alt_group_plot_perf_v_split(hd1, dmax_mean, perf_mean, ...
+%     '|\Delta_{max}|_{mean}'); xlim(hd1, [0.11 0.21]); ylim(hd1, [66 80])
+alt_group_plot_perf_v_split(hd1, sigprop_mean, perf_mean, 'Sig. Prop');
+ylim(hd1, [66, 80]);
 subplot(1,2,2);
 text(0.1, 0.4, ['inject\_noise = ' num2str(inject_noise)])
 text(0.1, 0.6, ['ntrial_thresh = ' num2str(split_metrics.trial_thresh)])
 text(0.1, 0.8, ['nstem_thresh = ' num2str(split_metrics.nstem_thresh)])
 axis off
 
-
-% printNK('Perf v splittiness by mice','alt')
+printNK(['Perf v splittiness by mice - sig prop only ' text_append],'alt')
 
 %% Run decoder analysis - needed before running the code above!
 niters = 100; % num iterations
@@ -433,7 +435,7 @@ for n = 1:4
 %         end
         corr_ratio_mean_all{n}(j,:,:) = LDAperf;
         corr_ratio_mean_shuf_all{n}(j,:,:) = LDAperf_shuf;
-        save(fullfile(sesh_use(j).Location,'LDAperf_w_shuf.mat'), 'LDAperf',...
+        save(fullfile(sesh_use(j).Location,['LDAperf_w_shuf' text_append '.mat']), 'LDAperf',...
             'LDAperf_shuf', 'niters', 'nshuf', 'leave_out_prop');
         waitbar(j/length(sesh_use),hw);
         

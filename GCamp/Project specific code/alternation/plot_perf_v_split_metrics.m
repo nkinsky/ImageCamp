@@ -31,15 +31,16 @@ end
 % session
 [rely_vals, dmax, ~, ~, dmax_norm, nactive_stem, dint_norm, curve_corr, ...
     rely_mean_vals, sigprop] = ...
-    arrayfun(@(a) parse_splitters(a.Location, 3, cnoise), sessions, ...
+    arrayfun(@(a) parse_splitters(a, 3, cnoise), sessions, ...
     'UniformOutput', false);
 
 % Load LDA data to get decoder_perf
 discr_perf = nan(1, length(sessions));
+text_append = alt_get_filter_text(); % find text to ID LDA file to load.
 for j = 1:length(sessions)
     LDAperf = [];
     try % Load previously run LDA data
-        load(fullfile(sessions(j).Location,'LDAperf.mat'), 'LDAperf');
+        load(fullfile(sessions(j).Location,['LDAperf' text_append '.mat']), 'LDAperf');
     catch
         LDAperf = nan;
     end
@@ -92,7 +93,9 @@ split_metrics.sigprop_mean = sigprop_mean;
 %% Plot stuff & do stats on each for correlations...
 if plot_flag
     
-    hmain = figure;  set(gcf,'Position', [1964 157 1398 761]);
+    hmain = figure;  set(gcf, 'Position', [0 160 1040 700])
+    
+%     set(gcf,'Position', [1964 157 1398 761]);
     
     % Get names of all mice being plotted automatically
     unique_names = unique(arrayfun(@(a) ...

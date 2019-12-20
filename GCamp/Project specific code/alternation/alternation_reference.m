@@ -7,10 +7,7 @@ if strcmpi('natlaptop', getenv('COMPUTERNAME'))
 else
     [MD, ref] = MakeMouseSessionListEraser('Nat');
 end
-alt_test_session(1) = G30_alt(end);
-alt_test_session(2) = G31_alt(4);
-alt_test_session(3) = G45_alt(20);
-alt_test_session(4) = G48_alt(11);
+
 clear G30_alt G30loop_alt G31_alt G45_alt G48_alt alt_all alt_all_cell
 
 j = 1; 
@@ -291,3 +288,9 @@ learning_stage_ends_sp(6,3) = G48_alt(end-1);
 % register pretty well together.
 G48_alt1 = G48_alt(1:15);
 G48_alt2 = G48_alt(16:end);
+
+%%
+alt_test_session(1) = G30_alt(end);
+alt_test_session(2) = G31_alt(4);
+alt_test_session(3) = G45_alt(20);
+alt_test_session(4) = G48_alt(11);

@@ -19,7 +19,7 @@ num_animals = length(unique_names);
 %% Plot stuff
 if nargin < 4
     figure;
-    set(gcf,'Position',[2160 20 1240 970]);
+    set(gcf,'Position',[0 20 1240 970]);
     ha_perf = subplot(2,2,1);
     ha_time = subplot(2,2,2);
     ha_ntrials = subplot(2,2,3);
@@ -67,7 +67,7 @@ for j = 1:num_animals
         split_prop_all = [split_prop_all; split_prop(legit_bool)];
         time_from_start_all = [time_from_start_all;...
             time_from_start(legit_bool)];
-        ntrials_all = [ntrials_all; num_trials(legit_bool)];
+        ntrials_all = [ntrials_all; num_trials(legit_bool)'];
     elseif ~isempty(max_sesh_num)
         % Randomly sub-sample sessions to match max_sesh_num
         legit_ind = find(legit_bool);

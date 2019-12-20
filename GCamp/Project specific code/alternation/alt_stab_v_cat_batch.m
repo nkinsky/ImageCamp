@@ -112,6 +112,7 @@ for j = 1:num_mice
 %             keyboard
 %         end
     end
+%     disp('one mouse run')
 end
 
 
