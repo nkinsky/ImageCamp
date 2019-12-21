@@ -41,7 +41,7 @@ close(hw)
 
 %% Reactivation Probability at different time lags
 alt_sesh_use = alt_all_cell; %alt_all_cell = all mice, alt_all_cell[1} = mouse 1
-matchER = true;
+matchER = false;
 trial_type = 'free_only';
 
 % One day looks great - all mice
@@ -66,7 +66,7 @@ printNK(['G48 Split v PC Prob present at 1 day lag matchER=' ...
 alt_plot_stab_v_cat(7, 'exact', alt_all_cell{3}, false, 'PFname', 'Placefields_cm1.mat', ...
     'matchER', matchER, 'trial_type', trial_type);
 printNK(['G45 Split v PC Prob present at 7 day lag matchER=' ...
-    num2str(matchER)],'alt')
+    num2str(matchER) text_append],'alt')
 
 %% Prob maintains phenotype versus days...looks good when I include ALL sessions
 % but falls apart a bit when I don't include forced sessions. Could be due

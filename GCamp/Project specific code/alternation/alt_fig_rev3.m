@@ -284,7 +284,7 @@ axis off
 
 make_figure_pretty(gcf)
 
-%% Next do the above by trial!!! dump first transient frame into Alt.trial!!
+%% Now ag
 
 
 
