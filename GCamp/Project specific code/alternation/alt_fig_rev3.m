@@ -7,7 +7,7 @@ if strcmpi('natlaptop', getenv('COMPUTERNAME'))
 end
 
 if strcmpi('natlaptop', getenv('COMPUTERNAME'))
-    sessions{1} = MD(32:42); % Eraser session for reference ! session at beginning and end of recording
+    sessions{1} = MD(32:42); % Eraser session for Marble11 = 12 week virus in system at start!
     sessions{1} = MD([15, 28]); % Eraser reference for Marble07 - 9 week virus in system!
     sessions{1} = MD([155, 168]); % Eraser reference for Marble29 - 10 week virus in system!
 else
@@ -207,5 +207,84 @@ for nn = 1:length(sessions_sp)
 end
 printNK('Mean Min F over time','alt','hfig',hall)
 printNK('Mean Min Cropped F over time','alt','hfig',hcrop)
+
+
+%% Make plot of PSAbool for splitter versus place cells. 
+wood_filt = true;
+half_life_thresh = 2;
+sigthresh = 3; 
+pval_thresh = 0.05;
+ntrans_thresh = 5;
+alt_set_filters(wood_filt, half_life_thresh);
+
+sesh_use = alt_test_session(1);
+load(fullfile(sesh_use.Location, 'Placefields_cm1.mat'), 'PSAbool');
+load(fullfile(sesh_use.Location, 'Alternation.mat'),'Alt');
+categories = alt_parse_cell_category(sesh_use, pval_thresh, ntrans_thresh, ...
+    sigthresh, 'Placefields_cm1.mat');
+sig_split = categories == 1; % splitters
+sig_place = categories == 2 | categories == 4; % stem and arm place cells
+sig_other = categories == 3 | categories == 5; % stem and arm non-place cells
+[~, ~, ~, ~, exclude_both] = alt_filt_cell_count(sesh_use);
+PSAsplit = PSAbool(~exclude_both & sig_split,:);
+PSAplace = PSAbool(~exclude_both & sig_place,:);
+PSAother = PSAbool(~exclude_both & sig_other,:);
+PSAcomb{1} = sortPSA(PSAsplit); PSAcomb{2} = sortPSA(PSAplace); 
+PSAcomb{3} = sortPSA(PSAother);
+names = {'Splitters', 'Place Cells', 'Other Cells'};
+
+figure; set(gcf,'Position', [176 77 1300 700]);
+for j = 1:3
+   ha = subplot(2,3,j); imagesc(PSAcomb{j});
+   ha.XTickLabels = arrayfun(@num2str, round(get(ha, 'XTick')/20), ...
+       'UniformOutput', false);
+   xlabel('Seconds'); ylabel('Cell #');
+   title(names{j});
+   hold on
+end
+sub_cell = {subplot(2,3,1), subplot(2,3,2), subplot(2,3,3)};
+
+% Go back and plot first transient line over images above...
+first_trans_frames = cellfun(@get_first_transient, PSAcomb, 'UniformOutput',...
+    false); % Get frame # of first transient for each group
+cellfun(@(a,b) plot(a, b, 1:length(b),'r-'), sub_cell, first_trans_frames);
+
+first_trans_trials = cellfun(@(a) Alt.trial(a), first_trans_frames, ...
+    'UniformOutput', false); % Convert to trial
+for j = 1:3
+    hc(1) = subplot(2,3,4);
+    ecdf(first_trans_frames{j}); hold on;
+    hc(2) = subplot(2,3,5);
+    ecdf(first_trans_trials{j}); hold on;
+end
+    
+hc(1).XTickLabels = arrayfun(@num2str, round(get(hc(1), 'XTick')/20), ...
+    'UniformOutput', false);
+xlabel(hc(1),'t (seconds)'); ylabel(hc(1),'F(t)')
+xlabel(hc(2),'Trial #'); ylabel(hc(2),'F(Trial #)')
+for s = 1:2; legend(hc(s), {'Splitters','PCs','Others'}); end
+
+% run stats on recruitment time for splitters versus pcs...
+[hfr, pfr, kstatfr] = kstest2(first_trans_frames{1}, first_trans_frames{2},...
+    'tail','larger');
+[htr, ptr, kstattr] = kstest2(first_trans_trials{1}, first_trans_trials{2},...
+    'tail','larger');
+
+subplot(2,3,6);
+text(0.1, 0.9, 'mean time of 1st transient (split, pc, other):')
+text(0.1, 0.8, num2str(round(cellfun(@mean, first_trans_frames)/20,1)))
+text(0.1, 0.7, ['1-sided kstest: p=' num2str(pfr, '%0.2g') ' ksstat=' ...
+    num2str(kstatfr, '%0.2g')])
+
+text(0.1, 0.5, 'mean trial of 1st transient (split, pc, other):')
+text(0.1, 0.4, num2str(round(cellfun(@mean, first_trans_trials),1)))
+text(0.1, 0.3, ['1-sided kstest: p=' num2str(ptr, '%0.2g') ' ksstat=' ...
+    num2str(kstattr, '%0.2g')])
+axis off
+
+make_figure_pretty(gcf)
+
+%% Next do the above by trial!!! dump first transient frame into Alt.trial!!
+
 
 

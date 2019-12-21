@@ -45,6 +45,9 @@ switch location
         location = 'C:\Users\Nat\Dropbox\Imaging Project\Manuscripts\2env\Figures';
     case 'alt'
         location = 'C:\Users\kinsky\Dropbox\Imaging Project\Manuscripts\Alternation\Figures';
+        if strcmpi('natlaptop', getenv('COMPUTERNAME'))
+            location = 'C:\Users\Nat\Dropbox\Imaging Project\Manuscripts\Alternation\Figures';
+        end
     case 'cnmf'
         location = 'C:\Users\kinsky\Dropbox\Imaging Project\MATLAB\CNMF vs T4';
     case 'eraser'

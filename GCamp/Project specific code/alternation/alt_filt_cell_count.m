@@ -29,7 +29,7 @@ exclude_trace = half_all_mean > half_thresh;
 p = alt_wood_analysis(session,'use_saved_data',true);
 exclude_lateral = (p(:,1) >= lateral_alpha) & (p(:,3) >= lateral_alpha);
 
-exclude_both = exclude_later | exclude_trace;
+exclude_both = exclude_lateral | exclude_trace;
 exclude_ratio = sum(exclude_both)/length(exclude_both);
 exclude_number = sum(exclude_both);
 
