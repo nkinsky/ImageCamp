@@ -216,7 +216,47 @@ half_life_thresh = 2;
 make_figure_pretty(hf1)
 printNK(hf1,'G30 split v pc recruit times - one session', 'alt')
 
-%% Now ag
+%% Now aggregate for all animals and plot
+sessions = alt_all(alt_all_free_bool);
+first_time_all = cell(1,3); first_trial_all = cell(1,3);
+for j = 1:length(sessions)
+    [~, first_time_temp, first_trial_temp] = alt_plot_recruit_times(...
+        sessions(j), false);
+    first_time_all = cellfun(@(a,b) cat(1,a,b), first_time_all, ...
+        first_time_temp, 'UniformOutput', false);
+    first_trial_all = cellfun(@(a,b) cat(1,a,b), first_trial_all, ...
+        first_trial_temp, 'UniformOutput', false);
+end
 
+figure; set(gcf, 'Position', [20, 100, 900, 700]);
+subplot(2,2,1)
+for j = 1:2; ecdf(first_time_all); hold on; end
+xlabel('First transient time (sec)')
+ylabel('Cumulative Fraction');
+legend('Splitters', 'Place Cells');
+title('All Sessions')
 
+subplot(2,2,2)
+for j = 1:2; ecdf(first_trial_all); hold on; end
+xlabel('First transient trial')
+ylabel('Cumulative Fraction');
+legend('Splitters', 'Place Cells');
+title('All Sessions')
+
+subplot(2,2,3)
+[~, ptime, kstime] = kstest2(first_time_all{1}, first_time_all{2}, ...
+    'tail','larger');
+[~, ptrial, kstrial] = kstest2(first_trial_all{1}, first_trial_all{2}, ...
+    'tail','larger');
+
+text(0.1, 0.9, 'mean time of 1st transient (split, pc):')
+text(0.1, 0.8, num2str(round(cellfun(@mean, first_time_all),1)))
+text(0.1, 0.7, ['1-sided kstest: p=' num2str(ptime, '%0.2g') ' ksstat=' ...
+    num2str(kstime, '%0.2g')])
+
+text(0.1, 0.5, 'mean trial of 1st transient (split, pc, other):')
+text(0.1, 0.4, num2str(round(cellfun(@mean, first_trial_all),1)))
+text(0.1, 0.3, ['1-sided kstest: p=' num2str(ptrial, '%0.2g') ' ksstat=' ...
+    num2str(kstrial, '%0.2g')])
+axis off
 

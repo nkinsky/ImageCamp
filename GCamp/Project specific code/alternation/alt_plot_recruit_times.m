@@ -44,7 +44,7 @@ first_trans_frames = cellfun(@get_first_transient, PSAcomb, 'UniformOutput',...
     false); % Get frame # of first transient for each group
 first_trans_times = cellfun(@(a) a/20, first_trans_frames,...
     'UniformOutput', false); % Convert frames to seconds
-first_trans_trials = cellfun(@(a) Alt.trial(a), first_trans_frames, ...
+first_trans_trials = cellfun(@(a) Alt.trial(a)', first_trans_frames, ...
     'UniformOutput', false); % Convert recruit times to trials
 
 if plot_bool
@@ -66,7 +66,7 @@ if plot_bool
     % Plot ecdfs of everything
     for j = 1:3
         hc(1) = subplot(2,3,4);
-        ecdf(first_trans_frames{j}); hold on;
+        ecdf(first_trans_times{j}); hold on;
         hc(2) = subplot(2,3,5);
         ecdf(first_trans_trials{j}); hold on;
     end
@@ -78,14 +78,14 @@ if plot_bool
     for s = 1:2; legend(hc(s), {'Splitters','PCs','Others'}); end
     
     % run stats on recruitment time for splitters versus pcs...
-    [~, pfr, kstatfr] = kstest2(first_trans_frames{1}, first_trans_frames{2},...
+    [~, pfr, kstatfr] = kstest2(first_trans_times{1}, first_trans_times{2},...
         'tail','larger');
     [~, ptr, kstattr] = kstest2(first_trans_trials{1}, first_trans_trials{2},...
         'tail','larger');
     
     subplot(2,3,6);
     text(0.1, 0.9, 'mean time of 1st transient (split, pc, other):')
-    text(0.1, 0.8, num2str(round(cellfun(@mean, first_trans_frames),1)))
+    text(0.1, 0.8, num2str(round(cellfun(@mean, first_trans_times),1)))
     text(0.1, 0.7, ['1-sided kstest: p=' num2str(pfr, '%0.2g') ' ksstat=' ...
         num2str(kstatfr, '%0.2g')])
     
