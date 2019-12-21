@@ -30,6 +30,7 @@ else
     half_thresh = 100;
 end
 
+
 % First ID any cells to exlucd with extra long transients
 [half_all_mean, ~, ~, ~] = get_session_trace_stats(session, ...
     'use_saved_data', true);
@@ -65,6 +66,5 @@ end
 % 3) If desired, use model to predict other session
 % 3a) register PSA to other session and load Alternation data
 % 3b) spit out prediction and do the same as above!
-
 end
 

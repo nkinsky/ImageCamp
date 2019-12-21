@@ -40,7 +40,7 @@ text_append = alt_get_filter_text(); % find text to ID LDA file to load.
 for j = 1:length(sessions)
     LDAperf = [];
     try % Load previously run LDA data
-        load(fullfile(sessions(j).Location,['LDAperf' text_append '.mat']), 'LDAperf');
+        load(fullfile(sessions(j).Location,['LDAperf_w_shuf' text_append '.mat']), 'LDAperf');
     catch
         LDAperf = nan;
     end
@@ -115,10 +115,10 @@ if plot_flag
         'Decoder (LDA) Accuracy (%)', true);
     xlim(h2, [40, 90]);
     [rhos.dmaxnorm, pvals.dmaxnorm] = plot_func(h3, dmax_norm_mean, perf_comb, ...
-        '|\Delta_{max}|_{norm}', true); 
+        '|\Delta_{max}|_{norm,mean}', true); 
     xlim(h3, [0.35, 0.85]);
-%     [rhos.dmax, pvals.dmax] = plot_func(h3, dmax_mean, perf_comb, ...
-%         '|\Delta_{max}|_{mean}', true); 
+%     [rhos.dmax, pvals.dmax] = plot_func(h4, dmax_mean, perf_comb, ...
+%         '|\Delta_{max}|_{mean}', true);
     [rhos.dint, pvals.dint] = plot_func(h4, dint_norm_mean, perf_comb, ...
         '\Sigma|\Delta|_{norm}', true);
     xlim(h4, [0.25, 0.8]);

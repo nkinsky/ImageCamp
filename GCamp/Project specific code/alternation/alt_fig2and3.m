@@ -329,7 +329,57 @@ printNK(['Perf v split metrics - All Mice' text_append], 'alt')
 % delta_max_norm metric
 plot_perf_v_split_metrics(alt_all(~arrayfun(@(a) ...
     strcmpi(a.Animal,'GCaMP6f_48'),alt_all)), true, inject_noise, trial_thresh);
-printNK(['Perf v split metrics - No G48 with LDA' text append], 'alt')
+printNK(['Perf v split metrics - No G48' text append], 'alt')
+
+plot_perf_v_split_metrics(alt_all(~arrayfun(@(a) ...
+    strcmpi(a.Animal,'GCaMP6f_30'),alt_all)), true, inject_noise, trial_thresh);
+printNK(['Perf v split metrics - No G30' text append], 'alt')
+
+%% Plot LDA correlations by maze thirds to figure out where coding breaks apart
+no_shuf = true;
+sesh_use = alt_all(alt_all_free_bool);
+perf = arrayfun(@alt_get_perf, sesh_use); 
+LDAperf3 = nan(3,length(sesh_use)); 
+LDAperf3_shuf = nan(3, length(sesh_use), 3);
+for k = 1:length(sesh_use) 
+    [perf_temp, shuf_temp] = alt_loadLDA(sesh_use(k), no_shuf);
+    % Get LDA performance in thirds
+    LDAperf3(1,k) = mean(nanmean(perf_temp(1:4,:))); 
+    LDAperf3(2,k) = mean(nanmean(perf_temp(5:8,:))); 
+    LDAperf3(3,k) = mean(nanmean(perf_temp(9:12,:)));
+    
+    % Get LDAshuffled means & 95% CIs
+    if length(shuf_temp) ~= 1
+        for qq = 1:3
+            shuf_use = shuf_temp((qq-1)*4+(1:4), :);
+            LDAperf3_shuf(qq,k,2) = mean(nanmean(shuf_use,1));
+            LDAperf3_shuf(qq,k,[1,3]) = quantile(nanmean(shuf_use,1),[0.025, 0.975]);
+        end
+    end
+end
+meanCIs = squeeze(mean(LDAperf3_shuf,2));
+third_text = {'1st', '2nd', '3rd'};
+figure; set(gcf, 'Position', [93    93   674   572]);
+for j = 1:3
+    subplot(2,2,j);
+    plot(100*LDAperf3(j,:), 100*perf, 'o'); 
+    hold on;
+    title([third_text{j} ' Third of Maze']);
+    xlabel('Decoder Accuracy (%)');
+    ylabel('Performance (%)');
+    good_bool = ~isnan(perf) & ~isnan(LDAperf3(j,:));
+    [r,p] = corr(100*perf(good_bool)', 100*LDAperf3(j, good_bool)');
+    text(35, 80, ['r = ' num2str(r,'%0.2g')])
+    text(35, 75, ['p = ' num2str(p, '%0.2g')])
+    lm = fitlm(LDAperf3(j,:)*100, perf*100);
+    perf_pred = lm.feval([min(LDAperf3(j,:)*100), max(LDAperf3(j,:)*100)]);
+    hpred = plot([min(LDAperf3(j,:)*100), max(LDAperf3(j,:)*100)], perf_pred,...
+        'r--');
+    plot(meanCIs(j,2)*[100,100], [40 90])
+    legend(hpred, 'Best-fit')
+end
+make_figure_pretty(gcf);
+printNK(['LDA v perf by maze thirds' text_append], 'alt');
 
 %% Breakdown above by individual mice - should probably do for different trial thresholds too
 
