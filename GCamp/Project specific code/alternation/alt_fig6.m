@@ -200,7 +200,7 @@ printNK(['Splitter Ontogeny - sum Deltamax_norm All mice means ' ...
     num2str(day_groups) ' day groups ' num2str(max_day) ' day max' text_append], 'alt')
 
 %% Now do all the above but for placefields!
-save_pdf = false;
+save_pdf = true;
 pthresh = 0.05;
 days_ba = 9;
 free_only = true;
