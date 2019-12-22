@@ -1,4 +1,7 @@
 % Alternation Figure 6: Splitter Ontogeny
+wood_filt = true;
+half_life_thresh = 2;
+text_append = alt_set_filters(wood_filt, half_life_thresh);
 
 %% Example cells between sessions
 
@@ -195,7 +198,6 @@ split_ontogeny_plot(dimean_all, daydiff_all, day_groups, 'ylabel', ...
     day_groups);
 printNK(['Splitter Ontogeny - sum Deltamax_norm All mice means ' ...
     num2str(day_groups) ' day groups ' num2str(max_day) ' day max' text_append], 'alt')
-
 
 %% Now do all the above but for placefields!
 save_pdf = false;

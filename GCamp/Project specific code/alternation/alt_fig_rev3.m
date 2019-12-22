@@ -212,9 +212,14 @@ printNK('Mean Min Cropped F over time','alt','hfig',hcrop)
 %% Make plot of PSAbool for splitter versus place cells. 
 wood_filt = true;
 half_life_thresh = 2;
+text_append = alt_set_filters(wood_filt, half_life_thresh);
 [~, ~, ~, hf1, hfhist] = alt_plot_recruit_times(alt_test_session(1));
 make_figure_pretty(hf1)
-printNK(hf1,'G30 split v pc recruit times - one session', 'alt')
+printNK(['G30 split v pc recruit times - one session' text_append], 'alt',...
+    'hfig', hf1)
+make_figure_pretty(hfhist)
+printNK(['G30 split v pc recruit histograms - one session' text_append], 'alt',...
+    'hfig', hfhist)
 
 %% Now aggregate for all animals and plot
 sessions = alt_all(alt_all_free_bool);
@@ -260,3 +265,15 @@ text(0.1, 0.3, ['1-sided kstest: p=' num2str(ptrial, '%0.2g') ' ksstat=' ...
     num2str(kstrial, '%0.2g')])
 axis off
 
+printNK(['Split v pc recruitment times - All Mice' text_append],'alt');
+
+figure;
+max_trials = max(cellfun(@max, first_trial_all(1:2)));
+hhist_sp = histogram(first_trial_all{1},'BinLimits', [0, max_trials],...
+    'Normalization', 'Probability');
+hold on;
+hhist_pc = histogram(first_trial_all{2}, 'BinEdges', ...
+    hhist_sp.BinEdges, 'Normalization', 'Probability');
+legend(cat(1,hhist_sp, hhist_pc), {'Splitters', 'Place Cells'})
+
+printNK(['Combined Split v PC recruitment histograms'],'alt')

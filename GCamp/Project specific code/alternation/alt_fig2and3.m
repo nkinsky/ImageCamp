@@ -335,6 +335,13 @@ plot_perf_v_split_metrics(alt_all(~arrayfun(@(a) ...
     strcmpi(a.Animal,'GCaMP6f_30'),alt_all)), true, inject_noise, trial_thresh);
 printNK(['Perf v split metrics - No G30' text append], 'alt')
 
+plot_perf_v_split_metrics(alt_all(~arrayfun(@(a) ...
+    strcmpi(a.Animal,'GCaMP6f_31'),alt_all)), true, inject_noise, trial_thresh);
+printNK(['Perf v split metrics - No G31' text append], 'alt')
+
+plot_perf_v_split_metrics(alt_all(~arrayfun(@(a) ...
+    strcmpi(a.Animal,'GCaMP6f_45'),alt_all)), true, inject_noise, trial_thresh);
+printNK(['Perf v split metrics - No G45' text append], 'alt')
 %% Plot LDA correlations by maze thirds to figure out where coding breaks apart
 no_shuf = true;
 sesh_use = alt_all(alt_all_free_bool);

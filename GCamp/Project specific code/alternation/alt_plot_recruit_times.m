@@ -95,14 +95,25 @@ if plot_bool
         num2str(kstattr, '%0.2g')])
     axis off
     
-    hfhist = figure; set(gcf,'Position', [176 77 1200 300]);
+    hfhist = figure; set(gcf,'Position', [176 77 1200 700]);
     for j = 1:3
-        subplot(1,3,j);
+        subplot(2,3,j);
         histogram(first_trans_trials{j})
         xlabel('1st transient trial');
         ylabel('Neuron count')
         title(names{j})
     end
+    
+    subplot(2,3,4)
+    max_trials = max(cellfun(@max, first_trans_trials(1:2)));
+    hhist_sp = histogram(first_trans_trials{1},'BinLimits', [0, max_trials],...
+        'Normalization', 'Probability');
+    hold on;
+    hhist_pc = histogram(first_trans_trials{2}, 'BinEdges', ...
+        hhist_sp.BinEdges, 'Normalization', 'Probability');
+    legend(cat(1,hhist_sp, hhist_pc), {'Splitters', 'Place Cells'})
+    xlabel('1st Transient Trial'); ylabel('Probability')
+    
 else
     hf1 = nan;
     hfhist = nan;
