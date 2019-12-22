@@ -1,7 +1,7 @@
 % Alternation Figure 5: More Consistent Spatial Coding in Splitters than
 % Arm PCs (and non-splitter stem PCs).
 
-wood_filt = false;
+wood_filt = true;
 half_thresh = 2;
 text_append = alt_set_filters(wood_filt, half_thresh);
 
