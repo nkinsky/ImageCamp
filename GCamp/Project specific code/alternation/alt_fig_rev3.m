@@ -228,16 +228,17 @@ for j = 1:length(sessions)
         first_trial_temp, 'UniformOutput', false);
 end
 
+%%
 figure; set(gcf, 'Position', [20, 100, 900, 700]);
 subplot(2,2,1)
-for j = 1:2; ecdf(first_time_all); hold on; end
+for j = 1:2; ecdf(first_time_all{j}); hold on; end
 xlabel('First transient time (sec)')
 ylabel('Cumulative Fraction');
 legend('Splitters', 'Place Cells');
 title('All Sessions')
 
 subplot(2,2,2)
-for j = 1:2; ecdf(first_trial_all); hold on; end
+for j = 1:2; ecdf(first_trial_all{j}); hold on; end
 xlabel('First transient trial')
 ylabel('Cumulative Fraction');
 legend('Splitters', 'Place Cells');
@@ -249,7 +250,7 @@ subplot(2,2,3)
 [~, ptrial, kstrial] = kstest2(first_trial_all{1}, first_trial_all{2}, ...
     'tail','larger');
 
-text(0.1, 0.9, 'mean time of 1st transient (split, pc):')
+text(0.1, 0.9, 'mean time of 1st transient (split, pc, others):')
 text(0.1, 0.8, num2str(round(cellfun(@mean, first_time_all),1)))
 text(0.1, 0.7, ['1-sided kstest: p=' num2str(ptime, '%0.2g') ' ksstat=' ...
     num2str(kstime, '%0.2g')])
@@ -260,3 +261,5 @@ text(0.1, 0.3, ['1-sided kstest: p=' num2str(ptrial, '%0.2g') ' ksstat=' ...
     num2str(kstrial, '%0.2g')])
 axis off
 
+make_figure_pretty(gcf);
+printNK('Split v pc recruitment times - All Mice', 'alt')
