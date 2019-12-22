@@ -83,6 +83,7 @@ for j = 1:(num_sessions-1)
         end    
         
         % Identify different cell categories in booleans
+        try
         [cats, cat_nums, cat_names] = alt_parse_cell_category(session1, ...
             pval_thresh, ntrans_thresh, sigthresh, 'Placefields_cm1.mat');
         armpc_bool = cats == cat_nums(strcmpi(cat_names, 'arm pcs'));
@@ -101,6 +102,13 @@ for j = 1:(num_sessions-1)
             deltacurve_corr_shuf);
         if ~isempty(deltacurve_corr)
             curvecorrmat_split(j,k) = nanmean(deltacurve_corr(split_ind));
+        end
+        catch ME
+            if strcmpi(ME.identifier, 'MATLAB:load:couldNotReadFile')
+                disp(['Can''t find wood_analysis.mat file for ' ...
+                    session1.Animal ' ' session1.Date 's' ...
+                    num2str(session1.Session) ' - leaving as all NaNs'])
+            end
         end
         waitbar(n/ncomps,hw);
         n = n + 1;
