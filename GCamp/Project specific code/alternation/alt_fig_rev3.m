@@ -265,7 +265,7 @@ text(0.1, 0.4, num2str(round(cellfun(@mean, first_trial_all),1)))
 text(0.1, 0.3, ['1-sided kstest: p=' num2str(ptrial, '%0.2g') ' ksstat=' ...
     num2str(kstrial, '%0.2g')])
 axis off
-
+make_figure_pretty(gcf)
 printNK(['Split v pc recruitment times - All Mice' text_append],'alt');
 
 figure;
@@ -276,6 +276,9 @@ hold on;
 hhist_pc = histogram(first_trial_all{2}, 'BinEdges', ...
     hhist_sp.BinEdges, 'Normalization', 'Probability');
 legend(cat(1,hhist_sp, hhist_pc), {'Splitters', 'Place Cells'})
+xlabel('1st Trial Transient')
+ylabel('Probability')
+make_plot_pretty(gca)
 
 printNK(['Combined Split v PC recruitment histograms'],'alt')
 
