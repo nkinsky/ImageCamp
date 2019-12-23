@@ -45,7 +45,7 @@ end
 %% Plot for each mouse
 save_pdf = true;
 sigthresh = 3;
-days_ba = 1;
+days_ba = 9;
 free_only = true;
 ignore_sameday = true;
 dplot = 'norm_max_int'; % metric to plot for discriminability
@@ -66,6 +66,7 @@ split_onsetstage_bymouse = cell(1,6);
 clear rmean_half1 rmean_half2 dmean_half1 dmean_half2 dimean_half1 ...
     dimean_half2 rm_mean_half1 rm_mean_half2 daydiff1 daydiff2 spmean_half1 ...
     spmean_half2
+text_append = alt_get_filter_text();
 for j = 1:6 %k = 1:length(alt_inds)
 %     j = alt_inds(k);
 
@@ -222,6 +223,7 @@ stemactive_inds = cell(1,6);
 % half
 clear MIstem_half1 MIstem_half2 MIarms_half1 MIarms_half2 ...
     daydiff1_arms daydiff2_arms daydiff1_stem daydiff2_stem
+text_append = alt_get_filter_text();
 for j=1:6 %k = 1:length(alt_inds)
 %     j = alt_inds(k);
 
@@ -236,7 +238,8 @@ for j=1:6 %k = 1:length(alt_inds)
     if save_pdf
         printNK(['PF Ontogeny ba=' num2str(days_ba) ' days' text_append],'alt', ...
             'append', true)
-        close(gcf)
+        set(gcf,'Position', [12    73   962   604])
+%         close(gcf)
     end
     
     unique_daydiff_arms = unique(days_aligned_arms(~isnan(days_aligned_arms)));

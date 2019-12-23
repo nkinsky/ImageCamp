@@ -2,7 +2,7 @@ function [ sigmat, MImat, onsetsesh, days_aligned, pkw, cmat,...
     MImat_armonly_atbirth, days_aligned_armonly_atbirth,...
     MImat_stemonly_atbirth, days_aligned_stemonly_atbirth, sesh_final, ...
     active_stemonly_ind, active_stem_ind] = ...
-    track_PFontogeny( MDbase, MDreg, varargin)
+    track_PFontogeny_old( MDbase, MDreg, varargin)
 %  [ sigmat, MImat, onsetsesh, days_aligned, pkw, cmat,...
 %     MImat_armonly_atbirth, days_aligned_armonly_atbirth,...
 %     MImat_stemonly_atbirth, days_aligned_stemonly_atbirth, sesh_final, ...
@@ -46,7 +46,6 @@ if ~isempty(HALF_LIFE_THRESH) && HALF_LIFE_THRESH
 else
     half_thresh = 100;
 end
-
 
 %% Step 1: Load batch neuron map and identify session indices for each
 % NK - do this for pair-wise sessions too? With try-catch clause?
@@ -110,8 +109,12 @@ for j = 1:num_sessions
     
     % Identify legit place cells by the significance of their mutual
     % information scores
-    sigPF_bool_temp = pval < pthresh; % Threshold to get significant PFs
-    sigPF_bool = sigPF_bool_temp & ~exclude_trace'; % exclude any neurons not meeting filter criteria
+    sigPF_booltemp = pval < pthresh; % Threshold to get significant PFs
+    sigPF_bool = sigPF_booltemp & ~exclude_trace'; % Bug is here - why???
+    if sum(sigPF_booltemp) ~= sum(sigPF_bool)
+        disp('Bugfix error catching in track_PFontogeny_old')
+        keyboard
+    end
     
     % Grab # trials each neuron was active on the return arms
     load(fullfile(sesh_use.Location,'Alternation.mat'),'Alt');
@@ -122,17 +125,15 @@ for j = 1:num_sessions
     % Get validly mapped cells for that session and if active at all/on the
     % return arm
     valid_bool = ~isnan(map_use) & map_use ~= 0; % Get boolean for validly mapped cells
-    
-    % Make sure you exclude any neurons with abnormally long traces from
-    % future consideration
-    active_arm_pass = nactive_arm >= nactive_thresh & ~exclude_trace; % Boolean for cells above activity threshold
-    active_all_pass = nactive_all >= nactive_thresh & ~exclude_trace; % Ditto for all trials
+    active_arm_pass = nactive_arm >= nactive_thresh; % Boolean for cells above activity threshold
+    active_all_pass = nactive_all >= nactive_thresh; % Ditto for all trials
     
     % ID if cells are active on the stem or not so that you can pull out
     % cells without any activity on the stem for comparison purposes!
-    [ ~, ~, ~, stem_bool, ~, nactive_stem] = parse_splitters( sesh_use, 3);
+    [ ~, ~, ~, stem_bool, ~, nactive_stem] = ...
+        parse_splitters_old( sesh_use, 3);
     active_stem_bool = nactive_stem >= nactive_thresh; % Boolean for cells above activity threshold
-    stem_bool = stem_bool & active_stem_bool & ~exclude_trace; % Redundant: Is it active at all on the stem AND is it active enough
+    stem_bool = stem_bool & active_stem_bool; % Redundant: Is it active at all on the stem AND is it active enough
     
     % Map valid & active neurons to batch_map numbering scheme
     valid_bool_all = false(num_neurons, 1);
@@ -309,3 +310,5 @@ sesh_final = sesh;
 
 
 end
+
+

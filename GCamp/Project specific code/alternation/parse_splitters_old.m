@@ -1,5 +1,5 @@
 function [ rely_val, delta_max, sigbool, stem_bool, dmax_norm, nactive_stem ,...
-    dint_norm, curve_corr, rely_mean, sigbin_prop] = parse_splitters( dir_use, ...
+    dint_norm, curve_corr, rely_mean, sigbin_prop] = parse_splitters_old( dir_use, ...
     sigthresh, cnoise )
 % [ rely_val, delta_max, sigbool, stem_bool, dmax_norm, nactive_stem ,...
 %    dint_norm, curve_corr, rely_mean, sigbin_prop] = parse_splitters( dir_use, ...
@@ -107,10 +107,10 @@ load(fullfile(dir_use,'sigSplitters'),'pvalue','sigcurve','deltacurve', ...
 load(fullfile(dir_use,'splitters.mat'), 'cellResps')
 nactive_stem = cellfun(@(a) sum(sum(a,2) > 0), cellResps);
 nneurons_sesh = length(pvalue); % get number of neurons in sesh_use
-sigbooltemp = cellfun(@(a) sum(a) >= sigthresh, sigcurve); % Get splitters
+sigbool = cellfun(@(a) sum(a) >= sigthresh, sigcurve); % Get splitters
 % exclude any neurons that don't meet Wood criteria or have abnormally long
 % transients
-sigbool = sigbooltemp & ~exclude_lateral & ~exclude_trace;
+% sigbool = sigbooltemp & ~exclude_lateral & ~exclude_trace;
 
 % Add noise to tuning curves if specified
 if cnoise
@@ -120,8 +120,8 @@ end
 
 % Identify cells active on the stem
 stem_bool = ~cellfun(@isempty, pvalue); % in sesh(j) numbering
-% Exclude any cells with abnormally long transients!!!
-stem_bool = stem_bool & ~exclude_trace;
+% Exclude any cells with abnormally long transients 
+% stem_bool = stem_bool & ~exclude_trace;
 
 % Assigns splitter metric vlaues to the appropriate neurons
 rely_val = nan(nneurons_sesh, 1); 
