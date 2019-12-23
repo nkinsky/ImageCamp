@@ -121,8 +121,6 @@ for j = 1:num_sessions
 
     % Get validly mapped cells for that session and if active at all/on the
     % return arm
-    %
-   
     valid_bool = ~isnan(map_use) & map_use ~= 0; % Get boolean for validly mapped cells
     
     active_arm_pass = nactive_arm >= nactive_thresh; % Boolean for cells above activity threshold
