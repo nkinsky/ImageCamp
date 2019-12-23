@@ -120,10 +120,8 @@ end
 
 % Identify cells active on the stem
 stem_bool = ~cellfun(@isempty, pvalue); % in sesh(j) numbering
-% Exclude any cells with abnormally long transients and cells that are
-% modulated by lateral position (these are weird cells that look like
-% splitters but aren't really)
-stem_bool = stem_bool & ~(sigbooltemp & exclude_lateral) & ~exclude_trace;
+% Exclude any cells with abnormally long transients 
+stem_bool = stem_bool & ~exclude_trace;
 
 % Assigns splitter metric vlaues to the appropriate neurons
 rely_val = nan(nneurons_sesh, 1); 

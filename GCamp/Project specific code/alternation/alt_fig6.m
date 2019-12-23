@@ -45,7 +45,7 @@ end
 %% Plot for each mouse
 save_pdf = true;
 sigthresh = 3;
-days_ba = 1;
+days_ba = 9;
 free_only = true;
 ignore_sameday = true;
 dplot = 'norm_max_int'; % metric to plot for discriminability
