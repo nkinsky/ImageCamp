@@ -125,8 +125,8 @@ for j = 1:num_sessions
    
     valid_bool = ~isnan(map_use) & map_use ~= 0; % Get boolean for validly mapped cells
     
-    %%% NK Note - I get weird results if I don't have the "~exclude_trace
-    %%% term here - this shouldn't have any effect, but it does!
+    % Make sure you exclude any neurons with abnormally long traces from
+    % future consideration
     active_arm_pass = nactive_arm >= nactive_thresh & ~exclude_trace; % Boolean for cells above activity threshold
     active_all_pass = nactive_all >= nactive_thresh & ~exclude_trace; % Ditto for all trials
     
