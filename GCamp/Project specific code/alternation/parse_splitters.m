@@ -120,7 +120,7 @@ end
 
 % Identify cells active on the stem
 stem_bool = ~cellfun(@isempty, pvalue); % in sesh(j) numbering
-% Exclude any cells with abnormally long transients 
+% Exclude any cells with abnormally long transients!!!
 stem_bool = stem_bool & ~exclude_trace;
 
 % Assigns splitter metric vlaues to the appropriate neurons

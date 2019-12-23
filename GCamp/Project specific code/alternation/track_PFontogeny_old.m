@@ -1,10 +1,12 @@
 function [ sigmat, MImat, onsetsesh, days_aligned, pkw, cmat,...
     MImat_armonly_atbirth, days_aligned_armonly_atbirth,...
-    MImat_stemonly_atbirth, days_aligned_stemonly_atbirth, sesh_final] = ...
+    MImat_stemonly_atbirth, days_aligned_stemonly_atbirth, sesh_final, ...
+    active_stemonly_ind, active_stem_ind] = ...
     track_PFontogeny_old( MDbase, MDreg, varargin)
 %  [ sigmat, MImat, onsetsesh, days_aligned, pkw, cmat,...
 %     MImat_armonly_atbirth, days_aligned_armonly_atbirth,...
-%     MImat_stemonly_atbirth, days_aligned_stemonly_atbirth, sesh_final] = ...
+%     MImat_stemonly_atbirth, days_aligned_stemonly_atbirth, sesh_final, ...
+%     active_stemonly_ind, active_stem_ind] = ...
 %     track_PFontogeny( MDbase, MDreg, varargin)
 %   tracks the spatial metrics for place cells before and after they become
 %   a place cell. Same backbone as track_splitters
@@ -34,6 +36,15 @@ xlims = [-days_ba - 0.5, days_ba + 0.5];
 if ignore_sameday == false && free_only == false
     disp('ignore_sameday=false and free_only=false')
     error('I won''t let you look at forced vs free trial from the same day')
+end
+
+%% Step 0 load in stuff for filtering out cells with long transients
+global HALF_LIFE_THRESH
+
+if ~isempty(HALF_LIFE_THRESH) && HALF_LIFE_THRESH
+    half_thresh = HALF_LIFE_THRESH;
+else
+    half_thresh = 100;
 end
 
 %% Step 1: Load batch neuron map and identify session indices for each
@@ -91,9 +102,19 @@ for j = 1:num_sessions
     load(fullfile(sesh_use.Location,'Placefields_cm1.mat'),'PSAbool', ...
         'pval', 'MI');
     
+    %ID cells with abnormally long transients
+    [half_all_mean, ~, ~, ~] = get_session_trace_stats(sesh_use, ...
+        'use_saved_data', true);
+    exclude_trace = half_all_mean > half_thresh;
+    
     % Identify legit place cells by the significance of their mutual
     % information scores
-    sigPF_bool = pval < pthresh; % Threshold to get significant PFs
+    sigPF_booltemp = pval < pthresh; % Threshold to get significant PFs
+    sigPF_bool = sigPF_booltemp & ~exclude_trace'; % Bug is here - why???
+    if sum(sigPF_booltemp) ~= sum(sigPF_bool)
+        disp('Bugfix error catching in track_PFontogeny_old')
+        keyboard
+    end
     
     % Grab # trials each neuron was active on the return arms
     load(fullfile(sesh_use.Location,'Alternation.mat'),'Alt');
@@ -110,7 +131,7 @@ for j = 1:num_sessions
     % ID if cells are active on the stem or not so that you can pull out
     % cells without any activity on the stem for comparison purposes!
     [ ~, ~, ~, stem_bool, ~, nactive_stem] = ...
-        parse_splitters( sesh_use.Location, 3);
+        parse_splitters_old( sesh_use, 3);
     active_stem_bool = nactive_stem >= nactive_thresh; % Boolean for cells above activity threshold
     stem_bool = stem_bool & active_stem_bool; % Redundant: Is it active at all on the stem AND is it active enough
     
@@ -138,7 +159,7 @@ onsetsesh = nan(num_neurons,1);
 PCs = find(any(sigmatbool,2));
 for j = 1:length(PCs)
     row_use = PCs(j);
-    onsetsesh(row_use) = find(sigmatbool(row_use,:),1,'first');
+    onsetsesh(row_use) = find(sigmatbool(row_use, :),1,'first');
 end
 
 %% Step 4: Get day of all sessions
@@ -179,6 +200,10 @@ active_armonly_atbirth = any(active_arm_mat & days_aligned == 0,2) & ...
     ~any(active_stem_mat & days_aligned == 0,2);
 active_stemonly_atbirth = ~any(active_arm_mat & days_aligned == 0,2) & ...
     any(active_stem_mat & days_aligned == 0,2);
+active_stem_atbirth = any(active_stem_mat & days_aligned == 0,2);
+%indices of place cells with fields on the stem only at birth
+active_stemonly_ind = PCs(active_stemonly_atbirth); 
+active_stem_ind = PCs(active_stem_atbirth); 
 
 MImat_armonly_atbirth = MImat(active_armonly_atbirth,:);
 MImat_stemonly_atbirth = MImat(active_stemonly_atbirth,:);
@@ -285,4 +310,5 @@ sesh_final = sesh;
 
 
 end
+
 

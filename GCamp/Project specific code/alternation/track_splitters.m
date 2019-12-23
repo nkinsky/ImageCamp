@@ -109,10 +109,10 @@ for j = 1:num_sessions
     % Get "splittiness" metrics and validly mapped cells for that session
     [ rely_val, delta_max, sigsplitter_bool , stem_bool, dmax_norm, nactive_stem,...
         dint_norm, ~, rely_mean, sigbin_prop] = ...
-        parse_splitters( sesh_use, sigthresh );
+        parse_splitters( sesh_use, sigthresh ); % Note that bad cells are filtered out here...
     valid_bool = ~isnan(map_use) & map_use ~= 0; % Get boolean for validly mapped cells
     active_bool = nactive_stem >= nactive_thresh; % Boolean for cells above activity threshold
-    stem_bool = stem_bool & active_bool;
+    stem_bool = stem_bool & active_bool; 
     
     % Map valid stem neurons to batch_map numbering scheme
     valid_stem_bool = false(num_neurons,1); 

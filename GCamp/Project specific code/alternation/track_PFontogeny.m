@@ -111,7 +111,7 @@ for j = 1:num_sessions
     % Identify legit place cells by the significance of their mutual
     % information scores
     sigPF_bool_temp = pval < pthresh; % Threshold to get significant PFs
-    sigPF_bool = sigPF_bool_temp & ~exclude_trace; % exclude any neurons not meeting filter criteria
+    sigPF_bool = sigPF_bool_temp & ~exclude_trace'; % exclude any neurons not meeting filter criteria
     
     % Grab # trials each neuron was active on the return arms
     load(fullfile(sesh_use.Location,'Alternation.mat'),'Alt');
@@ -125,14 +125,16 @@ for j = 1:num_sessions
    
     valid_bool = ~isnan(map_use) & map_use ~= 0; % Get boolean for validly mapped cells
     
-    active_arm_pass = nactive_arm >= nactive_thresh; % Boolean for cells above activity threshold
-    active_all_pass = nactive_all >= nactive_thresh; % Ditto for all trials
+    %%% NK Note - I get weird results if I don't have the "~exclude_trace
+    %%% term here - this shouldn't have any effect, but it does!
+    active_arm_pass = nactive_arm >= nactive_thresh & ~exclude_trace; % Boolean for cells above activity threshold
+    active_all_pass = nactive_all >= nactive_thresh & ~exclude_trace; % Ditto for all trials
     
     % ID if cells are active on the stem or not so that you can pull out
     % cells without any activity on the stem for comparison purposes!
     [ ~, ~, ~, stem_bool, ~, nactive_stem] = parse_splitters( sesh_use, 3);
     active_stem_bool = nactive_stem >= nactive_thresh; % Boolean for cells above activity threshold
-    stem_bool = stem_bool & active_stem_bool; % Redundant: Is it active at all on the stem AND is it active enough
+    stem_bool = stem_bool & active_stem_bool & ~exclude_trace; % Redundant: Is it active at all on the stem AND is it active enough
     
     % Map valid & active neurons to batch_map numbering scheme
     valid_bool_all = false(num_neurons, 1);
