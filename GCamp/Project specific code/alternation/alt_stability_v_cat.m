@@ -24,7 +24,7 @@ ip.addParameter('coactive_only', false, @islogical);
 ip.addParameter('ha', [], @ishandle);
 ip.addParameter('plot_flag',true,@islogical);
 ip.addParameter('matchER', false, @islogical); % true = match event-rate between all categories
-ip.addParameter('stem_filter', '', @(a) any(strcmpi(a, {'top','bottom',''}))) % high = keep only stem pcs in top/bottom quantile of reliability ('' = keep all)
+% ip.addParameter('stem_filter', '', @(a) any(strcmpi(a, {'top','bottom',''}))) % high = keep only stem pcs in top/bottom quantile of reliability ('' = keep all)
 ip.parse(MDbase,MDreg,varargin{:});
 
 PFname = ip.Results.PFname;
@@ -35,7 +35,7 @@ coactive_only = ip.Results.coactive_only;
 ha = ip.Results.ha;
 plot_flag = ip.Results.plot_flag;
 matchER = ip.Results.matchER;
-stem_filter = ip.Results.stem_filter;
+% stem_filter = ip.Results.stem_filter;
 
 %% Step 1: register sessions
 % Get map and cells that go silent or become active
@@ -48,10 +48,21 @@ neuron_map = neuron_map_simple(MDbase, MDreg,'suppress_output', true);
     ntrans_thresh, sigthresh, PFname), sesh, 'UniformOutput', false);
 cat_names = temp{1};
 
-%% Step 2a: Separate out high and low quantile stem pcs if specified...
-if strcmpi(stem_filter, 'top')
-    
-end
+%% Step 2a: Separate out high and low quantile stem pcs into categories 6 and 7
+ncats = length(temp);
+stem_cat_ind = find(strcmpi(cat_names, 'stem pcs'));
+stem_pc_bool = categories == stem_cat_ind;
+[ ~, ~, ~, ~, ~, ~ , dint_norm, ~, rely_mean, ~] = parse_splitters( ...
+    sesh(1), sigthresh, true);
+cutoffs = quantile(rely_mean(stem_pc_bool), [0.25, 0.75]);
+
+cat_names{6} = 'Stem PCs - top rely';
+cat_names{7} = 'Stem PCs - bot. rely';
+stem_top_keep_bool = stem_pc_bool & (rely_mean > cutoffs(2));
+stem_bot_keep_bool = stem_pc_bool & (rely_mean > cutoffs(1));
+stem_alt_categories = nan(size(categories));
+stem_alt_categories(stem_top_keep_bool) = ncats + 1;
+stem_alt_categories(stem_bot_keep_bool) = ncats + 2;
 %% Step 3: Get category stability metrics
 
 % Eliminate low event-rate (ER) neurons to roughly match event rates between all
@@ -59,7 +70,7 @@ end
 if matchER
     load(fullfile(MDbase.Location,PFname),'PSAbool');
     ntrans = get_num_trans(PSAbool);
-    trans_range = 5:max(ntrans); % get #trans
+    trans_range = ntrans_thresh:max(ntrans); % get #trans
     split_mean = mean(ntrans(categories{1} == 1));
     
     % adjust all the other thresholds
@@ -72,22 +83,38 @@ if matchER
         
         % dump any neurons that don't meet threshold for each category to
         % nans
-        categories{1}(categories{1} == j & ntrans <= cat_nthresh) = nan;
+        categories{1}(categories{1} == j & (ntrans <= cat_nthresh)) = nan;
+        
+    end
+    
+    % Same as above but for stem neurons
+    for j = 6:7
+        cat_alt_means = arrayfun(@(a) mean(ntrans(ntrans > a & ...
+            stem_alt_categories{1} == j)), trans_range);
+        cat_alt_nthresh = trans_range(find(cat_alt_means > ...
+            split_mean,1,'first'));
+        stem_alt_categories{1}(stem_alt_categories{1} == j & ...
+            (ntrans < cat_alt_nthresh)) = nan;
     end
 end 
     
 % Calculate proportions
 [ stay_prop, coactive_prop, ~, coactive_bool] = ...
     get_cat_stability(categories, neuron_map, 0:5);
-stay_prop = circshift(stay_prop,-1); % Shift so discarded cells are at the right
+[ alt_stay_prop, alt_coactive_prop, ~, ~] = ...
+    get_cat_stability(stem_alt_categories, neuron_map, 6:7);
+% Combine to include top/bottom reliable stem pcs as 6 and 7 respectively.
+stay_prop_comb = [stay_prop, alt_stay_prop];
+coactive_prop_comb = [coactive_prop, alt_coactive_prop];
+stay_prop = circshift(stay_prop_comb,-1); % Shift so discarded cells are at the right
 cat_names = circshift(cat_names,-1);
-coactive_prop = circshift(coactive_prop,-1);
+coactive_prop = circshift(coactive_prop_comb,-1);
 
 % if any(coactive_prop == 0 | coactive_prop == 1)
 %     keyboard
 %     disp('Debugging alt_stability_v_cat for 0/1 prob. present...')
 % end
-%% Step 5: Plot it
+%% Step 5: Plot it - does NOT include top/bottom reliable stem pcs
 if plot_flag
     if isempty(ha)
         figure; ha = gca; set(gcf,'Position',[270 230 960 550])
@@ -95,8 +122,9 @@ if plot_flag
     
 %     xlabels = {'Splitters', 'Stem PCs', 'Stem NPCs', 'Arm PCs', 'Arm NPCs', ...
 %         [ 'ntrans < ' num2str(ntrans_thresh)]};
-    xlabels = {'Splitters', 'Arm PCs', 'Arm NPCs', 'Stem PCs', 'Stem NPCs',...
-        [ 'ntrans < ' num2str(ntrans_thresh)]};
+%     xlabels = {'Splitters', 'Arm PCs', 'Arm NPCs', 'Stem PCs', 'Stem NPCs',...
+%         [ 'ntrans < ' num2str(ntrans_thresh)]};
+    xlabels = cat_names;
     if ~coactive_only
         [ha, h1, h2] = plotyy(ha, 1:6, stay_prop, 1:6, coactive_prop);
         h1.Marker = 'o'; h2.Marker = 'o';

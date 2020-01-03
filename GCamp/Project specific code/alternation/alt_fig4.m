@@ -94,20 +94,21 @@ for j = 1:max_day_lag
     ntrials1_v_days{j+1} = ntrials1;
     waitbar((j+1)/(max_day_lag+1),hw);
     
-    % Identify sessions with prob = 0 or 1 - why??
-    for k = 1:4
-       try
-           outlier_test = coactive_prop{k}(:,3) == 0 | coactive_prop{k}(:,1) == 0 ...
-               | coactive_prop{k}(:,3) == 1 | coactive_prop{k}(:,1) == 1;
-           if any(outlier_test)
-               disp(['Outlier in mouse ' num2str(k) ' at lag ' num2str(j)])
-           end
-       catch
-           
-       end
-    end
+    % Identify sessions with prob = 0 or 1 - used during development to
+    % check code.
+%     for k = 1:4
+%        try
+%            outlier_test = coactive_prop{k}(:,3) == 0 | coactive_prop{k}(:,1) == 0 ...
+%                | coactive_prop{k}(:,3) == 1 | coactive_prop{k}(:,1) == 1;
+%            if any(outlier_test)
+%                disp(['Outlier in mouse ' num2str(k) ' at lag ' num2str(j)])
+%            end
+%        catch
+%            
+%        end
+%     end
     
-    if ~isempty(temp_names) % bugfix hack
+    if ~isempty(temp_names) % bugfix
         cat_names = temp_names;
     end
 end
@@ -115,10 +116,10 @@ close(hw)
 
 grps_all = []; stay_prop_all = []; coactive_prop_all = []; 
 ntrials1_all = [];
-stay_mean = nan(max_day_lag + 1, 6);
-stay_std = nan(max_day_lag + 1, 6);
-stay_diff_mean = nan(max_day_lag + 1, 6);
-stay_diff_std = nan(max_day_lag + 1, 6);
+stay_mean = nan(max_day_lag + 1, 8);
+stay_std = nan(max_day_lag + 1, 8);
+stay_diff_mean = nan(max_day_lag + 1, 8);
+stay_diff_std = nan(max_day_lag + 1, 8);
 
 for j = 1:max_day_lag
     prop_for_day = cat(1, stay_prop_v_days{j+1}{:});
@@ -133,6 +134,7 @@ for j = 1:max_day_lag
     stay_mean(j+1,:) = nanmean(coactive_for_day);
     stay_std(j+1,:) = nanstd(coactive_for_day);
     
+    % This isn't used anywhere...
     if ~isempty(coactive_for_day)
         stay_diff_mean(j+1,:) = nanmean(coactive_for_day(:,1) - ...
             coactive_for_day(:,3));
@@ -142,7 +144,12 @@ for j = 1:max_day_lag
 end
 
 %% Plot it!
-other_type = 'Stem PCs'; % specify neuron phenotype to plot versus splitters
+
+% specify neuron phenotype to plot versus splitters - options are 'Arm
+% PCs', 'Stem PCs', 'Stem PCs - bottom mean rely' and 'Stem PCs - top mean
+% rely'. The last two options keep only the stem place cells with the
+% least/most reliable trajectory-dependent activity.
+other_type = 'Arm PCs'; 
 [~, ~, temp] = alt_parse_cell_category(G30_alt(end), 0.05, 5, 3, ...
     'Placefields_cm1.mat');
 % Get zero and 1 points due to low # cells starting out as splitter/armPC 
