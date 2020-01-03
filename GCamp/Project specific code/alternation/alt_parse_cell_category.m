@@ -80,19 +80,22 @@ cat_nums = 0:5;
 cat_names = { ['ntrans < ' num2str(ntrans_thresh) 'or bad transients'], 'Splitters', ...
     'Arm PCs', 'Arm NPCs', 'Stem PCs', 'Stem NPCs'}; % New scheme
 
+% Apply filters/booleans to break out cells into categories
 [pctemp, ntrans_pass] = pf_filter(sesh, pval_thresh, ntrans_thresh, ...
     PFname);
 categories(stem_cells & good_splitters & ntrans_pass & ~exclude_trace) = 1; % Splitters
-% categories(stem_cells & pctemp & ~cellfun(@any,sigcurve) & ...
-%     ntrans_pass) = 4; % Stem PCs
 categories(stem_cells & pctemp & not_splitters & ntrans_pass & ...
     ~exclude_trace) = 4; % Stem PCs
 categories(~stem_cells & pctemp & ntrans_pass & ~exclude_trace) = 2; % Arm PCs
-% categories(stem_cells & ~pctemp & ~cellfun(@any,sigcurve) & ...
-%     ntrans_pass) = 5; % Stem NPCs
 categories(stem_cells & ~pctemp & not_splitters & ntrans_pass & ...
     ~exclude_trace) = 5; % Stem NPCs
 categories(~stem_cells & ~pctemp & ntrans_pass & ~exclude_trace) = 3; % Arm NPCs
+
+% Old filters
+% categories(stem_cells & pctemp & ~cellfun(@any,sigcurve) & ...
+%     ntrans_pass) = 4; % Stem PCs
+% categories(stem_cells & ~pctemp & ~cellfun(@any,sigcurve) & ...
+%     ntrans_pass) = 5; % Stem NPCs
 
 end
 

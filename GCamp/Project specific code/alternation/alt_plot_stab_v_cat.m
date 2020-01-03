@@ -136,6 +136,9 @@ stats.all.coactive.c = multcompare(stats.all.coactive.stats,'Display','off');
 
 %% Plot stats
 
+split_ind = find(strcmpi('Splitters', cat_names));
+apc_ind = find(strcmpi('Arm PCs', cat_names));
+
 % Recurrence of phenotype stats
 subplot(2,3,3)
 text(0.1, 1.0, 'Mice included:')
@@ -156,13 +159,13 @@ text(0.1, 0.2, num2str(stats.all.coactive.c(:, [1 2 6]), '%0.2g \t'))
 text(0.1, 0.65, ['pkw = ' num2str(stats.all.coactive.p, '%0.2g')])
 text(0.5, 0,65, 'Splitters vs. Arm PCs only:')
 text(0.5, 0.55, ['p_{signrank,1sided} = ' num2str(...
-    signrank(co_all2(:,1), co_all2(:,3),'tail','right'), '%0.2g')])
+    signrank(co_all2(:, split_ind), co_all2(:,apc_ind),'tail','right'), '%0.2g')])
 axis off
 
 %% Plot just splitters v arm pcs paired
 figure; set(gcf, 'Position', [ 2180 332 716 480]);
 ha = subplot(1,2,1);
-x_use = co_all2(:,[1 3]);
+x_use = co_all2(:,[split_ind apc_ind]);
 match_bool = all(~isnan(x_use),2);
 x_use = x_use(match_bool,:);
 groups = ones(size(x_use)).*[1 2];

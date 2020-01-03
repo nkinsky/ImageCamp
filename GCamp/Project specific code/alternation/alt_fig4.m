@@ -142,7 +142,7 @@ for j = 1:max_day_lag
 end
 
 %% Plot it!
-other_type = 'Arm PCs'; % specify neuron phenotype to plot versus splitters
+other_type = 'Stem PCs'; % specify neuron phenotype to plot versus splitters
 [~, ~, temp] = alt_parse_cell_category(G30_alt(end), 0.05, 5, 3, ...
     'Placefields_cm1.mat');
 % Get zero and 1 points due to low # cells starting out as splitter/armPC 
@@ -251,12 +251,10 @@ hd = subplot(3,1,1:2);
 diff_all = coactive_prop_all(good_bool,1) - ...
     coactive_prop_all(good_bool, other_ind);
     
-    
 [~,~, hs_diff] = scatterBox(diff_all, grps_all(good_bool,1), 'xLabels', ...
     arrayfun(@num2str, 0:max_day_lag, 'UniformOutput', false), ...
     'yLabel', 'Delta Prob. Co-active', 'h', hd, 'plotBox', false, 'transparency', 0.3,...
     'circleColors', [0.3, 0.3, 0.3]);
-
 
 % Plot mean and 25%/75% quantiles
 dmean = arrayfun(@(a) nanmean(diff_all(grps_all(good_bool,1) == a)), ...

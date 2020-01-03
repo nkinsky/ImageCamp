@@ -615,5 +615,3 @@ ylabel('Count'); xlabel('Disc. or Rely. Value');
 legend(cat(1,hd,hr),{'Discriminability','Reliability'})
 make_plot_pretty(gca)
 printNK('Reliability and Discriminability Histograms - All Mice','alt');
-
-
