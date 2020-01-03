@@ -75,8 +75,10 @@ end
 
 cat_nums = 0:5;
 cat_names = { ['ntrans < ' num2str(ntrans_thresh) 'or bad transients'], 'Splitters', ...
-    'Stem PCs', 'Arm PCs', 'Stem NPCs', 'Arm NPCs'};
+    'Stem PCs', 'Arm PCs', 'Stem NPCs', 'Arm NPCs'};  % Old scheme
 
+% cat_names = { ['ntrans < ' num2str(ntrans_thresh) 'or bad transients'], 'Splitters', ...
+%     'Arm PCs', 'Arm NPCs', 'Stem PCs', 'Stem NPCs'}; % New scheme
 
 [pctemp, ntrans_pass] = pf_filter(sesh, pval_thresh, ntrans_thresh, ...
     PFname);

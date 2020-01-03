@@ -1,8 +1,8 @@
 function [ rely_val, delta_max, sigbool, stem_bool, dmax_norm, nactive_stem ,...
-    dint_norm, curve_corr, rely_mean, sigbin_prop] = parse_splitters( dir_use, ...
+    dint_norm, curve_corr, rely_mean, sigbin_prop] = parse_splitters( session, ...
     sigthresh, cnoise )
 % [ rely_val, delta_max, sigbool, stem_bool, dmax_norm, nactive_stem ,...
-%    dint_norm, curve_corr, rely_mean, sigbin_prop] = parse_splitters( dir_use, ...
+%    dint_norm, curve_corr, rely_mean, sigbin_prop] = parse_splitters( session, ...
 %    sigthresh, cnoise )
 %
 %   Gets splittiness metrics for all cells active on the stem
@@ -15,8 +15,8 @@ function [ rely_val, delta_max, sigbool, stem_bool, dmax_norm, nactive_stem ,...
 %
 %
 %   INPUTS: 
-%       dir_use: working directory with sigSplitters file. Could also input
-%       session_db file (dir_use = session_db.Location)
+%       session: session_db with .Location info where working files are
+%       located
 %
 %       sigthresh: # bins of delta tuning curve above chance (default = 3)
 %
@@ -55,10 +55,8 @@ if nargin < 3
     end
 end
 
-if isstruct(dir_use)
-    session = dir_use;
     dir_use = session.Location;
-end
+
 %% Load in global variables for cell filtering
 global WOOD_FILT
 global HALF_LIFE_THRESH

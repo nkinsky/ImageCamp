@@ -24,6 +24,7 @@ ip.addParameter('coactive_only', false, @islogical);
 ip.addParameter('ha', [], @ishandle);
 ip.addParameter('plot_flag',true,@islogical);
 ip.addParameter('matchER', false, @islogical); % true = match event-rate between all categories
+ip.addParameter('stem_filter', '', @(a) any(strcmpi(a, {'top','bottom',''}))) % high = keep only stem pcs in top/bottom quantile of reliability ('' = keep all)
 ip.parse(MDbase,MDreg,varargin{:});
 
 PFname = ip.Results.PFname;
@@ -34,6 +35,7 @@ coactive_only = ip.Results.coactive_only;
 ha = ip.Results.ha;
 plot_flag = ip.Results.plot_flag;
 matchER = ip.Results.matchER;
+stem_filter = ip.Results.stem_filter;
 
 %% Step 1: register sessions
 % Get map and cells that go silent or become active
@@ -45,6 +47,11 @@ neuron_map = neuron_map_simple(MDbase, MDreg,'suppress_output', true);
 [categories, ~, temp] = arrayfun(@(a) alt_parse_cell_category(a, pval_thresh, ...
     ntrans_thresh, sigthresh, PFname), sesh, 'UniformOutput', false);
 cat_names = temp{1};
+
+%% Step 2a: Separate out high and low quantile stem pcs if specified...
+if strcmpi(stem_filter, 'top')
+    
+end
 %% Step 3: Get category stability metrics
 
 % Eliminate low event-rate (ER) neurons to roughly match event rates between all
@@ -88,7 +95,7 @@ if plot_flag
     
 %     xlabels = {'Splitters', 'Stem PCs', 'Stem NPCs', 'Arm PCs', 'Arm NPCs', ...
 %         [ 'ntrans < ' num2str(ntrans_thresh)]};
-    xlabels = {'Splitters','Arm PCs', 'Arm NPCs', 'Stem PCs', 'Stem NPCs',...
+    xlabels = {'Splitters', 'Arm PCs', 'Arm NPCs', 'Stem PCs', 'Stem NPCs',...
         [ 'ntrans < ' num2str(ntrans_thresh)]};
     if ~coactive_only
         [ha, h1, h2] = plotyy(ha, 1:6, stay_prop, 1:6, coactive_prop);

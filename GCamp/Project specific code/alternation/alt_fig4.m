@@ -2,9 +2,7 @@
 wood_filt = true;
 half_thresh = 2;
 text_append = alt_set_filters(wood_filt, half_thresh);
-%% Reactivation Probability versus time - single mouse examples - will need to
-% redo with only stem and arm place cells to make pkw accurate... 
-
+%% Reactivation Probability versus time - single mouse examples
 % Remove upper loop and use alt_all_cell as sesh_use for ALL mice.
 trial_types = {'all', 'free_only', 'forced_only', 'no_loop'};
 hw = waitbar(0,'Running reactivation prob vs phenotype...');
