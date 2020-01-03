@@ -9,6 +9,8 @@ load(fullfile(sesh_use.Location,'sigSplitters.mat'),'sigcurve','deltacurve');
 [minc, maxc, totalsig, curvesum] = cellfun(@alt_consecutive_sigbins, ...
     sigcurve(sigbool), deltacurve(sigbool));
 
+% The below was hastily written on a plane as my computer was about to die
+% on 12/23/2019 - needs updating.
 % proportion of splitters that don't have 3 consecutive bins significant in
 % a row
 totalsig(maxc < 3);

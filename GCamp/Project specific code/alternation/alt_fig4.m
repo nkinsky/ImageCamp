@@ -142,7 +142,11 @@ for j = 1:max_day_lag
 end
 
 %% Plot it!
-other_type = 'Arm PCs'; % specify neuron phenotype to plot versus splitters
+% specify neuron phenotype to plot versus splitters - options are 'Arm
+% PCs', 'Stem PCs', 'Stem PCs - bottom mean rely' and 'Stem PCs - top mean
+% rely'. The last two options keep only the stem place cells with the
+% least/most reliable trajectory-dependent activity.
+other_type = 'Arm PCs'; 
 [~, ~, temp] = alt_parse_cell_category(G30_alt(end), 0.05, 5, 3, ...
     'Placefields_cm1.mat');
 % Get zero and 1 points due to low # cells starting out as splitter/armPC 

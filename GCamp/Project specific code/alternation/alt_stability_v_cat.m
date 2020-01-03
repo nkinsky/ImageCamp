@@ -49,8 +49,23 @@ neuron_map = neuron_map_simple(MDbase, MDreg,'suppress_output', true);
 cat_names = temp{1};
 
 %% Step 2a: Separate out high and low quantile stem pcs if specified...
-if strcmpi(stem_filter, 'top')
+if ~isempty(stem_filter)
+    stem_cat_ind = find(strcmpi(cat_names, 'stem pcs'));
+    stem_pc_bool = categories == stem_cat_ind;
+    [ ~, ~, ~, ~, ~, ~ , dint_norm, ~, rely_mean, ~] = parse_splitters( ...
+        sesh(1), sigthresh, true);
+    cutoffs = quantile(rely_mean(stem_pc_bool), [0.25, 0.75]);
     
+    % Figure out which cells to discard - set to NaNs
+    if strcmpi(stem_filter, 'top')
+%         stem_keep_bool = stem_pc_bool & rely_mean > cutoffs(2);
+        stem_discard_bool = stem_pc_bool & rely_mean <= cutoffs(2);
+    elseif strcmpi(stem_filter, 'bottom')
+%         stem_keep_bool = stem_pc_bool & rely_mean < cutoffs(1);
+        stem_discard_bool = stem_pc_bool & rely_mean >= cutoffs(1);
+    end
+    categories(stem_discard_bool) = nan;
+    cat_names{stem_cat_ind} = ['Stem PCs - ' stem_filter ' mean rely'];
 end
 %% Step 3: Get category stability metrics
 
@@ -95,8 +110,9 @@ if plot_flag
     
 %     xlabels = {'Splitters', 'Stem PCs', 'Stem NPCs', 'Arm PCs', 'Arm NPCs', ...
 %         [ 'ntrans < ' num2str(ntrans_thresh)]};
-    xlabels = {'Splitters', 'Arm PCs', 'Arm NPCs', 'Stem PCs', 'Stem NPCs',...
-        [ 'ntrans < ' num2str(ntrans_thresh)]};
+%     xlabels = {'Splitters', 'Arm PCs', 'Arm NPCs', 'Stem PCs', 'Stem NPCs',...
+%         [ 'ntrans < ' num2str(ntrans_thresh)]};
+    xlabels = cat_names;
     if ~coactive_only
         [ha, h1, h2] = plotyy(ha, 1:6, stay_prop, 1:6, coactive_prop);
         h1.Marker = 'o'; h2.Marker = 'o';
