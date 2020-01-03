@@ -44,25 +44,29 @@ neuron_map = neuron_map_simple(MDbase, MDreg,'suppress_output', true);
 %% Step 2: Parse cells into splitters (1), stem PCs(2), stem NPCs (3), 
 % arm PCs(4) ,and arm NPCs(5), 0 = doesn't pass ntrans threshold
 
-[categories, ~, temp] = arrayfun(@(a) alt_parse_cell_category(a, pval_thresh, ...
+[categories, cat_nums, temp] = arrayfun(@(a) alt_parse_cell_category(a, pval_thresh, ...
     ntrans_thresh, sigthresh, PFname), sesh, 'UniformOutput', false);
 cat_names = temp{1};
 
 %% Step 2a: Separate out high and low quantile stem pcs into categories 6 and 7
-ncats = length(temp);
-stem_cat_ind = find(strcmpi(cat_names, 'stem pcs'));
-stem_pc_bool = categories == stem_cat_ind;
-[ ~, ~, ~, ~, ~, ~ , dint_norm, ~, rely_mean, ~] = parse_splitters( ...
-    sesh(1), sigthresh, true);
-cutoffs = quantile(rely_mean(stem_pc_bool), [0.25, 0.75]);
-
-cat_names{6} = 'Stem PCs - top rely';
-cat_names{7} = 'Stem PCs - bot. rely';
-stem_top_keep_bool = stem_pc_bool & (rely_mean > cutoffs(2));
-stem_bot_keep_bool = stem_pc_bool & (rely_mean > cutoffs(1));
-stem_alt_categories = nan(size(categories));
-stem_alt_categories(stem_top_keep_bool) = ncats + 1;
-stem_alt_categories(stem_bot_keep_bool) = ncats + 2;
+stem_alt_categories = cell(size(categories));
+stem_cat_num = cat_nums{1}(strcmpi(cat_names, 'stem pcs'));
+ncats = length(cat_names);
+max_cat_num = max(cat_nums{1});
+for j = 1:2
+    stem_pc_bool = categories{j} == stem_cat_num;
+    [ ~, ~, ~, ~, ~, ~ , dint_norm, ~, rely_mean, ~] = parse_splitters( ...
+        sesh(j), sigthresh, true);
+    cutoffs = quantile(rely_mean(stem_pc_bool), [0.25, 0.75]);
+    
+    stem_top_keep_bool = stem_pc_bool & (rely_mean > cutoffs(2));
+    stem_bot_keep_bool = stem_pc_bool & (rely_mean < cutoffs(1));
+    stem_alt_categories{j} = nan(size(categories{j}));
+    stem_alt_categories{j}(stem_top_keep_bool) = max_cat_num + 1;
+    stem_alt_categories{j}(stem_bot_keep_bool) = max_cat_num + 2;
+end
+cat_names{ncats + 1} = 'Stem PCs - top rely';
+cat_names{ncats + 2} = 'Stem PCs - bot. rely';
 %% Step 3: Get category stability metrics
 
 % Eliminate low event-rate (ER) neurons to roughly match event rates between all
