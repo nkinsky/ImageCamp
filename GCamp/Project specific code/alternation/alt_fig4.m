@@ -1,6 +1,6 @@
 % Alternation Figure 4: Reactivation dynamics over time
 wood_filt = true;
-half_thresh = 100;
+half_thresh = 2;
 text_append = alt_set_filters(wood_filt, half_thresh);
 %% Reactivation Probability versus time - single mouse examples
 % Remove upper loop and use alt_all_cell as sesh_use for ALL mice.
@@ -73,7 +73,7 @@ printNK(['G45 Split v PC Prob present at 7 day lag matchER=' ...
 
 max_day_lag = 15;
 sessions = alt_all_cell; % Change this to make plots for each mouse...
-matchER = true; % March event-rate in non-splitters to splitters
+matchER = false; % March event-rate in non-splitters to splitters
 trial_type = 'free_only'; % 'no_loop';
 
 nmice = length(sessions);
@@ -149,7 +149,7 @@ end
 % PCs', 'Stem PCs', 'Stem PCs - bottom mean rely' and 'Stem PCs - top mean
 % rely'. The last two options keep only the stem place cells with the
 % least/most reliable trajectory-dependent activity.
-other_type = 'Stem PCs - bot. rely'; 
+other_type = 'Arm NPCs'; 
 [~, ~, temp] = alt_parse_cell_category(G30_alt(end), 0.05, 5, 3, ...
     'Placefields_cm1.mat');
 % Get zero and 1 points due to low # cells starting out as splitter/armPC 
