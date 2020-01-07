@@ -73,7 +73,7 @@ printNK(['G45 Split v PC Prob present at 7 day lag matchER=' ...
 
 max_day_lag = 15;
 sessions = alt_all_cell; % Change this to make plots for each mouse...
-matchER = false; % March event-rate in non-splitters to splitters
+matchER = true; % March event-rate in non-splitters to splitters
 trial_type = 'free_only'; % 'no_loop';
 
 nmice = length(sessions);
@@ -149,7 +149,7 @@ end
 % PCs', 'Stem PCs', 'Stem PCs - bottom mean rely' and 'Stem PCs - top mean
 % rely'. The last two options keep only the stem place cells with the
 % least/most reliable trajectory-dependent activity.
-other_type = 'Arm NPCs'; 
+other_type = 'Stem NPCs'; 
 [~, ~, temp] = alt_parse_cell_category(G30_alt(end), 0.05, 5, 3, ...
     'Placefields_cm1.mat');
 % Get zero and 1 points due to low # cells starting out as splitter/armPC 

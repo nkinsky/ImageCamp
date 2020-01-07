@@ -48,7 +48,7 @@ neuron_map = neuron_map_simple(MDbase, MDreg,'suppress_output', true);
     ntrans_thresh, sigthresh, PFname), sesh, 'UniformOutput', false);
 cat_names = temp{1};
 
-%% Step 2a: Separate out high and low quantile stem pcs into categories 6 and 7
+%% Step 2a: Separate out high and low reliability stem pcs into categories 6 and 7
 stem_alt_categories = cell(size(categories));
 stem_cat_num = cat_nums{1}(strcmpi(cat_names, 'stem pcs'));
 ncats = length(cat_names);
