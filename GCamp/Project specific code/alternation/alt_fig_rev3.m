@@ -208,6 +208,10 @@ end
 printNK('Mean Min F over time','alt','hfig',hall)
 printNK('Mean Min Cropped F over time','alt','hfig',hcrop)
 
+%% Plot side-by-side for each mouse
+track_neuron_trace_stats(G30_alt(5), G30_alt(end))
+% Same for others... - don't see a consistent increase!
+
 
 %% Make plot of PSAbool for splitter versus place cells. 
 wood_filt = true;
@@ -281,4 +285,6 @@ ylabel('Probability')
 make_plot_pretty(gca)
 
 printNK(['Combined Split v PC recruitment histograms'],'alt')
+
+
 

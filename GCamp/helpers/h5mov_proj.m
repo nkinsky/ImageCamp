@@ -42,8 +42,9 @@ switch proj_type
         F = @min;
         bool_use = @lt;
         newproj = inf(Xdim,Ydim); % Start at infinity for min proj
-    case 'std' % Not finished yet, clearly
+    case 'mean' % Not finished yet, clearly
         F = @mean;
+        newproj = zeros(Xdim, Ydim);
     otherwise
         disp('only ''min'' and ''max'' projections enabled currently')
 end
@@ -53,16 +54,34 @@ end
 Set_T_Params(moviefile)
 
 p = ProgressBar(NumChunks);
-for i = 1:NumChunks
-    FrameList = ChunkStarts(i):ChunkEnds(i);
-    temp = LoadFrames(moviefile,FrameList);
-    tempproj = feval(F,temp,[],3); % Get min/max
-    newproj(feval(bool_use,tempproj,newproj)) = ...
-        tempproj(feval(bool_use,tempproj,newproj));
-    
-    p.progress;
+switch proj_type
+    case {'min', 'max'} 
+
+        for i = 1:NumChunks
+            FrameList = ChunkStarts(i):ChunkEnds(i);
+            temp = LoadFrames(moviefile,FrameList);
+            tempproj = feval(F,temp,[],3); % Get min/max
+            newproj(feval(bool_use,tempproj,newproj)) = ...
+                tempproj(feval(bool_use,tempproj,newproj));
+            
+            p.progress;
+        end
+        p.stop;
+        
+    case 'mean'
+        for i = 1:NumChunks
+            FrameList = ChunkStarts(i):ChunkEnds(i);
+            temp = LoadFrames(moviefile,FrameList);
+            tempproj = feval(F,temp,3); % Get mean
+            
+            % Add mean*nframes used to previous
+            newproj = tempproj*length(FrameList) + newproj;
+            
+            p.progress;
+        end
+        newproj = newproj/NumFrames; % divide by # frames to get mean of each pixel
+        p.stop;
 end
-p.stop;
 
 proj_out = newproj;
 

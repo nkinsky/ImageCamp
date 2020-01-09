@@ -130,6 +130,7 @@ end
 
 
 %% Plot and get stats
+corridor_width = 5; % cm
 sp_ind = find(strcmpi('Splitters', cat_names));
 arm_ind = find(strcmpi('Arm PCs', cat_names));
 stem_ind = find(strcmpi('Stem PCs', cat_names));
@@ -141,8 +142,8 @@ ax_use = subplot(1,3,1:2);
 areas_relevant = cat_area_means(:, [sp_ind, stem_ind, arm_ind]);
 grps = repmat([1 2 3], nsesh, 1);
 paired_inds = repmat((1:nsesh)', 1, 3);
-scatterBox(areas_relevant(:), grps(:), 'h', ax_use, 'xLabels', ...
-    {'Splitters', 'Stem PCs', 'Arm PCs'}, 'yLabel', 'mean PF size', ...
+scatterBox(areas_relevant(:)/corridor_width, grps(:), 'h', ax_use, 'xLabels', ...
+    {'Splitters', 'Stem PCs', 'Arm PCs'}, 'yLabel', 'mean PF length (pixels)', ...
     'paired_ind', paired_inds );
 arrayfun(@(a) set(a,'Color', [0 0 0 0.3]), ax_use.Children(1:end-2));
 make_plot_pretty(gca);
