@@ -208,10 +208,118 @@ end
 printNK('Mean Min F over time','alt','hfig',hall)
 printNK('Mean Min Cropped F over time','alt','hfig',hcrop)
 
-%% Plot side-by-side for each mouse
-track_neuron_trace_stats(G30_alt(5), G30_alt(end))
+%% Plot side-by-side F0 and half-life for each mouse
+hff = figure; set(gcf, 'Position', [22   300   989   266]);
+for j = 1:4
+    haf(j) = subplot(1,4,j);
+end
+hft = figure; set(gcf, 'Position', [22   30   989   266]);
+for j = 1:4
+    hat(j) = subplot(1,4,j);
+end
+
+[~, ha1] = track_neuron_trace_stats(alt_all_cell{1}(1), alt_all_cell{1}(3),...
+    cat(1,haf(1), hat(1)));
+arrayfun(@(a) title(a, 'G30 Habituation Week'), ha1);
+[~, ha2] = track_neuron_trace_stats(alt_all_cell{1}(3), alt_all_cell{1}(5), ...
+    cat(1,haf(2), hat(2)));
+arrayfun(@(a) title(a, 'G30 Looping Week'), ha2);
+[~, ha3] = track_neuron_trace_stats(alt_all_cell{1}(5), alt_all_cell{1}(9), ...
+    cat(1,haf(3), hat(3)));
+arrayfun(@(a) title(a, 'G30 Free Week 1'), ha3);
+[~, ha4] = track_neuron_trace_stats(alt_all_cell{1}(9), alt_all_cell{1}(13), ...
+    cat(1,haf(4), hat(4)));
+arrayfun(@(a) title(a, 'G30 Free Week 2'), ha4);
+% arrayfun(@(a) ylim(a, [500, 2100]), haf); % Limits of all data
+arrayfun(@(a) ylim(a, [375, 3200]), haf); % Plots effective range of Fl we could detect
+arrayfun(@(a) ylim(a, [0, 6.5]), hat);
+printNK('F0 tracking matched neurons - G30', 'alt', 'hfig', hff);
+printNK('half life tracking matched neurons - G30', 'alt', 'hfig', hft);
+
+%% g31
+hff = figure; set(gcf, 'Position', [22   300   989   266]);
+for j = 1:4
+    haf(j) = subplot(1,4,j);
+end
+hft = figure; set(gcf, 'Position', [22   30   989   266]);
+for j = 1:4
+    hat(j) = subplot(1,4,j);
+end
+
+[~, ha1] = track_neuron_trace_stats(alt_all_cell{2}(1), alt_all_cell{2}(3),...
+    cat(1,haf(1), hat(1)));
+arrayfun(@(a) title(a, 'G31 Week 1'), ha1);
+[~, ha2] = track_neuron_trace_stats(alt_all_cell{2}(3), alt_all_cell{2}(6), ...
+    cat(1,haf(2), hat(2)));
+arrayfun(@(a) title(a, 'G31 Week 1.5'), ha2);
+[~, ha3] = track_neuron_trace_stats(alt_all_cell{2}(6), alt_all_cell{2}(7), ...
+    cat(1,haf(3), hat(3)));
+arrayfun(@(a) title(a, 'G31 Week 2'), ha3);
+% arrayfun(@(a) ylim(a, [600, 2400]), haf); % Limits of all data
+arrayfun(@(a) ylim(a, [440, 3220]), haf); % Plots effective range of Fl we could detect
+arrayfun(@(a) ylim(a, [0, 7.25]), hat);
+printNK('F0 tracking matched neurons - G31', 'alt', 'hfig', hff);
+printNK('half life tracking matched neurons - G31', 'alt', 'hfig', hft);
 % Same for others... - don't see a consistent increase!
 
+%% G45
+hff = figure; set(gcf, 'Position', [22   300   989   266]);
+for j = 1:4
+    haf(j) = subplot(1,4,j);
+end
+hft = figure; set(gcf, 'Position', [22   30   989   266]);
+for j = 1:4
+    hat(j) = subplot(1,4,j);
+end
+
+[~, ha1] = track_neuron_trace_stats(alt_all_cell{3}(1), alt_all_cell{3}(7),...
+    cat(1,haf(1), hat(1)));
+arrayfun(@(a) title(a, 'G45 Week 1'), ha1);
+[~, ha2] = track_neuron_trace_stats(alt_all_cell{3}(7), alt_all_cell{3}(14), ...
+    cat(1,haf(2), hat(2)));
+arrayfun(@(a) title(a, 'G45 Week 2'), ha2);
+[~, ha3] = track_neuron_trace_stats(alt_all_cell{3}(15), alt_all_cell{3}(20), ...
+    cat(1,haf(3), hat(3)));
+arrayfun(@(a) title(a, 'G45 Week 3'), ha3);
+[~, ha4] = track_neuron_trace_stats(alt_all_cell{3}(20), alt_all_cell{3}(end), ...
+    cat(1,haf(4), hat(4)));
+arrayfun(@(a) title(a, 'G45 Week 4'), ha4);
+% arrayfun(@(a) ylim(a, [500, 2100]), haf); % Limits of all data
+arrayfun(@(a) ylim(a, [275, 4000]), haf); % Plots effective range of Fl we could detect
+arrayfun(@(a) ylim(a, [0, 5.5]), hat);
+printNK('F0 tracking matched neurons - G45', 'alt', 'hfig', hff);
+printNK('half life tracking matched neurons - G45', 'alt', 'hfig', hft);
+
+%% G48
+hff = figure; set(gcf, 'Position', [22   300   989   266]);
+for j = 1:5
+    haf(j) = subplot(1,5,j);
+end
+hft = figure; set(gcf, 'Position', [22   30   989   266]);
+for j = 1:5
+    hat(j) = subplot(1,5,j);
+end
+
+[~, ha1] = track_neuron_trace_stats(alt_all_cell{4}(1), alt_all_cell{4}(7),...
+    cat(1,haf(1), hat(1)));
+arrayfun(@(a) title(a, 'G48 Week 1'), ha1);
+[~, ha2] = track_neuron_trace_stats(alt_all_cell{4}(7), alt_all_cell{4}(13), ...
+    cat(1,haf(2), hat(2)));
+arrayfun(@(a) title(a, 'G48 Week 2'), ha2);
+[~, ha3] = track_neuron_trace_stats(alt_all_cell{4}(15), alt_all_cell{4}(17), ...
+    cat(1,haf(3), hat(3)));
+arrayfun(@(a) title(a, 'G48 Week 3'), ha3);
+[~, ha4] = track_neuron_trace_stats(alt_all_cell{4}(17), alt_all_cell{4}(27), ...
+    cat(1,haf(4), hat(4)));
+arrayfun(@(a) title(a, 'G48 Week 4'), ha4);
+[~, ha5] = track_neuron_trace_stats(alt_all_cell{4}(27), alt_all_cell{4}(end), ...
+    cat(1,haf(5), hat(5)));
+arrayfun(@(a) title(a, 'G48 Week 5'), ha5);
+% arrayfun(@(a) ylim(a, [500, 2100]), haf); % Limits of all data
+arrayfun(@(a) ylim(a, [400, 4120]), haf); % Plots effective range of Fl we could detect
+arrayfun(@(a) ylim(a, [0, 6]), hat);
+printNK('F0 tracking matched neurons - G48', 'alt', 'hfig', hff);
+printNK('half life tracking matched neurons - G48', 'alt', 'hfig', hft);
 
 %% Make plot of PSAbool for splitter versus place cells. 
 wood_filt = true;

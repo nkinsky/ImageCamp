@@ -1,7 +1,8 @@
-function [hf, ha] = track_neuron_trace_stats(MD1, MD2)
-% [hf, ha] = track_neuron_trace_stats(MD1, MD2)
+function [hf, ha] = track_neuron_trace_stats(MD1, MD2, ha)
+% [hf, ha] = track_neuron_trace_stats(MD1, MD2, ha)
 %   Track neuron half-lives and baseline fluorescence between sessions MD1
-%   and MD2.
+%   and MD2. ha (optional) is a length 2 array of axes handles to plot
+%   into. Otherwise it plots
 
 sessions = cat(1, MD1, MD2); % combine session into one variable
 
@@ -27,22 +28,24 @@ half_all_reg(:,1) = half_all_mean{1}(coactive_bool);
 half_all_reg(:,2) = half_all_mean{2}(neuron_map(coactive_bool));
 
 %% Now plot!
-hf = figure; set(hf, 'Position', [ 57   185   840   420]);
-ha(1) = subplot(1,2,1);
+hf = nan;
+if nargin < 3
+    hf = figure; set(hf, 'Position', [ 57   185   840   420]);
+    ha(1) = subplot(1,2,1); ha(2) = subplot(1,2,2);
+end
 grps = repmat([1,2],ncoactive,1);
 paired_inds = repmat((1:ncoactive)',1, 2);
 [~, ~, ~, hpaired] = scatterBox(F0reg(:), grps(:), 'xLabels', ...
     {'First', 'Last'}, 'ylabel', 'F0', 'h', ha(1), ...
-    'paired_ind', paired_inds(:));
-arrayfun(@(a) set(a,'Color',[0 0 0 0.3]), hpaired);
-xlabel('Session')
+    'paired_ind', paired_inds(:), 'circlesize', 12);
+arrayfun(@(a) set(a,'Color',[0 0 0 0.1]), hpaired);
+xlabel(ha(1), 'Session')
 
-ha(2) = subplot(1,2,2);
 [~, ~, ~, hpaired] = scatterBox(half_all_reg(:), grps(:), 'xLabels', ...
-    {'First', 'Last'}, 'ylabel', '\tau_{1/2}', 'h', ha(2), ...
-    'paired_ind', paired_inds(:));
-arrayfun(@(a) set(a,'Color',[0 0 0 0.3]), hpaired);
-xlabel('Session')
+    {'First', 'Last'}, 'ylabel', '\tau_{1/2} (sec)', 'h', ha(2), ...
+    'paired_ind', paired_inds(:), 'circlesize', 12);
+arrayfun(@(a) set(a,'Color',[0 0 0 0.1]), hpaired);
+xlabel(ha(2), 'Session')
 
 
 end

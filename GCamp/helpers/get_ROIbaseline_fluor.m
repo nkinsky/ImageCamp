@@ -27,7 +27,7 @@ catch
 end
 
 % Calculate F0 for all neurons
-F0 = cellfun(@(a) sum(a(:).*minproj(:)), NeuronImage);
+F0 = cellfun(@(a) sum(a(:).*minproj(:))/sum(a(:)), NeuronImage);
 
 end
 
