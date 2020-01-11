@@ -395,4 +395,95 @@ make_plot_pretty(gca)
 printNK(['Combined Split v PC recruitment histograms'],'alt')
 
 
+%% Plot splitters between sessions - do a bunch at each time lag!!!
+% 1 day
+% plotSigSplitters_bw_sesh(G30_alt(
+
+%% Summary plot of all splitters and days before/after that they are splitters
+
+% First get matrices tracking all cells that are splitters across days with
+% their metrics.
+[ relymat, deltamaxmat, sigmat, onsetsesh, days_aligned,...
+    pkw, cmat, deltamax_normmat, sesh_final, dint_normmat, relymeanmat, ...
+    sigpropmat] = cellfun(@(a) track_splitters(a(1), a(2:end)), alt_all_cell_sp, ...
+    'UniformOutput', false);
+sigmat_splitonly = cellfun(@(a,b) a(b,:), sigmat, split_bool, ...
+    'UniformOutput', false);
+split_bool = cellfun(@(a) any(a,2), sigmat, 'UniformOutput', false); % Cells that were splitters at ANY point
+ndays_split = cellfun(@(a,b) nansum(a,2), sigmat_splitonly, ...
+    'UniformOutput', false); % # days each splitter split
+
+nunique_splitters = sum(cellfun(@sum, split_bool));
+
+%%
+figure; 
+for j = 1:6 
+    [onsetsort, isort] = sort(onsetsesh{j}(split_bool{j})); % sort by onset sesh
+%     metric_sorted = relymat{j}(isort,:);
+%     metric_sorted = sigmat_splitonly{j}(isort,:);
+    metric_sorted = sigpropmat{j}(isort,:);
+    subplot(2,3,j); imagesc(metric_sorted); hold on;
+    plot(onsetsort, 1:length(onsetsort),'r-');
+end
+
+%% Combine all animals together, sort by day of recruitment, plot
+ndays = cellfun(@(a) size(a,2), sigmat_splitonly); % # days a splitter
+
+% Get # columns to nan pad at end of each array
+nans_to_add = arrayfun(@(a) max(ndays) - a, ndays, 'UniformOutput', false);
+nanpads = cellfun(@(a,b) nan(size(a,1),b), sigmat_splitonly, ...
+    nans_to_add, 'UniformOutput', false);
+% [onsetsort, isort] = cellfun(@(a,b) sort(a(b)),...
+%     onsetsesh, split_bool, 'UniformOutput', false); % sort by onset sesh
+
+% Now zero-pad the ends of the arrays and concatenate together vertically
+% into one large array
+sigmat_padtemp = cellfun(@(a,c) [nan_to_zero(a) c], sigmat_splitonly, nanpads, ...
+    'UniformOutput', false);
+sigmat_nanpad = cat(1, sigmat_padtemp{:});
+sigprop_padtemp = cellfun(@(a,c) [nan_to_zero(a) c], sigpropmat, nanpads,...
+    'UniformOutput', false);
+sigprop_nanpad = cat(1, sigprop_padtemp{:});
+rely_padtemp = cellfun(@(a,c) [nan_to_zero(a) c], relymat, nanpads, ...
+    'UniformOutput', false);
+rely_nanpad = cat(1, rely_padtemp{:});
+dmax_padtemp = cellfun(@(a,c) [nan_to_zero(a) c], deltamaxmat, nanpads, ...
+    'UniformOutput', false);
+dmax_nanpad = cat(1, dmax_padtemp{:});
+onset_all = [];
+
+% Concatenate onsetsesh for all splitters and sort
+for j = 1:6; onset_all = [onset_all; onsetsesh{j}(split_bool{j})]; end
+[onall_sort, i_allsort] = sort(onset_all);
+
+% Now plot - chop off sessions 12-16 for G48 since only a few splitters get
+% recruited after that and no other animals have more than 12 sessions.
+figure; set(gcf, 'Position', [91   217   800   440]);
+subplot(1,2,1); 
+imagesc_nan(sigmat_nanpad(i_allsort,1:11)); colorbar;
+xlabel('Session'); ylabel('Neuron'); title('Sig. Splitter Sessions');
+subplot(1,2,2);
+imagesc_nan(sigprop_nanpad(i_allsort,1:11)); colorbar;
+xlabel('Session'); ylabel('Neuron'); title('Splitting Extent');
+make_figure_pretty(gcf);
+printNK('Splitter and Extent Summary Plot', 'alt');
+
+figure; set(gcf, 'Position', [91   217   800   440]);
+subplot(1,2,1); 
+imagesc_nan(dmax_nanpad(i_allsort,1:11)); colorbar;
+xlabel('Session'); ylabel('Neuron'); title('\Delta_{max}');
+subplot(1,2,2);
+imagesc_nan(rely_nanpad(i_allsort,1:11)); colorbar;
+xlabel('Session'); ylabel('Neuron'); title('Rely_{max}');
+make_figure_pretty(gcf);
+printNK('Max Discr and Rely Summary Plot', 'alt');
+
+% Plot # days of splitting
+figure; set(gcf, 'Position', [351   259   385   297]);
+histogram(nansum(sigmat_nanpad,2));
+xlabel('# Trajectory-Dependent Sessions'); ylabel('Count');
+make_plot_pretty(gca);
+printNK('Num Days Splitting Histogram','alt');
+
+
 

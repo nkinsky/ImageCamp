@@ -17,7 +17,7 @@ function [h, cm_out] = imagesc_nan(a, varargin)
 %% Parse Inputs
 ip = inputParser;
 ip.addRequired('a', @(a) isnumeric(a) || islogical(a));
-ip.addOptional('cm', 'jet', @(a) ischar(a) && ~ismember(a,{'z','ha'}) ...
+ip.addOptional('cm', 'parula', @(a) ischar(a) && ~ismember(a,{'z','ha'}) ...
     || (isnumeric(a) && size(a,2) == 3));
 ip.addParameter('z', nan, @(a) isnumeric(a));
 ip.addParameter('ha', [], @(a) ishandle(a) || isempty(a));

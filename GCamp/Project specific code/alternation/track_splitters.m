@@ -35,7 +35,7 @@ ip.addParameter('days_ba', 2, @(a) a > 0 && round(a) == a);
 ip.addParameter('free_only', true, @islogical);
 ip.addParameter('ignore_sameday', true, @islogical);
 ip.addParameter('dplot', 'norm_max_int', @ischar);
-ip.addParameter('rplot', 'rely_mean', @ischar);
+ip.addParameter('rplot', 'rmean', @ischar);
 ip.addParameter('nactive_thresh', 0,@(a) a >= 0 && round(a) == a);
 ip.parse(MDbase, MDreg, varargin{:});
 sigthresh = ip.Results.sigthresh;
