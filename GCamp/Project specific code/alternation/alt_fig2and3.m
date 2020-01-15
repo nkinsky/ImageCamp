@@ -299,6 +299,7 @@ axis off
 
 
 %% Save all the above.
+inject_noise = true;
 [~, ~, ~, G30glmall] = plot_split_v_perf_batch(G30_alt);
 printNK(['G30 perf time ntrials v splitter proportion' text_append], 'alt')
 [~, ~, ~, G31glmall] = plot_split_v_perf_batch(G31_alt);
@@ -329,21 +330,21 @@ printNK(['Perf v split metrics - All Mice' text_append], 'alt')
 % delta_max_norm metric
 plot_perf_v_split_metrics(alt_all(~arrayfun(@(a) ...
     strcmpi(a.Animal,'GCaMP6f_48'),alt_all)), true, inject_noise, trial_thresh);
-printNK(['Perf v split metrics - No G48' text append], 'alt')
+printNK(['Perf v split metrics - No G48' text_append], 'alt')
 
 plot_perf_v_split_metrics(alt_all(~arrayfun(@(a) ...
     strcmpi(a.Animal,'GCaMP6f_30'),alt_all)), true, inject_noise, trial_thresh);
-printNK(['Perf v split metrics - No G30' text append], 'alt')
+printNK(['Perf v split metrics - No G30' text_append], 'alt')
 
 plot_perf_v_split_metrics(alt_all(~arrayfun(@(a) ...
     strcmpi(a.Animal,'GCaMP6f_31'),alt_all)), true, inject_noise, trial_thresh);
-printNK(['Perf v split metrics - No G31' text append], 'alt')
+printNK(['Perf v split metrics - No G31' text_append], 'alt')
 
 plot_perf_v_split_metrics(alt_all(~arrayfun(@(a) ...
     strcmpi(a.Animal,'GCaMP6f_45'),alt_all)), true, inject_noise, trial_thresh);
-printNK(['Perf v split metrics - No G45' text append], 'alt')
+printNK(['Perf v split metrics - No G45' text_append], 'alt')
 %% Plot LDA correlations by maze thirds to figure out where coding breaks apart
-no_shuf = true;
+no_shuf = false;
 sesh_use = alt_all(alt_all_free_bool);
 perf = arrayfun(@alt_get_perf, sesh_use); 
 LDAperf3 = nan(3,length(sesh_use)); 

@@ -52,9 +52,10 @@ switch location
         location = 'C:\Users\kinsky\Dropbox\Imaging Project\MATLAB\CNMF vs T4';
     case 'eraser'
         location = 'C:\Users\kinsky\Dropbox\Imaging Project\Manuscripts\Eraser';
-    otherwise
+    case ''
         location = pwd;
-%         disp('using location as save location')
+    otherwise
+        % Don't do anything - use input location
 end
 
 

@@ -1,5 +1,5 @@
-function [hf, ha] = track_neuron_trace_stats(MD1, MD2, ha)
-% [hf, ha] = track_neuron_trace_stats(MD1, MD2, ha)
+function [hf, ha, psignrank_half, psignrank_F0] = track_neuron_trace_stats(MD1, MD2, ha)
+% [hf, ha, psignrank_half, psignrank_F0] = track_neuron_trace_stats(MD1, MD2, ha)
 %   Track neuron half-lives and baseline fluorescence between sessions MD1
 %   and MD2. ha (optional) is a length 2 array of axes handles to plot
 %   into. Otherwise it plots
@@ -47,6 +47,9 @@ xlabel(ha(1), 'Session')
 arrayfun(@(a) set(a,'Color',[0 0 0 0.1]), hpaired);
 xlabel(ha(2), 'Session')
 
+%% Calculate stats
+psignrank_F0 = signrank(F0reg(:,1), F0reg(:,2));
+psignrank_half = signrank(half_all_reg(:,1), half_all_reg(:,2));
 
 end
 

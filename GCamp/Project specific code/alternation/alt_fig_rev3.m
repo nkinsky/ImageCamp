@@ -210,24 +210,27 @@ printNK('Mean Min Cropped F over time','alt','hfig',hcrop)
 
 %% Plot side-by-side F0 and half-life for each mouse
 hff = figure; set(gcf, 'Position', [22   300   989   266]);
+clear haf
 for j = 1:4
     haf(j) = subplot(1,4,j);
 end
 hft = figure; set(gcf, 'Position', [22   30   989   266]);
+clear hat
 for j = 1:4
     hat(j) = subplot(1,4,j);
 end
 
-[~, ha1] = track_neuron_trace_stats(alt_all_cell{1}(1), alt_all_cell{1}(3),...
+phalf = nan(1,4); pf = nan(1,4);
+[~, ha1, phalf(1), pf(1)] = track_neuron_trace_stats(alt_all_cell{1}(1), alt_all_cell{1}(3),...
     cat(1,haf(1), hat(1)));
 arrayfun(@(a) title(a, 'G30 Habituation Week'), ha1);
-[~, ha2] = track_neuron_trace_stats(alt_all_cell{1}(3), alt_all_cell{1}(5), ...
+[~, ha2, phalf(2), pf(2)] = track_neuron_trace_stats(alt_all_cell{1}(3), alt_all_cell{1}(5), ...
     cat(1,haf(2), hat(2)));
 arrayfun(@(a) title(a, 'G30 Looping Week'), ha2);
-[~, ha3] = track_neuron_trace_stats(alt_all_cell{1}(5), alt_all_cell{1}(9), ...
+[~, ha3, phalf(3), pf(3)] = track_neuron_trace_stats(alt_all_cell{1}(5), alt_all_cell{1}(9), ...
     cat(1,haf(3), hat(3)));
 arrayfun(@(a) title(a, 'G30 Free Week 1'), ha3);
-[~, ha4] = track_neuron_trace_stats(alt_all_cell{1}(9), alt_all_cell{1}(13), ...
+[~, ha4, phalf(4), pf(4)] = track_neuron_trace_stats(alt_all_cell{1}(9), alt_all_cell{1}(13), ...
     cat(1,haf(4), hat(4)));
 arrayfun(@(a) title(a, 'G30 Free Week 2'), ha4);
 % arrayfun(@(a) ylim(a, [500, 2100]), haf); % Limits of all data
@@ -238,21 +241,23 @@ printNK('half life tracking matched neurons - G30', 'alt', 'hfig', hft);
 
 %% g31
 hff = figure; set(gcf, 'Position', [22   300   989   266]);
+clear haf
 for j = 1:4
     haf(j) = subplot(1,4,j);
 end
 hft = figure; set(gcf, 'Position', [22   30   989   266]);
+clear hat
 for j = 1:4
     hat(j) = subplot(1,4,j);
 end
 
-[~, ha1] = track_neuron_trace_stats(alt_all_cell{2}(1), alt_all_cell{2}(3),...
+[~, ha1, p_half1, p_F01] = track_neuron_trace_stats(alt_all_cell{2}(1), alt_all_cell{2}(3),...
     cat(1,haf(1), hat(1)));
 arrayfun(@(a) title(a, 'G31 Week 1'), ha1);
-[~, ha2] = track_neuron_trace_stats(alt_all_cell{2}(3), alt_all_cell{2}(6), ...
+[~, ha2, p_half2, p_F02] = track_neuron_trace_stats(alt_all_cell{2}(3), alt_all_cell{2}(6), ...
     cat(1,haf(2), hat(2)));
 arrayfun(@(a) title(a, 'G31 Week 1.5'), ha2);
-[~, ha3] = track_neuron_trace_stats(alt_all_cell{2}(6), alt_all_cell{2}(7), ...
+[~, ha3, p_half3, p_F03] = track_neuron_trace_stats(alt_all_cell{2}(6), alt_all_cell{2}(7), ...
     cat(1,haf(3), hat(3)));
 arrayfun(@(a) title(a, 'G31 Week 2'), ha3);
 % arrayfun(@(a) ylim(a, [600, 2400]), haf); % Limits of all data
@@ -264,24 +269,27 @@ printNK('half life tracking matched neurons - G31', 'alt', 'hfig', hft);
 
 %% G45
 hff = figure; set(gcf, 'Position', [22   300   989   266]);
+clear haf
 for j = 1:4
     haf(j) = subplot(1,4,j);
 end
 hft = figure; set(gcf, 'Position', [22   30   989   266]);
+clear hat
 for j = 1:4
     hat(j) = subplot(1,4,j);
 end
 
-[~, ha1] = track_neuron_trace_stats(alt_all_cell{3}(1), alt_all_cell{3}(7),...
+phalf = nan(1,4); pf = nan(1,4);
+[~, ha1, phalf(1), pf(1)] = track_neuron_trace_stats(alt_all_cell{3}(1), alt_all_cell{3}(7),...
     cat(1,haf(1), hat(1)));
 arrayfun(@(a) title(a, 'G45 Week 1'), ha1);
-[~, ha2] = track_neuron_trace_stats(alt_all_cell{3}(7), alt_all_cell{3}(14), ...
+[~, ha2, phalf(2), pf(2)] = track_neuron_trace_stats(alt_all_cell{3}(7), alt_all_cell{3}(14), ...
     cat(1,haf(2), hat(2)));
 arrayfun(@(a) title(a, 'G45 Week 2'), ha2);
-[~, ha3] = track_neuron_trace_stats(alt_all_cell{3}(15), alt_all_cell{3}(20), ...
+[~, ha3, phalf(3), pf(3)] = track_neuron_trace_stats(alt_all_cell{3}(15), alt_all_cell{3}(20), ...
     cat(1,haf(3), hat(3)));
 arrayfun(@(a) title(a, 'G45 Week 3'), ha3);
-[~, ha4] = track_neuron_trace_stats(alt_all_cell{3}(20), alt_all_cell{3}(end), ...
+[~, ha4, phalf(4), pf(4)] = track_neuron_trace_stats(alt_all_cell{3}(20), alt_all_cell{3}(end), ...
     cat(1,haf(4), hat(4)));
 arrayfun(@(a) title(a, 'G45 Week 4'), ha4);
 % arrayfun(@(a) ylim(a, [500, 2100]), haf); % Limits of all data
@@ -292,27 +300,30 @@ printNK('half life tracking matched neurons - G45', 'alt', 'hfig', hft);
 
 %% G48
 hff = figure; set(gcf, 'Position', [22   300   989   266]);
+clear haf
 for j = 1:5
     haf(j) = subplot(1,5,j);
 end
 hft = figure; set(gcf, 'Position', [22   30   989   266]);
+clear hat
 for j = 1:5
     hat(j) = subplot(1,5,j);
 end
 
-[~, ha1] = track_neuron_trace_stats(alt_all_cell{4}(1), alt_all_cell{4}(7),...
+phalf = nan(1,5); pf = nan(1,5);
+[~, ha1, phalf(1), pf(1)] = track_neuron_trace_stats(alt_all_cell{4}(1), alt_all_cell{4}(7),...
     cat(1,haf(1), hat(1)));
 arrayfun(@(a) title(a, 'G48 Week 1'), ha1);
-[~, ha2] = track_neuron_trace_stats(alt_all_cell{4}(7), alt_all_cell{4}(13), ...
+[~, ha2, phalf(2), pf(2)] = track_neuron_trace_stats(alt_all_cell{4}(7), alt_all_cell{4}(13), ...
     cat(1,haf(2), hat(2)));
 arrayfun(@(a) title(a, 'G48 Week 2'), ha2);
-[~, ha3] = track_neuron_trace_stats(alt_all_cell{4}(15), alt_all_cell{4}(17), ...
+[~, ha3, phalf(3), pf(3)] = track_neuron_trace_stats(alt_all_cell{4}(15), alt_all_cell{4}(17), ...
     cat(1,haf(3), hat(3)));
 arrayfun(@(a) title(a, 'G48 Week 3'), ha3);
-[~, ha4] = track_neuron_trace_stats(alt_all_cell{4}(17), alt_all_cell{4}(27), ...
+[~, ha4, phalf(4), pf(4)] = track_neuron_trace_stats(alt_all_cell{4}(17), alt_all_cell{4}(27), ...
     cat(1,haf(4), hat(4)));
 arrayfun(@(a) title(a, 'G48 Week 4'), ha4);
-[~, ha5] = track_neuron_trace_stats(alt_all_cell{4}(27), alt_all_cell{4}(end), ...
+[~, ha5, phalf(5), pf(5)] = track_neuron_trace_stats(alt_all_cell{4}(27), alt_all_cell{4}(end), ...
     cat(1,haf(5), hat(5)));
 arrayfun(@(a) title(a, 'G48 Week 5'), ha5);
 % arrayfun(@(a) ylim(a, [500, 2100]), haf); % Limits of all data
@@ -397,7 +408,30 @@ printNK(['Combined Split v PC recruitment histograms'],'alt')
 
 %% Plot splitters between sessions - do a bunch at each time lag!!!
 % 1 day
-% plotSigSplitters_bw_sesh(G30_alt(
+plotSigSplitters_bw_sesh(G31_alt(5), G31_alt(6));
+% 2 days
+plotSigSplitters_bw_sesh(G30_alt(12), G30_alt(14));
+plotSigSplitters_bw_sesh(G48_alt(11), G48_alt(14));
+% 3 days
+plotSigSplitters_bw_sesh(G48_alt(10), G48_alt(11)); % remapping b/w sessions
+plotSigSplitters_bw_sesh(G48_alt(35), G48_alt(39));
+% 4 days
+plotSigSplitters_bw_sesh(G45_alt(6), G45_alt(7));
+% 5 days
+plotSigSplitters_bw_sesh(G45_alt(13), G45_alt(16)); % remapping b/w sessions
+plotSigSplitters_bw_sesh(G45_alt(11), G45_alt(15)); 
+% 6 days
+plotSigSplitters_bw_sesh(G30_alt(8), G30_alt(11));
+% 7 days
+plotSigSplitters_bw_sesh(G45_alt(5), G45_alt(12));
+% 8 days
+plotSigSplitters_bw_sesh(G45_alt(4), G45_alt(13));
+% 9 days
+plotSigSplitters_bw_sesh(G48_alt(25), G48_alt(47)); % remapping b/w sessions
+plotSigSplitters_bw_sesh(G30_alt(8), G30_alt(14)); % partial remapping
+% 10 days
+plotSigSplitters_bw_sesh(G45_alt(16), G45_alt(25));
+
 
 %% Summary plot of all splitters and days before/after that they are splitters
 
