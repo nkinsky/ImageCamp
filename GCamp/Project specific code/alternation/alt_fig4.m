@@ -73,7 +73,7 @@ printNK(['G45 Split v PC Prob present at 7 day lag matchER=' ...
 
 max_day_lag = 15;
 sessions = alt_all_cell; % Change this to make plots for each mouse...
-matchER = true; % March event-rate in non-splitters to splitters
+matchER = false; % March event-rate in non-splitters to splitters
 trial_type = 'free_only'; % 'no_loop';
 
 nmice = length(sessions);
@@ -149,7 +149,7 @@ end
 % PCs', 'Stem PCs', 'Stem PCs - bottom mean rely' and 'Stem PCs - top mean
 % rely'. The last two options keep only the stem place cells with the
 % least/most reliable trajectory-dependent activity.
-other_type = 'Stem NPCs'; 
+other_type = 'Arm PCs'; 
 [~, ~, temp] = alt_parse_cell_category(G30_alt(end), 0.05, 5, 3, ...
     'Placefields_cm1.mat');
 % Get zero and 1 points due to low # cells starting out as splitter/armPC 
@@ -158,7 +158,7 @@ other_type = 'Stem NPCs';
 % one phenotype at a time!
 alpha = 0.05; % significance level
 elim_outliers = false; 
-ntrial_stem_thresh = 20; % exclude any session comparisons with less than this many trials in 1st session
+ntrial_stem_thresh = 0; % exclude any session comparisons with less than this many trials in 1st session
 figure; set(gcf,'Position',[1 41 890 740])
 h = subplot(3,1,1:2);
 
@@ -177,9 +177,10 @@ good_bool = ~outlier_bool & ntrial_bool;
     
 %%% NRK - below is plotting pairs of points where one does not have at
 %%% least 10 cells, which is below our #cells threshold. This is ok because
-%%% while they are plotted they are NOT used for stats!
+%%% while they are plotted they are NOT used for stats! - should probably
+%%% fix!! (nan out?) 
 
-% Plot spliiters
+% Plot splitters
 [~,~, hs_sp] = scatterBox(coactive_prop_all(good_bool, split_ind), ...
     grps_all(good_bool,1), 'xLabels', ...
     arrayfun(@num2str, 0:max_day_lag, 'UniformOutput', false), ...
@@ -206,14 +207,18 @@ make_plot_pretty(gca)
 run_ok = false;
 while ~run_ok
     try
-        prks = arrayfun(@(a) ranksum(coactive_prop_all(a == grps_all(:, split_ind) & good_bool, split_ind), ...
-            coactive_prop_all(a == grps_all(:, other_ind) & good_bool, other_ind)),1:max_day_lag);
-        psign = arrayfun(@(a) signtest(coactive_prop_all(a == grps_all(:, split_ind) & good_bool, split_ind), ...
-            coactive_prop_all(a == grps_all(:, other_ind) & good_bool, other_ind),'tail','right'),1:max_day_lag);
-        prsign = arrayfun(@(a) signrank(coactive_prop_all(a == grps_all(:, split_ind) & good_bool, split_ind), ...
-            coactive_prop_all(a == grps_all(:, other_ind) & good_bool, other_ind),'tail','right'),1:max_day_lag);
+        prks = arrayfun(@(a) ranksum(coactive_prop_all(a == grps_all(:, split_ind) ...
+            & good_bool, split_ind), coactive_prop_all(a == grps_all(:, other_ind) ...
+            & good_bool, other_ind)),1:max_day_lag);
+        psign = arrayfun(@(a) signtest(coactive_prop_all(a == grps_all(:, split_ind) ...
+            & good_bool, split_ind), coactive_prop_all(a == grps_all(:, other_ind) ...
+            & good_bool, other_ind),'tail','right'),1:max_day_lag);
+        prsign = arrayfun(@(a) signrank(coactive_prop_all(a == grps_all(:, split_ind) ...
+            & good_bool, split_ind),  coactive_prop_all(a == grps_all(:, other_ind) ...
+            & good_bool, other_ind),'tail','right'),1:max_day_lag);
     run_ok = true;
     catch
+        disp('ERROR RUNNING STATS!!! Check code in alt_fig4!!!')
         max_day_lag = max_day_lag - 1;
     end
 end

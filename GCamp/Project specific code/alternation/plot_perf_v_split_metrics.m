@@ -1,21 +1,24 @@
 function [split_metrics, hmain, rhos, pvals] = plot_perf_v_split_metrics(...
-    sessions, plot_flag, cnoise, trial_thresh, nstem_thresh)
+    sessions, plot_flag, cnoise, trial_thresh, nstem_thresh, plot_peak_rely)
 % [split_metrics, hmain]  = plot_perf_v_split_metrics(sessions, plot_flag, ...
 %   cnoise, ntrial_thresh)
 %  Plots animal performance versus "splittiness" metrics.
 
-if nargin < 5
-    % Must be active on at least this many trials on the stem to be considered
-    nstem_thresh = 5;
-    if nargin < 4
-        % Must have at LEAST this many trials in a session to be considered
-        trial_thresh = 20;
-        % no noise by default
-        if nargin < 3
-            cnoise = false;
-            % Plot by default
-            if nargin < 2
-                plot_flag = true;
+if nargin < 6
+    plot_peak_rely = false; % default is to plot mean reliability
+    if nargin < 5
+        % Must be active on at least this many trials on the stem to be considered
+        nstem_thresh = 5;
+        if nargin < 4
+            % Must have at LEAST this many trials in a session to be considered
+            trial_thresh = 20;
+            % no noise by default
+            if nargin < 3
+                cnoise = false;
+                % Plot by default
+                if nargin < 2
+                    plot_flag = true;
+                end
             end
         end
     end
@@ -104,8 +107,13 @@ if plot_flag
     % Plot performnace versus splitter metrics
     h1 = subplot(2,12,1:3); h2 = subplot(2,12,5:7); h3 = subplot(2,12,10:12);
     h4 = subplot(2,12,13:15); h5 = subplot(2,12,17:19); h6 = subplot(2,12,22:24);
-    [rhos.rely, pvals.rely] = plot_func(h1, rely_mean_mean, perf_comb, ...
-        'Mean Reliability (1-p)', true);
+    if ~plot_peak_rely
+        [rhos.rely, pvals.rely] = plot_func(h1, rely_mean_mean, perf_comb, ...
+            'Mean Reliability (1-p)', true);
+    else
+        [rhos.rely, pvals.rely] = plot_func(h1, rely_mean, perf_comb, ...
+            'Peak Reliability (1-p)', true);
+    end
     xlim(h1, [0.2, 0.37]);
     title(h1, unique_names); % put in names of all mice plotted
     % Don't plot this anymore - different levels of fluorescence between

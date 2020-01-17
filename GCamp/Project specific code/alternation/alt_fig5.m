@@ -126,13 +126,17 @@ psignrank = nan(length(lags_plot),5);
 psignrank(:,1) = lags_plot;
 % psignrank(:,2) = ;
 for j = lags_plot
-    % Assemble all mouse data into one
-    split_temp = cellfun(@(a) a(j), PFcorr_by_day_split);
-    PFcorr_split_all = cat(1, split_temp{:});
-    apc_temp = cellfun(@(a) a(j), PFcorr_by_day_apc);
-    PFcorr_apc_all = cat(1, apc_temp{:});
-    spc_temp = cellfun(@(a) a(j), PFcorr_by_day_spc);
-    PFcorr_spc_all = cat(1, spc_temp{:});
+    % Assemble all mouse data into one by getting all - i'm sure there is a
+    % better way to do this.
+    split_temp = cellfun(@(a, b) a(j == b), PFcorr_by_day_split, unique_lags, ...
+        'UniformOutput', false);
+    split_temp2 = cat(1, split_temp{:}); PFcorr_split_all = cat(1, split_temp2{:});
+    apc_temp = cellfun(@(a, b) a(j == b), PFcorr_by_day_apc, unique_lags, ...
+        'UniformOutput', false);
+    apc_temp2 = cat(1, apc_temp{:}); PFcorr_apc_all = cat(1, apc_temp2{:});
+    spc_temp = cellfun(@(a, b) a(j == b), PFcorr_by_day_spc, unique_lags, ...
+        'UniformOutput', false);
+    spc_temp2 = cat(1, spc_temp{:}); PFcorr_spc_all = cat(1, spc_temp2{:});
     
     if strcmpi(plot_type, 'all')
         x_use = [PFcorr_split_all, PFcorr_spc_all, PFcorr_apc_all]; 
@@ -183,13 +187,14 @@ printNK(['Spatial Consistency close-up plots - ' plot_type ' - All Mice' ...
     text_append], 'alt');
 
 %% Now re-arrange stuff and plot again as a group
-max_lag = 21; min_lag = 1;
+max_lag = 15; min_lag = 1;
 
 % First concatenate everything
 lags_combined = cat(1,unique_lags{1:4,1});
 PFapc_combined = cat(1, PFcorr_by_day_apc{1:4,1});
 PFspc_combined = cat(1, PFcorr_by_day_spc{1:4,1});
 PFstem_combined = cat(1, PFcorr_by_day_stem_nonsplit{1:4,1});
+Pfsplit_combined = cat(1, PFcorr_by_day_split{1:4,:});
 
 % No re-arrange to have only one array corresponding to each lag
 lags_combined_unique = unique(lags_combined(lags_combined <= max_lag ...
@@ -203,13 +208,16 @@ PFspc_combined_unique = arrayfun(@(a) cat(1, ...
 PFstem_combined_unique = arrayfun(@(a) cat(1, ...
     PFstem_combined{lags_combined == a}), lags_combined_unique, ...
     'UniformOutput', false);
+PFsplit_combined_unique = arrayfun(@(a) cat(1, ...
+    Pfsplit_combined{lags_combined == a}), lags_combined_unique,...
+    'UniformOutput', false);
 
-[~, ha1] = plot_corrs_v_time(PFapc_combined_unique, PFspc_combined_unique, ...
+[~, ha1] = plot_corrs_v_time(PFapc_combined_unique, PFsplit_combined_unique, ...
     lags_combined_unique, 'grp_labels', {'Arm PCs', 'Splitters'});
 xlim(ha1(1),[min_lag - 0.5, max_lag + 0.5])
 make_plot_pretty(gca);
 printNK(['Spatial Consistency - Split v APCs - All Mice' text_append], 'alt')
-[~, ha2] = plot_corrs_v_time(PFstem_combined_unique, PFspc_combined_unique, ...
+[~, ha2] = plot_corrs_v_time(PFspc_combined_unique, PFsplit_combined_unique, ...
     lags_combined_unique, 'grp_labels', {'Stem PCs', 'Splitters'});
 xlim(ha2(1),[min_lag - 0.5, max_lag + 0.5])
 printNK(['Spatial Consistency - Split v stem PCs - All Mice' text_append], 'alt')

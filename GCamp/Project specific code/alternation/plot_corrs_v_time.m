@@ -38,6 +38,12 @@ lag_jitter = 0.1;
 [PFout_apc, PFdayout] = scatterbox_reshape(PFcorr_by_day_apc, unique_lags); % All neurons
 PFout_sp = scatterbox_reshape(PFcorr_by_day_sp, unique_lags); % Splitters only
 
+% Grab only days that have valid data for both splitters and place-cells
+% (could occur if you only have < 4 cells in a category, most likely
+% splitters).
+match_bool = all(~isnan([PFout_apc, PFout_sp]), 2);
+PFout_sp = PFout_sp(match_bool); PFout_apc = PFout_apc(match_bool);
+PFdayout = PFdayout(match_bool);
 % Now plot all place field correlations
 if ~isempty(PFpval_by_day)
     [pPFout,~] = scatterbox_reshape(PFpval_by_day, unique_lags); % pvals to id gl. rmp. sessions
