@@ -172,7 +172,7 @@ groups = ones(size(x_use)).*[1 2];
 paired_ind = repmat((1:size(x_use,1))',1,2);
 scatterBox(x_use(:), groups(:), 'paired_ind', paired_ind(:), 'xLabels', ...
     {'Splitters', 'Arm PCs'}, 'yLabel', 'Prob. Present', 'h', ha);
-prsign = signrank(co_all2(:,1), co_all2(:,3),'tail','right');
+prsign = signrank(co_all2(:,split_ind), co_all2(:,apc_ind),'tail','right');
 subplot(1,2,2);
 text(0.1,0.5,['psign-rank (1-sided) = ' num2str(prsign,'%0.2g')])
 text(0.1,0.3,['trial_type = ' mouse_name_title(trial_type)])
