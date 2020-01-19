@@ -39,7 +39,7 @@ close(hw)
 
 %% Reactivation Probability at different time lags
 alt_sesh_use = alt_all_cell; %alt_all_cell = all mice, alt_all_cell[1} = mouse 1
-matchER = false;
+matchER = true;
 trial_type = 'free_only';
 
 % One day looks great - all mice
@@ -158,7 +158,7 @@ other_type = 'Arm PCs';
 % one phenotype at a time!
 alpha = 0.05; % significance level
 elim_outliers = false; 
-ntrial_stem_thresh = 0; % exclude any session comparisons with less than this many trials in 1st session
+ntrial_stem_thresh = 20; % exclude any session comparisons with less than this many trials in 1st session
 figure; set(gcf,'Position',[1 41 890 740])
 h = subplot(3,1,1:2);
 

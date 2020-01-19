@@ -72,7 +72,7 @@ if plot_bool
         ecdf(first_trans_trials{j}); hold on;
     end
     
-    hc(1).XTickLabels = arrayfun(@num2str, round(get(hc(1), 'XTick')/20), ...
+    hc(1).XTickLabels = arrayfun(@num2str, round(get(hc(1), 'XTick')), ...
         'UniformOutput', false);
     xlabel(hc(1),'t (seconds)'); ylabel(hc(1),'F(t)')
     xlabel(hc(2),'Trial #'); ylabel(hc(2),'F(Trial #)')

@@ -45,11 +45,11 @@ end
 %% Plot for each mouse
 save_pdf = true;
 sigthresh = 3;
-days_ba = 9;
+days_ba = 1;
 free_only = true;
 ignore_sameday = true;
 dplot = 'norm_max_int'; % metric to plot for discriminability
-rplot = 'rmean'; % metric to plot for reliability (max or mean of 1-p) or proportion of stem bins with sig splitting (sigprop)...
+rplot = 'sigprop'; % metric to plot for reliability (max or mean of 1-p) or proportion of stem bins with sig splitting (sigprop)...
 nactive_thresh = 5; % Neurons must be active at least this many trials to be considered
 daydiff_all = [];
 dmean_all = [];

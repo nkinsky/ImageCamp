@@ -20,11 +20,13 @@ ip.addOptional('color_mice', true, @islogical);
 ip.addParameter('PFname','Placefields_cm1.mat', @ischar);
 ip.addParameter('matchER', true, @islogical);
 ip.addParameter('trial_type', 'free_only', @ischar);
+ip.addParameter('ntrial_stem_thresh', 20, @(a) round(a) == a && a >= 0);
 ip.parse(day_lag, comp_type, mice_sesh, varargin{:});
 color_mice = ip.Results.color_mice;
 PFname = ip.Results.PFname;
 matchER = ip.Results.matchER;
 trial_type = ip.Results.trial_type;
+ntrial_stem_thresh = ip.Results.ntrial_stem_thresh;
 
 % Deal out mice_sesh into appropriate variable
 if iscell(mice_sesh)
@@ -44,7 +46,7 @@ elseif ~color_mice
 end
 
 % Get proportions for all mice
-[ stay_prop_all, coactive_prop_all, cat_names ] = ...
+[ stay_prop_all, coactive_prop_all, cat_names, ~, ntrials_all ] = ...
     alt_stab_v_cat_batch(day_lag, comp_type, mice_sesh, PFname, matchER, ...
     trial_type);
 
@@ -55,7 +57,8 @@ figure; set(gcf, 'Position', [2180, 20, 1440, 980]);
 hstay = subplot(2,3,1:2); hco = subplot(2,3,4:5);
 
 for j = 1:num_mice
-    stay_prop = stay_prop_all{j};
+    ntrial_bool = ntrials_all{j} >= ntrial_stem_thresh; % Filter out sessions with low # trials
+    stay_prop = stay_prop_all{j}(ntrial_bool,:);
     if ~isempty(stay_prop)
         cats{j} = repmat(1:size(stay_prop,2),size(stay_prop,1),1);
         
@@ -75,11 +78,12 @@ for j = 1:num_mice
 end
 
 for j = 1:num_mice
-    co_prop = coactive_prop_all{j};
+    ntrial_bool = ntrials_all{j} >= ntrial_stem_thresh; % Filter out sessions with low # trials
+    co_prop = coactive_prop_all{j}(ntrial_bool,:);
     if ~isempty(co_prop)
         scatterBox(co_prop(:), cats{j}(:), 'xLabels', cat_names, ...
             'h', hco,'circleColors', colors{j},'plotBox', false,...
-            'yLabel','Reactivation Probability');
+            'yLabel','Prob. Stays Active');
         hold on
         [stats.mouse(j).coactive.p, ~, stats.mouse(j).coactive.stats] = ...
             kruskalwallis(co_prop(:), cats{j}(:), 'off');
@@ -100,9 +104,22 @@ elseif strcmpi(comp_type,'le')
     comp_str = '<=';
 end
 
-axes(hstay)
-stay_all2 = cat(1,stay_prop_all{:});
+% Aggregate all values into one array after excluding session-pairs with
+% inqdequate sampling (# trials) in the first session
+ntrial_bool_all = cellfun(@(a) a >= ntrial_stem_thresh, ntrials_all, ...
+    'UniformOutput', false);
+stay_temp = cellfun(@(a,b) a(b,:), stay_prop_all, ntrial_bool_all, ...
+    'UniformOutput', false);
+stay_all2 = cat(1,stay_temp{:});
+co_temp = cellfun(@(a,b) a(b,:), coactive_prop_all, ntrial_bool_all, ...
+    'UniformOutput', false);
+co_all2 = cat(1,co_temp{:});
+% cats_temp = cellfun(@(a,b) a(b,:), cats', ntrial_bool_all, ...
+%     'UniformOutput', false);
 cats_all = cat(1,cats{:});
+
+% Plot prob. stays a phenotype
+axes(hstay)
 boxplot(stay_all2(:), cats_all(:),'color', 'k', 'symbol', 'k',...
     'labels', cat_names)
 boxProps = get(gca,'Children');
@@ -112,9 +129,8 @@ title({['Sessions ' comp_str ' ' num2str(day_lag) ' day(s) apart'],...
     mouse_name_title(trial_type)]})
 make_plot_pretty(gca)
 
+% Plot prob. stays active
 axes(hco)
-co_all2 = cat(1,coactive_prop_all{:});
-cats_all = cat(1,cats{:});
 boxplot(co_all2(:), cats_all(:),'color', 'k', 'symbol', 'k',...
     'labels', cat_names)
 boxProps = get(gca,'Children');
