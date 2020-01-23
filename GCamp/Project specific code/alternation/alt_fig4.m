@@ -73,7 +73,7 @@ printNK(['G45 Split v PC Prob present at 7 day lag matchER=' ...
 
 max_day_lag = 15;
 sessions = alt_all_cell; % Change this to make plots for each mouse...
-matchER = false; % March event-rate in non-splitters to splitters
+matchER = true; % March event-rate in non-splitters to splitters
 trial_type = 'free_only'; % 'no_loop';
 
 nmice = length(sessions);
@@ -146,23 +146,24 @@ end
 %% Plot it!
 
 % specify neuron phenotype to plot versus splitters - options are 'Arm
-% PCs', 'Stem PCs', 'Stem PCs - bottom mean rely' and 'Stem PCs - top mean
-% rely'. The last two options keep only the stem place cells with the
-% least/most reliable trajectory-dependent activity.
-other_type = 'Arm PCs'; 
+% PCs', 'Stem PCs', 'Stem PCs - top rely' and 'Stem PCs - bot. rely'.
+% The last two options keep only the stem place cells with the
+% most/least reliable trajectory-dependent activity.
+splitter_type = 'Splitters'; % 'Splitters'; % can also compare any other type to the other!!!
+other_type = 'Stem PCs'; % 'Arm PCs'; 
 [~, ~, temp] = alt_parse_cell_category(G30_alt(end), 0.05, 5, 3, ...
     'Placefields_cm1.mat');
 % Get zero and 1 points due to low # cells starting out as splitter/armPC 
 % phenotype in G30 lag 5 and G48 lag 8,9,10,and 13 analyses. Recommend
 % including since they are still real, especially since it only occurs for
-% one phenotype at a time!
+% one phenotype at a time!Stem PCs - bottom mean rely
 alpha = 0.05; % significance level
 elim_outliers = false; 
 ntrial_stem_thresh = 20; % exclude any session comparisons with less than this many trials in 1st session
 figure; set(gcf,'Position',[1 41 890 740])
 h = subplot(3,1,1:2);
 
-split_ind = find(strcmpi('splitters', cat_names));
+split_ind = find(strcmpi(splitter_type, cat_names));
 other_ind = find(strcmpi(other_type, cat_names));
 
 if ~elim_outliers
@@ -195,7 +196,7 @@ good_bool = ~outlier_bool & ntrial_bool;
     'circleColors', [0.7, 0, 0], 'transparency', 0.3);
 
 % Label stuff
-legend(cat(1,hs_sp,hs_other), {'Splitters', other_type})
+legend(cat(1,hs_sp,hs_other), {splitter_type, other_type})
 plot((0:max_day_lag)', stay_mean(1:(max_day_lag+1),split_ind),'g-')
 plot((0:max_day_lag)', stay_mean(1:(max_day_lag+1),other_ind),'r-')
 xlabel('Lag (days)')
@@ -226,7 +227,7 @@ end
 % Set-up holm-bonferroni correction
 ngrps = length(unique(grps_all));
 pthresh = alpha/ngrps:alpha/ngrps:alpha; % set up incremental sig levels
-[~, isort] = sort(psign); % get indices for signed-test values sorted from smallest to largest
+[~, isort] = sort(prsign); % get indices for signed-rank test values sorted from smallest to largest
 pthresh_holm_sort = nan(1,ngrps);
 pthresh_holm_sort(isort) = pthresh; % Put significance values in appropriate place
 days_pass_holm = find(prsign < pthresh_holm_sort);
