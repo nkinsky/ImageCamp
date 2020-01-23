@@ -520,4 +520,75 @@ make_plot_pretty(gca);
 printNK('Num Days Splitting Histogram','alt');
 
 
+%% Run exp fit on all traces/sessions
+sessions = alt_all(alt_all_free_bool);
+hw = waitbar(0,'Calculating exponential fits');
+for j = 1:length(sessions)
+    exp_fit_traces(sessions(j), 'save_data', true);
+    waitbar(j/length(sessions), hw);
+end
+close hw
 
+%% Plot ecdfs overlaid on one another
+ntrans_thresh = 5;
+for j = 1:4
+    sessions = alt_all_cell{j}(alt_all_free_boolc{j});
+    nsesh = length(sessions);
+    figure
+    for k = 1:nsesh
+        thalf = exp_fit_traces(sessions(k), 'use_saved_data', true);
+        load(fullfile(sessions(k).Location,'FinalOutput.mat'), 'PSAbool');
+        ntrans = get_num_trans(PSAbool);
+        ecdf(thalf(ntrans >= ntrans_thresh));
+        hold on;
+    end
+    ax_use = gca;
+    cmap_use = parula(nsesh);
+    for k = 1:nsesh
+        ax_use.Children(k).Color = cmap_use(k,:);
+    end
+    xlabel('\tau_{1/2} (sec)')
+    ylabel('Cumulative Proportion')
+    legend(ax_use.Children([end round(nsesh/2) 1]), {'1st session', ...
+        'Middle sesion', 'Last session'})
+    title(['Mouse ' num2str(j)])
+    xlim([0, 7])
+    printNK(['thalf ecdf - Mouse ' num2str(j)],'alt');
+end
+
+%% Same as above but for fluorescence
+ntrans_thresh = 5;
+split = true; % split G45 and G48 into two sessions
+mice_names = {'1', '2', '3a', '3b', '4a', '4b'};
+for j = 1:6
+    if split
+        sessions = alt_all_cell_sp{j}(alt_all_free_boolc_sp{j});
+    elseif ~split
+        sessions = alt_all_cell{j}(alt_all_free_boolc{j});
+    end
+    nsesh = length(sessions);
+    figure
+    for k = 1:nsesh
+        F0 = get_ROIbaseline_fluor(sessions(k));
+        load(fullfile(sessions(k).Location,'FinalOutput.mat'), 'PSAbool');
+        ntrans = get_num_trans(PSAbool);
+        ecdf(F0(ntrans >= ntrans_thresh));
+        hold on;
+    end
+    ax_use = gca;
+    cmap_use = parula(nsesh);
+    for k = 1:nsesh
+        ax_use.Children(k).Color = cmap_use(k,:);
+    end
+    xlabel('F0 (au)')
+    ylabel('Cumulative Proportion')
+    legend(ax_use.Children([end round(nsesh/2) 1]), {'1st session', ...
+        'Middle sesion', 'Last session'})
+    if ~split
+        title(['Mouse ' num2str(j)])
+        printNK(['F0 ecdf - Mouse ' num2str(j)],'alt');
+    elseif split
+        title(['Mouse ' mice_names{j}])
+        printNK(['F0 ecdf - Mouse ' mice_names{j}],'alt');
+    end
+end

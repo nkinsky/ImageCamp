@@ -172,8 +172,8 @@ for j = 1:6 %k = 1:length(alt_inds)
 end
 
 %% Splitter Ontogeny Population plots with smoothed windows before/after
-day_groups = 3;
-max_day = 9;
+day_groups = 5;
+max_day = 10;
 split_ontogeny_plot(rmean_all, daydiff_all, day_groups, 'ylabel', ...
     'max reliability(1-p)_{mean}', 'max_day', max_day, 'group_size', day_groups);
 printNK(['Splitter Ontogeny - Max Reliability All mice means ' ...

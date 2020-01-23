@@ -59,6 +59,7 @@ if plot_bool
         title(names{j});
         hold on
     end
+   
     sub_cell = {subplot(2,3,1), subplot(2,3,2), subplot(2,3,3)};
 
     % Go back and plot time of first transient line over images above 
@@ -114,6 +115,22 @@ if plot_bool
         hhist_sp.BinEdges, 'Normalization', 'Probability');
     legend(cat(1,hhist_sp, hhist_pc), {'Splitters', 'Place Cells'})
     xlabel('1st Transient Trial'); ylabel('Probability')
+    
+    % plot all PSAbools separately to see if you can get good looking
+    % pictures if you zoom out more
+    for j = 1:3
+        figure;  set(gcf,'Position', [217    42   659   642])
+        imagesc(PSAcomb{j}); ha2(j) = gca; hold on;
+        ha2(j).XTickLabels = arrayfun(@num2str, round(get(ha2(j), 'XTick')/20), ...
+            'UniformOutput', false); % Set xticks to seconds
+        xlabel('Seconds'); ylabel('Cell #');
+        title(names{j});
+        hold on
+    end
+    
+    % Go back and plot time of first transient line over images above
+    sub_cell2 = {ha2(1), ha2(2), ha2(3)};
+    cellfun(@(a,b) plot(a, b, 1:length(b),'r-'), sub_cell2, first_trans_frames);
     
 else
     hf1 = nan;

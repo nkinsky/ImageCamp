@@ -1,7 +1,7 @@
 function [half_all_mean, half_mean, LPerror_all, legit_trans_all] = ...
     get_session_trace_stats(session, varargin)
 % [half_all_mean, half_mean, LPerror, legit_trans] = ...
-%   get_session_trace_stats(session)
+%   get_session_trace_stats(session, varargin)
 %   Get trace statistics and detect any neurons with sketchy transients
 %   and/or low-pass filter artifacts. Default behavior is to NOT plot
 %   everything currently.

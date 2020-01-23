@@ -13,6 +13,7 @@ for j = 1:num_neurons
     temp = NP_FindSupraThresholdEpochs(PSAbool(j,:),eps);
     NumTransients(j,1) = size(temp, 1); % # of transients produces
     LenTransients{j,1} = diff(temp, 1, 2); % Get transient length
+    trans_frames{j} = temp;
 end
 
 end
