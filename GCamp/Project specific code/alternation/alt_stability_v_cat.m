@@ -91,7 +91,7 @@ if matchER
         
     end
     
-    % Same as above but for stem neurons in top/bottom quantile of
+    % Same as above but for stem neurons in top/bottom quartile of
     % reliability
     for j = 6:7
         cat_alt_means = arrayfun(@(a) mean(ntrans(ntrans > a & ...

@@ -99,7 +99,8 @@ if ~isempty(hstats)
     axes(hstats)
     text(0.1, 1.2, 'g1   g2   pval')
     text(0.1, 0.5, num2str(cmat(:,[1 2 6]), '%0.2g \t'))
-    text(0.5, 1.1, ['pkw = ' num2str(pkw, '%0.2g')])
+    text(0.5, 1.1, ['pkw = ' num2str(pkw, '%0.2g') ', n = ' ...
+        num2str(sum(~isnan(metric))) ' sessions'])
     axis off
     ylim([0 1.1])
 end

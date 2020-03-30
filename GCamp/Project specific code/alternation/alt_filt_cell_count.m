@@ -18,7 +18,7 @@ else
     half_thresh = 100;
 end
 
-% First ID any cells to exlucd with extra long transients
+% First ID any cells to exclude with extra long transients
 [half_all_mean, ~, ~, ~] = get_session_trace_stats(session, ...
     'use_saved_data', true);
 exclude_trace = half_all_mean > half_thresh; 

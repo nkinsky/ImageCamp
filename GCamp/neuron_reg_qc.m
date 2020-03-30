@@ -65,6 +65,10 @@ elseif ishandle(p.Results.plot) % Grab specified handle for latter plotting
     h = p.Results.plot;
 end
 
+save_file = fullfile(base_struct.Location, ['reg_stats_' reg_struct.Date ...
+        '-s', num2str(reg_struct.Session)]);
+
+if ~exist(save_file, 'file')
 %% Do the calculations
 reg_path = ChangeDirectory_NK(reg_struct,0);
 base_path = ChangeDirectory_NK(base_struct,0);
@@ -225,8 +229,10 @@ if num_shifts > 0
 end
 
 if save_stats
-    save(fullfile(base_struct.Location, ['reg_stats_' reg_struct.Date ...
-        '-s', num2str(reg_struct.Session)]), 'reg_stats')
+    save(save_file, 'reg_stats')
+end
+else
+    load(save_file, 'reg_stats')
 end
 
 %% Make plot if specified (probably should just make this mandatory, or lump in with shuffling

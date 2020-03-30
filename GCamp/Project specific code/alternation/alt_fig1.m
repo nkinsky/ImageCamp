@@ -1,5 +1,13 @@
 % Alternation figure 1: Behavior and Imaging
 
+%% Get num neurons for each animal - avg +/- std
+alt_all_free_cell = cellfun(@(a,b) a(b), alt_all_cell, alt_all_free_boolc, ...
+    'UniformOutput', false);
+num_neurons = cellfun(@(a) get_num_neurons(a), alt_all_free_cell, ...
+    'UniformOutput', false);
+num_mean = cellfun(@mean, num_neurons)
+num_std = cellfun(@std, num_neurons)
+
 %% Neuron ROIs and outlines - do for all, put 45 in full figure (others 
 % could go in supplemental if journal allows)
 
@@ -73,8 +81,17 @@ save(fullfile(G31_alt(1).Location,'G31regstats_chance.mat'),'G31regstats_chance'
 
 %%
 [G45regstats, G45regstats_chance] = reg_qc_plot_batch(G45_alt(1), G45_alt(2:end), ...
-    'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 1000);
-save(fullfile(G45_alt(1).Location,'G45regstats_chance.mat'),'G45regstats_chance')
+    'num_shuffles', 1000, 'shift_dist', 6, 'num_shifts', 0);
+save(fullfile(G45_alt(1).Location,'G45regstats_chance.mat'),'G45regstats_chance',...
+    'G45_regstats')
+
+%% Get stats
+load(fullfile(G45_alt(1).Location,'G45regstats_chance.mat'),'G45regstats_chance',...
+    'G45_regstats')
+[h, p, ksstat] = cellfun(@(a) kstest2(abs(a.orient_diff), ...
+    abs(G45regstats_chance.shuffle.orient_diff(:)), 'tail', 'larger'), ...
+    G45regstats);
+nneurons = cellfun(@(a) length(a.orient_diff), G45regstats);
 
 %% G48 is more complicated since the field of view moves a few times over the 1.5
 % months. Below lists the registrations for the 4 good chunks of data. Very

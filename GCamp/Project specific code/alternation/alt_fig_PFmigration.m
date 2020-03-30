@@ -29,10 +29,11 @@ for j = 1:length(sesh_use)
 end
 close all
 
-%% Across sessions
+%% Across sessions - note that this considers ALL day lags, even those > 15 
+% so you have a slightly larger n than Figures 4-5.
 diffs_all = [];
-for k = 1:4
-    sesh_use = alt_all_cell{k}(alt_all_free_boolc{k});
+for k = 1:6
+    sesh_use = alt_all_cell_sp{k}(alt_all_free_boolc_sp{k});
     COM_bwall = [];
     for j = 1:length(sesh_use)-1
         try
@@ -68,3 +69,5 @@ xlabel('COM1 - COM2 (- = moved backwards)')
 ylabel('Count')
 title(['Stem PF migration between sessions: All Mice'])
 legend(hmed, 'Median')
+
+nsesh_pairs = sum(~isnan(diffs_all))

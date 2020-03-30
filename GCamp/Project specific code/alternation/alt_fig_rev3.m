@@ -1,6 +1,6 @@
 % Alternation Reviewer 3 response figures
 
-%% Gete everything setup
+%% Get everything setup
 alternation_reference;
 if strcmpi('natlaptop', getenv('COMPUTERNAME'))
     [MD, ~, ref] = MakeMouseSessionListEraser('natlaptop');
@@ -335,7 +335,8 @@ printNK('half life tracking matched neurons - G48', 'alt', 'hfig', hft);
 %% Make plot of PSAbool for splitter versus place cells. 
 wood_filt = true;
 half_life_thresh = 2;
-text_append = alt_set_filters(wood_filt, half_life_thresh);
+use_expfit = true;
+text_append = alt_set_filters(wood_filt, half_life_thresh, use_expfit);
 [~, ~, ~, hf1, hfhist] = alt_plot_recruit_times(alt_test_session(1));
 make_figure_pretty(hf1)
 printNK(['G30 split v pc recruit times - one session' text_append], 'alt',...
@@ -382,11 +383,13 @@ text(0.1, 0.9, 'mean time of 1st transient (split, pc, others):')
 text(0.1, 0.8, num2str(round(cellfun(@mean, first_time_all),1)))
 text(0.1, 0.7, ['1-sided kstest: p=' num2str(ptime, '%0.2g') ' ksstat=' ...
     num2str(kstime, '%0.2g')])
+text(0.1, 0.6, ['nneurons = ' num2str(cellfun(@length, first_time_all))])
 
 text(0.1, 0.5, 'mean trial of 1st transient (split, pc, other):')
 text(0.1, 0.4, num2str(round(cellfun(@mean, first_trial_all),1)))
 text(0.1, 0.3, ['1-sided kstest: p=' num2str(ptrial, '%0.2g') ' ksstat=' ...
     num2str(kstrial, '%0.2g')])
+text(0.1, 0.2, ['nneurons = ' num2str(cellfun(@length, first_trial_all))])
 axis off
 make_figure_pretty(gcf)
 printNK(['Split v pc recruitment times - All Mice' text_append],'alt');
@@ -441,9 +444,9 @@ plotSigSplitters_bw_sesh(G45_alt(16), G45_alt(25));
     pkw, cmat, deltamax_normmat, sesh_final, dint_normmat, relymeanmat, ...
     sigpropmat] = cellfun(@(a) track_splitters(a(1), a(2:end)), alt_all_cell_sp, ...
     'UniformOutput', false);
+split_bool = cellfun(@(a) any(a,2), sigmat, 'UniformOutput', false); % Cells that were splitters at ANY point
 sigmat_splitonly = cellfun(@(a,b) a(b,:), sigmat, split_bool, ...
     'UniformOutput', false);
-split_bool = cellfun(@(a) any(a,2), sigmat, 'UniformOutput', false); % Cells that were splitters at ANY point
 ndays_split = cellfun(@(a,b) nansum(a,2), sigmat_splitonly, ...
     'UniformOutput', false); % # days each splitter split
 
@@ -591,4 +594,36 @@ for j = 1:6
         title(['Mouse ' mice_names{j}])
         printNK(['F0 ecdf - Mouse ' mice_names{j}],'alt');
     end
+end
+
+%% Calculate exclusion ratio using brute force method to calculate half-life
+sessions = alt_all(alt_all_free_bool);
+nsesh = length(sessions);
+exc_num = nan(1,nsesh);
+exc_ratio = nan(1,nsesh);
+nneurons = nan(1,nsesh);
+for j = 1:nsesh
+    sesh = sessions(j); 
+    [half_all_mean, ~, ~, ~] = get_session_trace_stats(sesh, ...
+        'use_saved_data', true);
+    exclude_trace = half_all_mean > half_thresh; 
+    exc_num(j) = sum(exclude_trace); 
+    nneurons(j) = length(exclude_trace);
+    exc_ratio(j) = exc_num(j)/nneurons(j);
+end
+
+
+%% Calculate exclusion ratio using exponential fit method to calculate half-life
+sessions = alt_all(alt_all_free_bool);
+nsesh = length(sessions);
+exc_nume = nan(1,nsesh);
+exc_ratioe = nan(1,nsesh);
+nneuronse = nan(1,nsesh);
+for j = 1:nsesh
+    sesh = sessions(j); 
+    [thalf_e, ~] = exp_fit_traces(sesh, 'use_saved_data', true);
+    exclude_tracee = thalf_e > half_thresh; 
+    exc_nume(j) = sum(exclude_tracee); 
+    nneuronse(j) = length(exclude_tracee);
+    exc_ratioe(j) = exc_nume(j)/nneuronse(j);
 end

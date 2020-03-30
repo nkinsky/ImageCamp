@@ -193,6 +193,7 @@ subplot(1,2,2);
 text(0.1,0.5,['psign-rank (1-sided) = ' num2str(prsign,'%0.2g')])
 text(0.1,0.3,['trial_type = ' mouse_name_title(trial_type)])
 text(0.1,0.1,['matchER = ' num2str(matchER)])
+text(0.1, 0, ['n = ' num2str(size(x_use,1))])
 axis off
 
 end

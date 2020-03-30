@@ -1,7 +1,8 @@
 % Alternation Figure 6: Splitter Ontogeny
 wood_filt = true;
 half_life_thresh = 2;
-text_append = alt_set_filters(wood_filt, half_life_thresh);
+use_expfit = true;
+text_append = alt_set_filters(wood_filt, half_life_thresh, use_expfit);
 
 %% Example cells between sessions
 
