@@ -157,7 +157,7 @@ G48_alt(j).Date = '09_24_2015'; G48_alt(j).Session = 1; j = j+1;
 % G48_alt(j).Date = '09_24_2015'; G48_alt(j).Session = 2; j = j+1; % No pos file!!
 G48_alt(j).Date = '09_29_2015'; G48_alt(j).Session = 1; j = j+1;
 G48_alt(j).Date = '09_30_2015'; G48_alt(j).Session = 1; j = j+1;
-% G48_alt(j).Date = '10_01_2015'; G48_alt(j).Session = 1; j = j+1;
+% G48_alt(j).Date = '10_01_2015'; G48_alt(j).Session = 1; j = j+1; ?? why excluded? Bad imaging?
 G48_alt(j).Date = '10_01_2015'; G48_alt(j).Session = 2; j = j+1;
 G48_alt(j).Date = '10_01_2015'; G48_alt(j).Session = 3; j = j+1; % Forced part
 G48_alt(j).Date = '10_02_2015'; G48_alt(j).Session = 1; j = j+1;

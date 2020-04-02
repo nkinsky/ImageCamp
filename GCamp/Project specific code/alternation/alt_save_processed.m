@@ -12,9 +12,13 @@ min_proj = imread('ICmovie_min_proj.tif');
 raw_trace = NeuronTraces.RawTrace;
 load(fullfile(dir_use, 'Pos.mat'), 'xpos_interp', 'ypos_interp', ...
     'time_interp')
+animal = MD.Animal;
+date = MD.Date;
+session = MD.Session;
 
-save('processed_minimum', 'NeuronImage', 'PSAbool', 'raw_trace', 'min_proj', ...
-    'xpos_interp', 'ypos_interp', 'time_interp')
+save(fullfile(dir_use,'processed_minimum'), 'NeuronImage', 'PSAbool', ...
+    'raw_trace', 'min_proj', 'xpos_interp', 'ypos_interp', 'time_interp', ...
+    'animal', 'date', 'session')
 
 end
 
