@@ -31,7 +31,7 @@ for m = 1:length(mice_use)
 end
 
 %% When done with above, run to qc registrations - use plot_registration
-mice_use = {'Marble20'};
+mice_use = {'Marble14', 'Marble18', 'Marble20', 'Marble27', 'Marble29'};
 for j = 1:length(mice_use)
     mouse_use = mice_use{j};
     MDuse = MD(ref{find(strcmpi(mouse_use,ref(:,1))),2}: ...
@@ -72,3 +72,49 @@ for j = 1:length(mice_use)
     end
     close(hw)
 end
+
+%% Now run batch registration qc for all different combos of sessions
+num_shuffles = 100;
+
+% mice_use = {'Marble06', 'Marble07', 'Marble11', 'Marble12', 'Marble14',...
+%     'Marble17', 'Marble18', 'Marble19', 'Marble20', 'Marble24', 'Marble25', ...
+%     'Marble27', 'Marble29'};
+mice_use = {'Marble20', 'Marble24', 'Marble25',  'Marble29'};
+success_bool = false(1,length(mice_use));
+for j = 1:length(mice_use)
+%     try
+        mouse_use = mice_use{j};
+        MDuse = MD(ref{find(strcmpi(mouse_use,ref(:,1))),2}: ...
+            ref{find(strcmpi(mouse_use,ref(:,1))),3}); %#ok<FNDSB>
+        num_sessions = length(MDuse);
+        hw = waitbar(0,['Registration Check Progress for ' num2str(mouse_use) '!']);
+        n = 0;
+        clear reg_stats_chance
+        for k = 1:num_sessions - 1
+            if k == 1
+                nshuf_use = 100;
+                [~, reg_stats_chance, hfig] = reg_qc_plot_batch(MDuse(k),...
+                    MDuse(k+1:num_sessions), 'num_shuffles', nshuf_use);
+            else  % don't overwrite reg_stats for any subsequent runs...
+                nshuf_use = 0;
+                [~, ~, hfig] = reg_qc_plot_batch(MDuse(k),...
+                    MDuse(k+1:num_sessions), 'num_shuffles', nshuf_use);
+                reg_qc_plot([], reg_stats_chance.shuffle.orient_diff, ...
+                    [], hfig, 'plot_shuf', 1);
+            end
+            printNK(['Reg qc plots - ' mouse_use], 'eraser', 'hfig', hfig, ...
+                'append',  true)
+            close(hfig)
+            
+        end
+        close(hw)
+        success_bool(j) = true;
+%     catch
+%         success_bool(j) = false;
+%     end
+end
+            
+            
+            
+            
+            
