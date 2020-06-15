@@ -92,13 +92,17 @@ end
 reg_stats = cell(length(reg),1);
 legend_text = cell(1, length(reg));
 reg_stats_chance = [];
+legend_text{1} = [mouse_name_title(reg(1).Date) ' - #' num2str(reg(1).Session)];
+he_cd = gobjects(length(reg),1); he_od = gobjects(length(reg),1);
+hhist_cd = gobjects(length(reg),1); hhist_od = gobjects(length(reg),1);
 
-%%% NRK adjust here - do shift and shuffle separately. Shift ONLY happens
-%%% for registering base to itself!
+
 try
     reg_stats{1} = neuron_reg_qc(base, reg(1), 'batch_mode', batch_mode, ...
         'name_append', name_append{1}, 'orient_only', orient_only, ...
         'save_stats', save_stats);
+    [he_cd(1), hhist_cd(1), he_od(1), hhist_od(1)] = reg_qc_plot(reg_stats{1}.cent_d, reg_stats{1}.orient_diff, ...
+        reg_stats{1}.avg_corr, hfig, 'multi_sesh', multi_sesh);
 end
 try
     reg_stats_chance = neuron_reg_qc(base, base, 'batch_mode', batch_mode, ...
@@ -108,20 +112,14 @@ try
 catch ME
     switch ME.identifier
         case {'MATLAB:load:couldNotReadFile', 'MATLAB:imagesci:imread:fileDoesNotExist'}
-            disp(['ERROR IN: ' base.Date ' session ' num2str(base.Session)])
+            disp(['ERROR IN BASE SESSION : ' base.Date ' session ' num2str(base.Session)])
+            return  % Exit if you find this error after displaying warning!
         otherwise
             rethrow(ME)
     end
 end
 
-% Save stats if specified.
-
-legend_text{1} = [mouse_name_title(reg(1).Date) ' - #' num2str(reg(1).Session)];
-he_cd = gobjects(length(reg),1); he_od = gobjects(length(reg),1);
-hhist_cd = gobjects(length(reg),1); hhist_od = gobjects(length(reg),1);
-[he_cd(1), hhist_cd(1), he_od(1), hhist_od(1)] = reg_qc_plot(reg_stats{1}.cent_d, reg_stats{1}.orient_diff, ...
-        reg_stats{1}.avg_corr, hfig, 'multi_sesh', multi_sesh);
-
+% Run through each session pair now.
 for j = 2:length(reg)   
     try
         reg_stats{j} = neuron_reg_qc(base, reg(j), 'batch_mode', batch_mode,...
@@ -217,8 +215,9 @@ elseif num_shifts == 0 && num_shuffles == 0
 end
 
 if sum(~good_reg_bool) == 1
-    text(subplot(2,2,2), 15, 0.8, 'Bad registrations for:')
-    text(subplot(2,2,2), 15, 0.7, legend_text(~good_reg_bool));
+    text(subplot(2,2,2), 15, 0.8*max(get(subplot(2,2,2),'ylim')), 'Bad registrations for')
+    text(subplot(2,2,2), 15, 0.7*max(get(subplot(2,2,2),'ylim')), '(on or around):')
+    text(subplot(2,2,2), 15, 0.6*max(get(subplot(2,2,2),'ylim')), legend_text(~good_reg_bool));
 end
     
         
