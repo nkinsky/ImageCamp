@@ -79,7 +79,7 @@ num_shuffles = 100;
 % mice_use = {'Marble06', 'Marble07', 'Marble11', 'Marble12', 'Marble14',...
 %     'Marble17', 'Marble18', 'Marble19', 'Marble20', 'Marble24', 'Marble25', ...
 %     'Marble27', 'Marble29'};
-mice_use = {'Marble20', 'Marble24', 'Marble25',  'Marble29'};
+mice_use = {'Marble24', 'Marble25',  'Marble29'};
 success_bool = false(1,length(mice_use));
 for j = 1:length(mice_use)
 %     try
