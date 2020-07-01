@@ -31,9 +31,9 @@ append = ip.Results.append;
 %%
 switch location
     case 'meeting'
-        if strcmp(getenv('COMPUTERNAME'))
+        if isempty(getenv('COMPUTERNAME'))
             location = '/data/UM/Meeting\ Plots';
-        elseif strcmp(getenv('NATLAPTOP'))
+        elseif strcmp(getenv('COMPUTERNAME'),'NATLAPTOP')
             location = 'C:\Users\Nat\Dropbox\UM\Meeting Plots';
         end         
     case 'russek'
