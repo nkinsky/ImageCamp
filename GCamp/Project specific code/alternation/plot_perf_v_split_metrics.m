@@ -39,15 +39,18 @@ end
 
 % Load LDA data to get decoder_perf
 discr_perf = nan(1, length(sessions));
+discr_chance = nan(1, length(sessions));
 text_append = alt_get_filter_text(); % find text to ID LDA file to load.
 for j = 1:length(sessions)
-    LDAperf = [];
+    LDAperf = []; LDAperf_shuf = [];
     try % Load previously run LDA data
-        load(fullfile(sessions(j).Location,['LDAperf_w_shuf' text_append '.mat']), 'LDAperf');
+        load(fullfile(sessions(j).Location,['LDAperf_w_shuf' text_append '.mat']), ...
+            'LDAperf', 'LDAperf_shuf');
     catch
         LDAperf = nan;
     end
     discr_perf(j) = nanmean(LDAperf(:))*100; % Take mean and make into a percentage
+    discr_chance(j) = nanmean(LDAperf_shuf(:))*100;
 end
 
 % Get performance & perform trial threshold
@@ -87,6 +90,7 @@ split_metrics.trial_thresh = trial_thresh;
 split_metrics.nstem_thresh = nstem_thresh;
 split_metrics.discr_perf = discr_perf;
 split_metrics.sigprop_mean = sigprop_mean;
+split_metrics.discr_chance = discr_chance;
 
 % %% Get correlations and stats - now done in plot_func subfunction
 % [rho_r, p_r] = corr(rely_mean', perf_comb', 'rows','complete');

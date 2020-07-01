@@ -400,7 +400,7 @@ sesh_cell_use = alt_all_cell;
 % Pre-allocate mean performance and dnorm arrays
 perf_mean = []; dnorm_mean = []; dint_mean = []; curve_corr_mean = [];
 rely_mean_mean = []; discr_perf_mean = []; dmax_mean = []; sigprop_mean = [];
-rely_mean = [];
+rely_mean = []; discr_chance = [];
 
 % Calculate values for each mouse
 for j = 1:length(sesh_cell_use)
@@ -414,6 +414,7 @@ for j = 1:length(sesh_cell_use)
     rely_mean_mean = [rely_mean_mean, nanmean(split_metrics.rely_mean_mean)];
     rely_mean = [rely_mean, nanmean(split_metrics.rely_mean)];
     discr_perf_mean = [discr_perf_mean, nanmean(split_metrics.discr_perf)];
+    discr_chance = [discr_chance, nanmean(split_metrics.discr_chance)];
     sigprop_mean = [sigprop_mean, nanmean(split_metrics.sigprop_mean)];
 end
 
@@ -429,12 +430,15 @@ alt_group_plot_perf_v_split(h2, dint_mean, perf_mean, ...
     '\Sigma|\Delta|_{norm}'); xlim(h2, [0.4 0.625]); ylim(h2, [66 80])
 alt_group_plot_perf_v_split(h3, 1 - curve_corr_mean, perf_mean, ...
     '1 - \rho_{mean}'); xlim(h3, [0.45 0.85]); ylim(h3, [66 80])
-% alt_group_plot_perf_v_split(h4, rely_mean_mean, perf_mean, ...
-%     'Mean Reliability (1-p)'); xlim(h4, [0.2 0.3]); ylim(h4, [66 80])
-alt_group_plot_perf_v_split(h4, rely_mean, perf_mean, ...
-    'Peak Reliability (1-p)');  xlim(h4, [0.81 0.85]); ylim(h4, [66 80])
+alt_group_plot_perf_v_split(h4, rely_mean_mean, perf_mean, ...
+    'Mean Reliability (1-p)'); xlim(h4, [0.2 0.3]); ylim(h4, [66 80])
+% alt_group_plot_perf_v_split(h4, rely_mean, perf_mean, ...
+%     'Peak Reliability (1-p)');  xlim(h4, [0.81 0.85]); ylim(h4, [66 80])
 alt_group_plot_perf_v_split(h5, discr_perf_mean, perf_mean, ...
     'Decoder (LDA) Accuracy (%)'); xlim(h5, [45 75]); ylim(h5, [66 80])
+h5.NextPlot = 'add'; % hold on
+plot(h5, nanmean(discr_chance)*[1 1], [66 80])
+ylim(h5, [66 80]);
 subplot(2,3,6);
 text(0.1, 0.4, ['inject\_noise = ' num2str(inject_noise)])
 text(0.1, 0.6, ['ntrial_thresh = ' num2str(split_metrics.trial_thresh)])
@@ -460,7 +464,7 @@ printNK(['Perf v splittiness by mice - sig prop only ' text_append],'alt')
 %% Run decoder analysis - needed before running the code above!
 niters = 100; % num iterations
 leave_out_prop = 0.5;
-nshuf = 1000;
+nshuf = 1;
 
 % Pre-allocate #animals x niters x nsesh x nbins_stem
 tic

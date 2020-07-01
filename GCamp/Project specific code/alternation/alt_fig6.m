@@ -1,7 +1,8 @@
 % Alternation Figure 6: Splitter Ontogeny
 wood_filt = true;
 half_life_thresh = 2;
-text_append = alt_set_filters(wood_filt, half_life_thresh);
+use_expfit = true;
+text_append = alt_set_filters(wood_filt, half_life_thresh, use_expfit);
 
 %% Example cells between sessions
 
@@ -43,7 +44,7 @@ for j = 1:5
 end
 
 %% Plot for each mouse
-save_pdf = true;
+save_pdf = false;
 sigthresh = 3;
 days_ba = 1;
 free_only = true;
@@ -162,13 +163,15 @@ for j = 1:6 %k = 1:length(alt_inds)
     
 %     disp(['size ddiff = ' num2str(length(unique_daydiff)), 'size dmean = ' ...
 %         num2str(length(dmean))])
-    daydiff_all = [daydiff_all; unique_daydiff];
-    dmean_all = [dmean_all; dmean];
-    dnormmean_all = [dnormmean_all; dnorm_mean];
-    dimean_all = [dimean_all; dintn_mean];
-    rmean_all = [rmean_all; rmean];
-    rm_mean_all = [rm_mean_all; rm_mean];
-    spmean_all = [spmean_all; spmean];
+    if ismember(j, [1 2 4 6])  % Make sure to only include combined data points for G45 and G48
+        daydiff_all = [daydiff_all; unique_daydiff];
+        dmean_all = [dmean_all; dmean];
+        dnormmean_all = [dnormmean_all; dnorm_mean];
+        dimean_all = [dimean_all; dintn_mean];
+        rmean_all = [rmean_all; rmean];
+        rm_mean_all = [rm_mean_all; rm_mean];
+        spmean_all = [spmean_all; spmean];
+    end
 end
 
 %% Splitter Ontogeny Population plots with smoothed windows before/after
@@ -297,10 +300,12 @@ for j=1:6 %k = 1:length(alt_inds)
             daydiff1_arms daydiff2_arms daydiff1_stem daydiff2_stem
     end
     
-    daydiff_arms_all = [daydiff_arms_all; unique_daydiff_arms];
-    daydiff_stem_all = [daydiff_stem_all; unique_daydiff_stem];
-    MImat_arms_all = [MImat_arms_all; MIarms_mean];
-    MImat_stem_all = [MImat_stem_all; MIstem_mean];
+    if ismember(j, [1 2 4 6])  % Make sure to only include combined data points for G45 and G48
+        daydiff_arms_all = [daydiff_arms_all; unique_daydiff_arms];
+        daydiff_stem_all = [daydiff_stem_all; unique_daydiff_stem];
+        MImat_arms_all = [MImat_arms_all; MIarms_mean];
+        MImat_stem_all = [MImat_stem_all; MIstem_mean];
+    end
 
 end
 

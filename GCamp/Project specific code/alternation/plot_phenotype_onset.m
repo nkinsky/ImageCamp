@@ -52,7 +52,9 @@ make_plot_pretty(gca);
 
 %% Absolute onset stats here - different distributions?
 axes(ha(6));
-text(ha(6), 0.1, 0,5, 'Onset Sesh stats here - different shape?')
+text(ha(6), 0.1, 0.5, 'Onset Sesh stats - run bottom alt\_fig6 then alt\_fig7')
+text(ha(6), 0.1, 0.4, ['n = ' num2str(sum(~isnan(pc_onset))) ' place cells'])
+text(ha(6), 0.1, 0.3, ['n = ' num2str(sum(~isnan(split_onset))) ' splitters'])
 axis off
 
 %% Difference in onset day. - = splitter first, + = place cell first
@@ -69,7 +71,8 @@ make_plot_pretty(gca);
 
 %% Onset diff stats here - is it skewed right or left?
 axes(ha(5))
-text(ha(5), 0.1, 0,5, 'Onset Difference Stats Here!')
+text(ha(5), 0.1, 0.5, 'Onset Diff stats - run bottom alt\_fig6 then alt\_fig7')
+text(ha(5), 0.1, 0.4, ['n = ' num2str(sum(~isnan(onset_diff))) ' neurons'])
 axis off
 end
 

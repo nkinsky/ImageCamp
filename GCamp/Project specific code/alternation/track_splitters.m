@@ -243,7 +243,8 @@ subplot(2,3,3)
 text(0.1, 1, ['First sesh date = ' mouse_name_title(MDbase.Date)])
 text(0.1, 0.9, 'day1   day2   pval')
 text(0.1, 0.5, num2str(cmat(:,[1 2 6]), '%0.2g \t'))
-text(0.1, 0.95, ['pkw = ' num2str(pkw, '%0.2g')])
+text(0.1, 0.95, ['pkw = ' num2str(pkw, '%0.2g') ', n = ' ...
+    num2str(sum(~isnan(delta_use(ba_bool)))) ' neurons'])
 axis off
 
 % run for relymat
@@ -258,7 +259,8 @@ cmat(:,2) = unique_days(cmat(:,2));
 subplot(2,3,6)
 text(0.1, 0.9, 'day1   day2   pval')
 text(0.1, 0.3, num2str(cmat(:,[1 2 6]), '%0.2g \t'))
-text(0.1, 0.95, ['pkw = ' num2str(pkw, '%0.2g')])
+text(0.1, 0.95, ['pkw = ' num2str(pkw, '%0.2g') ', n = ' ...
+    num2str(sum(~isnan(r_use(ba_bool)))) ' neurons'])
 axis off
 
 %% Step 7: save save_final

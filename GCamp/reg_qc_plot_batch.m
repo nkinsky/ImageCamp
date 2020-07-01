@@ -86,38 +86,58 @@ end
 %% Plot
 
 if isempty(hfig)
-    hfig = figure;
+    hfig = figure; set(gcf,'Position',[700 220 980 720]);
 end
 
 reg_stats = cell(length(reg),1);
 legend_text = cell(1, length(reg));
-
-%%% NRK adjust here - do shift and shuffle separately. Shift ONLY happens
-%%% for registering base to itself!
-reg_stats{1} = neuron_reg_qc(base, reg(1), 'batch_mode', batch_mode, ...
-    'name_append', name_append{1}, 'orient_only', orient_only, ...
-    'save_stats', save_stats); 
-reg_stats_chance = neuron_reg_qc(base, base, 'batch_mode', batch_mode, ...
-    'shuffle', num_shuffles, 'shift', num_shifts, 'shift_dist', shift_dist, ...'
-    'name_append', name_append{1}, 'save_stats', save_stats, ...
-    'orient_only', orient_only); % If the last registration is bad you can get a bad shuffled distribution here...
-
-% Save stats if specified.
-
+reg_stats_chance = [];
 legend_text{1} = [mouse_name_title(reg(1).Date) ' - #' num2str(reg(1).Session)];
 he_cd = gobjects(length(reg),1); he_od = gobjects(length(reg),1);
 hhist_cd = gobjects(length(reg),1); hhist_od = gobjects(length(reg),1);
-[he_cd(1), hhist_cd(1), he_od(1), hhist_od(1)] = reg_qc_plot(reg_stats{1}.cent_d, reg_stats{1}.orient_diff, ...
-        reg_stats{1}.avg_corr, hfig, 'multi_sesh', multi_sesh);
 
+
+try
+    reg_stats{1} = neuron_reg_qc(base, reg(1), 'batch_mode', batch_mode, ...
+        'name_append', name_append{1}, 'orient_only', orient_only, ...
+        'save_stats', save_stats);
+    [he_cd(1), hhist_cd(1), he_od(1), hhist_od(1)] = reg_qc_plot(reg_stats{1}.cent_d, reg_stats{1}.orient_diff, ...
+        reg_stats{1}.avg_corr, hfig, 'multi_sesh', multi_sesh);
+end
+try
+    reg_stats_chance = neuron_reg_qc(base, base, 'batch_mode', batch_mode, ...
+        'shuffle', num_shuffles, 'shift', num_shifts, 'shift_dist', shift_dist, ...'
+        'name_append', name_append{1}, 'save_stats', save_stats, ...
+        'orient_only', orient_only); % If the last registration is bad you can get a bad shuffled distribution here...
+catch ME
+    switch ME.identifier
+        case {'MATLAB:load:couldNotReadFile', 'MATLAB:imagesci:imread:fileDoesNotExist'}
+            disp(['ERROR IN BASE SESSION : ' base.Date ' session ' num2str(base.Session)])
+            return  % Exit if you find this error after displaying warning!
+        otherwise
+            rethrow(ME)
+    end
+end
+
+% Run through each session pair now.
 for j = 2:length(reg)   
-    reg_stats{j} = neuron_reg_qc(base, reg(j), 'batch_mode', batch_mode,...
-        'name_append', name_append{j}, 'save_stats', save_stats,...
-        'orient_only', orient_only);
-    [he_cd(j), hhist_cd(j), he_od(j), hhist_od(j)] = reg_qc_plot(reg_stats{j}.cent_d, ...
-        reg_stats{j}.orient_diff, reg_stats{j}.avg_corr, hfig, 'multi_sesh', 1);
-    legend_text{j} = [mouse_name_title(reg(j).Date) ' - #' num2str(reg(j).Session)];
-    reg_stats{j}.session = reg(j);
+    try
+        reg_stats{j} = neuron_reg_qc(base, reg(j), 'batch_mode', batch_mode,...
+            'name_append', name_append{j}, 'save_stats', save_stats,...
+            'orient_only', orient_only);
+        [he_cd(j), hhist_cd(j), he_od(j), hhist_od(j)] = reg_qc_plot(reg_stats{j}.cent_d, ...
+            reg_stats{j}.orient_diff, reg_stats{j}.avg_corr, hfig, 'multi_sesh', 1);
+        legend_text{j} = [mouse_name_title(reg(j).Date) ' - #' num2str(reg(j).Session)];
+        reg_stats{j}.session = reg(j);
+    catch ME  % error catching - keep going if you can't find FinalOutput of ICmovie_min_proj for one session
+        switch ME.identifier
+            case {'MATLAB:load:couldNotReadFile', 'MATLAB:imagesci:imread:fileDoesNotExist'}
+                disp(['ERROR IN: ' base.Date ' session ' num2str(base.Session) ...
+                    ' to ' reg(j).Date ' session ' num2str(reg(j).Session)])
+            otherwise
+                rethrow(ME)
+        end
+    end
 end
 
 % reg_stats{length(reg)} = neuron_reg_qc(base, reg(end), 'batch_mode', batch_mode, ...
@@ -142,7 +162,15 @@ end
     [], hfig, 'plot_shuf', 1);
 
 
-% Make legends work
+%% Make legends work
+
+% First rule out any session pairs with no matching neurons
+good_reg_bool = arrayfun(@isgraphics, hhist_cd); 
+hhist_cd = hhist_cd(good_reg_bool);
+hhist_od = hhist_od(good_reg_bool);
+he_cd = he_cd(good_reg_bool);
+he_od = he_od(good_reg_bool);
+legend_text = legend_text(good_reg_bool);
 if num_shifts > 0 && num_shuffles == 0
     legend_cd = cat(2,legend_text,[num2str(round(shift_dist)) '-pixel shift']);
     legend_od = cat(2,legend_text,[num2str(round(shift_dist)) '-pixel shift']);
@@ -184,6 +212,12 @@ elseif num_shifts == 0 && num_shuffles == 0
     legend(hhist_od, legend_text)
     legend(he_cd, legend_text)
     legend(he_od, legend_text)
+end
+
+if sum(~good_reg_bool) == 1
+    text(subplot(2,2,2), 15, 0.8*max(get(subplot(2,2,2),'ylim')), 'Bad registrations for')
+    text(subplot(2,2,2), 15, 0.7*max(get(subplot(2,2,2),'ylim')), '(on or around):')
+    text(subplot(2,2,2), 15, 0.6*max(get(subplot(2,2,2),'ylim')), legend_text(~good_reg_bool));
 end
     
         

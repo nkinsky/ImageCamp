@@ -9,11 +9,17 @@ function [half_all_mean, half_mean, LPerror_all, legit_trans_all] = ...
 % INPUTS: session - session structure (see MakeMouseSessionList/ChangeDirectory)
 %
 %         spam (optional): boolean to display warnings about neurons with
-%         weird traces (highly conservative at this point). Default = true
+%         weird traces (highly conservative at this point). Default = true.
+%
+%         See first cell of code for other optional parameters
 %
 % OUTPUTS: See plot_aligned_trace for full details
 %          half_all_mean: mean half-life of all individual traces averaged
-%          (sec)
+%          (sec). If global variable USE_EXPFIT = True AND the optional
+%          variable 'use_saved_data' is True, then half-life values are
+%          loaded from exponential fits (see function exp_fit_traces),
+%          rather than calculating the raw value from each trace and
+%          averaging...
 %
 %          half_mean: half-life of mean trace (sec)
 %
@@ -26,7 +32,7 @@ function [half_all_mean, half_mean, LPerror_all, legit_trans_all] = ...
 %% Parse inputs
 ip = inputParser;
 ip.addRequired('session', @isstruct);
-ip.addParameter('spam', true, @islogical); % output warnings about traces with weird transients
+ip.addParameter('spam', false, @islogical); % output warnings about traces with weird transients
 ip.addParameter('save_data', false, @islogical); % save data for fast loading later on
 ip.addParameter('use_saved_data', false, @islogical); % load previously saved data!
 ip.parse(session, varargin{:})
@@ -34,17 +40,29 @@ ip.parse(session, varargin{:})
 spam = ip.Results.spam;
 save_data = ip.Results.save_data;
 use_saved_data = ip.Results.use_saved_data;
+
+global USE_EXPFIT
 %% Load saved data if applicable and skip the rest
 load_success = false;
 if use_saved_data
     try
-        load(fullfile(session.Location,'trace_stats.mat'), 'trace_stats');
-        if compare_sessions(trace_stats.session, session) %#ok<NODEF>
-            half_all_mean = trace_stats.half_all_mean;
-            half_mean = trace_stats.half_mean;
-            LPerror_all = trace_stats.LPerror_all;
-            legit_trans_all = trace_stats.legit_trans_all;
+        if ~USE_EXPFIT
+            load(fullfile(session.Location,'trace_stats.mat'), 'trace_stats');
+            if compare_sessions(trace_stats.session, session) %#ok<NODEF>
+                half_all_mean = trace_stats.half_all_mean;
+                half_mean = trace_stats.half_mean;
+                LPerror_all = trace_stats.LPerror_all;
+                legit_trans_all = trace_stats.legit_trans_all;
+                load_success = true;
+            end
+        elseif USE_EXPFIT
+            load(fullfile(session.Location,'efit_traces.mat'), 'thalf_e');
+            half_all_mean = thalf_e;
+            half_mean = nan;
+            LPerror_all = nan;
+            legit_trans_all = nan;
             load_success = true;
+            disp('Loading half life stats from exponential fit!')
         end
     catch
         disp('Error loading trace_stats.mat - calculating directly rerun with flag to save_data if desired')

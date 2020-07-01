@@ -127,6 +127,8 @@ lags_w_sig = arrayfun(@(a,b) cat(2,num2str(a),b,' '), unique_lags, ...
 text(0.1, 1, ['* = signifcant at \alpha= ' num2str(alpha, '%0.1g') ' after Holm-Bonferroni correction'])
 text(0.1, 0.8, ['lags = ' cat(2,lags_w_sig{:})])
 text(0.1, 0.6, ['prksign = ' num2str(p', '%0.2g \t')])
+text(0.1, 0.4, ['nsession_pairs = ' num2str(cellfun(@(a,b) sum(~isnan(a) & ~isnan(b)), ...
+    PFcorr_by_day_apc, PFcorr_by_day_sp)')])
 axis off
 
 % 

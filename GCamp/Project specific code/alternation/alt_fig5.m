@@ -3,8 +3,8 @@
 
 wood_filt = true;
 half_thresh = 2;
-text_append = alt_set_filters(wood_filt, half_thresh);
-
+use_expfit = true;
+text_append = alt_set_filters(wood_filt, half_thresh, use_expfit);
 %% Scroll through for example cells
 pval_thresh = 1; % Use 1 because the pval_thresh function in PF_plot_compare is overly conservative for scrolling through cells
 % Sessions to compare
@@ -24,7 +24,7 @@ PF_plot_compare(sesh1, sesh2, neuron_map, 'calc_corrs', true, ...
     'pval_thresh', pval_thresh);
 
 %% PF versus splitter tuning fidelity across days
-plot_type = 'all'; % options 'All' (split v stem pc v arm pc), 'split_v_apc'
+plot_type = 'All'; % options 'All' (split v stem pc v arm pc), 'split_v_apc'
 nsesh_at_lag = cell(4,1);
 PFcorr_by_day_split = cell(4,1);
 PFcorr_by_day_spc = cell(4,1);
@@ -122,7 +122,7 @@ end
 %% Plot group data for above at specified lag
 
 figure;
-psignrank = nan(length(lags_plot),5);
+psignrank = nan(length(lags_plot),5); % cols: day lag, n, 3 = split v arm pc pval. If 5 cols 3 = split v stem pc, 4 = split v arm pc, 5 = stem v arm pc
 psignrank(:,1) = lags_plot;
 % psignrank(:,2) = ;
 for j = lags_plot
@@ -169,6 +169,7 @@ for j = lags_plot
     end
     
     % Add in stats
+    psignrank(j,2) = size(x_use,1); % n valid data points
     psignrank(j,3) = signrank(x_use(:,1), x_use(:,2), 'tail', 'right');
     if strcmpi(plot_type, 'all') % Add extra cols if doing all comparisons
         psignrank(j,4) = signrank(x_use(:,1), x_use(:,3), 'tail', 'right');

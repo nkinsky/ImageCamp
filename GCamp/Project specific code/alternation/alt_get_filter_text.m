@@ -6,6 +6,7 @@ function [text_append] = alt_get_filter_text()
 
 global WOOD_FILT
 global HALF_LIFE_THRESH
+global USE_EXPFIT
 
 text_append = '';
 if ~isempty(WOOD_FILT) && WOOD_FILT
@@ -17,6 +18,9 @@ if ~isempty(HALF_LIFE_THRESH)
         '_' num2str(round((HALF_LIFE_THRESH - floor(HALF_LIFE_THRESH))*100))];
 end
 
+if USE_EXPFIT
+   text_append = [text_append '_expfit']; 
+end
 
 if ~isempty(text_append)
     text_append = ['_' text_append];

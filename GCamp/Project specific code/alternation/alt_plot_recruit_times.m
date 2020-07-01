@@ -90,11 +90,13 @@ if plot_bool
     text(0.1, 0.8, num2str(round(cellfun(@mean, first_trans_times),1)))
     text(0.1, 0.7, ['1-sided kstest: p=' num2str(pfr, '%0.2g') ' ksstat=' ...
         num2str(kstatfr, '%0.2g')])
+    text(0.1, 0.6, ['nneurons = ' num2str(cellfun(@length, first_trans_times))])
     
     text(0.1, 0.5, 'mean trial of 1st transient (split, pc, other):')
     text(0.1, 0.4, num2str(round(cellfun(@mean, first_trans_trials),1)))
     text(0.1, 0.3, ['1-sided kstest: p=' num2str(ptr, '%0.2g') ' ksstat=' ...
         num2str(kstattr, '%0.2g')])
+    text(0.1, 0.2, ['nneurons = ' num2str(cellfun(@length, first_trans_trials))])
     axis off
     
     hfhist = figure; set(gcf,'Position', [176 77 1200 700]);

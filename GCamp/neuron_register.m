@@ -38,7 +38,7 @@ function [ neuron_map] = neuron_register( mouse_name, base_date, base_session, .
 %       'use_neuron_masks': 1 = use neuron masks to register,
 %       not minimum projection (0 = use min projection = default)
 %
-%       'use_alternate_reg': if specified, you can use an alternate
+%       'alt_reg': if specified, you can use an alternate
 %       image registration transform to do your image registration.  Must
 %       be followed by the affine transform matrix T
 %
@@ -119,11 +119,15 @@ min_thresh = p.Results.min_thresh;
 save_on = p.Results.save_on;
 suppress_output = p.Results.suppress_output;
 regtype = p.Results.regtype;
+
+sesh(1).folder = ChangeDirectory(mouse_name, base_date, base_session, 0);
+sesh(2).folder = ChangeDirectory(mouse_name, reg_date, reg_session, 0);
+
 %% 2: Perform Image Registration
 [RegistrationInfoX, imreg_unique_filename] = image_registerX(mouse_name, base_date, base_session, ...
     reg_date, reg_session, manual_reg_enable,'use_neuron_masks',use_neuron_masks,...
     'suppress_output', suppress_output,'name_append',name_append,...
-    'regtype', regtype);
+    'regtype', regtype, 'alt_reg', alt_reg_tform);
 
 % 2A:Adjust Image Registration for alternate tform
 % save_alt = 0;
@@ -148,12 +152,7 @@ end
 %     save(alt_filename,'RegistrationInfoX');
 % end
 
-%% 3: Get working folders for each session
-
-sesh(1).folder = ChangeDirectory(mouse_name, base_date, base_session, 0);
-sesh(2).folder = ChangeDirectory(mouse_name, reg_date, reg_session, 0);
-
-% Define unique filename for file you are registering to that you will
+%% 3: Define unique filename for file you are registering to that you will
 % eventually save in the base path
 if multi_reg == 0
     map_unique_filename = fullfile(sesh(1).folder,['neuron_map-' mouse_name '-' reg_date '-session' ...

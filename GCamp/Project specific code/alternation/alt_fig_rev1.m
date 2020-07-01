@@ -148,7 +148,8 @@ scatterBox(areas_relevant(:)/corridor_width, grps(:), 'h', ax_use, 'xLabels', ..
 arrayfun(@(a) set(a,'Color', [0 0 0 0.3]), ax_use.Children(1:end-2));
 make_plot_pretty(gca);
 subplot(1,3,3);
-text(0.1,0.9, 'psignrank values')
+text(0.1, 1, 'psignrank valu1es')
+text(0.1, 0.9, ['n = ' num2str(sum(~isnan(cat_area_means(:,1)))) ' sessions'])
 text(0.1, 0.8, ['sp v spc = ' num2str(psp_v_spc,'%0.2g')])
 text(0.1, 0.7, ['sp v apc = ' num2str(psp_v_apc,'%0.2g')])
 text(0.1, 0.6, ['apc v spc = ' num2str(papc_v_spc,'%0.2g')])

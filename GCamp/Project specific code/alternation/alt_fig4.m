@@ -1,7 +1,8 @@
 % Alternation Figure 4: Reactivation dynamics over time
 wood_filt = true;
 half_thresh = 2;
-text_append = alt_set_filters(wood_filt, half_thresh);
+use_expfit = true;
+text_append = alt_set_filters(wood_filt, half_thresh, use_expfit);
 %% Reactivation Probability versus time - single mouse examples
 % Remove upper loop and use alt_all_cell as sesh_use for ALL mice.
 trial_types = {'all', 'free_only', 'forced_only', 'no_loop'};
@@ -39,7 +40,7 @@ close(hw)
 
 %% Reactivation Probability at different time lags
 alt_sesh_use = alt_all_cell; %alt_all_cell = all mice, alt_all_cell[1} = mouse 1
-matchER = true;
+matchER = false;
 trial_type = 'free_only';
 
 % One day looks great - all mice
@@ -66,10 +67,10 @@ alt_plot_stab_v_cat(7, 'exact', alt_all_cell{3}, false, 'PFname', 'Placefields_c
 printNK(['G45 Split v PC Prob present at 7 day lag matchER=' ...
     num2str(matchER) text_append],'alt')
 
-%% Prob maintains phenotype versus days...looks good when I include ALL sessions
-% but falls apart a bit when I don't include forced sessions. Could be due
-% to a lot of shorter sessions with G48. Might need to only include
-% sessions that were longer than a certain amount of time...yes!!!
+%% Prob maintains phenotype versus days...looks good 
+% Note that I am excluding ANY session-pairs in which ANY coding type has less
+% than 4 neurons in the first session. This leads to a slight difference in
+% n between this figure and figure 5.
 
 max_day_lag = 15;
 sessions = alt_all_cell; % Change this to make plots for each mouse...
@@ -149,8 +150,8 @@ end
 % PCs', 'Stem PCs', 'Stem PCs - top rely' and 'Stem PCs - bot. rely'.
 % The last two options keep only the stem place cells with the
 % most/least reliable trajectory-dependent activity.
-splitter_type = 'Splitters'; % 'Splitters'; % can also compare any other type to the other!!!
-other_type = 'Stem PCs'; % 'Arm PCs'; 
+splitter_type = 'Stem PCs - top rely'; % 'Splitters'; % can also compare any other type to the other!!!
+other_type = 'Stem PCs - bot. rely'; % 'Arm PCs'; 
 [~, ~, temp] = alt_parse_cell_category(G30_alt(end), 0.05, 5, 3, ...
     'Placefields_cm1.mat');
 % Get zero and 1 points due to low # cells starting out as splitter/armPC 
@@ -175,11 +176,6 @@ end
 
 ntrial_bool = ntrials1_all >= ntrial_stem_thresh;
 good_bool = ~outlier_bool & ntrial_bool;
-    
-%%% NRK - below is plotting pairs of points where one does not have at
-%%% least 10 cells, which is below our #cells threshold. This is ok because
-%%% while they are plotted they are NOT used for stats! - should probably
-%%% fix!! (nan out?) 
 
 % Plot splitters
 [~,~, hs_sp] = scatterBox(coactive_prop_all(good_bool, split_ind), ...
@@ -197,8 +193,8 @@ good_bool = ~outlier_bool & ntrial_bool;
 
 % Label stuff
 legend(cat(1,hs_sp,hs_other), {splitter_type, other_type})
-plot((0:max_day_lag)', stay_mean(1:(max_day_lag+1),split_ind),'g-')
-plot((0:max_day_lag)', stay_mean(1:(max_day_lag+1),other_ind),'r-')
+plot((0:max_day_lag)', stay_mean(1:(max_day_lag+1), split_ind), 'g-')
+plot((0:max_day_lag)', stay_mean(1:(max_day_lag+1), other_ind), 'r-')
 xlabel('Lag (days)')
 title(['All Mice, matchER=' num2str(matchER) ' trial\_type=' ...
     mouse_name_title(trial_type)])
@@ -208,6 +204,8 @@ make_plot_pretty(gca)
 run_ok = false;
 while ~run_ok
     try
+        npairs = arrayfun(@(a) sum(~isnan(coactive_prop_all(a == grps_all(:,split_ind)...
+            & good_bool, split_ind))),1:max_day_lag);
         prks = arrayfun(@(a) ranksum(coactive_prop_all(a == grps_all(:, split_ind) ...
             & good_bool, split_ind), coactive_prop_all(a == grps_all(:, other_ind) ...
             & good_bool, other_ind)),1:max_day_lag);
@@ -243,6 +241,8 @@ text(0.1, 0.2, 'Days passing signed-rank test after holm-bonferroni correction')
 text(0.1, 0.1, num2str(days_pass_holm))
 text(0.1, -0.1, 'Days passing signed-rank test after Bonferroni correction')
 text(0.1, -0.2, num2str(find(prsign < alpha/ngrps)))
+text(0.1, -0.3, '# session-pairs')
+text(0.1, -0.4, num2str(npairs))
 axis off
 
 % Adjust groups of data to offset and see pattern a bit better.
