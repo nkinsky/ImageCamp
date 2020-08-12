@@ -30,6 +30,8 @@ append = ip.Results.append;
 
 %%
 switch location
+    case 'meeting'
+        location = '/data/UM/Meeting Plots';
     case 'russek'
         location = 'C:\Users\kinsky\Dropbox\Imaging Project\Presentations\Russek Day 2017\Poster';
     case '2env'
