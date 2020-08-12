@@ -31,7 +31,11 @@ append = ip.Results.append;
 %%
 switch location
     case 'meeting'
-        location = '/data/UM/Meeting Plots';
+        if isempty(getenv('COMPUTERNAME'))
+            location = '/data/UM/Meeting\ Plots';
+        elseif strcmp(getenv('COMPUTERNAME'),'NATLAPTOP')
+            location = 'C:\Users\Nat\Dropbox\UM\Meeting Plots';
+        end         
     case 'russek'
         location = 'C:\Users\kinsky\Dropbox\Imaging Project\Presentations\Russek Day 2017\Poster';
     case '2env'
@@ -44,7 +48,7 @@ switch location
     case 'NOlaptop'
         location = 'C:\Users\Nat\Dropbox\Imaging Project\Undergrads\Annalyse\plots';
     case '2env_laptop'
-        location = 'C:\Users\Nat\Dropbox\Imaging Project\Manuscripts\2env\Figures';
+        location = 'C:\Users\Nat\Dropbox\Imaging Project\Manguscripts\2env\Figures';
     case 'alt'
         location = 'C:\Users\kinsky\Dropbox\Imaging Project\Manuscripts\Alternation\Figures';
         if strcmpi('natlaptop', getenv('COMPUTERNAME'))

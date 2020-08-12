@@ -1,4 +1,4 @@
-%% Alternation reference
+    %% Alternation reference
 % File listing alternation sessions by mouse.
 
 % Load database - assume BU desktop or Nat's laptop only
