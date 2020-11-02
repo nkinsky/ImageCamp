@@ -42,6 +42,7 @@ p.addOptional('num_shuffles', 100, @(a) isnumeric(a) && round(a) == a && a >= 0)
 p.addOptional('num_shifts', 0, @(a) isnumeric(a) && round(a) == a && a >= 0);
 p.addOptional('shift_dist', 4, @(a) isnumeric(a) && a > 0);
 p.addParameter('batch_mode', 0, @(a) a == 0 || a == 1 || a == 2);
+p.addParameter('batchmap_dir', '', @(a) isempty(a) || exist(a,'dir'));
 p.addParameter('name_append', '', @(a) ischar(a) || iscell(a) && (length(a) == 1 ...
     || length(a) == length(reg)));
 p.addParameter('orient_only', false, @islogical); % only calculate orient_diff if true
@@ -55,6 +56,7 @@ num_shuffles = p.Results.num_shuffles;
 num_shifts = p.Results.num_shifts; 
 shift_dist = p.Results.shift_dist;
 batch_mode = p.Results.batch_mode;
+batchmap_dir = p.Results.batchmap_dir;
 name_append = p.Results.name_append;
 hfig = p.Results.hfig;
 save_stats = p.Results.save_stats;
@@ -75,7 +77,10 @@ end
 
 % Check to make sure you don't accidentally overwrite previous results
 if save_stats
-    proceed = input('save_stats=true. You will overwrite ANY existing reg_stats files. Is this ok? (y/n): ', 's');
+    persistent proceed
+    if ~exist('proceed', 'var') || isempty(proceed)
+        proceed = input('save_stats=true. You will overwrite ANY existing reg_stats files. Is this ok? (y/n): ', 's');
+    end
     if strcmpi(proceed,'n')
         disp('Exiting Function...')
     elseif strcmpi(proceed,'y')
@@ -100,15 +105,24 @@ hhist_cd = gobjects(length(reg),1); hhist_od = gobjects(length(reg),1);
 try
     reg_stats{1} = neuron_reg_qc(base, reg(1), 'batch_mode', batch_mode, ...
         'name_append', name_append{1}, 'orient_only', orient_only, ...
-        'save_stats', save_stats);
+        'save_stats', save_stats, 'batchmap_dir', batchmap_dir);
     [he_cd(1), hhist_cd(1), he_od(1), hhist_od(1)] = reg_qc_plot(reg_stats{1}.cent_d, reg_stats{1}.orient_diff, ...
-        reg_stats{1}.avg_corr, hfig, 'multi_sesh', multi_sesh);
+        reg_stats{1}.avg_corr, hfig, 'multi_sesh', multi_sesh);    
+catch ME
+    switch ME.identifier
+        case {'MATLAB:load:couldNotReadFile', 'MATLAB:imagesci:imread:fileDoesNotExist'}
+            disp(['ERROR IN BASE SESSION : ' base.Date ' session ' num2str(base.Session)])
+            return  % Exit if you find this error after displaying warning!
+        otherwise
+            rethrow(ME)
+    end
 end
+
 try
     reg_stats_chance = neuron_reg_qc(base, base, 'batch_mode', batch_mode, ...
         'shuffle', num_shuffles, 'shift', num_shifts, 'shift_dist', shift_dist, ...'
         'name_append', name_append{1}, 'save_stats', save_stats, ...
-        'orient_only', orient_only); % If the last registration is bad you can get a bad shuffled distribution here...
+        'orient_only', orient_only, 'batchmap_dir', batchmap_dir); % If the last registration is bad you can get a bad shuffled distribution here...
 catch ME
     switch ME.identifier
         case {'MATLAB:load:couldNotReadFile', 'MATLAB:imagesci:imread:fileDoesNotExist'}
@@ -124,7 +138,7 @@ for j = 2:length(reg)
     try
         reg_stats{j} = neuron_reg_qc(base, reg(j), 'batch_mode', batch_mode,...
             'name_append', name_append{j}, 'save_stats', save_stats,...
-            'orient_only', orient_only);
+            'orient_only', orient_only, 'batchmap_dir', batchmap_dir);
         [he_cd(j), hhist_cd(j), he_od(j), hhist_od(j)] = reg_qc_plot(reg_stats{j}.cent_d, ...
             reg_stats{j}.orient_diff, reg_stats{j}.avg_corr, hfig, 'multi_sesh', 1);
         legend_text{j} = [mouse_name_title(reg(j).Date) ' - #' num2str(reg(j).Session)];

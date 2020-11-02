@@ -44,6 +44,7 @@ p.addParameter('shift_dist', 4, @(a) isnumeric(a) && a > 0 );
 p.addParameter('batch_mode', 0, @(a) a == 0 || a == 1 || a == 2);
 p.addParameter('orient_only', false, @islogical); % only calculate orient_diff if true
 p.addParameter('save_stats', false, @islogical);
+p.addParameter('batchmap_dir', '', @(a) isempty(a) || exist(a, 'dir'));
 p.parse(base_struct, reg_struct, varargin{:});
 
 name_append = p.Results.name_append;
@@ -53,6 +54,7 @@ shift_dist = p.Results.shift_dist;
 batch_mode = p.Results.batch_mode;
 orient_only = p.Results.orient_only;
 save_stats = p.Results.save_stats;
+batchmap_dir = p.Results.batchmap_dir;
 
 % Parse out where to plot if specified
 if ~ishandle(p.Results.plot)
@@ -66,7 +68,7 @@ elseif ishandle(p.Results.plot) % Grab specified handle for latter plotting
 end
 
 save_file = fullfile(base_struct.Location, ['reg_stats_' reg_struct.Date ...
-        '-s', num2str(reg_struct.Session)]);
+        '-s', num2str(reg_struct.Session) name_append]);
 
 if ~exist(save_file, 'file')
 %% Do the calculations
@@ -75,6 +77,10 @@ base_path = ChangeDirectory_NK(base_struct,0);
 
 reg_stats.base = base_struct;
 reg_stats.reg = reg_struct;
+
+if isempty(batchmap_dir)
+    batchmap_dir = base_path;
+end
 
 % Load neuron ROI info, get registration info between sessions
 if batch_mode == 0 || batch_mode == 1
@@ -88,20 +94,27 @@ if batch_mode == 0 || batch_mode == 1
             'name_append', name_append, 'suppress_output', true);
         map_use = neuron_map.neuron_id;
     elseif batch_mode == 1 % Use final vetted map from neuron_reg_batch (better, conservative)
-        load(fullfile(base_path,['batch_session_map' name_append '.mat'])); % Load batch map
+        if ~contains(name_append, 'batch')
+            load(fullfile(batchmap_dir,['batch_session_map' name_append '.mat'])); % Load batch map
+        else % don't append on "batch" if redundant. Effectively only appends "batch" to reg stats files and no other files.
+            load(fullfile(batchmap_dir,'batch_session_map.mat'));
+            name_append = ''; 
+        end
         batch_session_map = fix_batch_session_map(batch_session_map);  % Fix it if pre-bugfix
         reg_index_use = get_index(batch_session_map.session, reg_struct);
-        map_use = get_neuronmap_from_batchmap(batch_session_map.map, 1, reg_index_use);
+        base_index_use = get_index(batch_session_map.session, base_struct);
+        map_use = get_neuronmap_from_batchmap(batch_session_map.map, base_index_use, reg_index_use);
     end
 
 elseif batch_mode == 2 % Check registration to ALL ROIs (including those appended from each session, less conservative).
-    load(fullfile(base_path,['Reg_NeuronIDs_updatemasks0' name_append '.mat']));
+    load(fullfile(batchmap_dir,['Reg_NeuronIDs_updatemasks0' name_append '.mat']));
     ROI_base = Reg_NeuronIDs(1).AllMasks;
     ROIavg_base = Reg_NeuronIDs(1).AllMasksMean;
     
-    load(fullfile(base_path,'batch_session_map'));
+    load(fullfile(batchmap_dir,'batch_session_map'));
     batch_session_map = fix_batch_session_map( batch_session_map); % Fix it if pre-bugfix
     reg_index_use = get_index(batch_session_map.session, reg_struct);
+    base_index_use = get_index(batch_session_map.session, base_struct);
     last_row = find(batch_session_map.map(:,reg_index_use+1) ...
         == min(Reg_NeuronIDs(reg_index_use-1).new_neurons)) - 1; % All neuron masks after this are from the registration itself
     map_use = batch_session_map.map(1:last_row, reg_index_use + 1);

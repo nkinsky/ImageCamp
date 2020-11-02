@@ -1,6 +1,6 @@
 function [] = replace_neuron_reg(animal_name, base_date, base_session,...
     bad_date, bad_session, replace_date, replace_session, name_append,...
-    alt_base_date, alt_base_session)
+    alt_base_date, alt_base_session, manual)
 % replace_neuron_reg(animal_name, base_date, base_session,...
 %     bad_date, bad_session, replace_date, replace_session, ...
 %     alt_base_date, alt_base_session)
@@ -11,14 +11,18 @@ function [] = replace_neuron_reg(animal_name, base_date, base_session,...
 %
 % INPUTS: animal name and date/session # for each session being considered.
 % "name_append" is what is appended to the end of each registration if
-% used.
+% used. alt_base_session uses a different base session.  manual: ''(default)
+% = run automatic registration, 'masks' = try using neuron masks instead of
+% minimum projection, 'manual' = try manual registration.
 
-
-if nargin < 9
-    alt_base_date = nan;
-    alt_base_session = nan;
-    if nargin < 8
-        name_append = '';
+if nargin < 10
+    manual = '';
+    if nargin < 9
+        alt_base_date = nan;
+        alt_base_session = nan;
+        if nargin < 8
+            name_append = '';
+        end
     end
 end
 
@@ -45,24 +49,41 @@ for j = 1:2
 end
 
 %% Now load good image registration file
-if isnan(alt_base_date)
-    replace_filename = fullfile(base_dir, ['RegistrationInfo-' animal_name '-' ...
-        replace_date '-session' num2str(replace_session) name_append '.mat']);
-else
-    alt_base_dir = ChangeDirectory(animal_name, alt_base_date, ...
-        alt_base_session, 0);
-    replace_filename = fullfile(alt_base_dir, ['RegistrationInfo-' animal_name '-' ...
-        replace_date '-session' num2str(replace_session) name_append '.mat']);
+if isempty(manual)
+    if isnan(alt_base_date)
+        replace_filename = fullfile(base_dir, ['RegistrationInfo-' animal_name '-' ...
+            replace_date '-session' num2str(replace_session) name_append '.mat']);
+    else
+        alt_base_dir = ChangeDirectory(animal_name, alt_base_date, ...
+            alt_base_session, 0);
+        replace_filename = fullfile(alt_base_dir, ['RegistrationInfo-' animal_name '-' ...
+            replace_date '-session' num2str(replace_session) name_append '.mat']);
+    end
+    
+    % Load good image transform between base and replace sessions to use for
+    % base-bad session-pair
+    load(replace_filename, 'RegistrationInfoX');
+    alt_reg_tform = RegistrationInfoX.tform.T;
+    % save(replace_filename, 'RegistrationInfoX');
 end
 
-% Load good image transform between base and replace sessions to use for
-% base-bad session-pair
-load(replace_filename, 'RegistrationInfoX');
-alt_reg_tform = RegistrationInfoX.tform.T;
-
 %% Now re-run registration
-neuron_register(animal_name, base_date, base_session, bad_date, ...
-    bad_session, 'alt_reg', alt_reg_tform);
+switch manual
+    case ''
+        neuron_register(animal_name, base_date, base_session, bad_date, ...
+            bad_session, 'alt_reg', alt_reg_tform);
+    case 'masks'
+        neuron_register(animal_name, base_date, base_session, bad_date, ...
+            bad_session, 'use_neuron_masks', true);
+    case 'manual'
+        neuron_register(animal_name, base_date, base_session, bad_date, ...
+            bad_session, 'manual_reg_enable', true);
+    case 'identity'
+        neuron_register(animal_name, base_date, base_session, bad_date, ...
+            bad_session, 'alt_reg', affine2d(eye(3)));
+    otherwise
+        error('manual flag must be empty or masks or manual')
+end
 
 
 end

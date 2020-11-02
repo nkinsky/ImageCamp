@@ -74,7 +74,7 @@ function [ neuron_map] = neuron_register( mouse_name, base_date, base_session, .
 
 %% 0: Parameters
 % min_thresh = 3; % distance in pixels beyond which we consider a cell a different cell
-manual_reg_enable = 0; % 0 = do not allow manual adjustment of registration
+% manual_reg_enable = 0; % 0 = do not allow manual adjustment of registration
 
 %% 1: Parse Inputs
 % keyboard
@@ -103,6 +103,7 @@ p.addParameter('min_thresh', 3, @isnumeric);
 p.addParameter('save_on', true, @(a) islogical(a) || a == 0 || a == 1);
 p.addParameter('suppress_output', false, @(a) islogical(a) || a == 0 || a == 1);
 p.addParameter('regtype','rigid',@ischar); 
+p.addParameter('manual_reg_enable', 0, @(a) a == 0 || a == 1);
 p.KeepUnmatched = true;
 p.parse(mouse_name, base_date, base_session, reg_date, reg_session, ...
     varargin{:});
@@ -119,6 +120,7 @@ min_thresh = p.Results.min_thresh;
 save_on = p.Results.save_on;
 suppress_output = p.Results.suppress_output;
 regtype = p.Results.regtype;
+manual_reg_enable = p.Results.manual_reg_enable;
 
 sesh(1).folder = ChangeDirectory(mouse_name, base_date, base_session, 0);
 sesh(2).folder = ChangeDirectory(mouse_name, reg_date, reg_session, 0);
